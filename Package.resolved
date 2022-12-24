@@ -1,0 +1,65 @@
+{
+  "pins" : [
+    {
+      "identity" : "accesstracker",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/AccessTracker.git",
+      "state" : {
+        "revision" : "42cf3aa090956ebcf1632dfb2e0a9f745faf8f4f",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "bimapping",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Bimapping.git",
+      "state" : {
+        "revision" : "6539d38957c20feaf742258094e83dc603a2ad44"
+      }
+    },
+    {
+      "identity" : "disposable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Disposable.git",
+      "state" : {
+        "revision" : "2280c49e0b09b3ecd003a7c8471a42c30d66629f",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "emitter",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Emitter.git",
+      "state" : {
+        "revision" : "5ac9aae127991bb573f07b121d3bd87cb5419319"
+      }
+    },
+    {
+      "identity" : "projection",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Projection.git",
+      "state" : {
+        "revision" : "7126470a9c130b493549447b692c4c89e21582ac"
+      }
+    },
+    {
+      "identity" : "sourcelocation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/SourceLocation.git",
+      "state" : {
+        "revision" : "bab4249887669388aa36a72286a8ec295ceff315",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "swift-log",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-log.git",
+      "state" : {
+        "revision" : "6fe203dc33195667ce1759bf0182975e4653ba1c",
+        "version" : "1.4.4"
+      }
+    }
+  ],
+  "version" : 2
+}
