@@ -1,135 +1,172 @@
-# 🌳 StateTree
+# StateTree
 
-StateTree won't be developed in its current form beyond `v0.0.10`.
+StateTree brings reactive tools to the domain layer of an application.
 
-StateTree `v0.0.10` was a semi-successful experiment in applying declarative
-routing to the application domain logic without using a Redux model.
+* A 'state tree' is a domain model built by composing `Node` sub-models.
+* A tree updates based on its state and its nodes' declaratively defined `Rules`.
+* Tree state is fully serializable, and so StateTree supports time travel debugging.
+* `StateTree` lets you model your domain's API *naturally*.
+  1. It is explicitly not a `Redux` implementation.
+  2. It makes reactivity easy. No reactive-streams/RxSwift/Combine required.
+* The library's other primary concerns include:
+  - Side effects and thier testability.
+  - Deeplinkable state.
+  - Dependency injection.
+  - async/await support.
+  - UI layer update minimization.
 
-Logic writen with StateTree:
-* Is declarative
-* Is fully independent of the UI layer
-* Has no proprietary dependencies (like Combine)
-* Has native-feeling SwiftUI integration
-* Has simple imperative UIKit compatibility
-* Automatically supports time-travel-debugging
-* Has excellent unit testing support — including side effect interception
-* Is simple to integrate with SwiftUI Previews
+`StateTree` is implemented in Swift with familiar syntax heavily inspired by SwiftUI.
+- `@State`, `@Binding`, and `@Environment` have direct equivalents.
+- `var body: some View { ... }` is similarly analgous to `var rules: some Rules { ... }`.
+- This package includes `StateTreeSwiftUI` for easy SwiftUI integration.
 
-![SwiftUI TicTacToe App](https://user-images.githubusercontent.com/509838/210757910-6cf03b58-0e39-4c3b-828e-c50c253c3ffe.gif)
+The library should/will work on Linux — it has no proprietary dependencies.
+Its state management model is similarly platform independent. `StateTree` could be reimplemented for any platform—and implementations could exchange serialized state.
 
-## Retrospective
+StateTree is experimental at `v0.0.99` but its model and functionality has largely stabilized.
+It will ship as `v0.1.0` with some more examples, documentation, and some rather exciting tooling.
 
-This project involved a bunch of hypothesis testing and a lot of research.
-StateTree works — and seems stable! It has proved out some of what it intended!
+## Importing with SPM
 
-1. Declarative routing applies nicely to domain logic — and
-   it's probably not too slow for production usage.
-2. A system doing it can be integrated nicely into SwiftUI.
-3. The same system can have alternative frontends.
-4. It's possible to make a system that treats bidirectional
-   mapping as a first class concept and works reliably.
+```swift
+// Package dependencies
+.package(url: "https://github.com/GoodHatsLLC/StateTree.git", .upToNextMajor(from: "0.0.9"))
 
-But the API it provided was rough to work with.
+// Domain layer product dependencies
+.product(name: "StateTree", package: "StateTree"),
 
-* It was awkward to work with an explicit 'Store' object.
-* It's nicer to work with granular values like the `@StoreValue`
-  than larger blobs like the current structs conforming to `State`.
-* Per-model storage meant having to write significant and often fragile
-  mapping logic.  
-  It's possible to write a DSL like `Bimapping` to make this easier — but
-  doing so didn't fix the root issue.
-* Some of Redux model's gotchas are present in or echoed by StateTree.
-  It ends up similarly necessary to normalize app state increasing complexity and
-  separating the conceptual source of truth.
-* Bidirectional mapping is hard when applied to anything more complicated
-  than subsets. `Projection` makes it more flexible than SwiftUI's `Binding` allows
-  — but one quickly reaches for logic that's harder to write than is desirable.
-
-The results largely support the conventional wisdom favoring Unidirectional data-flow.  
-StateTree `v0.0.10` exposes Bidirection model to users more than SwiftUI itself does.
-This wasn't a design goal. `v0.0.10`'s implementation of multi-store sources of truth
-(`Nodes`) were dependent on bidirectional mapping, and the paradigm leaked through the API.
-
-The `Node` tree's up-and-back-down-propagation model *does* work to smudge over the some
-of the wrinkles in the split-source-of-truth model—but it had a high complexity cost.
-
-## Themes for what's next
-
-I remain bullish on the value of applying a declarative paradigm to domain logic.  
-`v0.0.10` largely reinforced this.  
-Notably however, StateTree `v0.0.10` mostly failed in its goal of providing evidence
-of an alternative to the Redux model.  
-
-Future work will focus on:
-* DAG-like modelling and behavior.
-* Minimising bidirectional mapping.
-* Allowing more granular state definitons.
-* Avoiding explicit stores and generally improving ergonomics.
-* Enable global actors beyond `@MainActor`. In Swift 5.7.
-
------
+// UI layer product dependencies
+.product(name: "StateTreeSwiftUI", package: "StateTree"),
+```
 
 ## Examples
 
-The repo bundles example projects:
-* SwiftUI based [TicTacToe app](https://github.com/GoodHatsLLC/StateTree/tree/main/Examples/TicTacToe)
-    * Time-travel debugging / state playback
-    * SwiftUI preview integration
-* UIKit based [Counters app](https://github.com/GoodHatsLLC/StateTree/tree/main/Examples/Counter)
-    * Proof of concept for integration with imperative UI
-    * Uses array index based routing
-* SwiftUI based [ToDo app](https://github.com/GoodHatsLLC/StateTree/tree/main/Examples/ToDo)
-    * `NavigationLink` and `NavigationSplitView` use
-    * Most complicated routing example, showing changes based on selection ids
+### TicTacToe
 
-### SwiftUI TicTacToe
-![SwiftUI TicTacToe App](https://user-images.githubusercontent.com/509838/201757307-b719a9e1-4a03-4186-9375-452975d986d8.gif)
+The examples in the `Workspace` folder and its are the best current resource. Read the [TicTacToe source](https://github.com/GoodHatsLLC/StateTree/tree/main/Workspace/Examples/TicTacToe) and run it from the [`xcworkspace`](https://github.com/GoodHatsLLC/StateTree/tree/main/Workspace/StateTree.xcworkspace).
 
-### UIKit Counters
-![UIKit Counters App](https://user-images.githubusercontent.com/509838/204498714-a519ae4b-cfb3-4fa9-b9d7-309a17435027.gif)
+![ttt](https://user-images.githubusercontent.com/509838/220849173-ecf1100a-dd9e-424d-bd38-0643fba5c2f1.gif)
 
-### SwiftUI ToDos
-![SwiftUI ToDo App](https://user-images.githubusercontent.com/509838/204482543-c5ba1524-790f-4654-b764-d49593007b67.gif)
 
-## What it can do
-* Multi-store (per-model) state
-* Declarative state based routing between domains/models
-    * Optional routes
-    * List routes
-* UI layer integration 
-    * Native-feeling SwiftUI integration
-    * Easy SwiftUI Previews support
-    * Prototype UIKit/callback support
-* Model bound 'Behaviors' facilitating side-effects and I/O
-    * Test utilities for mocking and verifying Behavior execution
-* Time-travel debugging support. 
-    * i.e. State recording and playback.
-* Tree-scoped dependency injection styled after SwiftUI's `@Environment`.
-* Lifecycle events hooks. e.g. 'didActivate', 'didUpdate'
-* Update events which trigger only for observed state.
+### Domain modeling walkthrough
 
-## Understanding StateTree's `v0.0.10`'s model
+Let's model a domain that outputs the square of a number — but only
+if it's prime.
 
-For now, the best way to get a sense of how you'd use state tree is to follow the code:
+Let's start with a sub-domain. We'll just write a `Node` that squares
+its input — and ignore the prime bit for now.
 
-1. [Tree](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Tree/Tree.swift) is the root object containing the model tree.
-2. See the tree and root model started up in the [ToDoApp example](https://github.com/GoodHatsLLC/StateTree/blob/main/Examples/ToDo/ToDo/ToDoApp.swift)
-3. The ToDo example's [ToDoManager](https://github.com/GoodHatsLLC/StateTree/blob/main/Examples/ToDo/ToDoSupport/Sources/ToDoDomain/ToDoManager.swift) is its core domain model.  
-Step back from the UI and into the domain logic code that StateTree is centered around. 
-4. Look at how the ToDoManager interacts with its routed submodel, the [SelectedToDo](https://github.com/GoodHatsLLC/StateTree/blob/main/Examples/ToDo/ToDoSupport/Sources/ToDoDomain/SelectedToDo.swift).
-5. Given a sense of how domain logic written with StateTree holds together, look at how the domain models can be used in SwiftUI [as the domain layer behind your view models](https://github.com/GoodHatsLLC/StateTree/tree/main/Examples/ToDo/ToDoSupport/Sources/ToDoUI/Selected) — or for simpler setups [directly as your observable objects](https://github.com/GoodHatsLLC/StateTree/blob/main/Examples/TicTacToe/GameSupport/Sources/GameUI/ScoreBoardView.swift).
+```swift
+struct Squarer: Node {
 
-### Understanding the implementation
+  // @Value fields are maintained by the
+  // system — like SwiftUI's @State.
 
-To get a sense of the implementation follow the code on the hot-path of state updates.  
-It's reasonably well commented.
+  @Value var output: Int! // Our output
 
-* Follow the [`Store`](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Model/Model/Store.swift) that's exposed to consumers through to its backing [`_ModelStorage`](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Model/Model/Storage/_ModelStorage.swift)
-* Follow `_ModelStorage` structs's [`start(model:meta:annotations)`](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Model/Model/Storage/_ModelStorage.swift#L211) call through to the [`ActiveModel`](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Model/Model/Storage/ActiveModel.swift).  
-(Note that `ActiveModel` exists only while the store is actually started/active.)
-* Follow `ActiveModel's` [`write(_:)`](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Model/Model/Storage/ActiveModel.swift#L369) call through to the actual underlying `Node` storage.  
-Look at the state update/write entrypoint [`updateIfNeeded(state:)`](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Node/Node.swift#L171) and follow the logic from there.
-* Finally look at how the `ActiveModel` calls out to the consumer `Model` implementations's [`route(state:)`](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Model/Model/Storage/ActiveModel.swift#L405) blocks—  
-— And then how it [registers itself with its `Node`](https://github.com/GoodHatsLLC/StateTree/blob/main/Sources/Model/Model/Storage/ActiveModel.swift#L236) to do so as part of resolving state changes.
+  // @Projections are derived reference to @Values.
+  // This relationship is like that between
+  // SwiftUI's @Bindings and @State.
 
-Clear as mud!
+  @Projection var input: Int
+
+  // Our `rules` define how the system updates
+  // in response to state changes.
+  // `var rules` is akin to a SwiftUI view's `body`.
+  //
+  // Rules declaratively define the system and are
+  // reevaluated and reapplied when state changes.
+
+  var rules: some Rules {
+    OnChange(input) { input in
+      output = input * input
+    }
+  }
+}
+```
+
+Now let's grab some logic for calculating a prime from StackOverflow.
+
+We can use this logic in another `Node`'s rules — and
+'route' to our previous `Squarer` node only when an input
+`Int` actually *is* a prime.
+
+```swift
+struct PrimeSquarer: Node {
+
+  // The state in our system updates based on.
+  // Like the output above `potentialPrime` is directly
+  // owned by this Node, so is an @Value.
+
+  @Value var potentialPrime: Int = 0
+
+  // A sub-node that we 'route' to.
+  // We're composing Nodes just like SwiftUI composes
+  // views.
+  // Sub-nodes need to be easy to access, so unlike
+  // SwiftUI sub-views they're exposed as fields.
+
+  @Route(Squarer.self) var primeSquared
+
+  // We use our rules to define our systems behaviors
+  // like when exactly routes should be populated.
+
+  var rules: some Rules {
+    if isPrime(potentialPrime) {
+      $primeSquared.route(
+        to: Squarer(value: $potentialPrime)
+      )
+    }
+  }
+
+  private func isPrime(_ num: Int) -> Bool {
+    guard num >= 2     else { return false }
+    guard num != 2     else { return true  }
+    guard num % 2 != 0 else { return false }
+    return !stride(
+      from: 3,
+      through: Int(sqrt(Double(num))),
+      by: 2
+    ).contains { num % $0 == 0 }
+  }
+
+}
+```
+
+When we run our `PrimeSquarer`, its logic and routing
+happens in response to state changes — and automatically
+updates the shape of our `Node` domain models.
+
+```swift
+import StateTree
+import XCTest
+
+@TreeActor
+final class Playground: XCTestCase {
+
+  func test_primeSquareRouting() throws {
+
+    // Boot up the system.
+    let tree = try Tree.main.start(
+      root: PrimeSquare()
+    )
+
+    // Make changes and observe automatic updates
+
+    tree.root.potentialPrime = 2
+    XCTAssertEqual(tree.root.primeSquared?.square, 4)
+
+    tree.root.potentialPrime = 4
+    XCTAssertEqual(tree.root.primeSquared?.square, nil)
+
+    tree.root.potentialPrime = 7
+    XCTAssertEqual(tree.root.primeSquared?.square, 49)
+
+    // Shut down the system and it cleans itself up.
+
+    tree.dispose()
+
+    XCTAssertEqual(tree.root.primeSquared?.square, nil)
+  }
+}
+```

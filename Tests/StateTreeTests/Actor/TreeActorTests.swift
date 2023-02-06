@@ -1,0 +1,17 @@
+import Disposable
+import StateTree
+import XCTest
+
+@TreeActor
+final class TreeActorTests: XCTestCase {
+
+  func test_printActor() throws {
+    switch TreeActor.type {
+    case .custom:
+      Swift.print("🛠️ - @CustomActor aliased as @TreeActor")
+    case .main:
+      Swift.print("🎨 - @MainActor aliased as @TreeActor")
+    }
+  }
+
+}

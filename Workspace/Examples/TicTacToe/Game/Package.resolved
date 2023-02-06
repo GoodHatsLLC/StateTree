@@ -1,0 +1,32 @@
+{
+  "pins" : [
+    {
+      "identity" : "disposable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Disposable.git",
+      "state" : {
+        "revision" : "7529c939ffa7e2d3f635d709ff7b14307173916f",
+        "version" : "0.4.0"
+      }
+    },
+    {
+      "identity" : "emitter",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Emitter.git",
+      "state" : {
+        "revision" : "2736f37612a8cb86a65eaf4a59f98e0df242c63c",
+        "version" : "0.1.4"
+      }
+    },
+    {
+      "identity" : "lifecycle",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Lifecycle.git",
+      "state" : {
+        "revision" : "0ce36eb3c2bed6e2525653c0a278031bf2a45b11",
+        "version" : "0.2.1"
+      }
+    }
+  ],
+  "version" : 2
+}

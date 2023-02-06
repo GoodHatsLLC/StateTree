@@ -1,73 +1,96 @@
+#if !CUSTOM_ACTOR
 import Disposable
+import Emitter
 import StateTree
 import SwiftUI
-import TreeJSON
+import TimeTravel
+
+// MARK: - TimeTravelView
 
 @MainActor
-public struct TimeTravelView<RootModel: Model, ModelView: View>: View {
+public struct TimeTravelView<Root: Node, NodeView: View>: View {
+
+  // MARK: Lifecycle
 
   public init(
-    tree: Tree<RootModel>,
-    options: [StartOption] = [],
-    rootViewBuilder: @MainActor (_ model: RootModel) -> ModelView
+    root: TreeRoot<Root>,
+    @ViewBuilder rootViewBuilder: @escaping (_ node: TreeNode<Root>) -> NodeView
   ) {
-    self.tree = tree
-    // @State used to ensure the 'rootModel' value is also not changes on re-init.
-    rootView = rootViewBuilder(tree.rootModel)
-    self.options = options.filter {
-      switch $0 {
-      case .statePlayback: return false
-      case .dependencies: return true
-      case .logging: return true
-      }
-    }
+    self.rootViewBuilder = rootViewBuilder
+    _root = TreeNode(scope: root.scope)
+    let life = root.life()
+    _life = .init(wrappedValue: life)
+    let recorder = life.recorder()
+    _mode = .init(wrappedValue: .record(recorder))
+    _scanReporter = .init(wrappedValue: .init(recorder.frameCount.erase()))
+    _control = .init(wrappedValue: .record)
+    try! recorder.start()
   }
 
-  public var tree: Tree<RootModel>
-
-  public var rootModel: RootModel {
-    tree.rootModel
-  }
+  // MARK: Public
 
   public var body: some View {
     VStack {
       Spacer()
-      rootView
+      rootViewBuilder($root)
         .allowsHitTesting(control == .record)
       Spacer()
       HStack {
         Picker("", selection: $control) {
-          ControlMode.record.view
-          ControlMode.pause.view
+          ControlMode.record
+          ControlMode.play
         }
         .pickerStyle(.segmented)
         .layoutPriority(-1)
-
-        Slider(value: .init(projectedValue: $scanLocation))
-          .frame(maxWidth: .infinity)
-          .disabled(control != .pause)
+        let transition = AnyTransition.slide
+        Slider(
+          value: $scanLocation,
+          in: frameRange,
+          step: 1
+        )
+        .transition(transition)
+        .animation(.default.speed(0.5), value: frameRange)
+        .frame(maxWidth: .infinity)
+        .disabled(control != .play)
         HStack(spacing: 0) {
           Button("⏪") {
             guard let player
             else {
               return
             }
-            scanLocation = player.previousFrameScan()
-          }
+            scanLocation = Double(player.previous())
+          }.disabled(control != .play)
           Button("⏩") {
             guard let player
             else {
               return
             }
-            scanLocation = player.nextFrameScan()
-          }
-          Button("ℹ️") {
-            debugPrint(player?.frames ?? [])
+            scanLocation = Double(player.next())
+          }.disabled(control != .play)
+          Button("🔍") {
+            popoverFrame = recorder?.currentFrame ?? player?.currentFrame
           }.padding(.leading)
-        }.disabled(control != .pause)
+            .popover(item: $popoverFrame) { frame in
+              TextEditor(text: .constant(frame.state.formattedJSON))
+                .frame(width: 600, height: 800)
+                .font(.body.monospaced())
+                .padding()
+            }
+        }
       }
     }
     .padding()
+    .onReceive(
+      scanReporter
+        .flatMapLatest(producer: { $0 })
+        .combineDriver
+    ) { loc in
+      switch mode {
+      case .record(let recorder): frameRange = recorder.frameRangeDouble
+      case .play(let player): frameRange = player.frameRangeDouble
+      }
+      scanLocation = Double(loc)
+    }
     .onChange(
       of: scanLocation,
       perform: { newValue in
@@ -75,81 +98,98 @@ public struct TimeTravelView<RootModel: Model, ModelView: View>: View {
         else {
           return
         }
-        player.scanTo(proportion: newValue)
+        player.frame = Int(newValue)
       }
     )
     .onChange(of: control) { _ in
       switch (mode, control) {
-      case (.record(let record), .pause):
+      case (.record(let recorder), .play):
         do {
-          let player = record.makePlayer()
-          mode = .playback(player)
-          disposable?.dispose()
-          disposable = try tree.start(options: [.statePlayback(mode: .playback(player))] + options)
+          let frames = try recorder.stop()
+          let player = try life.player(frames: frames)
+          try player.start()
+          mode = .play(player)
+          scanReporter.emit(.value(player.currentFrameIndex.erase()))
         } catch {
-          DependencyValues.defaults.logger
-            .error(
-              message: "failed to start the tree in playback mode",
-              error
-            )
+          assertionFailure("❌ \(error.localizedDescription)")
         }
-      case (.playback, .record):
+      case (.play(let player), .record):
         do {
-          let record = JSONTreeStateRecord()
-          mode = .record(record)
-          disposable?.dispose()
-          disposable = try tree.start(options: [.statePlayback(mode: .record(record))] + options)
+          let keptFrames = player.stop()
+          let recorder = life.recorder(frames: keptFrames)
+          frameRange = 0.0 ... Double(max(1, keptFrames.count - 1))
+          try recorder.start()
+          mode = .record(recorder)
+          scanReporter.emit(.value(recorder.frameCount.erase()))
         } catch {
-          DependencyValues.defaults.logger
-            .error(
-              message: "failed to start the tree in record mode",
-              error
-            )
+          assertionFailure("❌ \(error.localizedDescription)")
         }
-      case _:
-        break
+      case (_, .record):
+        do {
+          let recorder = life.recorder()
+          try recorder.start()
+          mode = .record(recorder)
+          scanReporter.emit(.value(recorder.frameCount.erase()))
+        } catch {
+          assertionFailure("❌ \(error.localizedDescription)")
+        }
+      default: break
       }
     }
-    .onAppear {
-      control = .record
-    }
   }
 
-  enum TimeTravelMode {
-    case record(JSONTreeStateRecord)
-    case playback(JSONTreeStatePlayer)
+  // MARK: Internal
+
+  enum PlaybackMode {
+    case record(Recorder<Root>)
+    case play(Player<Root>)
   }
 
-  enum ControlMode {
+  enum ControlMode: View {
     case record
-    case pause
+    case play
 
-    var icon: String {
+    var icon: (String, Color) {
       switch self {
-      case .record: return "⏺️"
-      case .pause: return "⏸️"
+      case .record: return ("⏺️", .red)
+      case .play: return ("▶️", .green)
       }
     }
 
-    var view: some View {
-      Text(icon).tag(self)
+    var body: some View {
+      Text(icon.0)
+        .tag(self)
     }
   }
 
+  @TreeNode var root: Root
+  @State var life: TreeLifetime<Root>
+  @ViewBuilder var rootViewBuilder: (TreeNode<Root>) -> NodeView
+
+  @State var popoverFrame: StateFrame?
+  @State var frameRange: ClosedRange<Double> = 0.0 ... 1.0
+  @State var mode: PlaybackMode
   @State var disposable: AnyDisposable?
+  @State var control: ControlMode
 
-  @State var control: ControlMode = .pause
+  // MARK: Private
 
-  @State private var scanLocation: Double = 0
-  private let rootView: ModelView
-  @State private var mode: TimeTravelMode = .playback(JSONTreeStatePlayer(treePatches: []))
-  private let options: [StartOption]
+  @State private var scanLocation: Double = 1
+  @State private var scanReporter: ValueSubject<AnyEmitter<Int>>
 
-  private var player: JSONTreeStatePlayer? {
-    if case .playback(let player) = mode {
-      return player
+  private var player: Player<Root>? {
+    switch mode {
+    case .play(let player): return player
+    case .record: return nil
     }
-    return nil
+  }
+
+  private var recorder: Recorder<Root>? {
+    switch mode {
+    case .play: return nil
+    case .record(let recorder): return recorder
+    }
   }
 
 }
+#endif

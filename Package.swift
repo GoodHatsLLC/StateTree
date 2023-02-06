@@ -1,185 +1,82 @@
 // swift-tools-version: 5.7
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
   name: "StateTree",
   platforms: [
-    .iOS(.v15),
     .macOS(.v12),
+    .iOS(.v14),
   ],
   products: [
     .library(
       name: "StateTree",
       targets: [
-        "StateTree"
+        "StateTree",
       ]
     ),
     .library(
       name: "StateTreeSwiftUI",
       targets: [
-        "StateTreeSwiftUI"
-      ]
-    ),
-    .library(
-      name: "StateTreeUIKit",
-      targets: [
-        "StateTreeUIKit"
+        "StateTreeSwiftUI",
       ]
     ),
   ],
   dependencies: [
     .package(
-      url: "https://github.com/GoodHatsLLC/AccessTracker.git", .upToNextMajor(from: "0.1.0")
+      url: "https://github.com/GoodHatsLLC/Disposable.git",
+      .upToNextMinor(from: "0.4.0")
     ),
-    .package(url: "https://github.com/GoodHatsLLC/Bimapping.git", .upToNextMajor(from: "0.1.0")),
-    .package(url: "https://github.com/GoodHatsLLC/Disposable.git", .upToNextMajor(from: "0.1.0")),
     .package(
       url: "https://github.com/GoodHatsLLC/Emitter.git",
-      revision: "5ac9aae127991bb573f07b121d3bd87cb5419319"
+      .upToNextMinor(from: "0.1.4")
     ),
     .package(
-      url: "https://github.com/GoodHatsLLC/Projection.git",
-      revision: "7126470a9c130b493549447b692c4c89e21582ac"
+      url: "https://github.com/apple/swift-collections.git",
+      branch: "release/1.1"
     ),
-
-    .package(
-      url: "https://github.com/GoodHatsLLC/SourceLocation.git", .upToNextMajor(from: "0.1.0")
-    ),
-    .package(url: "https://github.com/apple/swift-log.git", .upToNextMajor(from: "1.4.0")),
   ],
   targets: [
     .target(
-      name: "StateTreeSwiftUI",
-      dependencies: [
-        "AccessTracker",
-        "Behavior",
-        "Dependencies",
-        "Emitter",
-        "TreeJSON",
-        "Model",
-        "Node",
-        "Projection",
-        "Tree",
-        "Utilities",
-      ]
-    ),
-    .target(
-      name: "StateTreeUIKit",
-      dependencies: [
-        "AccessTracker",
-        "Behavior",
-        "Dependencies",
-        "Emitter",
-        "Model",
-        "Node",
-        "Projection",
-        "Tree",
-        "Utilities",
-      ]
-    ),
-    .target(
       name: "StateTree",
       dependencies: [
-        "AccessTracker",
-        "Behavior",
-        "Dependencies",
-        "Emitter",
-        "Model",
-        "Node",
-        "Projection",
-        "Tree",
-        "Utilities",
-      ]
-    ),
-    .target(
-      name: "TreeJSON",
-      dependencies: [
-        "Tree",
-        "Emitter",
-        "ModelInterface",
-      ]
-    ),
-    .target(
-      name: "Tree",
-      dependencies: [
-        "AccessTracker",
-        "Behavior",
-        "Model",
-        "Node",
-        "Projection",
-        "TreeInterface",
-        "Emitter",
-        "Utilities",
-      ]
-    ),
-    .target(
-      name: "TreeInterface",
-      dependencies: [
-        "BehaviorInterface",
-        "SourceLocation",
-      ]
-    ),
-    .target(name: "ModelInterface"),
-    .target(
-      name: "Behavior",
-      dependencies: [
-        "BehaviorInterface",
         "Disposable",
-        "SourceLocation",
-      ]
-    ),
-    .target(
-      name: "BehaviorInterface",
-      dependencies: [
-        "SourceLocation"
-      ]
-    ),
-    .target(
-      name: "Model",
-      dependencies: [
-        "AccessTracker",
-        "Bimapping",
-        "Behavior",
-        "Dependencies",
         "Emitter",
-        "ModelInterface",
-        "Node",
-        "Projection",
-        "TreeInterface",
-        "Utilities",
+        "TreeState",
+        .product(name: "HeapModule", package: "swift-collections"),
       ]
     ),
     .target(
-      name: "Node",
+      name: "StateTreeSwiftUI",
       dependencies: [
-        "AccessTracker",
-        "Dependencies",
-        "Emitter",
-        "ModelInterface",
-        "Projection",
-        "Utilities",
+        "StateTree",
+        "TimeTravel",
       ]
     ),
     .target(
-      name: "Utilities",
+      name: "TimeTravel",
       dependencies: [
-        "Dependencies",
-        "Disposable",
-        "SourceLocation",
-        .product(name: "Logging", package: "swift-log"),
+        "StateTree",
       ]
     ),
     .target(
-      name: "Dependencies"
+      name: "TreeState"
     ),
-
-    // MARK: - Test targets
-
-    .testTarget(name: "DependenciesTests", dependencies: ["Dependencies"]),
-    .testTarget(name: "ModelTests", dependencies: ["Model"]),
-    .testTarget(name: "TreeTests", dependencies: ["Tree", "TreeJSON"]),
-    .testTarget(name: "UtilitiesTests", dependencies: ["Utilities"]),
+    .testTarget(
+      name: "StateTreeTests",
+      dependencies: [
+        "StateTree",
+      ]
+    ),
+    .testTarget(
+      name: "StateTreeSwiftUITests",
+      dependencies: [
+        "StateTreeSwiftUI",
+      ]
+    ),
+    .testTarget(
+      name: "TreeStateTests",
+      dependencies: ["TreeState"]
+    ),
   ]
 )

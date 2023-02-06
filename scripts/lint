@@ -3,5 +3,4 @@
 ROOT=$(git rev-parse --show-toplevel)
 
 swiftlint --fix --config "$ROOT/.swiftlint"
-swift-format format --in-place --recursive "$ROOT" 
-
+swiftformat "$ROOT"
