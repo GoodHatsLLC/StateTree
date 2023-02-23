@@ -1,4 +1,4 @@
-# StateTree
+# StateTree 🌳
 
 StateTree brings reactive tools to the domain layer of an application.
 
