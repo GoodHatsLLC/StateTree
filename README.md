@@ -30,7 +30,7 @@ It will ship as `v0.1.0` with some more examples, documentation, and some rather
 
 ```swift
 // Package dependencies
-.package(url: "https://github.com/GoodHatsLLC/StateTree.git", .upToNextMajor(from: "0.0.9"))
+.package(url: "https://github.com/GoodHatsLLC/StateTree.git", .upToNextMajor(from: "0.0.99"))
 
 // Domain layer product dependencies
 .product(name: "StateTree", package: "StateTree"),
