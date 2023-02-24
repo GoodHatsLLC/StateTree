@@ -53,12 +53,15 @@ extension ProjectionTests {
     @Value var val: Int?
 
     var rules: some Rules {
-      if val == 1 {
+      switch val {
+      case 1:
         $route.route { .a(SubnodeA()) }
-      } else if val == 2 {
+      case 2:
         $route.route { .b(SubnodeB()) }
-      } else if val == 3 {
+      case 3:
         $route.route { .c(SubnodeC(value: $val)) }
+      default:
+        ()
       }
     }
   }

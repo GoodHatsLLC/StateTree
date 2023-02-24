@@ -45,13 +45,14 @@ extension UnionRouteWithoutEnumTests {
     @Value var select: String?
     @Route(NodeA.self, NodeB.self) var route
     var rules: some Rules {
-      if select == "a" {
+      switch select {
+      case "a":
         try $route.route(to: NodeA())
-      } else if select == "b" {
+      case "b":
         try $route.route {
           NodeB()
         }
-      } else if select == "bad" {
+      default:
         try $route.route(to: BadNode())
       }
     }
@@ -67,7 +68,9 @@ extension UnionRouteWithoutEnumTests {
         try $route.route {
           NodeB()
         }
-      } else if select == "c" {
+      }
+
+      if select == "c" {
         try $route.route(to: NodeC())
       } else if select == "bad" {
         try $route.route(to: BadNode())
