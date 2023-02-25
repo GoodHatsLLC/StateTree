@@ -16,12 +16,7 @@ public struct Step: TreeState {
     self.underlying = Memberwise(value: step)
   }
 
-  public init(name: String, fields: [String: any Codable]) {
-    self.name = name
-    self.underlying = Memberwise(fields: fields)
-  }
-
-  public init(name: String, fields: [String: Any]) throws {
+  public init(name: String, fields: [String: Any]) {
     self.name = name
     self.underlying = Memberwise(fields: fields)
   }

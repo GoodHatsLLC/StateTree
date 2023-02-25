@@ -2,10 +2,10 @@ import Disposable
 
 // MARK: - Behavior
 
-public protocol Behavior<Input> {
-  associatedtype Input
+public protocol Behavior<Input>: Sendable {
+  associatedtype Input: Sendable
   associatedtype Action
-  associatedtype Output
+  associatedtype Output: Sendable
   associatedtype Handler: BehaviorHandler where Handler.Output == Output
   init(id: BehaviorID, _: Action)
   var id: BehaviorID { get }
@@ -36,7 +36,7 @@ extension Never: BehaviorHandler {
 
 // MARK: - BehaviorType
 
-public protocol BehaviorType<Input>: Behavior {
+public protocol BehaviorType<Input>: Behavior, Sendable {
   /// Run the Behavior binding its lifetime to the passed scope.
   ///
   /// The Behavior is cancelled if the scope deactivates before it finishes.
@@ -93,7 +93,7 @@ extension Behavior {
     line: Int = #line,
     column: Int = #column,
     _ id: BehaviorID? = nil,
-    _ action: @escaping @TreeActor (I) -> T
+    _ action: @escaping @Sendable @TreeActor (I) -> T
   ) -> ValueBehavior<I, T>
     where Self == ValueBehavior<I, T>
   {

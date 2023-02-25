@@ -3,13 +3,13 @@ import Foundation
 
 // MARK: - OwningBehavior
 
-public struct OwningBehavior<Input>: BehaviorType {
+public struct OwningBehavior<Input: Sendable>: BehaviorType, Sendable {
 
   // MARK: Lifecycle
 
   public init(
     id: BehaviorID,
-    _ action: @escaping (Input) -> AnyDisposable
+    _ action: @escaping @Sendable (Input) -> AnyDisposable
   ) {
     self.id = id
     self.action = action
@@ -31,7 +31,8 @@ public struct OwningBehavior<Input>: BehaviorType {
 
   public let id: BehaviorID
 
-  public let action: (Input) -> AnyDisposable
+  public let action: @Sendable (Input)
+    -> AnyDisposable
 
   public func subscribe(handler _: Never) { }
 

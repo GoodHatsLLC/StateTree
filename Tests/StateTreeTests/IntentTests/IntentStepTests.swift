@@ -23,14 +23,14 @@ final class IntentStepTests: XCTestCase {
       loneField: 44.44,
       subEnum: .one
     )
-    let step = try Step(
+    let step = Step(
       name: "typenesting",
       fields: [
         "subStruct": [
           "field1": true,
           "field2": 22,
           "field3": "333",
-        ],
+        ] as [String: Any],
         "loneField": 44.44,
         "subEnum": "one",
       ]

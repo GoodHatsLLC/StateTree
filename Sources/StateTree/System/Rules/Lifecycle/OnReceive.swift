@@ -5,7 +5,7 @@ import Emitter
 
 /// TODO: replace with behavior oriented lifecycle handlers
 @TreeActor
-public struct OnReceive<Value>: Rules {
+public struct OnReceive<Value: Sendable>: Rules {
 
   // MARK: Lifecycle
 

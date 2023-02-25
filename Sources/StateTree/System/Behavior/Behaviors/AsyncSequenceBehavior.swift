@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - AsyncSequenceBehavior
 
-public struct AsyncSequenceBehavior<Input, Output>: BehaviorType {
+public struct AsyncSequenceBehavior<Input: Sendable, Output: Sendable>: BehaviorType, Sendable {
 
   public init(
     id: BehaviorID,
@@ -56,13 +56,13 @@ extension AsyncSequenceBehavior {
 
 // MARK: - AsyncSequenceHandler
 
-public struct AsyncSequenceHandler<Output>: BehaviorHandler {
+public struct AsyncSequenceHandler<Output>: BehaviorHandler, Sendable {
   public typealias Failure = Error
   public init(
-    onValue: @escaping @TreeActor (Output) -> Void,
-    onFinish: @escaping @TreeActor () -> Void = { },
-    onCancel: @escaping @TreeActor () -> Void = { },
-    onFailure: @escaping @TreeActor (Error) -> Void = { _ in }
+    onValue: @escaping @Sendable @TreeActor (Output) -> Void,
+    onFinish: @escaping @Sendable @TreeActor () -> Void = { },
+    onCancel: @escaping @Sendable @TreeActor () -> Void = { },
+    onFailure: @escaping @Sendable @TreeActor (Error) -> Void = { _ in }
   ) {
     self.onValue = onValue
     self.onFinish = onFinish
@@ -70,10 +70,10 @@ public struct AsyncSequenceHandler<Output>: BehaviorHandler {
     self.onFailure = onFailure
   }
 
-  let onValue: @TreeActor (_ value: Output) -> Void
-  let onFinish: @TreeActor () -> Void
-  let onCancel: @TreeActor () -> Void
-  let onFailure: @TreeActor (_ error: Error) -> Void
+  let onValue: @Sendable @TreeActor (_ value: Output) -> Void
+  let onFinish: @Sendable @TreeActor () -> Void
+  let onCancel: @Sendable @TreeActor () -> Void
+  let onFailure: @Sendable @TreeActor (_ error: Error) -> Void
 }
 
 // MARK: - API

@@ -181,7 +181,7 @@ extension BehaviorInterceptionTests {
       .none
     }
 
-    func maybe<T>(
+    func maybe<T: Sendable>(
       id: BehaviorID,
       wait: UInt64,
       value: T,

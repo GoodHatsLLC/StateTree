@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - AsyncValueBehavior
 
-public struct AsyncValueBehavior<Input, Output>: BehaviorType {
+public struct AsyncValueBehavior<Input: Sendable, Output: Sendable>: BehaviorType, Sendable {
 
   // MARK: Lifecycle
 
@@ -35,8 +35,8 @@ extension AsyncValueBehavior {
   ///   - onCancel: A callback run if the behavior is cancelled because its hosting ``Node`` is
   /// deactivated.
   public func onFinish(
-    _ onFinish: @escaping @TreeActor (_ value: Output) -> Void,
-    onCancel: @escaping @TreeActor () -> Void = { }
+    _ onFinish: @escaping @Sendable @TreeActor (_ value: Output) -> Void,
+    onCancel: @escaping @Sendable @TreeActor () -> Void = { }
   ) {
     subscribe(handler: AsyncValueHandler<Output>(onValue: onFinish, onCancel: onCancel))
   }
@@ -50,18 +50,18 @@ extension AsyncValueBehavior {
 
 // MARK: - AsyncValueHandler
 
-public struct AsyncValueHandler<Output>: BehaviorHandler {
+public struct AsyncValueHandler<Output>: BehaviorHandler, Sendable {
   public typealias Failure = Never
   public init(
-    onValue: @escaping @TreeActor (_ value: Output) -> Void,
-    onCancel: @escaping @TreeActor () -> Void = { }
+    onValue: @escaping @Sendable @TreeActor (_ value: Output) -> Void,
+    onCancel: @escaping @Sendable @TreeActor () -> Void = { }
   ) {
     self.onValue = onValue
     self.onCancel = onCancel
   }
 
-  let onValue: @TreeActor (_ value: Output) -> Void
-  let onCancel: @TreeActor () -> Void
+  let onValue: @Sendable @TreeActor (_ value: Output) -> Void
+  let onCancel: @Sendable @TreeActor () -> Void
 }
 
 // MARK: - Internal API

@@ -196,7 +196,7 @@ extension BehaviorCancelTests {
       .none
     }
 
-    func maybe<T: Equatable>(
+    func maybe<T: Equatable & Sendable>(
       id: BehaviorID,
       wait: UInt64,
       value: T,

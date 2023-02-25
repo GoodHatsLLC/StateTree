@@ -40,12 +40,12 @@ final class MemberwiseTests: XCTestCase {
         "l": [
           "m": 22,
           "n": false,
-        ],
-      ],
+        ] as [String: Any],
+      ] as [String: Any],
       "o": [
         "p": 12.3,
         "q": true,
-      ],
+      ] as [String: Any],
       "r": "https://example.com",
       // "s": nil,
       "t": [1, 2, 3],

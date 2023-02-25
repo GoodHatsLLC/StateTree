@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - AsyncThrowingBehavior
 
-public struct AsyncThrowingBehavior<Input, Output>: BehaviorType {
+public struct AsyncThrowingBehavior<Input: Sendable, Output: Sendable>: BehaviorType, Sendable {
 
   // MARK: Lifecycle
 
@@ -58,20 +58,20 @@ extension AsyncThrowingBehavior {
 
 // MARK: - AsyncThrowingHandler
 
-public struct AsyncThrowingHandler<Output>: BehaviorHandler {
+public struct AsyncThrowingHandler<Output>: BehaviorHandler, Sendable {
 
   public typealias Failure = Error
 
   public init(
-    onCompletion: @escaping @TreeActor (Result<Output, Error>) -> Void,
-    onCancel: @escaping @TreeActor () -> Void = { }
+    onCompletion: @escaping @Sendable @TreeActor (Result<Output, Error>) -> Void,
+    onCancel: @escaping @Sendable @TreeActor () -> Void = { }
   ) {
     self.onCompletion = onCompletion
     self.onCancel = onCancel
   }
 
-  let onCompletion: @TreeActor (_ result: Result<Output, any Error>) -> Void
-  let onCancel: @TreeActor () -> Void
+  let onCompletion: @Sendable @TreeActor (_ result: Result<Output, any Error>) -> Void
+  let onCancel: @Sendable @TreeActor () -> Void
 }
 
 // MARK: - API

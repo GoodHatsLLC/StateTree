@@ -1,4 +1,4 @@
-import Emitter
+@preconcurrency import Emitter
 import XCTest
 @_spi(Implementation) @testable import StateTree
 

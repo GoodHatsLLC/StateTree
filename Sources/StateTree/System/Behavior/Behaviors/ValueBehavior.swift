@@ -10,7 +10,7 @@ public struct ValueBehavior<Input, Output>: BehaviorType {
 
   public init(
     id: BehaviorID,
-    _ action: @escaping @TreeActor (Input) -> Output
+    _ action: @escaping @Sendable @TreeActor (Input) -> Output
   ) {
     self.id = id
     self.action = action
@@ -22,7 +22,7 @@ public struct ValueBehavior<Input, Output>: BehaviorType {
 
   // MARK: Private
 
-  public let action: @TreeActor (Input) -> Output
+  public let action: @Sendable @TreeActor (Input) -> Output
   private let resolution = AsyncValue<BehaviorResolution>()
   private let runner = Runner()
 
@@ -87,7 +87,7 @@ extension ValueBehavior {
 
 // MARK: - ValueHandler
 
-public struct ValueHandler<Output>: BehaviorHandler {
+public struct ValueHandler<Output>: BehaviorHandler, Sendable {
   public typealias Failure = Never
   let onValue: @TreeActor @Sendable (_ value: Output) -> Void
   let onCancel: @TreeActor @Sendable () -> Void

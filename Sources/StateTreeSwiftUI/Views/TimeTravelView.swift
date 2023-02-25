@@ -1,6 +1,6 @@
 #if !CUSTOM_ACTOR
 import Disposable
-import Emitter
+@preconcurrency import Emitter
 import StateTree
 import SwiftUI
 import TimeTravel

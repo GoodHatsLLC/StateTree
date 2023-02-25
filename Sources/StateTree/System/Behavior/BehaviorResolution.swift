@@ -1,7 +1,7 @@
 // MARK: - BehaviorResolution
 
-public struct BehaviorResolution {
-  public enum Resolution {
+public struct BehaviorResolution: Sendable {
+  public enum Resolution: Sendable {
     case cancelled
     case failed
     case finished
