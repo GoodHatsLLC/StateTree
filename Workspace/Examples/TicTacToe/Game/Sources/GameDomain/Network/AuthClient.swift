@@ -1,15 +1,43 @@
 import Foundation
 import StateTree
 
+// MARK: - AuthClientType
+
+protocol AuthClientType {
+  func auth(playerX: String, playerO: String, password: String) async throws -> Authentication
+}
+
+extension AuthClientType {
+  public func erase() -> AuthClient {
+    AuthClient(underlying: self)
+  }
+}
+
 // MARK: - AuthClient
 
-protocol AuthClient {
-  func auth(playerX: String, playerO: String, password: String) async throws -> Authentication
+public struct AuthClient: AuthClientType, Sendable {
+  init(underlying: some AuthClientType) {
+    self.authFunc = { x, o, password in
+      try await underlying.auth(playerX: x, playerO: o, password: password)
+    }
+  }
+
+  public func auth(
+    playerX: String,
+    playerO: String,
+    password: String
+  ) async throws
+    -> Authentication
+  {
+    try await authFunc(playerX, playerO, password)
+  }
+
+  private let authFunc: @Sendable (String, String, String) async throws -> Authentication
 }
 
 // MARK: - LiveAuthClient
 
-struct LiveAuthClient: AuthClient {
+struct LiveAuthClient: AuthClientType {
   init() { }
   func auth(playerX: String, playerO: String, password: String) async throws -> Authentication {
     try await Task.sleep(nanoseconds: NSEC_PER_SEC / 3)
@@ -23,7 +51,7 @@ struct LiveAuthClient: AuthClient {
 
 // MARK: - AuthClientMock
 
-struct AuthClientMock: AuthClient {
+struct AuthClientMock: AuthClientType {
   func auth(
     playerX _: String,
     playerO _: String,
@@ -38,11 +66,11 @@ struct AuthClientMock: AuthClient {
 // MARK: - AuthClientKey
 
 struct AuthClientKey: DependencyKey {
-  static let defaultValue: any AuthClient = LiveAuthClient()
+  static let defaultValue: AuthClient = LiveAuthClient().erase()
 }
 
 extension DependencyValues {
-  var authClient: any AuthClient {
+  var authClient: AuthClient {
     get { self[AuthClientKey.self] }
     set { self[AuthClientKey.self] = newValue }
   }

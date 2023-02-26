@@ -45,7 +45,7 @@ public struct Scope: ScopeField {
     await inner.treeScope?.scope?.behaviorResolutions ?? []
   }
 
-  @MainActor
+  @TreeActor
   public func transaction<T>(_ action: @escaping () throws -> T) rethrows -> T? {
     try inner.treeScope?.runtime.transaction(action)
   }

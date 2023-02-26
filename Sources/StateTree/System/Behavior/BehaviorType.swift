@@ -7,7 +7,6 @@ public protocol Behavior<Input>: Sendable {
   associatedtype Action
   associatedtype Output: Sendable
   associatedtype Handler: BehaviorHandler where Handler.Output == Output
-  init(id: BehaviorID, _: Action)
   var id: BehaviorID { get }
   func erase() -> AnyBehavior<Input>
   func prepare(_ input: Input) -> PreparedBehavior
@@ -43,7 +42,6 @@ public protocol BehaviorType<Input>: Behavior, Sendable {
   func run(on scope: some Scoping, input: Input)
   func resolution() async -> BehaviorResolution
   func dispose()
-  var action: Action { get }
 }
 
 extension BehaviorType {

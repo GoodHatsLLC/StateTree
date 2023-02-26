@@ -25,11 +25,11 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
-      .upToNextMinor(from: "0.4.0")
+      from: .init(0, 6, 0)
     ),
     .package(
       url: "https://github.com/GoodHatsLLC/Emitter.git",
-      .upToNextMinor(from: "0.1.4")
+      from: .init(0, 2, 0)
     ),
     .package(
       url: "https://github.com/apple/swift-collections.git",
@@ -66,6 +66,8 @@ let package = Package(
       name: "StateTreeTests",
       dependencies: [
         "StateTree",
+        "Disposable",
+        .product(name: "HeapModule", package: "swift-collections"),
       ]
     ),
     .testTarget(
@@ -76,7 +78,11 @@ let package = Package(
     ),
     .testTarget(
       name: "TreeStateTests",
-      dependencies: ["TreeState"]
+      dependencies: [
+        "TreeState",
+        "Disposable",
+        .product(name: "HeapModule", package: "swift-collections"),
+      ]
     ),
   ]
 )

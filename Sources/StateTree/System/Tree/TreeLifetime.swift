@@ -1,4 +1,4 @@
-@preconcurrency import Disposable
+import Disposable
 import Emitter
 
 // MARK: - TreeLifetime

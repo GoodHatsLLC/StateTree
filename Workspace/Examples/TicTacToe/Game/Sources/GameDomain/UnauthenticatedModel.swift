@@ -56,6 +56,6 @@ public struct UnauthenticatedModel: Node {
 
   // MARK: Private
 
-  @Dependency(\.authClient) private var authClient: any AuthClient
+  @Dependency(\.authClient) private var authClient: AuthClient
 
 }

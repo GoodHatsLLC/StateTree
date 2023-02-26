@@ -50,7 +50,7 @@ public final class Recorder<Root: Node> {
     }
     lifetime
       .updateEmitter
-      .map { [lifetime] _ in lifetime.snapshot() }
+      .flatMapLatest { [lifetime] _ in lifetime.snapshotEmitter() }
       .removeDuplicates()
       .subscribe { [weak self] snapshot in
         if let self {
