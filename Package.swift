@@ -25,15 +25,19 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
-      from: .init(0, 6, 0)
+      "0.6.1" ..< "0.7.0"
     ),
     .package(
       url: "https://github.com/GoodHatsLLC/Emitter.git",
-      from: .init(0, 2, 0)
+      "0.2.1" ..< "0.3.0"
     ),
     .package(
       url: "https://github.com/apple/swift-collections.git",
       branch: "release/1.1"
+    ),
+    .package(
+      url: "https://github.com/apple/swift-crypto.git",
+      "2.2.4" ..< "3.0.0"
     ),
   ],
   targets: [
@@ -43,6 +47,7 @@ let package = Package(
         "Disposable",
         "Emitter",
         "TreeState",
+        .product(name: "Crypto", package: "swift-crypto"),
         .product(name: "HeapModule", package: "swift-collections"),
       ]
     ),
@@ -86,3 +91,8 @@ let package = Package(
     ),
   ]
 )
+
+#if os(Linux)
+package.targets.removeAll(where: { $0.name.hasPrefix("StateTreeSwiftUI") })
+package.products.removeAll(where: { $0.name.hasPrefix("StateTreeSwiftUI") })
+#endif

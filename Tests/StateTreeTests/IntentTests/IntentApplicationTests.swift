@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - IntentApplicationTests
 
-@TreeActor
 final class IntentApplicationTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,7 +12,8 @@ final class IntentApplicationTests: XCTestCase {
     stage.reset()
   }
 
-  func test_singleStep_intentApplication() throws {
+  @TreeActor
+  func test_singleStep_intentApplication() async throws {
     let life = try Tree.main
       .start(root: ValueSetNode())
     life.stage(on: stage)
@@ -35,7 +35,8 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertNil(life._info.pendingIntent)
   }
 
-  func test_decodedPayloadStep_intentApplication() throws {
+  @TreeActor
+  func test_decodedPayloadStep_intentApplication() async throws {
     let life = try Tree.main
       .start(root: PrivateIntentNode())
     life.stage(on: stage)
@@ -65,7 +66,8 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertNil(life._info.pendingIntent)
   }
 
-  func test_multiStep_intentApplication() throws {
+  @TreeActor
+  func test_multiStep_intentApplication() async throws {
     let life = try Tree.main
       .start(root: RoutingIntentNode<ValueSetNode>())
     life.stage(on: stage)
@@ -89,7 +91,8 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertNil(life._info.pendingIntent)
   }
 
-  func test_nodeSkippingIntentApplication() throws {
+  @TreeActor
+  func test_nodeSkippingIntentApplication() async throws {
     let life = try Tree.main
       .start(root: RoutingIntentNode<IntermediateNode<ValueSetNode>>())
     life.stage(on: stage)
@@ -118,7 +121,8 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertNil(life._info.pendingIntent)
   }
 
-  func test_singleNodeRepeatedStep_intentApplication() throws {
+  @TreeActor
+  func test_singleNodeRepeatedStep_intentApplication() async throws {
     let life = try Tree.main
       .start(root: RepeatStepNode())
     life.stage(on: stage)
@@ -143,7 +147,8 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertNil(life._info.pendingIntent)
   }
 
-  func test_pendingStep_intentApplication() throws {
+  @TreeActor
+  func test_pendingStep_intentApplication() async throws {
     let life = try Tree.main
       .start(root: PendingNode<ValueSetNode>())
     life.stage(on: stage)
@@ -177,7 +182,8 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertNil(life._info.pendingIntent)
   }
 
-  func test_maybeInvalidatedIntent() throws {
+  @TreeActor
+  func test_maybeInvalidatedIntent() async throws {
     try runTest(shouldInvalidate: false)
     stage.reset()
     try runTest(shouldInvalidate: true)

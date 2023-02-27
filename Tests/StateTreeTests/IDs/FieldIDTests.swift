@@ -2,7 +2,6 @@ import Emitter
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
-@TreeActor
 final class MemberIDTests: XCTestCase {
 
   override func setUp() { }

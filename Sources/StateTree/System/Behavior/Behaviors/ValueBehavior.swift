@@ -139,7 +139,7 @@ extension ValueBehavior {
   public nonisolated func dispose() {
     Task { @TreeActor in
       if runner.state.cancel() {
-        let time = CFAbsoluteTimeGetCurrent()
+        let time = ProcessInfo.processInfo.systemUptime
         await resolution
           .resolve(.init(id: id, resolution: .cancelled, startTime: nil, endTime: time))
       }
@@ -150,7 +150,7 @@ extension ValueBehavior {
   public func run(on scope: some Scoping, input: Input) {
     let action = scope.host(behavior: self, input: input) ?? action
     if nil != runner.state.run(action: action, input: input) {
-      let time = CFAbsoluteTimeGetCurrent()
+      let time = ProcessInfo.processInfo.systemUptime
       Task {
         await resolution
           .resolve(.init(id: id, resolution: .finished, startTime: time, endTime: time))

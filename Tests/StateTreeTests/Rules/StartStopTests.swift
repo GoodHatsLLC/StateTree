@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - StartStopTests
 
-@TreeActor
 final class StartStopTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,7 +12,8 @@ final class StartStopTests: XCTestCase {
     stage.reset()
   }
 
-  func test_startStop() throws {
+  @TreeActor
+  func test_startStop() async throws {
     var startCount = 0
     var stopCount = 0
     let tree = try Tree.main
@@ -35,7 +35,8 @@ final class StartStopTests: XCTestCase {
     XCTAssertEqual(stopCount, 1)
   }
 
-  func test_subnode_startStop() throws {
+  @TreeActor
+  func test_subnode_startStop() async throws {
     var startCount = 0
     var stopCount = 0
     let tree = try Tree.main

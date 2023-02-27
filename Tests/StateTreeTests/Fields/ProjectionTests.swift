@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - ProjectionTests
 
-@TreeActor
 final class ProjectionTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,7 +12,8 @@ final class ProjectionTests: XCTestCase {
     stage.reset()
   }
 
-  func test_projection() throws {
+  @TreeActor
+  func test_projection() async throws {
     let tree = try Tree.main
       .start(root: ProjectionHost())
     tree.stage(on: stage)
@@ -25,7 +25,8 @@ final class ProjectionTests: XCTestCase {
     XCTAssertNil(node.route)
   }
 
-  func test_projection_onChange() throws {
+  @TreeActor
+  func test_projection_onChange() async throws {
     let tree = try Tree.main
       .start(root: ReferencedHost(intVal: 5))
     tree.stage(on: stage)

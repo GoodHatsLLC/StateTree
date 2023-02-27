@@ -20,7 +20,7 @@ StateTree brings reactive tools to the domain layer of an application.
 - `var body: some View { ... }` is similarly analgous to `var rules: some Rules { ... }`.
 - This package includes `StateTreeSwiftUI` for easy SwiftUI integration.
 
-The library should/will work on Linux — it has no proprietary dependencies.
+The library works on Linux — it has no proprietary dependencies.
 Its state management model is similarly platform independent. `StateTree` could be reimplemented for any platform—and implementations could exchange serialized state.
 
 StateTree is experimental at `v0.0.99` but its model and functionality has largely stabilized.
@@ -141,10 +141,10 @@ updates the shape of our `Node` domain models.
 import StateTree
 import XCTest
 
-@TreeActor
 final class Playground: XCTestCase {
 
-  func test_primeSquareRouting() throws {
+  @TreeActor
+  func test_primeSquareRouting() async throws {
 
     // Boot up the system.
     let tree = try Tree.main.start(

@@ -209,7 +209,7 @@ extension AsyncThrowingBehavior {
            .running:
         return false
       case .unstarted:
-        self = .running(handle: handle(), startTime: CFAbsoluteTimeGetCurrent())
+        self = .running(handle: handle(), startTime: ProcessInfo.processInfo.systemUptime)
         return true
       }
     }
@@ -229,7 +229,7 @@ extension AsyncThrowingBehavior {
           id: id,
           resolution: .finished,
           startTime: nil,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       case .running(
         handle: let handle,
@@ -241,7 +241,7 @@ extension AsyncThrowingBehavior {
           id: id,
           resolution: ((try? result.get()) != nil) ? .finished : .failed,
           startTime: startTime,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       }
     }
@@ -258,7 +258,7 @@ extension AsyncThrowingBehavior {
           id: id,
           resolution: .cancelled,
           startTime: startTime,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       case .unstarted:
         self = .cancelled
@@ -266,7 +266,7 @@ extension AsyncThrowingBehavior {
           id: id,
           resolution: .cancelled,
           startTime: nil,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       }
     }

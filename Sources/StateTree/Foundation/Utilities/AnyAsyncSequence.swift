@@ -1,3 +1,5 @@
+// MARK: - AnyAsyncSequence
+
 /// A type erased AsyncSequence
 ///
 /// As of Swift 5.7 The AsyncSequence protocol doesn't have a  primary associated type.
@@ -26,4 +28,10 @@ public struct AnyAsyncSequence<Element>: AsyncSequence {
 
   private let iteratorFunc: () -> AsyncIterator
 
+}
+
+extension AsyncSequence {
+  public func erase() -> AnyAsyncSequence<Element> {
+    .init(self)
+  }
 }

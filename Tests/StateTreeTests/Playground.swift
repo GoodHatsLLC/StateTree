@@ -4,7 +4,6 @@ import XCTest
 
 // MARK: - Playground
 
-@TreeActor
 final class Playground: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,11 +12,8 @@ final class Playground: XCTestCase {
     stage.reset()
   }
 
-  func test_intentStep_decoding() async throws {
-    let step = Step(name: "myintent", fields: ["payload": "somepayload"])
-    let myStep = try step.decode(as: MyIntent.self)
-    XCTAssertEqual(MyIntent(payload: "somepayload"), myStep)
-  }
+  @TreeActor
+  func test_something_async() async throws { }
 }
 
 extension Playground {

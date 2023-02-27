@@ -3,13 +3,11 @@ import XCTest
 
 // MARK: - PlaybackTests
 
-@TreeActor
 final class PlaybackTests: XCTestCase {
 
   let stage = DisposableStage()
 
   override func setUp() {
-    XCTAssertNil(Tree.main._info)
     NodeID
       .incrementForTesting()
       .stage(on: stage)
@@ -19,7 +17,8 @@ final class PlaybackTests: XCTestCase {
     stage.reset()
   }
 
-  func test_startFrom() throws {
+  @TreeActor
+  func test_startFrom() async throws {
     let handle = try Tree.main
       .start(
         root: RootNode()
@@ -58,7 +57,8 @@ final class PlaybackTests: XCTestCase {
     restartHandle.dispose()
   }
 
-  func test_setState() throws {
+  @TreeActor
+  func test_setState() async throws {
     let handle = try Tree.main
       .start(
         root: RootNode()
@@ -96,7 +96,8 @@ final class PlaybackTests: XCTestCase {
     handle.dispose()
   }
 
-  func test_setState_thrash() throws {
+  @TreeActor
+  func test_setState_thrash() async throws {
     let lifetime = try Tree.main
       .start(
         root: PrimeSquare()

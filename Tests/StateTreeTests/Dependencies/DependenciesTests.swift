@@ -1,7 +1,6 @@
 import StateTree
 import XCTest
 
-@MainActor
 class DependencyValuesTests: XCTestCase {
 
   func test_defaults() throws {

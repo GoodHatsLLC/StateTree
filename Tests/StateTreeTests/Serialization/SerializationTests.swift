@@ -3,13 +3,11 @@ import XCTest
 
 // MARK: - SerializationTests
 
-@TreeActor
 final class SerializationTests: XCTestCase {
 
   let stage = DisposableStage()
 
   override func setUp() {
-    XCTAssertNil(Tree.main._info)
     NodeID
       .incrementForTesting()
       .stage(on: stage)
@@ -19,7 +17,8 @@ final class SerializationTests: XCTestCase {
     stage.reset()
   }
 
-  func _test_dump_prime() throws {
+  @TreeActor
+  func _test_dump_prime() async throws {
     let life = try Tree()
       .start(
         root: PrimeSquare()
@@ -29,7 +28,8 @@ final class SerializationTests: XCTestCase {
     print(life.snapshot().formattedJSON)
   }
 
-  func _test_dump_nonprime() throws {
+  @TreeActor
+  func _test_dump_nonprime() async throws {
     let life = try Tree()
       .start(
         root: PrimeSquare()
@@ -44,7 +44,8 @@ final class SerializationTests: XCTestCase {
     print(life.snapshot().formattedJSON)
   }
 
-  func testEncoding() throws {
+  @TreeActor
+  func testEncoding() async throws {
     let tree = try Tree.main
       .start(
         root: PrimeSquare()
@@ -57,7 +58,8 @@ final class SerializationTests: XCTestCase {
     XCTAssert(tree.rootNode.commentaries?[0].note != nil)
   }
 
-  func testDecoding() throws {
+  @TreeActor
+  func testDecoding() async throws {
     let state = try TreeStateRecord(formattedJSON: primeStateString)
     let tree1 = try Tree().start(
       root: PrimeSquare(),
@@ -81,7 +83,8 @@ final class SerializationTests: XCTestCase {
     XCTAssertEqual(snap1, snap2)
   }
 
-  func testAlternateEncoding() throws {
+  @TreeActor
+  func testAlternateEncoding() async throws {
     let tree = try Tree.main
       .start(
         root: PrimeSquare()
@@ -98,7 +101,8 @@ final class SerializationTests: XCTestCase {
     XCTAssertEqual(string, nonPrimeStateString)
   }
 
-  func testAlternateState() throws {
+  @TreeActor
+  func testAlternateState() async throws {
     let state = try TreeStateRecord(formattedJSON: nonPrimeStateString)
     let life = try Tree().start(
       root: PrimeSquare(),

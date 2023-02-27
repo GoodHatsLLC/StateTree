@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - OnChangeTests
 
-@TreeActor
 final class OnChangeTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,7 +12,8 @@ final class OnChangeTests: XCTestCase {
     stage.reset()
   }
 
-  func test_playground() throws {
+  @TreeActor
+  func test_playground() async throws {
     let tree = try Tree.main
       .start(root: OnChangeNode())
     tree.stage(on: stage)

@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - ValueTests
 
-@TreeActor
 final class ValueTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,7 +12,8 @@ final class ValueTests: XCTestCase {
     stage.reset()
   }
 
-  func test_value() throws {
+  @TreeActor
+  func test_value() async throws {
     let tree = try Tree.main
       .start(root: ValueTestHost())
     tree.stage(on: stage)

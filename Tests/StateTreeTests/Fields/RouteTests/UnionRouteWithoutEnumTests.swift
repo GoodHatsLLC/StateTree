@@ -3,10 +3,10 @@ import XCTest
 
 // MARK: - UnionRouteWithoutEnumTests
 
-@TreeActor
 final class UnionRouteWithoutEnumTests: XCTestCase {
 
-  func test_directNodeRoute_Union2() throws {
+  @TreeActor
+  func test_directNodeRoute_Union2() async throws {
     let lifetime = try Tree.main
       .start(
         root: Union2Node()
@@ -20,7 +20,8 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
     XCTAssertNil(lifetime.rootNode.route)
   }
 
-  func test_directNodeRoute_Union3() throws {
+  @TreeActor
+  func test_directNodeRoute_Union3() async throws {
     let lifetime = try Tree.main
       .start(
         root: Union3Node()

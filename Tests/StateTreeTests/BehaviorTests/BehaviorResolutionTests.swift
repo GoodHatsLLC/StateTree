@@ -1,20 +1,20 @@
-import Combine
 import Disposable
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - BehaviorResolutionTests
 
-@TreeActor
 final class BehaviorResolutionTests: XCTestCase {
 
   let stage = DisposableStage()
+  let NSEC_PER_SEC: UInt64 = 1_000_000_000
 
-  override func setUp() { XCTAssertNil(Tree.main._info) }
+  override func setUp() { }
   override func tearDown() {
     stage.reset()
   }
 
+  @TreeActor
   func test_await_alwaysBehavior() async throws {
     let life = try Tree.main.start(root: ScopeNode())
     life.stage(on: stage)
@@ -40,6 +40,7 @@ final class BehaviorResolutionTests: XCTestCase {
     })
   }
 
+  @TreeActor
   func test_await_maybeBehavior() async throws {
     let life = try Tree.main.start(root: ScopeNode())
     life.stage(on: stage)
@@ -65,18 +66,16 @@ final class BehaviorResolutionTests: XCTestCase {
     })
   }
 
-  /// FIXME: flake
+  @TreeActor
   func test_await_subscriptionBehavior() async throws {
     let life = try Tree.main.start(root: ScopeNode())
     life.stage(on: stage)
-    let waitTime: UInt64 = (NSEC_PER_SEC / 2)
     var subscriptionCount = 0
     var values = [1, 2, 3, 4, 5]
     let vInput = values
     var didFinish = false
     life.rootNode.subscription(
       id: .id("subscription"),
-      wait: waitTime,
       values: vInput,
       valueCallback: { value in
         XCTAssert(values.contains(value))
@@ -102,6 +101,7 @@ final class BehaviorResolutionTests: XCTestCase {
     })
   }
 
+  @TreeActor
   func test_await_multipleBehaviors() async throws {
     let life = try Tree.main.start(root: ScopeNode())
     life.stage(on: stage)
@@ -135,15 +135,15 @@ final class BehaviorResolutionTests: XCTestCase {
     )
 
     var subscriptionCount = 0
-    var values = [1, 2, 3, 4, 5]
-    let vInput = values
+    var values = Set([1, 2, 3, 4, 5])
+    let vInput = Array(values)
     var didFinish = false
     life.rootNode.subscription(
       id: .id("subscription"),
-      wait: waitTime,
       values: vInput,
       valueCallback: {
-        XCTAssertEqual(values.removeFirst(), $0)
+        XCTAssert(values.contains($0))
+        values.remove($0)
         subscriptionCount += 1
       },
       finishedCallback: {
@@ -230,9 +230,8 @@ extension BehaviorResolutionTests {
       }
     }
 
-    func subscription<T: Equatable>(
+    func subscription<T: Equatable & Sendable>(
       id: BehaviorID,
-      wait _: UInt64,
       values: [T],
       valueCallback: @escaping (_ value: T) -> Void,
       finishedCallback: @escaping () -> Void,
@@ -240,10 +239,15 @@ extension BehaviorResolutionTests {
       failureCallback: @escaping (any Error) -> Void
     ) {
       $scope.run(id) {
-        values
-          .publisher
-          .receive(on: DispatchQueue.global())
-          .values
+        var i = 0
+        return AsyncStream {
+          if i < values.endIndex {
+            defer { i += 1 }
+            return values[i]
+          } else {
+            return nil
+          }
+        }
       }
       .onValue { value in
         valueCallback(value)

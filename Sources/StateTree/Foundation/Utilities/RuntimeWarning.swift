@@ -1,4 +1,4 @@
-#if DEBUG
+#if DEBUG && canImport(os)
 import os
 
 // MIT License
@@ -50,7 +50,7 @@ func runtimeWarning(
   _ message: @autoclosure () -> StaticString,
   _ args: @autoclosure () -> [CVarArg] = []
 ) {
-  #if DEBUG
+  #if DEBUG && canImport(os)
   let message = message()
   unsafeBitCast(
     os_log as (OSLogType, UnsafeRawPointer, OSLog, StaticString, CVarArg...) -> Void,

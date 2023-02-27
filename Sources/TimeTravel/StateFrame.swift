@@ -10,5 +10,4 @@ public struct StateFrame: TreeState, Identifiable {
   public let id: UUID
   public let state: TreeStateRecord
   public let date: Date
-
 }

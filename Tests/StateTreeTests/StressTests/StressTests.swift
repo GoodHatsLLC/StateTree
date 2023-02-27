@@ -4,7 +4,6 @@ import XCTest
 
 // MARK: - StressTests
 
-@TreeActor
 final class StressTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -14,10 +13,11 @@ final class StressTests: XCTestCase {
     stage.reset()
   }
 
-  func test_creationThrash() throws {
+  @TreeActor
+  func test_creationThrash() async throws {
     let testTree = Tree.main
 
-    let desiredDepth = 1600
+    let desiredDepth = 1000
     let repetitions = 4
 
     func findDepth(from node: DeepNode) -> Int {

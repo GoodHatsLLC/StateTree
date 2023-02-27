@@ -236,7 +236,7 @@ extension AsyncSequenceBehavior {
            .running:
         return false
       case .unstarted:
-        self = .running(handle: handle(), startTime: CFAbsoluteTimeGetCurrent())
+        self = .running(handle: handle(), startTime: ProcessInfo.processInfo.systemUptime)
         return true
       }
     }
@@ -252,7 +252,7 @@ extension AsyncSequenceBehavior {
           id: id,
           resolution: .failed,
           startTime: nil,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       case .running(handle: let handle, startTime: let startTime):
         handle.cancel()
@@ -261,7 +261,7 @@ extension AsyncSequenceBehavior {
           id: id,
           resolution: .failed,
           startTime: startTime,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       }
     }
@@ -277,7 +277,7 @@ extension AsyncSequenceBehavior {
           id: id,
           resolution: wasCancelled ? .cancelled : .finished,
           startTime: nil,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       case .running(handle: let handle, startTime: let startTime):
         handle.cancel()
@@ -286,7 +286,7 @@ extension AsyncSequenceBehavior {
           id: id,
           resolution: wasCancelled ? .cancelled : .finished,
           startTime: startTime,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       }
     }

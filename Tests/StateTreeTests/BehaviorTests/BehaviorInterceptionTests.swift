@@ -1,3 +1,5 @@
+// FIXME: test without using Combine
+#if canImport(Combine)
 import Combine
 import Disposable
 import XCTest
@@ -5,16 +7,16 @@ import XCTest
 
 // MARK: - BehaviorInterceptionTests
 
-@TreeActor
 final class BehaviorInterceptionTests: XCTestCase {
 
   let stage = DisposableStage()
 
-  override func setUp() { XCTAssertNil(Tree.main._info) }
+  override func setUp() { }
   override func tearDown() {
     stage.reset()
   }
 
+  @TreeActor
   func test_intercept_alwaysBehavior() async throws {
     let originalValue = "ORIGINAL VALUE"
     let substituteValue = "SUBSTITUTE VALUE"
@@ -62,6 +64,7 @@ final class BehaviorInterceptionTests: XCTestCase {
     XCTAssertEqual(1, actionCount)
   }
 
+  @TreeActor
   func test_intercept_maybeBehavior() async throws {
     let originalValue = "ORIGINAL VALUE"
     let substituteValue = "SUBSTITUTE VALUE"
@@ -109,6 +112,7 @@ final class BehaviorInterceptionTests: XCTestCase {
     XCTAssertEqual(1, actionCount)
   }
 
+  @TreeActor
   func test_intercept_sequenceBehavior() async throws {
     let originalValues = [1, 2, 3, 4, 5]
     let substituteValues = [101, 102, 103]
@@ -246,3 +250,4 @@ extension BehaviorInterceptionTests {
 
   }
 }
+#endif

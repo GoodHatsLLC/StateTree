@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - Union3RouteTests
 
-@TreeActor
 final class Union3RouteTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,7 +12,8 @@ final class Union3RouteTests: XCTestCase {
     stage.reset()
   }
 
-  func test_Union3Route_A() throws {
+  @TreeActor
+  func test_Union3Route_A() async throws {
     let tree = try Tree.main
       .start(root: NestedUnion3RouteHost(routeTo: .a))
     tree.stage(on: stage)
@@ -27,7 +27,8 @@ final class Union3RouteTests: XCTestCase {
     )
   }
 
-  func test_Union3Route_B() throws {
+  @TreeActor
+  func test_Union3Route_B() async throws {
     let tree = try Tree.main
       .start(root: NestedUnion3RouteHost(routeTo: .b))
     tree.stage(on: stage)
@@ -41,7 +42,8 @@ final class Union3RouteTests: XCTestCase {
     )
   }
 
-  func test_Union3Route_C() throws {
+  @TreeActor
+  func test_Union3Route_C() async throws {
     let tree = try Tree.main
       .start(root: NestedUnion3RouteHost(routeTo: .c))
     tree.stage(on: stage)
@@ -55,7 +57,8 @@ final class Union3RouteTests: XCTestCase {
     )
   }
 
-  func test_Union3Route_none() throws {
+  @TreeActor
+  func test_Union3Route_none() async throws {
     let tree = try Tree.main
       .start(root: NestedUnion3RouteHost(routeTo: nil))
     tree.stage(on: stage)
@@ -65,7 +68,8 @@ final class Union3RouteTests: XCTestCase {
     XCTAssertNil(tree.rootNode.hosted?.c)
   }
 
-  func test_Union3Route_reroute() throws {
+  @TreeActor
+  func test_Union3Route_reroute() async throws {
     let tree = try Tree.main
       .start(root: NestedUnion3RouteHost(routeTo: .a))
     tree.stage(on: stage)

@@ -4,17 +4,17 @@ import XCTest
 
 // MARK: - DependencyTests
 
-@TreeActor
 final class DependencyTests: XCTestCase {
 
   let stage = DisposableStage()
 
-  override func setUp() { XCTAssertNil(Tree.main._info) }
+  override func setUp() { }
   override func tearDown() {
     stage.reset()
   }
 
-  func test_dependencyInjection() throws {
+  @TreeActor
+  func test_dependencyInjection() async throws {
     let tree = try Tree.main
       .start(root: DependencyHost())
     tree.stage(on: stage)

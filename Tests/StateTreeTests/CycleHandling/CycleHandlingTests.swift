@@ -4,7 +4,6 @@ import XCTest
 
 // MARK: - CycleHandlingTests
 
-@TreeActor
 final class CycleHandlingTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,6 +12,7 @@ final class CycleHandlingTests: XCTestCase {
     stage.reset()
   }
 
+  @TreeActor
   func test_cycle() async throws {
     var cycleCount = 0
     let life = try Tree.main.start(

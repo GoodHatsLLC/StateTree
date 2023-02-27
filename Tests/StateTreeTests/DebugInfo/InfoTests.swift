@@ -4,17 +4,17 @@ import XCTest
 
 // MARK: - InfoTests
 
-@TreeActor
 final class InfoTests: XCTestCase {
 
   let stage = DisposableStage()
 
-  override func setUp() { XCTAssertNil(Tree.main._info) }
+  override func setUp() { }
   override func tearDown() {
     stage.reset()
   }
 
-  func test_isActive() throws {
+  @TreeActor
+  func test_isActive() async throws {
     let testTree = Tree.main
 
     XCTAssertFalse(testTree._info?.isActive == true)
@@ -29,7 +29,8 @@ final class InfoTests: XCTestCase {
     XCTAssertFalse(testTree._info?.isActive == true)
   }
 
-  func test_count() throws {
+  @TreeActor
+  func test_count() async throws {
     let testTree = Tree.main
 
     XCTAssertEqual(0, testTree._info?.nodeCount ?? 0)

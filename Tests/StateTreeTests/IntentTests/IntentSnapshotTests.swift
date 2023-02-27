@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - IntentSnapshotTests
 
-@TreeActor
 final class IntentSnapshotTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,7 +12,8 @@ final class IntentSnapshotTests: XCTestCase {
     stage.reset()
   }
 
-  func test_intentSnapshot_restoration() throws {
+  @TreeActor
+  func test_intentSnapshot_restoration() async throws {
     let life = try Tree()
       .start(root: PendingNode<ValueSetNode>())
 

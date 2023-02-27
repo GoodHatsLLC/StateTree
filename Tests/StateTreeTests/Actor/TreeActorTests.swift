@@ -2,7 +2,6 @@ import Disposable
 import StateTree
 import XCTest
 
-@TreeActor
 final class TreeActorTests: XCTestCase {
 
   func test_printActor() throws {

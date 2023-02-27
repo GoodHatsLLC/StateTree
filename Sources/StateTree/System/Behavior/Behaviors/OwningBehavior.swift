@@ -70,7 +70,7 @@ extension OwningBehavior {
     mutating func start(action: (Input) -> Disposable, input: Input) {
       switch self {
       case .unstarted:
-        self = .started(time: CFAbsoluteTimeGetCurrent(), disposable: action(input))
+        self = .started(time: ProcessInfo.processInfo.systemUptime, disposable: action(input))
       case .cancelled,
            .started:
         break
@@ -96,7 +96,7 @@ extension OwningBehavior {
   public nonisolated func dispose() {
     Task { @TreeActor in
       if let startTime = runner.state.cancel() {
-        let endTime = CFAbsoluteTimeGetCurrent()
+        let endTime = ProcessInfo.processInfo.systemUptime
         await resolution
           .resolve(.init(id: id, resolution: .cancelled, startTime: startTime, endTime: endTime))
       }

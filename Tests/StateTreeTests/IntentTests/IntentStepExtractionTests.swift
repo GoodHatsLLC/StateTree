@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - IntentStepExtractionTests
 
-@TreeActor
 final class IntentStepExtractionTests: XCTestCase {
 
   func test_nil_emptyIntent() throws {

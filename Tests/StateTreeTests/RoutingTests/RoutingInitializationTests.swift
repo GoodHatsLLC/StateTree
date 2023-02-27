@@ -4,7 +4,6 @@ import XCTest
 
 // MARK: - RoutingInitializationTests
 
-@TreeActor
 final class RoutingInitializationTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -14,7 +13,8 @@ final class RoutingInitializationTests: XCTestCase {
     stage.reset()
   }
 
-  func test_structuralReinitQuirk() throws {
+  @TreeActor
+  func test_structuralReinitQuirk() async throws {
     let testTree = Tree.main
 
     XCTAssertEqual(0, testTree._info?.depth ?? 0)

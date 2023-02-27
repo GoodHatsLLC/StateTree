@@ -4,7 +4,6 @@ import XCTest
 
 // MARK: - StageWhileActiveTests
 
-@TreeActor
 final class StageWhileActiveTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -14,7 +13,8 @@ final class StageWhileActiveTests: XCTestCase {
     stage.reset()
   }
 
-  func test_stageWhileActive() throws {
+  @TreeActor
+  func test_stageWhileActive() async throws {
     var disposeCount = 0
     let tree = try Tree.main
       .start(

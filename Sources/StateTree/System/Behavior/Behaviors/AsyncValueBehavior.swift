@@ -188,7 +188,7 @@ extension AsyncValueBehavior {
            .running:
         return false
       case .unstarted:
-        self = .running(handle: handle(), startTime: CFAbsoluteTimeGetCurrent())
+        self = .running(handle: handle(), startTime: ProcessInfo.processInfo.systemUptime)
         return true
       }
     }
@@ -204,7 +204,7 @@ extension AsyncValueBehavior {
           id: id,
           resolution: .finished,
           startTime: nil,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       case .running(let handle, let startTime):
         handle.cancel()
@@ -213,7 +213,7 @@ extension AsyncValueBehavior {
           id: id,
           resolution: .finished,
           startTime: startTime,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       }
     }
@@ -230,7 +230,7 @@ extension AsyncValueBehavior {
           id: id,
           resolution: .cancelled,
           startTime: startTime,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       case .unstarted:
         self = .cancelled
@@ -238,7 +238,7 @@ extension AsyncValueBehavior {
           id: id,
           resolution: .cancelled,
           startTime: 0,
-          endTime: CFAbsoluteTimeGetCurrent()
+          endTime: ProcessInfo.processInfo.systemUptime
         )
       }
     }

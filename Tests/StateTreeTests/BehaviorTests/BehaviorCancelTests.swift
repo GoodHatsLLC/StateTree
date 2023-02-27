@@ -1,21 +1,20 @@
-import Combine
 import Disposable
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - BehaviorCancelTests
 
-@TreeActor
 final class BehaviorCancelTests: XCTestCase {
 
   let stage = DisposableStage()
+  let NSEC_PER_SEC: UInt64 = 1_000_000_000
 
-  override func setUp() { XCTAssertNil(Tree.main._info) }
+  override func setUp() { }
   override func tearDown() {
     stage.reset()
-    XCTAssertNil(Tree.main._info)
   }
 
+  @TreeActor
   func test_cancel_alwaysBehavior() async throws {
     let life = try Tree.main.start(root: ScopeNode())
     life.stage(on: stage)
@@ -45,6 +44,7 @@ final class BehaviorCancelTests: XCTestCase {
     })
   }
 
+  @TreeActor
   func test_cancel_maybeBehavior() async throws {
     let life = try Tree.main.start(root: ScopeNode())
     life.stage(on: stage)
@@ -73,6 +73,7 @@ final class BehaviorCancelTests: XCTestCase {
     })
   }
 
+  @TreeActor
   func test_cancel_subscriptionBehavior() async throws {
     let life = try Tree.main.start(root: ScopeNode())
     life.stage(on: stage)
@@ -107,7 +108,7 @@ final class BehaviorCancelTests: XCTestCase {
     })
   }
 
-  /// FIXME: this is occasionally flaky
+  @TreeActor
   func test_cancel_multipleBehaviors() async throws {
     let life = try Tree.main.start(root: ScopeNode())
     life.stage(on: stage)
@@ -237,7 +238,7 @@ extension BehaviorCancelTests {
       }
     }
 
-    func subscription<T: Equatable>(
+    func subscription<T: Equatable & Sendable>(
       id: BehaviorID,
       wait: UInt64,
       values: [T],
@@ -247,11 +248,18 @@ extension BehaviorCancelTests {
       failureCallback: @escaping (any Error) -> Void
     ) {
       $scope.run(id) {
-        values
-          .publisher
-          .delay(for: .nanoseconds(Int(wait)), scheduler: RunLoop.main)
-          .receive(on: DispatchQueue.global())
-          .values
+        var i = 0
+        return AsyncStream {
+          if i == 0 {
+            try? await Task.sleep(nanoseconds: wait)
+          }
+          if i < values.endIndex {
+            defer { i += 1 }
+            return values[i]
+          } else {
+            return nil
+          }
+        }
       }
       .onValue { value in
         valueCallback(value)

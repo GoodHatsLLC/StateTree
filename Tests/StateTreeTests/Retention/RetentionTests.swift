@@ -4,7 +4,6 @@ import XCTest
 
 // MARK: - RetentionTests
 
-@TreeActor
 final class RetentionTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -14,12 +13,13 @@ final class RetentionTests: XCTestCase {
     stage.reset()
   }
 
-  func test_retention() throws {
+  @TreeActor
+  func test_retention() async throws {
     let tree = Tree.main
     var scopes: [WeakRef<NodeScope<DeepNode>>] = []
     let count = 800
 
-    try autoreleasepool {
+    try ({
       let lifetime = try tree
         .start(root: DeepNode(depth: count))
       let rootScope = (try? lifetime.runtime.getScope(for: lifetime.rootID))?
@@ -34,7 +34,7 @@ final class RetentionTests: XCTestCase {
       XCTAssertEqual(scopes.compactMap(\.ref).count, count)
 
       lifetime.dispose()
-    }
+    })()
     XCTAssertEqual(scopes.compactMap(\.ref).count, 0)
   }
 }

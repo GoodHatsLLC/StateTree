@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - IntentStepTests
 
-@TreeActor
 final class IntentStepTests: XCTestCase {
 
   func test_intentStep_decoding() throws {

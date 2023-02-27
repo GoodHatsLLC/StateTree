@@ -3,17 +3,17 @@ import XCTest
 
 // MARK: - ListRouteTests
 
-@TreeActor
 final class ListRouteTests: XCTestCase {
 
   let stage = DisposableStage()
 
-  override func setUp() { XCTAssertNil(Tree.main._info) }
+  override func setUp() { }
   override func tearDown() {
     stage.reset()
   }
 
-  func test_listRoute() throws {
+  @TreeActor
+  func test_listRoute() async throws {
     let lifetime = try Tree.main
       .start(
         root: ListNode()

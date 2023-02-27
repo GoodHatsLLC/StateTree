@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - SingleRouteTests
 
-@TreeActor
 final class SingleRouteTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,7 +12,8 @@ final class SingleRouteTests: XCTestCase {
     stage.reset()
   }
 
-  func test_singleRoute_route() throws {
+  @TreeActor
+  func test_singleRoute_route() async throws {
     let tree = try Tree.main
       .start(root: SingleRouteHost(route: true))
     tree.stage(on: stage)
@@ -25,7 +25,8 @@ final class SingleRouteTests: XCTestCase {
     )
   }
 
-  func test_singleRoute_routeNone() throws {
+  @TreeActor
+  func test_singleRoute_routeNone() async throws {
     let tree = try Tree.main
       .start(root: SingleRouteHost(route: false))
     tree.stage(on: stage)
@@ -33,7 +34,8 @@ final class SingleRouteTests: XCTestCase {
     XCTAssertNil(tree.rootNode.hosted)
   }
 
-  func test_singleRoute_reroute() throws {
+  @TreeActor
+  func test_singleRoute_reroute() async throws {
     let tree = try Tree.main
       .start(root: SingleRouteHost(route: true))
     tree.stage(on: stage)

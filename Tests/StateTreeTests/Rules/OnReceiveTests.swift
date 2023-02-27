@@ -4,7 +4,6 @@ import XCTest
 
 // MARK: - OnReceiveTests
 
-@TreeActor
 final class OnReceiveTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -14,7 +13,8 @@ final class OnReceiveTests: XCTestCase {
     stage.reset()
   }
 
-  func test_onReceive_finish() throws {
+  @TreeActor
+  func test_onReceive_finish() async throws {
     let subject = PublishSubject<Int>()
     let tree = try Tree.main
       .start(root: OnReceiveHost(emitter: subject.erase()))
@@ -31,7 +31,8 @@ final class OnReceiveTests: XCTestCase {
     XCTAssertEqual(node.val, nil)
   }
 
-  func test_onReceive_fail() throws {
+  @TreeActor
+  func test_onReceive_fail() async throws {
     let subject = PublishSubject<Int>()
     let tree = try Tree.main
       .start(root: OnReceiveHost(emitter: subject.erase()))

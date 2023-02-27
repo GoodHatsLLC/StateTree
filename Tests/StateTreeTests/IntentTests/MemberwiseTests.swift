@@ -3,7 +3,6 @@ import XCTest
 
 // MARK: - MemberwiseTests
 
-@TreeActor
 final class MemberwiseTests: XCTestCase {
 
   func test_directMemberwise() throws {
