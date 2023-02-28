@@ -264,7 +264,9 @@ extension Runtime {
     }
     assert(transactionCount > 0)
     transactionCount -= 1
-    emitUpdates(changes: changes)
+    if transactionCount == 0 {
+      emitUpdates(changes: changes)
+    }
     return value
   }
 

@@ -3,10 +3,8 @@ import SwiftUI
 
 // MARK: - SingleRouterAccess
 
-// TODO: these separate implementations might be refactorable into one.
-// This probably requires refactoring the RouterType.
-
-@MainActor
+/// TODO: this file is largely duplicated from StateTreeSwiftUI
+@TreeActor
 struct SingleRouterAccess<R: SingleRouterType, Child: Node> where R.Value == Child {
   init(route: Route<R>) {
     self.route = route
@@ -32,7 +30,7 @@ extension SingleRouterAccess {
 
 // MARK: - Union2RouterAccess
 
-@MainActor
+@TreeActor
 public struct Union2RouterAccess<A: Node, B: Node> {
   init(route: Route<UnionRouter<Union.Two<A, B>>>) {
     self.route = route
@@ -52,20 +50,20 @@ public struct Union2RouterAccess<A: Node, B: Node> {
     return anyScope
   }
 
-  public var a: TreeNode<A>? {
+  public var a: Reported<A>? {
     (anyScope?.underlying as? NodeScope<A>)
-      .map { TreeNode(scope: $0) }
+      .map { Reported(reporter: Reporter(scope: $0)) }
   }
 
-  public var b: TreeNode<B>? {
+  public var b: Reported<B>? {
     (anyScope?.underlying as? NodeScope<B>)
-      .map { TreeNode(scope: $0) }
+      .map { Reported(reporter: Reporter(scope: $0)) }
   }
 }
 
 // MARK: - Union3RouterAccess
 
-@MainActor
+@TreeActor
 public struct Union3RouterAccess<A: Node, B: Node, C: Node> {
 
   // MARK: Lifecycle
@@ -76,19 +74,19 @@ public struct Union3RouterAccess<A: Node, B: Node, C: Node> {
 
   // MARK: Public
 
-  public var a: TreeNode<A>? {
+  public var a: Reported<A>? {
     (anyScope?.underlying as? NodeScope<A>)
-      .map { TreeNode(scope: $0) }
+      .map { Reported(reporter: Reporter(scope: $0)) }
   }
 
-  public var b: TreeNode<B>? {
+  public var b: Reported<B>? {
     (anyScope?.underlying as? NodeScope<B>)
-      .map { TreeNode(scope: $0) }
+      .map { Reported(reporter: Reporter(scope: $0)) }
   }
 
-  public var c: TreeNode<C>? {
+  public var c: Reported<C>? {
     (anyScope?.underlying as? NodeScope<C>)
-      .map { TreeNode(scope: $0) }
+      .map { Reported(reporter: Reporter(scope: $0)) }
   }
 
   // MARK: Internal
@@ -113,7 +111,7 @@ public struct Union3RouterAccess<A: Node, B: Node, C: Node> {
 
 // MARK: - ListRouterAccess
 
-@MainActor
+@TreeActor
 public struct ListRouterAccess<N: Node> where N: Identifiable {
   init(route: Route<ListRouter<N>>) {
     self.route = route
@@ -121,7 +119,7 @@ public struct ListRouterAccess<N: Node> where N: Identifiable {
 
   private let route: Route<ListRouter<N>>
 
-  public func at(index: Int) -> TreeNode<N>? {
+  public func at(index: Int) -> Reported<N>? {
     guard
       let (idSet, _) = route._routed,
       idSet.ids.count > index,
@@ -130,7 +128,7 @@ public struct ListRouterAccess<N: Node> where N: Identifiable {
       return nil
     }
     return (anyScope.underlying as? NodeScope<N>)
-      .map { TreeNode(scope: $0) }
+      .map { Reported(reporter: Reporter(scope: $0)) }
   }
 
   public var count: Int {
@@ -146,7 +144,7 @@ public struct ListRouterAccess<N: Node> where N: Identifiable {
 
 extension ListRouterAccess: Sequence {
 
-  public typealias Element = TreeNode<N>
+  public typealias Element = Reported<N>
   public typealias Iterator = IndexingIterator<ListRouterAccess<N>>
   public typealias SubSequence = Slice<ListRouterAccess<N>>
 }
@@ -179,7 +177,7 @@ extension ListRouterAccess: Collection {
 
   public subscript(
     position: Int
-  ) -> TreeNode<N> {
+  ) -> Reported<N> {
     at(index: position)!
   }
 }

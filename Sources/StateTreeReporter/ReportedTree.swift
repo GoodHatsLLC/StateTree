@@ -4,17 +4,17 @@ import Foundation
 @_spi(Implementation) import StateTree
 import SwiftUI
 
-// MARK: - ReportedRoot
+// MARK: - ReportedTree
 
 @TreeActor
-public final class ReportedRoot<N: Node> {
+public final class ReportedTree<N: Node> {
 
   // MARK: Lifecycle
 
   init(tree: Tree = .main, root: N) {
     self.reportedFunc = {
       let life = try tree.start(root: root)
-      return .init(projectedValue: .init(tree: life))
+      return (.init(projectedValue: .init(tree: life)), life)
     }
   }
 
@@ -31,44 +31,32 @@ public final class ReportedRoot<N: Node> {
   }
 
   public func start() async throws {
-    guard reported == nil
+    guard lifetime == nil
     else {
       throw TreeAlreadyStartedError()
     }
-    let reported = try reportedFunc()
+    let (reported, lifetime) = try reportedFunc()
+    self.lifetime = lifetime
     subject.emit(.value(reported))
-    self.reported = reported
     let asyncValue = AsyncThrowingValue<Void>()
-    let disposable = reported
-      .projectedValue
-      .start()
-    reported
-      .projectedValue
-      .onStop {
-        asyncValue.resolve(())
-        disposable.dispose()
-      }
-    reported
-      .onCancel {
-        asyncValue.fail(TreeLifetimeCancelledError())
-        disposable.dispose()
-      }
-    reported
-      .onChange {
-        for change in self.onChangeSubscribers {
-          change()
-        }
-      }
-    return try await asyncValue.value
+    reported.onCancel {
+      asyncValue.resolve(())
+    }
+    reported.onStop {
+      asyncValue.resolve(())
+    }
+    return try await withTaskCancellationHandler {
+      try await asyncValue.value
+    } onCancel: {
+      lifetime.dispose()
+    }
   }
 
   // MARK: Private
 
+  private var lifetime: TreeLifetime<N>?
   private let subject = ValueSubject<Reported<N>?>(nil)
-  private var reported: Reported<N>?
-  private let reportedFunc: () throws -> Reported<N>
-
-  private var onChangeSubscribers: [@Sendable @TreeActor () -> Void] = []
+  private let reportedFunc: () throws -> (Reported<N>, TreeLifetime<N>)
 
 }
 

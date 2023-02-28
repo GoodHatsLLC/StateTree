@@ -10,15 +10,15 @@ final class Reporter<N: Node> {
   // MARK: Lifecycle
 
   init(root: TreeLifetime<N>) {
-    self.runtime = root.runtime
     self.scope = root.root
     self.id = root.rootID
+    self.disposable = start()
   }
 
-  init(lifetime: TreeLifetime<some Node>, scope: NodeScope<N>) {
-    self.runtime = lifetime.runtime
+  init(scope: NodeScope<N>) {
     self.scope = scope
     self.id = scope.id
+    self.disposable = start()
   }
 
   // MARK: Internal
@@ -42,13 +42,10 @@ final class Reporter<N: Node> {
   }
 
   func start() -> AnyDisposable {
-    let disposable = runtime
+    scope
+      .runtime
       .updateEmitter
-      .subscribe { [weak self] value in
-        guard let self
-        else {
-          return
-        }
+      .subscribe { value in
         if Task.isCancelled {
           for sub in self.onCancelSubscribers {
             sub()
@@ -73,17 +70,15 @@ final class Reporter<N: Node> {
           break
         }
       }
-    self.disposable = disposable
-    return disposable
   }
 
   // MARK: Private
 
   private let id: NodeID
-  private let runtime: Runtime
   private var onChangeSubscribers: [@Sendable @TreeActor () -> Void] = []
   private var onStopSubscribers: [@Sendable @TreeActor () -> Void] = []
   private var onCancelSubscribers: [@Sendable @TreeActor () -> Void] = []
   private var disposable: AnyDisposable?
+  private var runtime: Runtime?
 
 }

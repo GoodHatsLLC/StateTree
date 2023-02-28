@@ -2,12 +2,17 @@
 
 @TreeActor
 @propertyWrapper
-public struct Reported<N: Node> {
+public struct Reported<N: Node>: NodeAccess {
 
   // MARK: Lifecycle
 
   public init(projectedValue: Reported<N>) {
     self = projectedValue
+  }
+
+  init(reporter: Reporter<N>) {
+    self.reporter = reporter
+    self.nodeID = reporter.scope.id
   }
 
   public init(tree: TreeLifetime<N>) {
@@ -18,8 +23,12 @@ public struct Reported<N: Node> {
 
   // MARK: Public
 
+  @_spi(Implementation) public var scope: NodeScope<N> {
+    reporter.scope
+  }
+
   public var wrappedValue: N {
-    reporter.scope.node
+    scope.node
   }
 
   public var projectedValue: Reported<N> {
@@ -48,11 +57,6 @@ public struct Reported<N: Node> {
     _ callback: @escaping @Sendable @TreeActor () -> Void
   ) {
     reporter.onStop(callback)
-  }
-
-  func start() -> AnyDisposable {
-    reporter
-      .start()
   }
 
   // MARK: Private

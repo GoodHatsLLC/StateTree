@@ -95,7 +95,7 @@ let package = Package(
     ),
     .package(
       url: "https://github.com/GoodHatsLLC/Emitter.git",
-      "0.2.1" ..< "0.3.0"
+      "0.2.2" ..< "0.3.0"
     ),
     .package(
       url: "https://github.com/apple/swift-collections.git",
@@ -150,6 +150,12 @@ let package = Package(
         "StateTree",
         "Disposable",
         .product(name: "HeapModule", package: "swift-collections"),
+      ]
+    ),
+    .testTarget(
+      name: "StateTreeReporterTests",
+      dependencies: [
+        "StateTreeReporter",
       ]
     ),
     .testTarget(
