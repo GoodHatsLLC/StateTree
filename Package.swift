@@ -82,9 +82,9 @@ let package = Package(
       ]
     ),
     .library(
-      name: "StateTreeObservation",
+      name: "StateTreeReporter",
       targets: [
-        "StateTreeObservation",
+        "StateTreeReporter",
       ]
     ),
   ],
@@ -127,7 +127,7 @@ let package = Package(
       swiftSettings: Build.globalSwiftSettings
     ),
     .target(
-      name: "StateTreeObservation",
+      name: "StateTreeReporter",
       dependencies: [
         "StateTree",
       ],

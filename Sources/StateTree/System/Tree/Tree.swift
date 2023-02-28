@@ -31,6 +31,10 @@ extension Tree {
 
   // MARK: Public
 
+  /// TODO: If lifetime is collapsed into Tree this start() can become async throws.
+  /// This would allow for a configuration that throws an exception if a circular
+  /// dependency is hit — and allows the consumer to restart the tree with the last
+  /// state if so desired.
   @TreeActor
   public func start<N: Node>(
     root: N,

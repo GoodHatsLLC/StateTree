@@ -26,7 +26,7 @@ final class StateApplier: ChangeManager {
   /// This method is used when:
   /// - reverting state changes triggering circular updates
   /// - applying time-travel-debugging `StateFrames`
-  func apply(state newState: TreeStateRecord) throws -> FinalizedChange {
+  func apply(state newState: TreeStateRecord) throws -> [NodeChange] {
     guard newState.isValidInitialState
     else {
       throw InvalidInitialStateError()
@@ -88,7 +88,7 @@ final class StateApplier: ChangeManager {
   private let scopes: ScopeStorage
   private var stagedChanges: TreeChanges = .none
 
-  private func flush() throws -> FinalizedChange {
+  private func flush() throws -> [NodeChange] {
     guard !isFlushing
     else {
       assertionFailure("flush should never be called when another flush is in progress")
@@ -122,7 +122,7 @@ final class StateApplier: ChangeManager {
       uniqueBy: \.id
     )
 
-    var updatedScopes = [NodeID]()
+    var updateCollector = UpdateCollector()
 
     // Handle changes made as part of a full tree state application.
     //
@@ -134,12 +134,13 @@ final class StateApplier: ChangeManager {
       // but not in the post-application record must be stopped and removed.
       // Unlike in regular change management where removed scopes fire
       // ending lifecycle events, scopes torn down in rebuild do not.
-      // (When updating the full next state is not known a priori but must
-      // be worked out based partially on lifecycle events. When rebuilding
+      // (When updating, the full next state is not known a priori but must
+      // be worked out based partially on lifecycle events. When rebuilding,
       // the full next state is already defined and lifecycle events could
       // corrupt it.)
-      for id in changes.removedScopes {
-        scopes.remove(id: id)
+      for nodeID in changes.removedScopes {
+        updateCollector.stopped(id: nodeID, depth: nil)
+        scopes.remove(id: nodeID)
       }
 
       // [N.B. 2.a.] Node records added by apply(state:) don't initially
@@ -159,6 +160,7 @@ final class StateApplier: ChangeManager {
           assertionFailure("a reported routed scope should always exist")
           continue
         }
+        updateCollector.started(id: nodeID, depth: scope.depth)
         scope.markDirty(pending: .rebuild)
         _ = priorityQueue.insert(scope)
       }
@@ -216,6 +218,8 @@ final class StateApplier: ChangeManager {
         // Remove the scope if fully finished.
         if scope.isFinished {
           priorityQueue.popMax()
+          // add to record for external consumers
+          updateCollector.stopped(id: scope.id, depth: scope.depth)
           continue
         }
         // Take the next finalization action to
@@ -231,7 +235,9 @@ final class StateApplier: ChangeManager {
       {
         // If already clean remove.
         if scope.isClean, let scope = priorityQueue.popMin() {
-          updatedScopes.append(scope.id)
+          // add to record for external consumers
+          // avoid overwriting '.start' — as that's more informative.
+          updateCollector.updated(id: scope.id, depth: scope.depth)
           continue
         }
         // Forward if required.
@@ -251,6 +257,7 @@ final class StateApplier: ChangeManager {
       {
         if scope.isFinished {
           priorityQueue.popMin()
+          updateCollector.stopped(id: scope.id, depth: scope.depth)
           continue
         }
         try scope.stepTowardsFinished()
@@ -269,9 +276,7 @@ final class StateApplier: ChangeManager {
     }
     // Return the list of updated nodes to fire notifications
     // to the UI layer for.
-    // These are sorted by increasing depth as they're inserted
-    // at min pop.
-    return .init(updatedScopes: updatedScopes)
+    return updateCollector.collectChanges()
   }
 
 }

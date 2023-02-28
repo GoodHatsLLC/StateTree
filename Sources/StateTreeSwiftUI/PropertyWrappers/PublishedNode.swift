@@ -57,14 +57,35 @@ public final class PublishedNode<N: Node> {
           .projectedValue
           .runtime
           .updateEmitter
-          .filter { [nodeID = storage.projectedValue.id] in $0 == nodeID }
-          .subscribe { _ in
-            objectWillChangePublisher.send()
+          .compactMap { [nodeID = storage.projectedValue.id] change in
+            switch change {
+            case .updated(let updatedID) where updatedID == nodeID:
+              return ChangeEvent.update
+            case .stopped(let stoppedID) where stoppedID == nodeID:
+              return ChangeEvent.stop
+            case _:
+              return nil
+            }
+          }
+          .subscribe { change in
+            switch change {
+            case .update:
+              objectWillChangePublisher.send()
+            case .stop:
+              storage.disposable?.dispose()
+            }
           }
       }
       return storage.projectedValue.node
     }
     set { }
+  }
+
+  // MARK: Internal
+
+  enum ChangeEvent {
+    case update
+    case stop
   }
 
   // MARK: Private

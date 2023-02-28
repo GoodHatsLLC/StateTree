@@ -19,15 +19,34 @@ final class ObservableNode<N: Node>: ObservableObject {
 
   // MARK: Internal
 
+  enum ChangeEvent {
+    case update
+    case stop
+  }
+
   let scope: NodeScope<N>
 
   func start() -> AnyDisposable {
     scope
       .runtime
       .updateEmitter
-      .filter { [id = scope.id] in $0 == id }
-      .subscribe { [weak self] _ in
-        self?.objectWillChange.send()
+      .compactMap { [id = scope.id] change in
+        switch change {
+        case .updated(let updatedID) where updatedID == id:
+          return ChangeEvent.update
+        case .stopped(let stoppedID) where stoppedID == id:
+          return ChangeEvent.stop
+        case _:
+          return nil
+        }
+      }
+      .subscribe { change in
+        switch change {
+        case .update:
+          self.objectWillChange.send()
+        case .stop:
+          self.disposable?.dispose()
+        }
       }
   }
 

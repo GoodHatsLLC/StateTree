@@ -23,7 +23,7 @@ public struct TreeLifetime<N: Node>: Disposable {
 
   public var tree: Tree { runtime.tree }
   public var rootNode: N { root.node }
-  public var updateEmitter: some Emitter<NodeID> { runtime.updateEmitter }
+  public var updateEmitter: some Emitter<NodeChange> { runtime.updateEmitter }
   public var _info: StateTreeInfo { runtime._info }
 
   public nonisolated func dispose() {

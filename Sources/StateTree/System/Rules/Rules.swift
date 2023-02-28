@@ -16,12 +16,6 @@ public enum RuleLifecycle {
   case handleIntent(Intent)
 }
 
-// MARK: - FinalizedChange
-
-struct FinalizedChange {
-  let updatedScopes: [NodeID]
-}
-
 // MARK: - LifecycleResult
 
 public struct LifecycleResult {

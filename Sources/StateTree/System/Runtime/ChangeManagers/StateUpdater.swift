@@ -27,7 +27,7 @@ final class StateUpdater: ChangeManager {
   ///
   /// > Important: The changes in `StateStorage` must be described in the `changes`
   /// parameter to be flushed.
-  func flush() throws -> FinalizedChange {
+  func flush() throws -> [NodeChange] {
     guard !isFlushing
     else {
       assertionFailure("flush should never be called when another flush is in progress")
@@ -37,9 +37,7 @@ final class StateUpdater: ChangeManager {
     isFlushing = true
     defer { isFlushing = false }
     do {
-      return try .init(
-        updatedScopes: updateScopes()
-      )
+      return try updateScopes()
     } catch let error as CycleError {
       runtimeWarning("A circular dependency between Nodes was found")
       let applier = StateApplier(state: state, scopes: scopes)
@@ -89,10 +87,9 @@ final class StateUpdater: ChangeManager {
     !potentialFlushCycles.isEmpty
   }
 
-  private func updateScopes() throws -> [NodeID] {
+  private func updateScopes() throws -> [NodeChange] {
     var allInserts = Set<NodeID>()
-    var updatedScopes = Set<DepthMarkedNodeID>()
-
+    var updateCollector = UpdateCollector()
     // Create a priority queue to hold the scopes that require updates.
     //
     // The queue is ordered based on the scopes's depth within the tree,
@@ -160,6 +157,7 @@ final class StateUpdater: ChangeManager {
           assertionFailure("a reported added scope should always exist")
           continue
         }
+        updateCollector.started(id: id, depth: scope.depth)
         scope.markDirty(pending: .update)
         if priorityQueue.insert(scope) {
           try detectCycles(scope.id)
@@ -234,8 +232,11 @@ final class StateUpdater: ChangeManager {
         scope.requiresFinishing
       {
         // Remove the scope if fully finished.
-        if scope.isFinished {
-          priorityQueue.popMax()
+        if
+          scope.isFinished,
+          let scope = priorityQueue.popMax()
+        {
+          updateCollector.stopped(id: scope.id, depth: scope.depth)
           continue
         }
         // Take the next finalization action to
@@ -250,8 +251,11 @@ final class StateUpdater: ChangeManager {
         scope.requiresReadying
       {
         // If already clean remove.
-        if scope.isClean, let scope = priorityQueue.popMin() {
-          updatedScopes.insert(DepthMarkedNodeID(id: scope.id, depth: scope.depth))
+        if
+          scope.isClean,
+          let scope = priorityQueue.popMin()
+        {
+          updateCollector.updated(id: scope.id, depth: scope.depth)
           continue
         }
         // Forward if required.
@@ -268,8 +272,11 @@ final class StateUpdater: ChangeManager {
         let scope = priorityQueue.min,
         scope.requiresFinishing
       {
-        if scope.isFinished {
-          priorityQueue.popMin()
+        if
+          scope.isFinished,
+          let scope = priorityQueue.popMin()
+        {
+          updateCollector.stopped(id: scope.id, depth: scope.depth)
           continue
         }
         try scope.stepTowardsFinished()
@@ -285,20 +292,7 @@ final class StateUpdater: ChangeManager {
 
     // Return the list of updated nodes to fire notifications
     // to the UI layer for.
-    // These are sorted by increasing depth as they're inserted
-    // at min pop.
-    return Set(updatedScopes)
-      .sorted { lhs, rhs in
-        lhs.depth < rhs.depth
-      }
-      .map(\.id)
+    return updateCollector.collectChanges()
   }
 
-}
-
-// MARK: - DepthMarkedNodeID
-
-private struct DepthMarkedNodeID: Hashable {
-  let id: NodeID
-  let depth: Int
 }

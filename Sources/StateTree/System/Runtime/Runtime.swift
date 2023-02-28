@@ -22,7 +22,7 @@ public final class Runtime {
 
   // MARK: Public
 
-  public var updateEmitter: some Emitter<NodeID> {
+  public var updateEmitter: some Emitter<NodeChange> {
     updateSubject
   }
 
@@ -38,7 +38,7 @@ public final class Runtime {
   private let stage = DisposableStage()
   private let dependencies: DependencyValues
   private let didStabilizeSubject = PublishSubject<Void>()
-  private let updateSubject = PublishSubject<NodeID>()
+  private let updateSubject = PublishSubject<NodeChange>()
   private var transactionCount: Int = 0
   private var updates: TreeChanges = .none
   private var changeManager: (any ChangeManager)?
@@ -244,7 +244,7 @@ extension Runtime {
 
   func transaction<T>(_ action: () throws -> T) rethrows -> T {
     let validState = state.snapshot()
-    var changes: FinalizedChange?
+    var changes: [NodeChange] = []
     assert(transactionCount >= 0)
     transactionCount += 1
     let value = try action()
@@ -264,9 +264,7 @@ extension Runtime {
     }
     assert(transactionCount > 0)
     transactionCount -= 1
-    if let changes {
-      emitUpdates(changes: changes)
-    }
+    emitUpdates(changes: changes)
     return value
   }
 
@@ -375,14 +373,10 @@ extension Runtime {
 
   // MARK: Private
 
-  private func emitUpdates(changes: FinalizedChange) {
-    emitUpdatesExternally(nodeIDs: changes.updatedScopes)
-  }
-
-  private func emitUpdatesExternally(nodeIDs: [NodeID]) {
-    for nodeID in nodeIDs {
+  private func emitUpdates(changes: [NodeChange]) {
+    for change in changes {
       updateSubject.emit(
-        .value(nodeID)
+        .value(change)
       )
     }
   }
@@ -403,7 +397,7 @@ extension Runtime {
   private func updateScopes(
     lastValidState: TreeStateRecord
   ) throws
-    -> FinalizedChange
+    -> [NodeChange]
   {
     let updater = StateUpdater(
       changes: updates.take(),
@@ -420,7 +414,7 @@ extension Runtime {
   private func apply(
     state newState: TreeStateRecord
   ) throws
-    -> FinalizedChange
+    -> [NodeChange]
   {
     let applier = StateApplier(
       state: state,
