@@ -1,7 +1,8 @@
-#if !CUSTOM_ACTOR
 @_spi(Implementation) import StateTree
+import StateTreePlayback
 import SwiftUI
-import TimeTravel
+
+// MARK: - PreviewNode
 
 @MainActor
 @propertyWrapper
@@ -42,6 +43,8 @@ public struct PreviewNode<N: Node> {
 
 }
 
+// MARK: - PreviewLife
+
 @MainActor
 public struct PreviewLife<N: Node> {
   init(
@@ -71,5 +74,3 @@ public struct PreviewLife<N: Node> {
 
   private let root: N
 }
-
-#endif

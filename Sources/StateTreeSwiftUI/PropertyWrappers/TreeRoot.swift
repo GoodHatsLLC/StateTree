@@ -1,7 +1,6 @@
-#if !CUSTOM_ACTOR
 @_spi(Implementation) import StateTree
+import StateTreePlayback
 import SwiftUI
-import TimeTravel
 
 @MainActor
 @propertyWrapper
@@ -13,7 +12,7 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
   public init(
     wrappedValue: N
   ) {
-    _state = .init(wrappedValue: RootNodeObject(root: wrappedValue))
+    _state = .init(wrappedValue: ObservableRoot(root: wrappedValue))
   }
 
   // MARK: Public
@@ -52,7 +51,6 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
 
   // MARK: Internal
 
-  @StateObject var state: RootNodeObject<N>
+  @StateObject var state: ObservableRoot<N>
 
 }
-#endif

@@ -1,4 +1,3 @@
-#if !CUSTOM_ACTOR
 import Combine
 import Disposable
 @_spi(Implementation) import StateTree
@@ -52,4 +51,3 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
   }
 
 }
-#endif

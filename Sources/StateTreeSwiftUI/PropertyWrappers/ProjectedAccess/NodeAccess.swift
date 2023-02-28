@@ -1,4 +1,3 @@
-#if !CUSTOM_ACTOR
 @_spi(Implementation) import StateTree
 import SwiftUI
 
@@ -59,5 +58,3 @@ extension NodeAccess {
   }
 
 }
-
-#endif

@@ -1,4 +1,3 @@
-#if !CUSTOM_ACTOR
 import Combine
 import Disposable
 import Emitter
@@ -37,4 +36,3 @@ final class ObservableNode<N: Node>: ObservableObject {
   private var disposable: AnyDisposable?
 
 }
-#endif

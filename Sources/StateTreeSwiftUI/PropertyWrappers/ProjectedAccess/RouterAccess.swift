@@ -1,11 +1,10 @@
-#if !CUSTOM_ACTOR
 @_spi(Implementation) import StateTree
 import SwiftUI
 
+// MARK: - SingleRouterAccess
+
 // TODO: these separate implementations might be refactorable into one.
 // This probably requires refactoring the RouterType.
-
-// MARK: - SingleRouterAccess
 
 @MainActor
 struct SingleRouterAccess<R: SingleRouterType, Child: Node> where R.Value == Child {
@@ -64,6 +63,8 @@ public struct Union2RouterAccess<A: Node, B: Node> {
   }
 }
 
+// MARK: - Union3RouterAccess
+
 @MainActor
 public struct Union3RouterAccess<A: Node, B: Node, C: Node> {
 
@@ -110,6 +111,8 @@ public struct Union3RouterAccess<A: Node, B: Node, C: Node> {
 
 }
 
+// MARK: - ListRouterAccess
+
 @MainActor
 public struct ListRouterAccess<N: Node> where N: Identifiable {
   init(route: Route<ListRouter<N>>) {
@@ -134,5 +137,3 @@ public struct ListRouterAccess<N: Node> where N: Identifiable {
       .map { TreeNode(scope: $0) }
   }
 }
-
-#endif

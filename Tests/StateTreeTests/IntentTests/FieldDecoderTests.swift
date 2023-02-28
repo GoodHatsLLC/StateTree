@@ -1,12 +1,12 @@
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
-// MARK: - MemberwiseTests
+// MARK: - FieldDecoderTests
 
-final class MemberwiseTests: XCTestCase {
+final class FieldDecoderTests: XCTestCase {
 
-  func test_directMemberwise() throws {
-    let expected = MemberwiseExample(
+  func test_directDecoder() throws {
+    let expected = DecoderExample(
       a: "qwert",
       b: 99,
       c: 100.1,
@@ -27,7 +27,7 @@ final class MemberwiseTests: XCTestCase {
         "low": 6,
       ]
     )
-    let payload = Memberwise(fields: [
+    let payload = FieldDecoder(fields: [
       "a": "qwert",
       "b": 99,
       "c": 100.1,
@@ -51,16 +51,16 @@ final class MemberwiseTests: XCTestCase {
       "u": 18.3,
       "v": ["hi": 5, "low": 6],
     ])
-    let decoded = try payload.decode(as: MemberwiseExample.self)
+    let decoded = try payload.decode(as: DecoderExample.self)
     XCTAssertEqual(expected, decoded)
   }
 }
 
-// MARK: MemberwiseTests.MemberwiseExample
+// MARK: FieldDecoderTests.DecoderExample
 
-extension MemberwiseTests {
+extension FieldDecoderTests {
 
-  struct MemberwiseExample: Codable, Equatable {
+  struct DecoderExample: Codable, Equatable {
     enum EnumType: Int, Codable, Equatable {
       case f = 1
       case g = 2

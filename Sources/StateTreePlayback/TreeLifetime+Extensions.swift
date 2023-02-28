@@ -18,7 +18,7 @@ extension TreeLifetime {
 
   // MARK: Internal
 
-  /// A `nonisolated` snapshot accessor that's easy to use in an emitter chain.
+  /// A `nonisolated` snapshot accessor that's can be used in an emitter chain.
   nonisolated func snapshotEmitter() -> some Emitter<TreeStateRecord> {
     Emitters.create(TreeStateRecord.self) { emit in
       Task { @TreeActor in

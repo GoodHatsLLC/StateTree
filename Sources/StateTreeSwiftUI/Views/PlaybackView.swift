@@ -1,14 +1,13 @@
-#if !CUSTOM_ACTOR
 import Disposable
 import Emitter
 import StateTree
+import StateTreePlayback
 import SwiftUI
-import TimeTravel
 
-// MARK: - TimeTravelView
+// MARK: - PlaybackView
 
 @MainActor
-public struct TimeTravelView<Root: Node, NodeView: View>: View {
+public struct PlaybackView<Root: Node, NodeView: View>: View {
 
   // MARK: Lifecycle
 
@@ -192,4 +191,3 @@ public struct TimeTravelView<Root: Node, NodeView: View>: View {
   }
 
 }
-#endif

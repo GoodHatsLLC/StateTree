@@ -1,4 +1,3 @@
-#if !CUSTOM_ACTOR
 import Combine
 import Disposable
 import Emitter
@@ -6,10 +5,10 @@ import Foundation
 @_spi(Implementation) import StateTree
 import SwiftUI
 
-// MARK: - RootNodeObject
+// MARK: - ObservableRoot
 
 @MainActor
-public final class RootNodeObject<N: Node>: ObservableObject {
+public final class ObservableRoot<N: Node>: ObservableObject {
 
   // MARK: Lifecycle
 
@@ -25,7 +24,7 @@ public final class RootNodeObject<N: Node>: ObservableObject {
     life
       .runtime
       .updateEmitter
-      .filter { [id = life.root.id] in $0 == id }
+      .filter { [id = life.rootID] in $0 == id }
       .subscribe { [weak self] _ in
         self?.objectWillChange.send()
       }
@@ -36,4 +35,3 @@ public final class RootNodeObject<N: Node>: ObservableObject {
   private var disposable: AnyDisposable?
 
 }
-#endif

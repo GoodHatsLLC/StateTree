@@ -1,4 +1,3 @@
-#if !CUSTOM_ACTOR
 import StateTree
 import SwiftUI
 
@@ -17,4 +16,3 @@ extension Binding {
     Binding<T>(self)
   }
 }
-#endif

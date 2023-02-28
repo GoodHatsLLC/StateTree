@@ -1,4 +1,3 @@
-#if !CUSTOM_ACTOR
 import Combine
 @_spi(Implementation) import StateTree
 import SwiftUI
@@ -73,4 +72,3 @@ public final class PublishedNode<N: Node> {
   private var disposable: AnyDisposable?
 
 }
-#endif

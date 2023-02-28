@@ -9,7 +9,7 @@ StateTree brings reactive tools to the domain layer of an application.
   1. It is explicitly not a `Redux` implementation.
   2. It makes reactivity easy. No reactive-streams/RxSwift/Combine required.
 * The library's other primary concerns include:
-  - Side effects and thier testability.
+  - Side effects and their testability.
   - Deeplinkable state.
   - Dependency injection.
   - async/await support.
@@ -17,7 +17,7 @@ StateTree brings reactive tools to the domain layer of an application.
 
 `StateTree` is implemented in Swift with familiar syntax heavily inspired by SwiftUI.
 - `@State`, `@Binding`, and `@Environment` have direct equivalents.
-- `var body: some View { ... }` is similarly analgous to `var rules: some Rules { ... }`.
+- `var body: some View { ... }` is similarly analagous to `var rules: some Rules { ... }`.
 - This package includes `StateTreeSwiftUI` for easy SwiftUI integration.
 
 The library works on Linux — it has no proprietary dependencies.
@@ -30,7 +30,7 @@ It will ship as `v0.1.0` with some more examples, documentation, and some rather
 
 ```swift
 // Package dependencies
-.package(url: "https://github.com/GoodHatsLLC/StateTree.git", .upToNextMajor(from: "0.0.99"))
+.package(url: "https://github.com/GoodHatsLLC/StateTree.git", .upToNextMinor(from: "0.0.99"))
 
 // Domain layer product dependencies
 .product(name: "StateTree", package: "StateTree"),

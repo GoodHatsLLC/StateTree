@@ -1,9 +1,9 @@
 import Foundation
 import TreeState
 
-// MARK: - Memberwise
+// MARK: - FieldDecoder
 
-public struct Memberwise: TreeStateNonSendable, @unchecked
+public struct FieldDecoder: Equatable & Hashable & Codable, @unchecked
 Sendable {
 
   public init(fields: [String: Any]) {

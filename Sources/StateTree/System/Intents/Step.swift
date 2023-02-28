@@ -13,12 +13,12 @@ public struct Step: TreeState {
 
   public init(_ step: some IntentStep) {
     self.name = step.name()
-    self.underlying = Memberwise(value: step)
+    self.underlying = FieldDecoder(value: step)
   }
 
   public init(name: String, fields: [String: Any]) {
     self.name = name
-    self.underlying = Memberwise(fields: fields)
+    self.underlying = FieldDecoder(fields: fields)
   }
 
   // MARK: Public
@@ -37,7 +37,7 @@ public struct Step: TreeState {
 
   // MARK: Private
 
-  private let underlying: Memberwise
+  private let underlying: FieldDecoder
 
 }
 
