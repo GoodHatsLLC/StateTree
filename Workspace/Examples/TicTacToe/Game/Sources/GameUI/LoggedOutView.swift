@@ -26,6 +26,9 @@ struct LoggedOutView: View {
               .font(.title)
           }
           TextField("Player x", text: $playerX)
+          #if os(iOS)
+            .textInputAutocapitalization(.never)
+          #endif
             .textFieldStyle(.roundedBorder)
             .truncationMode(.tail)
             .textContentType(.username)
@@ -34,6 +37,9 @@ struct LoggedOutView: View {
               submit()
             }
           TextField("Player o", text: $playerO)
+          #if os(iOS)
+            .textInputAutocapitalization(.never)
+          #endif
             .textFieldStyle(.roundedBorder)
             .truncationMode(.tail)
             .textContentType(.username)
@@ -44,6 +50,9 @@ struct LoggedOutView: View {
           Divider()
             .padding(.horizontal, 2.su)
           TextField("Password", text: $password)
+          #if os(iOS)
+            .textInputAutocapitalization(.never)
+          #endif
             .textFieldStyle(.roundedBorder)
             .truncationMode(.tail)
             .font(.body.monospaced())
@@ -61,6 +70,7 @@ struct LoggedOutView: View {
             Button("Login") {
               submit()
             }
+            .buttonStyle(.borderedProminent)
             .disabled(model.isLoading)
             ProgressView()
               .progressViewStyle(

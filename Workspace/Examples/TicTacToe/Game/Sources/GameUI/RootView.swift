@@ -14,7 +14,6 @@ struct RootView: View {
         LoggedOutView(model: loggedOut)
       }
     }
-    .aspectRatio(1, contentMode: .fit)
   }
 
   @TreeNode var model: AppModel

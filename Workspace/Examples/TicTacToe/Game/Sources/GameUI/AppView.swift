@@ -17,3 +17,14 @@ public struct AppView: View {
   @TreeRoot var root = AppModel()
 
 }
+
+// MARK: - AppView_Previews
+
+struct AppView_Previews: PreviewProvider {
+
+//  @PreviewNode static var gameInfo = AppModel()
+
+  static var previews: some View {
+    AppView()
+  }
+}

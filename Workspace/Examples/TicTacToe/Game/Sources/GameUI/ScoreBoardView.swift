@@ -6,14 +6,6 @@ import SwiftUI
 
 struct ScoreBoardView: View {
 
-  // MARK: Lifecycle
-
-  public init(model: TreeNode<GameInfoModel>) {
-    _model = model
-  }
-
-  // MARK: Internal
-
   @TreeNode var model: GameInfoModel
 
   var body: some View {
@@ -27,7 +19,7 @@ struct ScoreBoardView: View {
           Divider()
         }
       }
-      HStack {
+      HStack(alignment: .center) {
         VStack(alignment: .leading, spacing: 1.su) {
           Text("Score")
             .font(.title.monospaced())
@@ -38,8 +30,9 @@ struct ScoreBoardView: View {
         }
         Divider()
           .padding()
-        VStack(alignment: .trailing) {
+        VStack(alignment: .trailing, spacing: 1.su) {
           Text("")
+            .font(.title.monospaced())
           Button("🏁 Start") {
             model.startGame()
           }

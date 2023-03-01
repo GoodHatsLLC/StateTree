@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GoodHatsLLC/Emitter.git",
       "state" : {
-        "revision" : "b4687cceb4fce5adfbd45796e4909fec7573f896",
-        "version" : "0.2.1"
+        "revision" : "b5576484babe37afe26f19a29fd29f74468a8383",
+        "version" : "0.2.2"
       }
     },
     {

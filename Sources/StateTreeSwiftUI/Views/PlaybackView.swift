@@ -35,12 +35,25 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
         .allowsHitTesting(control == .record)
       Spacer()
       HStack {
-        Picker("", selection: $control) {
-          ControlMode.record
-          ControlMode.play
+        HStack(spacing: 8) {
+          Button {
+            control = .record
+          } label: {
+            Text("▶️")
+              .overlay(.blue.blendMode(control == .record ? .screen : .overlay))
+          }
+          .buttonStyle(.borderless)
+          .disabled(control == .record)
+          Button {
+            control = .play
+          } label: {
+            Text("⏺️")
+              .overlay(.blue.blendMode(control == .play ? .screen : .overlay))
+          }
+          .buttonStyle(.borderless)
+          .disabled(control == .play)
         }
-        .pickerStyle(.segmented)
-        .layoutPriority(-1)
+
         let transition = AnyTransition.slide
         Slider(
           value: $scanLocation,
@@ -51,34 +64,52 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
         .animation(.default.speed(0.5), value: frameRange)
         .frame(maxWidth: .infinity)
         .disabled(control != .play)
-        HStack(spacing: 0) {
-          Button("⏪") {
+        HStack(spacing: 8) {
+          Button {
             guard let player
             else {
               return
             }
             scanLocation = Double(player.previous())
-          }.disabled(control != .play)
-          Button("⏩") {
+          } label: {
+            Text("⏪")
+              .overlay(.blue.blendMode(.overlay))
+          }
+          .buttonStyle(.borderless)
+          .disabled(control != .play)
+          Button {
             guard let player
             else {
               return
             }
             scanLocation = Double(player.next())
-          }.disabled(control != .play)
-          Button("🔍") {
+          } label: {
+            Text("⏩")
+              .overlay(.blue.blendMode(.overlay))
+          }
+          .buttonStyle(.borderless)
+          .disabled(control != .play)
+          Button {
             popoverFrame = recorder?.currentFrame ?? player?.currentFrame
-          }.padding(.leading)
-            .popover(item: $popoverFrame) { frame in
-              TextEditor(text: .constant(frame.state.formattedJSON))
-                .frame(width: 600, height: 800)
-                .font(.body.monospaced())
-                .padding()
-            }
+          } label: {
+            Text("🔍")
+          }
+          .buttonStyle(.borderless)
+          .padding(.leading)
+          .popover(item: $popoverFrame) { frame in
+            TextEditor(text: .constant(frame.state.formattedJSON))
+              .frame(idealWidth: 600, maxWidth: .infinity)
+              .font(.footnote.monospaced())
+          }
         }
       }
+      .padding()
+      .background(.background)
+      .cornerRadius(16)
+      .shadow(color: .black.opacity(0.1), radius: 4)
+      .padding()
     }
-    .padding()
+    .background(.thickMaterial)
     .onReceive(
       scanReporter
         .flatMapLatest(producer: { $0 })

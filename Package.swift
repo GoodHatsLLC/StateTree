@@ -66,7 +66,7 @@ let package = Package(
   name: "StateTree",
   platforms: [
     .macOS(.v12),
-    .iOS(.v14),
+    .iOS(.v15),
   ],
   products: [
     .library(
