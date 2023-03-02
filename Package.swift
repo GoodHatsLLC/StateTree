@@ -101,10 +101,6 @@ let package = Package(
       url: "https://github.com/apple/swift-collections.git",
       branch: "release/1.1"
     ),
-    .package(
-      url: "https://github.com/apple/swift-crypto.git",
-      "2.2.4" ..< "3.0.0"
-    ),
   ],
   targets: [
     .target(
@@ -113,7 +109,6 @@ let package = Package(
         "Disposable",
         "Emitter",
         "TreeState",
-        .product(name: "Crypto", package: "swift-crypto"),
         .product(name: "HeapModule", package: "swift-collections"),
       ],
       swiftSettings: Build.globalSwiftSettings

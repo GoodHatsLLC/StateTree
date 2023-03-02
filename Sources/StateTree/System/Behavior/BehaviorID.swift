@@ -1,4 +1,3 @@
-import Crypto
 import Foundation
 
 public struct BehaviorID: TreeState, CustomStringConvertible {
@@ -12,9 +11,7 @@ public struct BehaviorID: TreeState, CustomStringConvertible {
     custom: String?
   ) {
     let info = "\(fileID):\(line):\(column)"
-    let data = Data(info.utf8)
-    let hash = SHA256.hash(data: data)
-    let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+    let hashString = SimpleHash.hash(Data(info.utf8))
     #if DEBUG
     self.debugInfo = info
     #endif
@@ -29,7 +26,7 @@ public struct BehaviorID: TreeState, CustomStringConvertible {
   /// If not an id is generated based on the source code location of the behavior's initialization.
   ///
   /// > Warning: An auto-generated BehaviorID will be stable only as long as the code around
-  /// it remains fully unchanged. Prefer custom identifiers when testing Behavior identity.
+  /// it remains unchanged. Prefer custom identifiers when testing Behavior identity.
   public let id: String
 
   public var description: String {

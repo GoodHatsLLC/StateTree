@@ -4,7 +4,7 @@ import XCTest
 
 final class TreeActorTests: XCTestCase {
 
-  func test_printActor() throws {
+  func _test_printActor() throws {
     switch TreeActor.type {
     case .custom:
       Swift.print("🛠️ - @CustomActor aliased as @TreeActor")
