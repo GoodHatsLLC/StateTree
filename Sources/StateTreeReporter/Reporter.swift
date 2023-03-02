@@ -25,20 +25,23 @@ final class Reporter<N: Node> {
 
   let scope: NodeScope<N>
 
-  func onChange(of _: NodeID, _ callback: @escaping @Sendable @TreeActor () -> Void) {
-    onChangeSubscribers.append(callback)
+  func onChange(
+    owner: ObjectIdentifier,
+    _ callback: @escaping @Sendable @TreeActor () -> Void
+  ) {
+    onChangeSubscribers[owner, default: []].append(callback)
   }
 
   func onStop(
+    owner: ObjectIdentifier,
     _ callback: @escaping @Sendable @TreeActor () -> Void
   ) {
-    onStopSubscribers.append(callback)
+    onStopSubscribers[owner, default: []].append(callback)
   }
 
-  func onCancel(
-    _ callback: @escaping @Sendable @TreeActor () -> Void
-  ) {
-    onCancelSubscribers.append(callback)
+  func unregister(subscriber: ObjectIdentifier) {
+    onChangeSubscribers.removeValue(forKey: subscriber)
+    onStopSubscribers.removeValue(forKey: subscriber)
   }
 
   func start() -> AnyDisposable {
@@ -47,7 +50,7 @@ final class Reporter<N: Node> {
       .updateEmitter
       .subscribe { value in
         if Task.isCancelled {
-          for sub in self.onCancelSubscribers {
+          for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
             sub()
           }
           self.disposable?.dispose()
@@ -55,15 +58,15 @@ final class Reporter<N: Node> {
         }
         switch value {
         case .stopped(let id) where self.id == id:
-          for sub in self.onStopSubscribers {
+          for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
             sub()
           }
-          self.onStopSubscribers = []
-          self.onChangeSubscribers = []
+          self.onStopSubscribers = [:]
+          self.onChangeSubscribers = [:]
           self.disposable?.dispose()
         case .updated(let id) where self.id == id,
              .started(let id) where self.id == id:
-          for sub in self.onChangeSubscribers {
+          for sub in self.onChangeSubscribers.values.flatMap({ $0 }) {
             sub()
           }
         case _:
@@ -75,9 +78,8 @@ final class Reporter<N: Node> {
   // MARK: Private
 
   private let id: NodeID
-  private var onChangeSubscribers: [@Sendable @TreeActor () -> Void] = []
-  private var onStopSubscribers: [@Sendable @TreeActor () -> Void] = []
-  private var onCancelSubscribers: [@Sendable @TreeActor () -> Void] = []
+  private var onChangeSubscribers: [ObjectIdentifier: [@Sendable @TreeActor () -> Void]] = [:]
+  private var onStopSubscribers: [ObjectIdentifier: [@Sendable @TreeActor () -> Void]] = [:]
   private var disposable: AnyDisposable?
   private var runtime: Runtime?
 

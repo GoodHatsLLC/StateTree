@@ -32,8 +32,8 @@ final class NodeContextAccess: XCTestCase {
     XCTAssertEqual(nil, context.$union3.a?.v1)
     XCTAssertEqual(nil, context.$union3.b?.v1)
     XCTAssertEqual(55, context.$union3.c?.v1)
-    XCTAssertEqual(55, context.$list[1]?.v1)
-    XCTAssertEqual(nil, context.$list[100]?.v1)
+    XCTAssertEqual(55, context.$list[1].v1)
+    XCTAssertEqual(nil, context.$list.at(index: 100)?.v1)
     XCTAssertNotNil(context.$union3.c?.$v1 is Binding<Int>)
   }
 }

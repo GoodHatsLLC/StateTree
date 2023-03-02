@@ -11,7 +11,7 @@ public final class ReportedTree<N: Node> {
 
   // MARK: Lifecycle
 
-  init(tree: Tree = .main, root: N) {
+  public init(tree: Tree = .main, root: N) {
     self.reportedFunc = {
       let life = try tree.start(root: root)
       return (.init(projectedValue: .init(tree: life)), life)
@@ -39,10 +39,7 @@ public final class ReportedTree<N: Node> {
     self.lifetime = lifetime
     subject.emit(.value(reported))
     let asyncValue = AsyncThrowingValue<Void>()
-    reported.onCancel {
-      asyncValue.resolve(())
-    }
-    reported.onStop {
+    reported.onStop(subscriber: self) {
       asyncValue.resolve(())
     }
     return try await withTaskCancellationHandler {

@@ -36,27 +36,30 @@ public struct Reported<N: Node>: NodeAccess {
   }
 
   public func onChange(
+    subscriber: AnyObject,
     _ callback: @escaping @Sendable @TreeActor () -> Void
   ) {
     reporter
       .onChange(
-        of: nodeID,
+        owner: ObjectIdentifier(subscriber),
         callback
       )
   }
 
-  // MARK: Internal
-
-  func onCancel(
+  public func onStop(
+    subscriber: AnyObject,
     _ callback: @escaping @Sendable @TreeActor () -> Void
   ) {
-    reporter.onCancel(callback)
+    reporter.onStop(
+      owner: ObjectIdentifier(subscriber),
+      callback
+    )
   }
 
-  func onStop(
-    _ callback: @escaping @Sendable @TreeActor () -> Void
-  ) {
-    reporter.onStop(callback)
+  public func unregister(subscriber: AnyObject) {
+    reporter.unregister(
+      subscriber: ObjectIdentifier(subscriber)
+    )
   }
 
   // MARK: Private

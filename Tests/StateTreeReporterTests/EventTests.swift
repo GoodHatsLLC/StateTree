@@ -16,7 +16,7 @@ final class EventTests: XCTestCase {
     }
     @Reported(projectedValue: try await tree.root) var root
     var rootDidStopCount = 0
-    $root.onStop {
+    $root.onStop(subscriber: self) {
       rootDidStopCount += 1
     }
     XCTAssertEqual(rootDidStopCount, 0)
@@ -32,7 +32,7 @@ final class EventTests: XCTestCase {
     }
     @Reported(projectedValue: try await tree.root) var root
     var rootFireCount = 0
-    $root.onChange {
+    $root.onChange(subscriber: self) {
       rootFireCount += 1
     }
     XCTAssert(rootFireCount == 0)
@@ -54,21 +54,21 @@ final class EventTests: XCTestCase {
     var emitCount = 0
 
     if let single = $root.$single {
-      single.onChange {
+      single.onChange(subscriber: self) {
         emitCount += 1
       }
     }
 
-    $root.$union2.b?.onChange {
+    $root.$union2.b?.onChange(subscriber: self) {
       emitCount += 1
     }
 
-    $root.$union3.c?.onChange {
+    $root.$union3.c?.onChange(subscriber: self) {
       emitCount += 1
     }
 
     for node in $root.$list {
-      node.onChange {
+      node.onChange(subscriber: self) {
         emitCount += 1
       }
     }
