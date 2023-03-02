@@ -1,6 +1,8 @@
 // MARK: Map
 extension Projection {
 
+  // MARK: Public
+
   public func map<Downstream>(
     downwards: @escaping (
       _ upstream: Value
@@ -45,7 +47,9 @@ extension Projection {
     )
   }
 
-  public func map<Downstream>(
+  // MARK: Internal
+
+  func map<Downstream>(
     _ map: some Transformer<Value, Downstream>
   ) -> Projection<Downstream> {
     .init(

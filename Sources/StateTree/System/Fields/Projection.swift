@@ -20,8 +20,7 @@ struct ProjectionConnection {
 
 /// A `Projection` references a value whose source of truth is elsewhere.
 ///
-/// The underlying referenced value is represented by an ``Accessor`` which
-/// is back by either:
+/// The underlying referenced value is backed by either:
 /// - A ``Value`` owned by a ``Node`` which is an ancestor to the one
 ///   containing the `Projection`.
 /// - Or more rarely a closure capturing a value.

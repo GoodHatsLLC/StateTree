@@ -1,7 +1,7 @@
 import TreeState
 
 /// An ``Accessor`` which refers to `@Value` field in a tree
-public struct ValueFieldAccessor<Value: TreeState>: Accessor {
+struct ValueFieldAccessor<Value: TreeState>: Accessor {
 
   // MARK: Lifecycle
 
@@ -21,9 +21,9 @@ public struct ValueFieldAccessor<Value: TreeState>: Accessor {
     }
   }
 
-  // MARK: Public
+  // MARK: Internal
 
-  @TreeActor public var value: Value {
+  @TreeActor var value: Value {
     get {
       getFunc()
     }
@@ -31,8 +31,6 @@ public struct ValueFieldAccessor<Value: TreeState>: Accessor {
       setFunc(newValue)
     }
   }
-
-  // MARK: Internal
 
   @TreeActor var source: ProjectionSource {
     sourceFunc()

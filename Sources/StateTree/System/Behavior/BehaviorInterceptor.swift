@@ -2,13 +2,12 @@
 
 /// `BehaviorInterceptor` mocks side effects for testing.
 ///
-/// It allows for intercepting and replacing ``Behaviors`` run in a ``Scope``.
+/// It allows for intercepting and replacing ``Behavior``s run in a ``Scope``.
 ///
-/// Behavior interceptors are registered with the ``Tree`` in
-/// ``Tree/start(root:from:dependencies:interceptors:)``.
+/// Behavior interceptors are registered when starting the ``Tree``.
 ///
 /// A ``Behavior`` is triggered via a ``Scope`` '`run`' function (e.g.
-/// ``Scope/run(fileID:line:column:_:_:)-3vypn``).
+/// ``Scope/run(fileID:line:column:_:_:)-63046``).
 ///
 /// The behavior's will be 'intercepted' and its ``Behavior/Action`` substituted for a registered
 /// interceptor if:

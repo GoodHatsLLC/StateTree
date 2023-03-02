@@ -1,5 +1,5 @@
 import XCTest
-@testable import TreeState
+@_spi(Implementation) @testable import TreeState
 
 class AnyEncodableTests: XCTestCase {
 

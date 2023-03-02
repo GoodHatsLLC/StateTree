@@ -19,9 +19,11 @@ public final class BehaviorHost {
   // MARK: Public
 
   /// Whether to track ``Behavior`` instances created during the runtime.
-  /// ``track`` is required to enable `await`ing ``Tree/resolvedBehaviors()`` in unit tests.
+  /// ``BehaviorTracking/track`` is required to enable `await`ing
+  /// ``TreeLifetime/resolvedBehaviors()`` in unit tests.
   public enum BehaviorTracking {
-    /// Enable `await`ing ``Tree/resolvedBehaviors()`` in unit tests by retaining handles to created
+    /// Enable `await`ing ``TreeLifetime/resolvedBehaviors()`` in unit tests by retaining handles to
+    /// created
     /// ``Behavior``s.
     case track
     /// Don't track ``Behavior`` handles.

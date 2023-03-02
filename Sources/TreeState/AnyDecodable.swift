@@ -34,6 +34,7 @@ import Foundation
 ///    let decoder = JSONDecoder()
 ///    let dictionary = try! decoder.decode([String: AnyDecodable].self, from: json)
 @frozen
+@_spi(Implementation)
 public struct AnyDecodable: Decodable {
   public let value: Any
 

@@ -1,5 +1,5 @@
 import Foundation
-import TreeState
+@_spi(Implementation) import TreeState
 
 // MARK: - FieldDecoder
 

@@ -7,16 +7,16 @@
 /// * A transformer is 'upstream first', it primarily represents a mapping
 /// from the upstream value to the downstream value.
 /// * A transformer may only be valid when the upstream is in certain
-/// states—and should be checked with ``isValid()``.
+/// states—and should be checked with ``isValid(given:)``.
 /// * A transformer may contain stored state creating a 'memory' of
 /// previous values as needed to fulfil its contract — as such transformers
 /// should not be reused across different contexts.
 ///
-/// > Warning: ``Transformer.value`` should not be called on an
+/// > Warning: ``Transformer/value`` should not be called on an
 /// invalid `Transformer`. The  property's behavior is undefined
 /// when the `Transformer` is invalid and the program may fault.
 @TreeActor
-public protocol Transformer<Upstream, Downstream> {
+protocol Transformer<Upstream, Downstream> {
   associatedtype Upstream
   associatedtype Downstream
 
@@ -30,7 +30,7 @@ public protocol Transformer<Upstream, Downstream> {
 public enum Transform { }
 
 extension Transformer {
-  public func erase() -> AnyTransformer<Upstream, Downstream> {
+  func erase() -> AnyTransformer<Upstream, Downstream> {
     AnyTransformer(
       downwards: { self.downstream(from: $0) },
       upwards: { self.upstream(from: $0) },

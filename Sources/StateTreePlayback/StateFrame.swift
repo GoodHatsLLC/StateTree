@@ -5,7 +5,7 @@ import StateTree
 
 /// A snapshot of the StateTree at a moment in time
 ///
-/// `StateFrames` contain the ``TreeStateRecord`` state and metadata
+/// `StateFrames` contain the `TreeStateRecord` state and metadata
 public struct StateFrame: TreeState, Identifiable {
   public let id: UUID
   public let state: TreeStateRecord

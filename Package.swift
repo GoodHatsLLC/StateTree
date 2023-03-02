@@ -101,6 +101,10 @@ let package = Package(
       url: "https://github.com/apple/swift-collections.git",
       branch: "release/1.1"
     ),
+    .package(
+      url: "https://github.com/apple/swift-docc-plugin",
+      from: "1.1.0"
+    ),
   ],
   targets: [
     .target(

@@ -32,6 +32,7 @@ import Foundation
 ///    let encoder = JSONEncoder()
 ///    let json = try! encoder.encode(dictionary)
 @frozen
+@_spi(Implementation)
 public struct AnyEncodable: Encodable {
   public let value: Any
 

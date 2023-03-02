@@ -3,7 +3,7 @@ import TreeState
 
 // MARK: - NodeID
 
-/// The runtime identifier  representing a ``Node`` and its ``AnyScope``.
+/// The runtime identifier  representing a ``Node``.
 ///
 /// String serialised `NodeIDs` are formatted as `<UUID>:<Optional Metadata>`
 public struct NodeID: TreeState, LosslessStringConvertible, Comparable {
