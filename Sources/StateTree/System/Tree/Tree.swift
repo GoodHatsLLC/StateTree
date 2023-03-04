@@ -65,7 +65,7 @@ extension Tree {
     let lifetime = TreeLifetime(
       runtime: runtime,
       root: scope,
-      rootID: scope.id,
+      rootID: scope.nid,
       disposable: disposable
     )
     return lifetime

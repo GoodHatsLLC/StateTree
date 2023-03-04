@@ -49,9 +49,9 @@ public struct Value<Wrapped: TreeState>: ValueField {
 
   // MARK: Lifecycle
 
-  @TreeActor
   public init(wrappedValue: Wrapped) {
     self.initial = wrappedValue
+    self.cache = .init(value: wrappedValue)
   }
 
   // MARK: Public
@@ -60,23 +60,27 @@ public struct Value<Wrapped: TreeState>: ValueField {
 
   @TreeActor public var wrappedValue: Wrapped {
     get {
-      access
+      let value = access
         .treeValue?
-        .getValue(as: Wrapped.self) ?? initial
+        .getValue(as: Wrapped.self) ?? cache.value
+      cache.value = value
+      return value
     }
     nonmutating set {
+      cache.value = newValue
       access
         .treeValue?
         .setValue(to: newValue)
     }
   }
 
-  @TreeActor public var projectedValue: Projection<Wrapped> {
+  public var projectedValue: Projection<Wrapped> {
     .init(
       ValueFieldAccessor(
         access: access,
         initial: initial
-      )
+      ),
+      initial: initial
     )
   }
 
@@ -89,5 +93,9 @@ public struct Value<Wrapped: TreeState>: ValueField {
   var anyInitial: any TreeState {
     initial
   }
+
+  // MARK: Private
+
+  private let cache: Ref<Wrapped>
 
 }

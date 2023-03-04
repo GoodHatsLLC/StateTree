@@ -16,7 +16,7 @@ public final class NodeScope<N: Node> {
     self.activeRules = nil
     self.dependencies = dependencies
     self.depth = depth
-    self.id = node.id
+    self.nid = node.id
     self.initialCapture = node.initialCapture
     self.initialRecord = node.nodeRecord
     self.node = node.node
@@ -28,7 +28,7 @@ public final class NodeScope<N: Node> {
   // MARK: Public
 
   public var node: N
-  public let id: NodeID
+  public let nid: NodeID
   public let uniqueIdentity: String?
   public let depth: Int
   public let dependencies: DependencyValues
@@ -60,11 +60,11 @@ public final class NodeScope<N: Node> {
 
 extension NodeScope: Hashable {
   public nonisolated static func == (lhs: NodeScope<N>, rhs: NodeScope<N>) -> Bool {
-    lhs.id == rhs.id
+    lhs.nid == rhs.nid
   }
 
   public nonisolated func hash(into hasher: inout Hasher) {
-    hasher.combine(id)
+    hasher.combine(nid)
   }
 }
 
@@ -75,7 +75,7 @@ extension NodeScope: Scoped {
   // MARK: Public
 
   public var isActive: Bool { activeRules != nil }
-  public var childScopes: [AnyScope] { runtime.childScopes(of: id) }
+  public var childScopes: [AnyScope] { runtime.childScopes(of: nid) }
 
   public var behaviorResolutions: [BehaviorResolution] {
     get async {
@@ -152,7 +152,7 @@ extension NodeScope: Scoped {
   }
 
   private func disconnect() {
-    runtime.disconnect(scopeID: id)
+    runtime.disconnect(scopeID: nid)
   }
 
   private func update() throws {
@@ -191,7 +191,7 @@ extension NodeScope: Scoped {
   private func handleIntents() {
     guard
       let intent = runtime.activeIntent,
-      id == intent.lastNodeID || ancestors.contains(intent.lastNodeID)
+      nid == intent.lastNodeID || ancestors.contains(intent.lastNodeID)
     else {
       return
     }
@@ -208,11 +208,11 @@ extension NodeScope: Scoped {
 
       switch firstResolution {
       case .application(let act):
-        runtime.recordIntentScopeDependency(id)
+        runtime.recordIntentScopeDependency(nid)
         runtime.popIntentStep()
         act()
       case .pending:
-        runtime.recordIntentScopeDependency(id)
+        runtime.recordIntentScopeDependency(nid)
       case .inapplicable:
         assertionFailure("this state should be filtered out")
       }
@@ -242,7 +242,7 @@ extension NodeScope {
   }
 
   public var ancestors: [NodeID] {
-    runtime.ancestors(of: id) ?? []
+    runtime.ancestors(of: nid) ?? []
   }
 
   public func applyIntent(_ intent: Intent) -> StepResolutionInternal {
@@ -479,7 +479,13 @@ extension NodeScope {
 
   public var record: NodeRecord {
     runtime
-      .getRecord(id) ?? initialRecord
+      .getRecord(nid) ?? initialRecord
   }
 
 }
+
+//
+//
+// extension NodeScope: Identifiable where N: Identifiable {
+//
+// }

@@ -17,7 +17,7 @@ final class Reporter<N: Node> {
 
   init(scope: NodeScope<N>) {
     self.scope = scope
-    self.id = scope.id
+    self.id = scope.nid
     self.disposable = start()
   }
 

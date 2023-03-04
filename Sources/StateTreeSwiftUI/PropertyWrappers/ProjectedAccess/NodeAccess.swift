@@ -15,10 +15,12 @@ extension NodeAccess {
   public subscript<R: SingleRouterType>(dynamicMember dynamicMember: KeyPath<N, Route<R>>)
     -> TreeNode<R.Value>? where R.Value: Node
   {
-    let route = scope.node[keyPath: dynamicMember]
-    return SingleRouterAccess(route: route)
-      .resolve()
-      .map { TreeNode(scope: $0) }
+    get {
+      let route = scope.node[keyPath: dynamicMember]
+      return SingleRouterAccess(route: route)
+        .resolve()
+    }
+    nonmutating set { }
   }
 
   public subscript<
@@ -27,8 +29,11 @@ extension NodeAccess {
   >(dynamicMember dynamicMember: KeyPath<N, Route<UnionRouter<Union.Two<A, B>>>>)
     -> Union2RouterAccess<A, B>
   {
-    let route = scope.node[keyPath: dynamicMember]
-    return Union2RouterAccess(route: route)
+    get {
+      let route = scope.node[keyPath: dynamicMember]
+      return Union2RouterAccess(route: route)
+    }
+    nonmutating set { }
   }
 
   public subscript<
@@ -38,23 +43,41 @@ extension NodeAccess {
   >(dynamicMember dynamicMember: KeyPath<N, Route<UnionRouter<Union.Three<A, B, C>>>>)
     -> Union3RouterAccess<A, B, C>
   {
-    let route = scope.node[keyPath: dynamicMember]
-    return Union3RouterAccess(route: route)
+    get {
+      let route = scope.node[keyPath: dynamicMember]
+      return Union3RouterAccess(route: route)
+    }
+    nonmutating set { }
   }
 
   public subscript<Child: Node>(dynamicMember dynamicMember: KeyPath<N, Route<ListRouter<Child>>>)
     -> ListRouterAccess<Child>
   {
-    let route = scope.node[keyPath: dynamicMember]
-    return ListRouterAccess(route: route)
+    get {
+      let route = scope.node[keyPath: dynamicMember]
+      return ListRouterAccess(route: route)
+    }
+    nonmutating set { }
   }
 
   public subscript<T>(dynamicMember dynamicMember: KeyPath<N, Projection<T>>) -> Binding<T> {
-    scope.node[keyPath: dynamicMember].binding()
+    get {
+      scope.node[keyPath: dynamicMember].binding()
+    }
+    nonmutating set { }
   }
 
-  public subscript<T>(dynamicMember dynamicMember: KeyPath<N, T>) -> T {
-    scope.node[keyPath: dynamicMember]
+  public subscript<T>(dynamicMember dynamicMember: WritableKeyPath<N, T>) -> T {
+    get {
+      scope.node[keyPath: dynamicMember]
+    }
+    nonmutating set {
+      // This copy avoids an exclusive access error as the eventual
+      // update calls use node.rules.
+      var node = scope.node
+      node[keyPath: dynamicMember] = newValue
+      scope.node = node
+    }
   }
 
 }

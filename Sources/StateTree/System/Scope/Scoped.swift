@@ -22,7 +22,7 @@ public enum ExternalRequirement {
 @_spi(Implementation)
 public protocol Scoped<N>: Scoping, Hashable {
   associatedtype N: Node
-  nonisolated var id: NodeID { get }
+  nonisolated var nid: NodeID { get }
   nonisolated var uniqueIdentity: String? { get }
   nonisolated var depth: Int { get }
   var node: N { get nonmutating set }

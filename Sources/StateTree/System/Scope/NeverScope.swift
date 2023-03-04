@@ -26,7 +26,7 @@ struct NeverScope: Scoped {
   typealias N = NeverNode
   struct NeverScopeError: Error { }
 
-  var id: NodeID {
+  var nid: NodeID {
     assertionFailure("NeverScope should never be invoked")
     return .invalid
   }

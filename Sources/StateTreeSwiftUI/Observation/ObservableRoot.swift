@@ -25,12 +25,14 @@ public final class ObservableRoot<N: Node>: ObservableObject {
 
   let life: TreeLifetime<N>
 
-  func start() -> AnyDisposable {
+  func start(didStop: @escaping () -> Void) -> AnyDisposable {
     life
       .runtime
       .updateEmitter
       .compactMap { [id = life.rootID] change in
         switch change {
+        case .started(let updatedID) where updatedID == id:
+          return ChangeEvent.update
         case .updated(let updatedID) where updatedID == id:
           return ChangeEvent.update
         case .stopped(let stoppedID) where stoppedID == id:
@@ -39,18 +41,15 @@ public final class ObservableRoot<N: Node>: ObservableObject {
           return nil
         }
       }
-      .subscribe { change in
+      .subscribe { [weak self] change in
         switch change {
         case .update:
-          self.objectWillChange.send()
+          self?.objectWillChange.send()
         case .stop:
-          self.disposable?.dispose()
+          didStop()
+          self?.life.dispose()
         }
       }
   }
-
-  // MARK: Private
-
-  private var disposable: AnyDisposable?
 
 }

@@ -15,6 +15,10 @@ public struct NodeCapture: Equatable {
       }
   }
 
+  var uniqueIdentity: String? {
+    anyNode.uniqueIdentity
+  }
+
   let anyNode: any Node
   let fields: [FieldCapture]
 }

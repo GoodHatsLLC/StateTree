@@ -19,10 +19,8 @@ enum SimpleHash {
       two = (one + two) % 65536
     }
     let result = (two << 16) | one
-    // repeated bytes on the end avoid == base64 padding.
-    let shifts = [24, 16, 8, 0] + [0, 8]
+    let shifts = [24, 16, 8, 0]
     let bytes = shifts.map { UInt8(truncatingIfNeeded: result >> $0) }
-    let data = Data(bytes)
-    return data.base64EncodedString()
+    return bytes.map { String(format: "%02x", $0) }.joined()
   }
 }

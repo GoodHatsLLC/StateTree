@@ -76,7 +76,7 @@ extension Runtime {
     } else {
       updateRoutedNodes(
         at: .system,
-        to: .single(.init(id: scope.id))
+        to: .single(.init(id: scope.nid))
       )
     }
 
@@ -88,7 +88,7 @@ extension Runtime {
       if let root {
         register(
           changes: .init(
-            removedScopes: [root.id]
+            removedScopes: [root.nid]
           )
         )
       }
@@ -244,28 +244,29 @@ extension Runtime {
 
   func transaction<T>(_ action: () throws -> T) rethrows -> T {
     let validState = state.snapshot()
-    var changes: [NodeChange] = []
     assert(transactionCount >= 0)
     transactionCount += 1
     let value = try action()
-    if transactionCount == 1 {
-      do {
-        changes = try updateScopes(
-          lastValidState: validState
-        )
-      } catch {
-        runtimeWarning(
-          "An update failed and couldn't be reverted leaving the tree in an illegal state."
-        )
-        assertionFailure(
-          error.localizedDescription
-        )
-      }
+    guard transactionCount == 1
+    else {
+      transactionCount -= 1
+      return value
     }
-    assert(transactionCount > 0)
-    transactionCount -= 1
-    if transactionCount == 0 {
+    defer {
+      transactionCount -= 1
+    }
+    do {
+      let changes = try updateScopes(
+        lastValidState: validState
+      )
       emitUpdates(changes: changes)
+    } catch {
+      runtimeWarning(
+        "An update failed and couldn't be reverted leaving the tree in an illegal state."
+      )
+      assertionFailure(
+        error.localizedDescription
+      )
     }
     return value
   }
@@ -347,11 +348,6 @@ extension Runtime {
         ) == true
       {
         register(
-          metadata: .init(
-            value: field
-          )
-        )
-        register(
           changes: .init(
             updatedValues: [field]
           )
@@ -367,10 +363,6 @@ extension Runtime {
   func set(state newState: TreeStateRecord) throws {
     let changes = try apply(state: newState)
     emitUpdates(changes: changes)
-  }
-
-  func register(metadata: StateChangeMetadata?) {
-    changeManager?.register(metadata: metadata)
   }
 
   // MARK: Private

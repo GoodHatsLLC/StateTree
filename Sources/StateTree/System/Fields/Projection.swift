@@ -34,14 +34,13 @@ struct ProjectionConnection {
 /// dependency—but that's likely to be a costly process with a poor end-user  uexperience.
 @propertyWrapper
 @dynamicMemberLookup
-public struct Projection<Value: TreeState>: ProjectionField, Accessor {
+public struct Projection<Value: Equatable>: ProjectionField, Accessor {
 
   // MARK: Lifecycle
 
-  @TreeActor
-  init(_ access: some Accessor<Value>) {
+  nonisolated init(_ access: some Accessor<Value>, initial: Value) {
     self.access = access
-    self.inner = Inner(cache: access.value)
+    self.inner = Inner(cache: initial)
   }
 
   // MARK: Public
@@ -70,7 +69,6 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
         return
       }
       if access.value != newValue {
-        registerWriteMetadata()
         access.value = newValue
         inner.cache = newValue
       }
@@ -85,7 +83,10 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
   }
 
   public var projectedValue: Projection<Value> {
-    .init(self)
+    get {
+      .init(self, initial: value)
+    }
+    nonmutating set { }
   }
 
   // MARK: Internal
@@ -105,7 +106,7 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
 
   // MARK: Private
 
-  @TreeActor private final class Inner {
+  private final class Inner {
 
     // MARK: Lifecycle
 
@@ -122,27 +123,5 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
   private let inner: Inner
 
   private let access: any Accessor<Value>
-
-  /// Register the projection's metadata with the ``Runtime`` providing
-  /// diagnostic information in case of circular update dependencies.
-  private func registerWriteMetadata() {
-    guard let projectionContext
-    else {
-      // An intermediate Projection not assigned to a Node field will not
-      // have a projectionContext set by StateTree.
-
-      // TODO: Consider weird cases:
-      // - projections used directly as instance variables
-      // - projections used only within an initialiser.
-      return
-    }
-    projectionContext.runtime
-      .register(
-        metadata: .init(
-          projection: projectionContext.fieldID,
-          source: source
-        )
-      )
-  }
 
 }

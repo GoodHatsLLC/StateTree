@@ -12,13 +12,13 @@ public struct Reported<N: Node>: NodeAccess {
 
   init(reporter: Reporter<N>) {
     self.reporter = reporter
-    self.nodeID = reporter.scope.id
+    self.nodeID = reporter.scope.nid
   }
 
   public init(tree: TreeLifetime<N>) {
     let reporter = Reporter(root: tree)
     self.reporter = reporter
-    self.nodeID = reporter.scope.id
+    self.nodeID = reporter.scope.nid
   }
 
   // MARK: Public

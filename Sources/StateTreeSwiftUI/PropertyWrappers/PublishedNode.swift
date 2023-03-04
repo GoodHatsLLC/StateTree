@@ -57,7 +57,7 @@ public final class PublishedNode<N: Node> {
           .projectedValue
           .runtime
           .updateEmitter
-          .compactMap { [nodeID = storage.projectedValue.id] change in
+          .compactMap { [nodeID = storage.projectedValue.nid] change in
             switch change {
             case .updated(let updatedID) where updatedID == nodeID:
               return ChangeEvent.update

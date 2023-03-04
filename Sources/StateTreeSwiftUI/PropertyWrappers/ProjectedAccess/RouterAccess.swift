@@ -16,7 +16,7 @@ struct SingleRouterAccess<R: SingleRouterType, Child: Node> where R.Value == Chi
 }
 
 extension SingleRouterAccess {
-  func resolve<Child: Node>() -> NodeScope<Child>? {
+  func resolve<Child: Node>() -> TreeNode<Child>? {
     guard
       let (idSet, _) = route._routed,
       let id = idSet.ids.first,
@@ -26,7 +26,7 @@ extension SingleRouterAccess {
       return nil
     }
     assert(idSet.ids.count == 1)
-    return scope
+    return .init(scope: scope)
   }
 }
 
@@ -34,11 +34,32 @@ extension SingleRouterAccess {
 
 @MainActor
 public struct Union2RouterAccess<A: Node, B: Node> {
+
+  // MARK: Lifecycle
+
   init(route: Route<UnionRouter<Union.Two<A, B>>>) {
     self.route = route
   }
 
-  private let route: Route<UnionRouter<Union.Two<A, B>>>
+  // MARK: Public
+
+  public var a: TreeNode<A>? {
+    get {
+      (anyScope?.underlying as? NodeScope<A>)
+        .map { TreeNode(scope: $0) }
+    }
+    nonmutating set { }
+  }
+
+  public var b: TreeNode<B>? {
+    get {
+      (anyScope?.underlying as? NodeScope<B>)
+        .map { TreeNode(scope: $0) }
+    }
+    nonmutating set { }
+  }
+
+  // MARK: Internal
 
   var anyScope: AnyScope? {
     guard
@@ -52,15 +73,10 @@ public struct Union2RouterAccess<A: Node, B: Node> {
     return anyScope
   }
 
-  public var a: TreeNode<A>? {
-    (anyScope?.underlying as? NodeScope<A>)
-      .map { TreeNode(scope: $0) }
-  }
+  // MARK: Private
 
-  public var b: TreeNode<B>? {
-    (anyScope?.underlying as? NodeScope<B>)
-      .map { TreeNode(scope: $0) }
-  }
+  private let route: Route<UnionRouter<Union.Two<A, B>>>
+
 }
 
 // MARK: - Union3RouterAccess
@@ -77,18 +93,26 @@ public struct Union3RouterAccess<A: Node, B: Node, C: Node> {
   // MARK: Public
 
   public var a: TreeNode<A>? {
-    (anyScope?.underlying as? NodeScope<A>)
-      .map { TreeNode(scope: $0) }
+    get {
+      (anyScope?.underlying as? NodeScope<A>)
+        .map { TreeNode(scope: $0) }
+    }
+    nonmutating set { }
   }
 
   public var b: TreeNode<B>? {
-    (anyScope?.underlying as? NodeScope<B>)
-      .map { TreeNode(scope: $0) }
+    get {
+      (anyScope?.underlying as? NodeScope<B>)
+        .map { TreeNode(scope: $0) }
+    } nonmutating set { }
   }
 
   public var c: TreeNode<C>? {
-    (anyScope?.underlying as? NodeScope<C>)
-      .map { TreeNode(scope: $0) }
+    get {
+      (anyScope?.underlying as? NodeScope<C>)
+        .map { TreeNode(scope: $0) }
+    }
+    nonmutating set { }
   }
 
   // MARK: Internal

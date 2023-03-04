@@ -76,22 +76,22 @@ extension ListRouter: RouterType {
     with context: RuleContext
   ) throws {
     let currentScopes = context.scope.childScopes
-    let currentIDs = Set(currentScopes.compactMap { $0.node as? N }.map(\.id))
+    let currentIDs = Set(currentScopes.compactMap(\.uniqueIdentity))
     let captures = new.capture()
-    let newIDs = Set(captures.compactMap { $0.anyNode as? N }.map(\.id))
+    let newIDs = Set(captures.compactMap(\.uniqueIdentity))
 
     let continuedIdentifiableNodeIDs = currentIDs.intersection(newIDs)
     let startedIdentifiableNodeIDs = newIDs.subtracting(currentIDs)
 
     let continuedScopes = currentScopes.filter {
-      guard let id = ($0.node as? N)?.id
+      guard let id = $0.uniqueIdentity
       else {
         return false
       }
       return continuedIdentifiableNodeIDs.contains(id)
     }
     let newCaptures = captures.filter {
-      guard let id = ($0.anyNode as? N)?.id
+      guard let id = $0.uniqueIdentity
       else {
         return false
       }
@@ -182,7 +182,7 @@ extension ListRouter {
     scopes
       .map { scope in
         if case .some(let identity) = scope.uniqueIdentity {
-          return (uniqueIdentity: identity, nodeID: scope.id)
+          return (uniqueIdentity: identity, nodeID: scope.nid)
         } else {
           assertionFailure(
             "scopes without custom identities should not be present in ListRouter"

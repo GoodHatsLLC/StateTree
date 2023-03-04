@@ -14,7 +14,6 @@ final class ObservableNode<N: Node>: ObservableObject {
 
   init(scope: NodeScope<N>) {
     self.scope = scope
-    self.disposable = start()
   }
 
   // MARK: Internal
@@ -26,12 +25,14 @@ final class ObservableNode<N: Node>: ObservableObject {
 
   let scope: NodeScope<N>
 
-  func start() -> AnyDisposable {
+  func start(didStop: @escaping () -> Void) -> AnyDisposable {
     scope
       .runtime
       .updateEmitter
-      .compactMap { [id = scope.id] change in
+      .compactMap { [id = scope.nid] change in
         switch change {
+        case .started(let updatedID) where updatedID == id:
+          return ChangeEvent.update
         case .updated(let updatedID) where updatedID == id:
           return ChangeEvent.update
         case .stopped(let stoppedID) where stoppedID == id:
@@ -40,12 +41,12 @@ final class ObservableNode<N: Node>: ObservableObject {
           return nil
         }
       }
-      .subscribe { change in
+      .subscribe { [weak self] change in
         switch change {
         case .update:
-          self.objectWillChange.send()
+          self?.objectWillChange.send()
         case .stop:
-          self.disposable?.dispose()
+          didStop()
         }
       }
   }

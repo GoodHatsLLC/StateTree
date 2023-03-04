@@ -16,7 +16,7 @@ public struct StateTreeInfo {
   // MARK: Public
 
   public var rootID: NodeID? {
-    runtime.root?.id
+    runtime.root?.nid
   }
 
   public var nodeIDs: [NodeID] {

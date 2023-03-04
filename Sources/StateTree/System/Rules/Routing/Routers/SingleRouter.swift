@@ -165,7 +165,7 @@ extension SingleRouter: SingleRouterType {
     runtime.updateRoutedNodes(
       at: fieldID,
       to: .single(
-        .init(id: scope.id)
+        .init(id: scope.nid)
       )
     )
     assert(scope == currentScope(on: runtime))

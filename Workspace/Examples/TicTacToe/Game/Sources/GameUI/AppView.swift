@@ -8,13 +8,11 @@ public struct AppView: View {
 
   public init() { }
 
-  public var body: some View {
-    PlaybackView(root: $root) { node in
-      RootView(model: node)
-    }
-  }
-
   @TreeRoot var root = AppModel()
+
+  public var body: some View {
+    RootView(model: $root.root)
+  }
 
 }
 

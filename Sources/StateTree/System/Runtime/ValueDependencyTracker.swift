@@ -10,7 +10,7 @@ struct ValueDependencyTracker {
   @TreeActor
   mutating func addValueDependencies(for scope: AnyScope) {
     let valueFieldDependencies = scope.valueFieldDependencies
-    let nodeID = scope.id
+    let nodeID = scope.nid
     nodeToValueDependency[nodeID] = valueFieldDependencies
     for valueDependency in valueFieldDependencies {
       valueDependencyToNodes[valueDependency, default: []]
@@ -21,7 +21,7 @@ struct ValueDependencyTracker {
   @TreeActor
   mutating func removeValueDependencies(for scope: AnyScope) {
     let valueFieldDependencies = scope.valueFieldDependencies
-    let nodeID = scope.id
+    let nodeID = scope.nid
     nodeToValueDependency
       .removeValue(forKey: nodeID)
     for valueDependency in valueFieldDependencies {

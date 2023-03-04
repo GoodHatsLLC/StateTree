@@ -27,7 +27,7 @@ final class RetentionTests: XCTestCase {
       var maybeScope: NodeScope<DeepNode>? = rootScope
       while let scope = maybeScope {
         scopes.append(.init(ref: scope))
-        maybeScope = scope.childScopes.filter { $0.id != scope.id }.first?
+        maybeScope = scope.childScopes.filter { $0.nid != scope.nid }.first?
           .underlying as? NodeScope<DeepNode>
       }
 

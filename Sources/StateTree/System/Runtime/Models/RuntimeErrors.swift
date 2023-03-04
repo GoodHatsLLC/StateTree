@@ -7,7 +7,7 @@ struct InTransactionError: Error { }
 public struct InternalStateInconsistency: Error, CustomStringConvertible {
   init(state: TreeStateRecord, scopes: [AnyScope]) {
     self.state = state
-    let scopeIDs = Set(scopes.map(\.id))
+    let scopeIDs = Set(scopes.map(\.nid))
     let nodeIDs = Set(state.nodeIDs)
     self.stateDiscrepancy = nodeIDs.subtracting(scopeIDs).sorted()
     self.scopeDiscrepancy = scopeIDs.subtracting(nodeIDs).sorted()

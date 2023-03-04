@@ -1,11 +1,11 @@
 extension Projection {
 
   public static func stored<V>(_ value: V) -> Projection<V> {
-    .init(StoredAccess(value))
+    .init(StoredAccess(value), initial: value)
   }
 
   public static func constant<V>(_ value: V) -> Projection<V> {
-    .init(ConstantAccess(value))
+    .init(ConstantAccess(value), initial: value)
   }
 
   public static func captured<V>(
@@ -16,7 +16,8 @@ extension Projection {
       CapturedAccess(
         getter: getter,
         setter: setter
-      )
+      ),
+      initial: getter()
     )
   }
 

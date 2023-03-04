@@ -11,6 +11,9 @@
       location = "group:Examples/TicTacToe/TicTacToe.xcodeproj">
    </FileRef>
    <FileRef
+      location = "group:Examples/ToDo/ToDo.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:Examples/Counter/Counter.xcodeproj">
    </FileRef>
    <FileRef

@@ -9,7 +9,7 @@ public struct AnyScope: Hashable {
   // MARK: Lifecycle
 
   nonisolated init<N: Node>(scope: some Scoped<N>) {
-    self.id = scope.id
+    self.nid = scope.nid
     self.depth = scope.depth
     self.underlying = scope
     self.uniqueIdentity = scope.uniqueIdentity
@@ -27,21 +27,22 @@ public struct AnyScope: Hashable {
 
   public let underlying: any Scoped
 
+  public let uniqueIdentity: String?
+
   public nonisolated static func == (lhs: AnyScope, rhs: AnyScope) -> Bool {
-    lhs.id == rhs.id
+    lhs.nid == rhs.nid
   }
 
   public nonisolated func hash(into hasher: inout Hasher) {
-    hasher.combine(id)
+    hasher.combine(nid)
   }
 
   public func own(_ disposable: some Disposable) { underlying.own(disposable) }
 
   // MARK: Internal
 
-  let id: NodeID
+  let nid: NodeID
   let depth: Int
-  let uniqueIdentity: String?
   let getNodeFunc: @TreeActor () -> any Node
   let setNodeFunc: @TreeActor (any Node) -> Void
 }

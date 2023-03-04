@@ -186,7 +186,7 @@ extension UnionRouter: RouterType {
     on runtime: Runtime
   ) throws {
     let scope = try initialized.connect()
-    let id = scope.id
+    let id = scope.nid
     let idSet = union.idSet(from: id)
     runtime.updateRoutedNodes(at: fieldID, to: idSet)
   }

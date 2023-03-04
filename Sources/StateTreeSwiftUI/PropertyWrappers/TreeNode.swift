@@ -5,7 +5,6 @@ import SwiftUI
 
 // MARK: - TreeNode
 
-@MainActor
 @propertyWrapper
 @dynamicMemberLookup
 public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
@@ -15,19 +14,25 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
   init(scope: NodeScope<N>) {
     self.scope = scope
     self.observed = .init(scope: scope)
+    self.disposable = observed.start { [disposable] in
+      disposable?.dispose()
+    }
   }
 
   public init(projectedValue: TreeNode<N>) {
     self.scope = projectedValue.scope
     self.observed = .init(scope: projectedValue.scope)
+    self.disposable = observed.start { [disposable] in
+      disposable?.dispose()
+    }
   }
 
   // MARK: Public
 
   @_spi(Implementation) public let scope: NodeScope<N>
 
-  public var id: NodeID {
-    scope.id
+  public var nid: NodeID {
+    scope.nid
   }
 
   public var wrappedValue: N {
@@ -50,4 +55,16 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
     scope.node
   }
 
+  // MARK: Private
+
+  private var disposable: AnyDisposable?
+}
+
+// MARK: Identifiable
+
+extension TreeNode: Identifiable where N: Identifiable {
+  public var id: String {
+    assert(scope.node.uniqueIdentity != nil)
+    return scope.node.uniqueIdentity ?? scope.nid.description
+  }
 }

@@ -77,11 +77,6 @@ final class StateApplier: ChangeManager {
     stagedChanges.put(changes)
   }
 
-  func register(metadata _: StateChangeMetadata?) {
-    // NO-OP: there shouldn't be any risk of circular dependencies during
-    // state application as lifecycle events aren't triggered.
-  }
-
   // MARK: Private
 
   private let state: StateStorage
@@ -119,7 +114,7 @@ final class StateApplier: ChangeManager {
     var priorityQueue = PriorityQueue(
       type: AnyScope.self,
       prioritizeBy: \.depth,
-      uniqueBy: \.id
+      uniqueBy: \.nid
     )
 
     var updateCollector = UpdateCollector()
@@ -219,7 +214,7 @@ final class StateApplier: ChangeManager {
         if scope.isFinished {
           priorityQueue.popMax()
           // add to record for external consumers
-          updateCollector.stopped(id: scope.id, depth: scope.depth)
+          updateCollector.stopped(id: scope.nid, depth: scope.depth)
           continue
         }
         // Take the next finalization action to
@@ -237,7 +232,7 @@ final class StateApplier: ChangeManager {
         if scope.isClean, let scope = priorityQueue.popMin() {
           // add to record for external consumers
           // avoid overwriting '.start' — as that's more informative.
-          updateCollector.updated(id: scope.id, depth: scope.depth)
+          updateCollector.updated(id: scope.nid, depth: scope.depth)
           continue
         }
         // Forward if required.
@@ -257,7 +252,7 @@ final class StateApplier: ChangeManager {
       {
         if scope.isFinished {
           priorityQueue.popMin()
-          updateCollector.stopped(id: scope.id, depth: scope.depth)
+          updateCollector.stopped(id: scope.nid, depth: scope.depth)
           continue
         }
         try scope.stepTowardsFinished()

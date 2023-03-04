@@ -9,7 +9,7 @@ public protocol Node {
 }
 
 extension Node {
-  nonisolated var uniqueIdentity: String? {
+  public nonisolated var uniqueIdentity: String? {
     guard let identifiableNode = self as? any Identifiable
     else {
       return nil

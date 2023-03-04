@@ -16,7 +16,11 @@ final class ScopeStorage {
   }
 
   var scopes: [AnyScope] {
-    scopeMap.values.sorted(by: { $0.id < $1.id })
+    scopeMap.values.sorted(by: { lhs, rhs in
+      lhs.depth != rhs.depth
+        ? lhs.depth < rhs.depth
+        : lhs.nid < rhs.nid
+    })
   }
 
   var scopeIDs: [NodeID] {
@@ -28,7 +32,7 @@ final class ScopeStorage {
   }
 
   func remove(_ scope: AnyScope) {
-    remove(id: scope.id)
+    remove(id: scope.nid)
   }
 
   func remove(id: NodeID) {
@@ -39,8 +43,8 @@ final class ScopeStorage {
   }
 
   func insert(_ scope: AnyScope) {
-    assert(scopeMap[scope.id] == nil)
-    scopeMap[scope.id] = scope
+    assert(scopeMap[scope.nid] == nil)
+    scopeMap[scope.nid] = scope
     valueDependencyTracker
       .addValueDependencies(for: scope)
   }
@@ -62,7 +66,7 @@ final class ScopeStorage {
   }
 
   func contains(_ scope: AnyScope) -> Bool {
-    scopeMap[scope.id] != nil
+    scopeMap[scope.nid] != nil
   }
 
   func matching<N: Node>(node _: N) -> [AnyScope] {
@@ -91,7 +95,7 @@ final class ScopeStorage {
 
     return scope
       .childScopes
-      .filter { $0.id != scope.id }
+      .filter { $0.nid != scope.nid }
       .map { depth(from: $0) }
       .max()
       .map { $0 + 1 } ?? 0

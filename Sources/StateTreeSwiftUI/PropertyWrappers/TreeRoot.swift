@@ -2,7 +2,6 @@
 import StateTreePlayback
 import SwiftUI
 
-@MainActor
 @propertyWrapper
 @dynamicMemberLookup
 public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
@@ -12,45 +11,53 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
   public init(
     wrappedValue: N
   ) {
-    _state = .init(wrappedValue: ObservableRoot(root: wrappedValue))
+    let root = ObservableRoot(root: wrappedValue)
+    _observed = .init(wrappedValue: root)
   }
 
   // MARK: Public
 
   @_spi(Implementation) public var scope: NodeScope<N> {
-    state.life.root
+    observed.life.root
   }
 
   public var tree: Tree {
-    state.life.tree
+    observed.life.tree
   }
 
-  @_spi(Implementation) public var id: NodeID {
-    state.life.root.id
+  @_spi(Implementation) public var nid: NodeID {
+    observed.life.root.nid
   }
 
   public var wrappedValue: N {
-    state.life.root.node
+    observed.life.root.node
   }
 
-  public var projectedValue: TreeRoot<N> {
+  public var root: TreeNode<N> {
+    TreeNode(scope: scope)
+  }
+
+  public var projectedValue: Self {
     self
   }
 
   public func life() -> TreeLifetime<N> {
-    state.life
+    observed.life
   }
 
   public func player(frames: [StateFrame]) throws -> Player<N> {
-    try state.life.player(frames: frames)
+    try observed.life.player(frames: frames)
   }
 
   public func recorder(frames: [StateFrame] = []) -> Recorder<N> {
-    state.life.recorder(frames: frames)
+    observed.life.recorder(frames: frames)
   }
 
   // MARK: Internal
 
-  @StateObject var state: ObservableRoot<N>
+  @StateObject var observed: ObservableRoot<N>
 
+  // MARK: Private
+
+  private var disposable: AnyDisposable?
 }
