@@ -114,6 +114,7 @@ let package = Package(
         "Emitter",
         "TreeState",
         .product(name: "HeapModule", package: "swift-collections"),
+        .product(name: "OrderedCollections", package: "swift-collections"),
       ],
       swiftSettings: Build.globalSwiftSettings
     ),

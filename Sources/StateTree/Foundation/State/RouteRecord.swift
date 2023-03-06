@@ -1,3 +1,4 @@
+import OrderedCollections
 /// The underlying StateTree representation of the identity of a routed node.
 ///
 /// `@Route` (``Route``) fields may be of different types such as:
@@ -55,14 +56,14 @@ public enum RouteRecord: TreeState {
 
     // MARK: Lifecycle
 
-    init(ids: [String: NodeID]) {
-      self.ids = ids
+    init(idMap: OrderedDictionary<String, NodeID>) {
+      self.idMap = idMap
     }
 
     public init(from decoder: Decoder) throws {
       let container = try decoder.singleValueContainer()
       let pairs = try container.decode([IDPair].self)
-      self.ids = pairs.reduce(into: [String: NodeID]()) { partialResult, pair in
+      self.idMap = pairs.reduce(into: OrderedDictionary<String, NodeID>()) { partialResult, pair in
         partialResult[pair.key] = pair.val
       }
     }
@@ -71,7 +72,7 @@ public enum RouteRecord: TreeState {
 
     public func encode(to encoder: Encoder) throws {
       var container = encoder.singleValueContainer()
-      let pairs = ids.map { IDPair(key: $0.key, val: $0.value) }.sorted(by: { $0.key < $1.key })
+      let pairs = idMap.map { IDPair(key: $0.key, val: $0.value) }.sorted(by: { $0.key < $1.key })
       try container.encode(pairs)
     }
 
@@ -82,26 +83,17 @@ public enum RouteRecord: TreeState {
       var val: NodeID
     }
 
-    enum CodingKeys: CodingKey {
-      case ids
+    var nodeIDs: [NodeID] {
+      Array(idMap.values)
     }
 
     func nodeID(matching route: RouteSource) -> NodeID? {
-      route.identity.flatMap { ids[$0] }
-    }
-
-    func sortedNodeIDs() -> [NodeID] {
-      ids
-        .map { (sortKey: $0.key, value: $0.value) }
-        .sorted { lhs, rhs in
-          lhs.sortKey < rhs.sortKey
-        }
-        .map(\.value)
+      route.identity.flatMap { idMap[$0] }
     }
 
     // MARK: Private
 
-    private var ids: [String: NodeID]
+    private var idMap: OrderedDictionary<String, NodeID>
   }
 
   public var ids: [NodeID] {
@@ -109,7 +101,7 @@ public enum RouteRecord: TreeState {
     case .single(let single): return (single?.id).map { [$0] } ?? []
     case .union2(let union2): return (union2?.id).map { [$0] } ?? []
     case .union3(let union3): return (union3?.id).map { [$0] } ?? []
-    case .list(let list): return list?.sortedNodeIDs() ?? []
+    case .list(let list): return list?.nodeIDs ?? []
     }
   }
 

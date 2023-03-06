@@ -1,4 +1,5 @@
 import Disposable
+import OrderedCollections
 
 // MARK: - ListRouter
 
@@ -28,13 +29,9 @@ extension ListRouter: RouterType {
     else {
       return nil
     }
-    return list
-      .sortedNodeIDs()
+    return list.nodeIDs
       .compactMap { id in
-        try? runtime.getScope(for: id)
-      }
-      .compactMap { scope in
-        scope.node as? N
+        try? runtime.getScope(for: id).node as? N
       }
   }
 
@@ -174,11 +171,11 @@ extension ListRouter {
     let identityMap = idMap(for: scopes)
     runtime.updateRoutedNodes(
       at: fieldID,
-      to: .list(.init(ids: identityMap))
+      to: .list(.init(idMap: identityMap))
     )
   }
 
-  private func idMap(for scopes: [AnyScope]) -> [String: NodeID] {
+  private func idMap(for scopes: [AnyScope]) -> OrderedDictionary<String, NodeID> {
     scopes
       .map { scope in
         if case .some(let identity) = scope.uniqueIdentity {
@@ -191,7 +188,7 @@ extension ListRouter {
         }
       }
       .compactMap { $0 }
-      .reduce(into: [:]) { acc, curr in
+      .reduce(into: OrderedDictionary<String, NodeID>()) { acc, curr in
         acc[curr.uniqueIdentity] = curr.nodeID
       }
   }
@@ -209,7 +206,7 @@ extension ListRouter {
     let identityMap = idMap(for: scopes)
     runtime.updateRoutedNodes(
       at: fieldID,
-      to: .list(.init(ids: identityMap))
+      to: .list(.init(idMap: identityMap))
     )
   }
 

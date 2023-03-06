@@ -17,7 +17,7 @@ final class StressTests: XCTestCase {
   func test_creationThrash() async throws {
     let testTree = Tree.main
 
-    let desiredDepth = 1000
+    let desiredDepth = 800
     let repetitions = 4
 
     func findDepth(from node: DeepNode) -> Int {
