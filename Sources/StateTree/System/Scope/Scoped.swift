@@ -23,7 +23,7 @@ public enum ExternalRequirement {
 public protocol Scoped<N>: Scoping, Hashable {
   associatedtype N: Node
   nonisolated var nid: NodeID { get }
-  nonisolated var uniqueIdentity: String? { get }
+  nonisolated var cuid: CUID? { get }
   nonisolated var depth: Int { get }
   var node: N { get nonmutating set }
   var requiresReadying: Bool { get }

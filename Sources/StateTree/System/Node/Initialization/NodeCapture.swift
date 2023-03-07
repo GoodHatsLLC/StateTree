@@ -15,8 +15,8 @@ public struct NodeCapture: Equatable {
       }
   }
 
-  var uniqueIdentity: String? {
-    anyNode.uniqueIdentity
+  var cuid: CUID? {
+    anyNode.cuid
   }
 
   let anyNode: any Node

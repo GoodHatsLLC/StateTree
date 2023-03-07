@@ -95,7 +95,6 @@ final class ScopeStorage {
 
     return scope
       .childScopes
-      .filter { $0.nid != scope.nid }
       .map { depth(from: $0) }
       .max()
       .map { $0 + 1 } ?? 0

@@ -164,7 +164,7 @@ extension Union {
     {
       let routeID = RouteSource(
         fieldID: fieldID,
-        identity: uninitialized.capture.anyNode.uniqueIdentity,
+        identity: uninitialized.capture.anyNode.cuid,
         type: .union3
       )
       switch self {

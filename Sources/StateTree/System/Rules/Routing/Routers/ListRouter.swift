@@ -73,22 +73,22 @@ extension ListRouter: RouterType {
     with context: RuleContext
   ) throws {
     let currentScopes = context.scope.childScopes
-    let currentIDs = Set(currentScopes.compactMap(\.uniqueIdentity))
+    let currentIDs = Set(currentScopes.compactMap(\.cuid))
     let captures = new.capture()
-    let newIDs = Set(captures.compactMap(\.uniqueIdentity))
+    let newIDs = Set(captures.compactMap(\.cuid))
 
     let continuedIdentifiableNodeIDs = currentIDs.intersection(newIDs)
     let startedIdentifiableNodeIDs = newIDs.subtracting(currentIDs)
 
     let continuedScopes = currentScopes.filter {
-      guard let id = $0.uniqueIdentity
+      guard let id = $0.cuid
       else {
         return false
       }
       return continuedIdentifiableNodeIDs.contains(id)
     }
     let newCaptures = captures.filter {
-      guard let id = $0.uniqueIdentity
+      guard let id = $0.cuid
       else {
         return false
       }
@@ -153,7 +153,7 @@ extension ListRouter {
           dependencies: context.dependencies,
           on: .init(
             fieldID: fieldID,
-            identity: uninitialized.capture.anyNode.uniqueIdentity,
+            identity: uninitialized.capture.anyNode.cuid,
             type: .list
           )
         )
@@ -168,29 +168,10 @@ extension ListRouter {
     let scopes = try initializedList.map { initialized in
       try initialized.connect().erase()
     }
-    let identityMap = idMap(for: scopes)
     runtime.updateRoutedNodes(
       at: fieldID,
-      to: .list(.init(idMap: identityMap))
+      to: .list(.init(nodeIDs: scopes.map(\.nid)))
     )
-  }
-
-  private func idMap(for scopes: [AnyScope]) -> OrderedDictionary<String, NodeID> {
-    scopes
-      .map { scope in
-        if case .some(let identity) = scope.uniqueIdentity {
-          return (uniqueIdentity: identity, nodeID: scope.nid)
-        } else {
-          assertionFailure(
-            "scopes without custom identities should not be present in ListRouter"
-          )
-          return nil
-        }
-      }
-      .compactMap { $0 }
-      .reduce(into: OrderedDictionary<String, NodeID>()) { acc, curr in
-        acc[curr.uniqueIdentity] = curr.nodeID
-      }
   }
 
   @TreeActor
@@ -203,10 +184,9 @@ extension ListRouter {
       try initialized.connect().erase()
     }
     let scopes = newScopes + continuing
-    let identityMap = idMap(for: scopes)
     runtime.updateRoutedNodes(
       at: fieldID,
-      to: .list(.init(idMap: identityMap))
+      to: .list(.init(nodeIDs: scopes.map(\.nid)))
     )
   }
 

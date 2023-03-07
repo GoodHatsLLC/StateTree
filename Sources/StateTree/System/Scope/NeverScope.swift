@@ -36,9 +36,9 @@ struct NeverScope: Scoped {
     return Int.max
   }
 
-  var uniqueIdentity: String? {
+  var cuid: CUID? {
     assertionFailure("NeverScope should never be invoked")
-    return .none
+    return .invalid
   }
 
   var behaviorResolutions: [BehaviorResolution] {

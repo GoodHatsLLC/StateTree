@@ -56,32 +56,43 @@ public enum RouteRecord: TreeState {
 
     // MARK: Lifecycle
 
-    init(idMap: OrderedDictionary<String, NodeID>) {
+    init(nodeIDs: [NodeID]) {
+      self.idMap = Self.identityDict(nodeIDs: nodeIDs)
+    }
+
+    init(idMap: OrderedDictionary<CUID, NodeID>) {
       self.idMap = idMap
     }
 
     public init(from decoder: Decoder) throws {
       let container = try decoder.singleValueContainer()
-      let pairs = try container.decode([IDPair].self)
-      self.idMap = pairs.reduce(into: OrderedDictionary<String, NodeID>()) { partialResult, pair in
-        partialResult[pair.key] = pair.val
-      }
+      let nids = try container.decode([NodeID].self)
+      self.idMap = Self.identityDict(nodeIDs: nids)
     }
 
     // MARK: Public
 
+    public static func identityDict(nodeIDs: [NodeID]) -> OrderedDictionary<CUID, NodeID> {
+      let pairs: [(CUID, NodeID)] = nodeIDs
+        .compactMap { nid in
+          if let cuid = nid.cuid {
+            return (cuid, nid)
+          } else {
+            return nil
+          }
+        }
+      return pairs
+        .reduce(into: OrderedDictionary<CUID, NodeID>()) { acc, curr in
+          acc[curr.0] = curr.1
+        }
+    }
+
     public func encode(to encoder: Encoder) throws {
       var container = encoder.singleValueContainer()
-      let pairs = idMap.map { IDPair(key: $0.key, val: $0.value) }.sorted(by: { $0.key < $1.key })
-      try container.encode(pairs)
+      try container.encode(Array(idMap.values))
     }
 
     // MARK: Internal
-
-    struct IDPair: TreeState {
-      var key: String
-      var val: NodeID
-    }
 
     var nodeIDs: [NodeID] {
       Array(idMap.values)
@@ -93,7 +104,7 @@ public enum RouteRecord: TreeState {
 
     // MARK: Private
 
-    private var idMap: OrderedDictionary<String, NodeID>
+    private var idMap: OrderedDictionary<CUID, NodeID>
   }
 
   public var ids: [NodeID] {

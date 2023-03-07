@@ -18,7 +18,7 @@ final class MemberIDTests: XCTestCase {
     )
     XCTAssertEqual(fieldID.offset, 4)
     XCTAssertEqual(fieldID.type, .value)
-    XCTAssertEqual(fieldID.nodeID.metadata, meta)
+    XCTAssertEqual(fieldID.nodeID.cuid, CUID(meta))
   }
 
   func test_fieldID_nometadata_decoding() throws {
@@ -31,7 +31,7 @@ final class MemberIDTests: XCTestCase {
     )
     XCTAssertEqual(fieldID.offset, 4)
     XCTAssertEqual(fieldID.type, .value)
-    XCTAssertEqual(fieldID.nodeID.metadata, nil)
+    XCTAssertEqual(fieldID.nodeID.cuid, nil)
   }
 
   func test_bad_fieldID() throws {

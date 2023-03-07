@@ -18,7 +18,7 @@ final class NodeIDTests: XCTestCase {
     let nodeID = try XCTUnwrap(NodeID(nodeIDString))
     XCTAssertEqual(nodeID.description, nodeIDString)
     XCTAssertEqual(nodeID.uuid, uuid)
-    XCTAssertEqual(nodeID.metadata, metadata)
+    XCTAssertEqual(nodeID.cuid, CUID(metadata))
   }
 
   func test_nodeID_uuidV4_metadata_encoding() throws {
@@ -28,7 +28,7 @@ final class NodeIDTests: XCTestCase {
     let nodeIDString = "\(uuidString):\(metadata)"
     let nodeID = try XCTUnwrap(NodeID(nodeIDString))
     XCTAssertEqual(nodeID.uuid, uuid)
-    XCTAssertEqual(nodeID.metadata, metadata)
+    XCTAssertEqual(nodeID.cuid, CUID(metadata))
   }
 
   func test_nodeID_noMetadata() throws {
@@ -37,12 +37,12 @@ final class NodeIDTests: XCTestCase {
     let nodeIDString = "\(uuidString):"
     let nodeID = try XCTUnwrap(NodeID(nodeIDString))
     XCTAssertEqual(nodeID.uuid, uuid)
-    XCTAssertNil(nodeID.metadata)
+    XCTAssertNil(nodeID.cuid)
   }
 
   func test_nodeID_emptyMetadata() throws {
     let nodeID = try XCTUnwrap(NodeID("9AD2F770-E559-4B95-8EB4-EDC5ACD1FF39:"))
-    XCTAssertNil(nodeID.metadata)
+    XCTAssertNil(nodeID.cuid)
   }
 
   func test_nodeID_badInputs() throws {

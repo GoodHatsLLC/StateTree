@@ -63,8 +63,8 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
 // MARK: Identifiable
 
 extension TreeNode: Identifiable where N: Identifiable {
-  public var id: String {
-    assert(scope.node.uniqueIdentity != nil)
-    return scope.node.uniqueIdentity ?? scope.nid.description
+  public var id: CUID {
+    assert(scope.node.cuid != nil)
+    return scope.node.cuid ?? .invalid
   }
 }

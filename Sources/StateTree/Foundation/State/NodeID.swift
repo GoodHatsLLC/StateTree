@@ -5,12 +5,12 @@ import TreeState
 
 /// The runtime identifier  representing a ``Node``.
 ///
-/// String serialised `NodeIDs` are formatted as `<UUID>:<Optional Metadata>`
+/// String serialised `NodeIDs` are formatted as `<UUID>:<CUID>`
 public struct NodeID: TreeState, LosslessStringConvertible, Comparable {
 
   // MARK: Lifecycle
 
-  /// Create a `NodeID` from its `String` serialised representation:`<UUID>:<Optional Metadata>`
+  /// Create a `NodeID` from its `String` serialised representation:`<UUID>:<CUID>`
   public init?(_ description: String) {
     let components = description
       .split(
@@ -27,13 +27,12 @@ public struct NodeID: TreeState, LosslessStringConvertible, Comparable {
       return nil
     }
     self.uuid = uuid
-    let metadata = String(components[1])
-    self.metadata = metadata.isEmpty ? nil : metadata
+    self.cuid = CUID(String(components[1]))
   }
 
-  init(uuid: UUID = Self.makeUUID(), metadata: String? = nil) {
+  init(uuid: UUID = Self.makeUUID(), cuid: CUID? = nil) {
     self.uuid = uuid
-    self.metadata = metadata
+    self.cuid = cuid
   }
 
   /// Decode a `NodeID` from a serialised representation.
@@ -52,7 +51,7 @@ public struct NodeID: TreeState, LosslessStringConvertible, Comparable {
   /// The `String` serialised representation of a NodeID following the format
   /// `"<UUID>:<OptionalMetadata>"`
   public var description: String {
-    "\(uuid.description):\(metadata ?? "")"
+    "\(uuid.description):\(cuid?.description ?? "")"
   }
 
   /// `NodeID` ordering is not generally meaningful — but allows for stable ordering in
@@ -91,16 +90,16 @@ public struct NodeID: TreeState, LosslessStringConvertible, Comparable {
   // MARK: Internal
 
   /// A custom invalid `NodeID` which should never be present in serialised output.
-  static let invalid = NodeID(uuid: .min, metadata: "❌")
+  static let invalid = NodeID(uuid: .min, cuid: .invalid)
 
   /// A custom `NodeID` indicating a reference to the StateTree system itself.
-  static let system = NodeID(uuid: .min, metadata: "⚡️")
+  static let system = NodeID(uuid: .min, cuid: .system)
 
   /// A custom `NodeID` identifying the root node.
-  static let root = NodeID(uuid: .max, metadata: "🌳")
+  static let root = NodeID(uuid: .max, cuid: .root)
 
   let uuid: UUID
-  let metadata: String?
+  let cuid: CUID?
 
 }
 

@@ -21,7 +21,7 @@ public final class NodeScope<N: Node> {
     self.initialRecord = node.nodeRecord
     self.node = node.node
     self.runtime = node.runtime
-    self.uniqueIdentity = node.node.uniqueIdentity
+    self.cuid = node.node.cuid
     self.valueFieldDependencies = node.getValueDependencies()
   }
 
@@ -29,7 +29,7 @@ public final class NodeScope<N: Node> {
 
   public var node: N
   public let nid: NodeID
-  public let uniqueIdentity: String?
+  public let cuid: CUID?
   public let depth: Int
   public let dependencies: DependencyValues
   public let valueFieldDependencies: Set<FieldID>

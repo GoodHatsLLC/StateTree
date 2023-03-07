@@ -12,7 +12,7 @@ public struct RouteSource: TreeState, CustomDebugStringConvertible {
   }
 
   public let fieldID: FieldID
-  public let identity: String?
+  public let identity: CUID?
   public let type: RouteType
 
   public var debugDescription: String {

@@ -149,7 +149,7 @@ extension SingleRouter: SingleRouterType {
         dependencies: context.dependencies,
         on: .init(
           fieldID: fieldID,
-          identity: capture.anyNode.uniqueIdentity,
+          identity: capture.anyNode.cuid,
           type: .single
         )
       )

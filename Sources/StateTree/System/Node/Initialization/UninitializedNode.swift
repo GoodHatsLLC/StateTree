@@ -95,7 +95,7 @@ extension UninitializedNode {
   /// Create the node record—the underlying state that can be added to the tree.
   @TreeActor
   private func createRecord(for route: RouteSource) -> NodeRecord {
-    let nodeID = route.nodeID == .system ? .root : NodeID()
+    let nodeID = route.nodeID == .system ? .root : NodeID(cuid: capture.cuid)
 
     let fieldRecords: [FieldRecord] = capture
       .fields
