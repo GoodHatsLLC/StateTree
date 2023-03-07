@@ -42,26 +42,19 @@ public final class Recorder<Root: Node> {
     }
     if frames.isEmpty {
       frames
-        .append(StateFrame(
-          id: UUID(),
-          state: lifetime.snapshot(),
-          date: Date()
-        ))
+        .append(
+          StateFrame(
+            record: lifetime.snapshot()
+          )
+        )
     }
     lifetime
       .updateEmitter
-      .flatMapLatest { [lifetime] _ in lifetime.snapshotEmitter() }
-      .removeDuplicates()
+      .flatMapLatest { [lifetime] _ in lifetime.stateFrameSnapshot() }
       .subscribe { [weak self] snapshot in
         if let self {
           self.frames
-            .append(
-              StateFrame(
-                id: UUID(),
-                state: snapshot,
-                date: Date()
-              )
-            )
+            .append(snapshot)
         }
       }
       .stage(on: stage)

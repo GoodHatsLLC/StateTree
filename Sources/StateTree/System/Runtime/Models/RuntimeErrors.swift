@@ -9,8 +9,8 @@ public struct InternalStateInconsistency: Error, CustomStringConvertible {
     self.state = state
     let scopeIDs = Set(scopes.map(\.nid))
     let nodeIDs = Set(state.nodeIDs)
-    self.stateDiscrepancy = nodeIDs.subtracting(scopeIDs).sorted()
-    self.scopeDiscrepancy = scopeIDs.subtracting(nodeIDs).sorted()
+    self.stateDiscrepancy = Array(nodeIDs.subtracting(scopeIDs))
+    self.scopeDiscrepancy = Array(scopeIDs.subtracting(nodeIDs))
   }
 
   public let state: TreeStateRecord

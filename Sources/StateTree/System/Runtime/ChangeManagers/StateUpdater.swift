@@ -148,11 +148,10 @@ final class StateUpdater: ChangeManager {
       // (Both the scopes containing changed @Value fields
       // and scopes containing @Projection fields derived
       // from them may be affected by the change.)
-
-      // FIXME: this approach is not performant enough.
       let valueChangeDirtiedScopes = changes
         .updatedValues
         .flatMap { field in
+          // N.B. This casts a wide net and triggers needless checks.
           scopes.dependentScopesForValue(id: field)
         }
       // If the source of the change has directly highlighted

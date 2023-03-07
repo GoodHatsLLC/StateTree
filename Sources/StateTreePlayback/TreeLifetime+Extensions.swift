@@ -1,4 +1,5 @@
 import Emitter
+import Foundation
 import StateTree
 
 extension TreeLifetime {
@@ -18,11 +19,15 @@ extension TreeLifetime {
 
   // MARK: Internal
 
-  /// A `nonisolated` snapshot accessor that's can be used in an emitter chain.
-  nonisolated func snapshotEmitter() -> some Emitter<TreeStateRecord> {
-    Emitters.create(TreeStateRecord.self) { emit in
+  /// A `nonisolated` snapshot accessor that can be used in an emitter chain.
+  nonisolated func stateFrameSnapshot() -> some Emitter<StateFrame> {
+    Emitters.create(StateFrame.self) { emit in
       Task { @TreeActor in
-        emit(.value(snapshot()))
+        emit(
+          .value(
+            StateFrame(record: snapshot())
+          )
+        )
         emit(.finished)
       }
     }

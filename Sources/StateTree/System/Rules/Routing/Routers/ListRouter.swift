@@ -31,7 +31,7 @@ extension ListRouter: RouterType {
     }
     return list.nodeIDs
       .compactMap { id in
-        try? runtime.getScope(for: id).node as? N
+        runtime.getNode(id: id) as? N
       }
   }
 

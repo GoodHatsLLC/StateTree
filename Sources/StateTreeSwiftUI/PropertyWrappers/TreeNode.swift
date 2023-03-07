@@ -14,26 +14,19 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
   init(scope: NodeScope<N>) {
     self.scope = scope
     self.observed = .init(scope: scope)
-    self.disposable = observed.start { [disposable] in
-      disposable?.dispose()
-    }
+    self.nid = scope.nid
+    self.cuid = scope.cuid
+    observed.startIfNeeded()
   }
 
   public init(projectedValue: TreeNode<N>) {
-    self.scope = projectedValue.scope
-    self.observed = .init(scope: projectedValue.scope)
-    self.disposable = observed.start { [disposable] in
-      disposable?.dispose()
-    }
+    self = projectedValue
+    observed.startIfNeeded()
   }
 
   // MARK: Public
 
   @_spi(Implementation) public let scope: NodeScope<N>
-
-  public var nid: NodeID {
-    scope.nid
-  }
 
   public var wrappedValue: N {
     scope.node
@@ -44,6 +37,9 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
   }
 
   // MARK: Internal
+
+  let nid: NodeID
+  let cuid: CUID?
 
   @ObservedObject var observed: ObservableNode<N>
 
@@ -64,7 +60,6 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
 
 extension TreeNode: Identifiable where N: Identifiable {
   public var id: CUID {
-    assert(scope.node.cuid != nil)
-    return scope.node.cuid ?? .invalid
+    cuid ?? .invalid
   }
 }

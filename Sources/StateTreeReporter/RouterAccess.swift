@@ -16,7 +16,7 @@ struct SingleRouterAccess<R: SingleRouterType, Child: Node> where R.Value == Chi
 extension SingleRouterAccess {
   func resolve<Child: Node>() -> NodeScope<Child>? {
     guard
-      let (idSet, _) = route._routed,
+      let (idSet, _) = route.current,
       let id = idSet.ids.first,
       let anyScope = try? route.runtime?.getScope(for: id),
       let scope = anyScope.underlying as? NodeScope<Child>
@@ -40,7 +40,7 @@ public struct Union2RouterAccess<A: Node, B: Node> {
 
   var anyScope: AnyScope? {
     guard
-      let (idSet, _) = route._routed,
+      let (idSet, _) = route.current,
       let id = idSet.ids.first,
       let anyScope = try? route.runtime?.getScope(for: id)
     else {
@@ -93,7 +93,7 @@ public struct Union3RouterAccess<A: Node, B: Node, C: Node> {
 
   var anyScope: AnyScope? {
     guard
-      let (idSet, _) = route._routed,
+      let (idSet, _) = route.current,
       let id = idSet.ids.first,
       let anyScope = try? route.runtime?.getScope(for: id)
     else {
@@ -121,7 +121,7 @@ public struct ListRouterAccess<N: Node> where N: Identifiable {
 
   public func at(index: Int) -> Reported<N>? {
     guard
-      let (idSet, _) = route._routed,
+      let (idSet, _) = route.current,
       idSet.ids.count > index,
       let anyScope = try? route.runtime?.getScope(for: idSet.ids[index])
     else {
@@ -132,7 +132,7 @@ public struct ListRouterAccess<N: Node> where N: Identifiable {
   }
 
   public var count: Int {
-    if let (idSet, _) = route._routed {
+    if let (idSet, _) = route.current {
       return idSet.ids.count
     } else {
       return 0

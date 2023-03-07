@@ -11,8 +11,8 @@ public struct AppView: View {
   @TreeRoot var root = AppModel()
 
   public var body: some View {
-    PlaybackView(root: $root) { _ in
-      RootView(model: $root.root)
+    PlaybackView(root: $root) { node in
+      RootView(model: node)
     }
   }
 
@@ -21,8 +21,6 @@ public struct AppView: View {
 // MARK: - AppView_Previews
 
 struct AppView_Previews: PreviewProvider {
-
-//  @PreviewNode static var gameInfo = AppModel()
 
   static var previews: some View {
     AppView()

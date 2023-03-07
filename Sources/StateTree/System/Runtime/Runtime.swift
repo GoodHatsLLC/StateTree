@@ -42,7 +42,7 @@ public final class Runtime {
   private var transactionCount: Int = 0
   private var updates: TreeChanges = .none
   private var changeManager: (any ChangeManager)?
-
+  private var nodeCache: [NodeID: any Node] = [:]
 }
 
 // MARK: Lifecycle
@@ -184,6 +184,8 @@ extension Runtime {
 // MARK: Public
 extension Runtime {
 
+  // MARK: Public
+
   public var _info: StateTreeInfo {
     StateTreeInfo(
       runtime: self,
@@ -212,6 +214,16 @@ extension Runtime {
     } else {
       throw NodeNotFoundError()
     }
+  }
+
+  // MARK: Internal
+
+  func getNode(id: NodeID) -> (any Node)? {
+    nodeCache[id] ?? {
+      let node = try? getScope(for: id).node
+      nodeCache[id] = node
+      return node
+    }()
   }
 
 }
@@ -279,6 +291,7 @@ extension Runtime {
   }
 
   func disconnect(scopeID: NodeID) {
+    nodeCache.removeValue(forKey: scopeID)
     scopes.remove(id: scopeID)
     state.removeRecord(scopeID)
   }

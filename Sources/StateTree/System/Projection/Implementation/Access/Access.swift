@@ -10,7 +10,3 @@ protocol Accessor<WrappedValue> {
   func isValid() -> Bool
   var source: ProjectionSource { get }
 }
-
-// MARK: - Access
-
-enum Access { }

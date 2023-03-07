@@ -1,5 +1,5 @@
 import Disposable
-
+import OrderedCollections
 // MARK: - ScopeStorage
 
 @TreeActor
@@ -16,15 +16,11 @@ final class ScopeStorage {
   }
 
   var scopes: [AnyScope] {
-    scopeMap.values.sorted(by: { lhs, rhs in
-      lhs.depth != rhs.depth
-        ? lhs.depth < rhs.depth
-        : lhs.nid < rhs.nid
-    })
+    scopeMap.values.elements
   }
 
   var scopeIDs: [NodeID] {
-    scopeMap.keys.sorted()
+    scopeMap.keys.elements
   }
 
   var isEmpty: Bool {
@@ -102,7 +98,7 @@ final class ScopeStorage {
 
   // MARK: Private
 
-  private var scopeMap: [NodeID: AnyScope] = [:]
+  private var scopeMap: OrderedDictionary<NodeID, AnyScope> = [:]
   private var valueDependencyTracker: ValueDependencyTracker = .init()
 
 }

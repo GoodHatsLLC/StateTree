@@ -3,7 +3,7 @@ import StateTree
 
 public struct AppModel: Node {
 
-  public init() { }
+  public nonisolated init() { }
 
   @Value var authentication: Authentication?
   @Route(GameInfoModel.self) public var loggedIn

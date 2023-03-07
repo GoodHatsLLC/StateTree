@@ -35,20 +35,34 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
         .allowsHitTesting(control == .record)
       Spacer()
       HStack {
-        HStack(spacing: 8) {
+        HStack(spacing: 1.su) {
           Button {
             control = .record
           } label: {
-            Text("▶️")
-              .overlay(.blue.blendMode(control == .record ? .screen : .overlay))
+            Text("⏺️")
+              .font(.title)
+              .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                  .foregroundColor(.red)
+                  .blendMode(.color)
+                  .padding(2)
+                  .opacity(control == .record ? 1 : 0.6)
+              )
           }
           .buttonStyle(.borderless)
           .disabled(control == .record)
           Button {
             control = .play
           } label: {
-            Text("⏺️")
-              .overlay(.blue.blendMode(control == .play ? .screen : .overlay))
+            Text("▶️")
+              .font(.title)
+              .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                  .foregroundColor(.green)
+                  .blendMode(.color)
+                  .padding(2)
+                  .opacity(control == .play ? 1 : 0.3)
+              )
           }
           .buttonStyle(.borderless)
           .disabled(control == .play)
@@ -64,7 +78,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
         .animation(.default.speed(0.5), value: frameRange)
         .frame(maxWidth: .infinity)
         .disabled(control != .play)
-        HStack(spacing: 8) {
+        HStack(spacing: 1.su) {
           Button {
             guard let player
             else {
@@ -73,7 +87,13 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
             scanLocation = Double(player.previous())
           } label: {
             Text("⏪")
-              .overlay(.blue.blendMode(.overlay))
+              .font(.title)
+              .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                  .foregroundColor(control == .play ? .blue : .gray)
+                  .blendMode(.color)
+                  .padding(2)
+              )
           }
           .buttonStyle(.borderless)
           .disabled(control != .play)
@@ -85,7 +105,13 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
             scanLocation = Double(player.next())
           } label: {
             Text("⏩")
-              .overlay(.blue.blendMode(.overlay))
+              .font(.title)
+              .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                  .foregroundColor(control == .play ? .blue : .gray)
+                  .blendMode(.color)
+                  .padding(2)
+              )
           }
           .buttonStyle(.borderless)
           .disabled(control != .play)
@@ -93,6 +119,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
             popoverFrame = recorder?.currentFrame ?? player?.currentFrame
           } label: {
             Text("🔍")
+              .font(.title)
           }
           .buttonStyle(.borderless)
           .padding(.leading)
@@ -105,8 +132,8 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
       }
       .padding()
       .background(.background)
-      .cornerRadius(16)
-      .shadow(color: .black.opacity(0.1), radius: 4)
+      .cornerRadius(2.su)
+      .shadow(color: .black.opacity(0.1), radius: 0.5.su)
       .padding()
     }
     .background(.thickMaterial)

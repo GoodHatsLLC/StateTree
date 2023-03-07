@@ -1,4 +1,5 @@
 import Foundation
+import OrderedCollections
 import TreeState
 
 // MARK: - TreeStateRecord
@@ -15,8 +16,8 @@ public struct TreeStateRecord: TreeState {
     let container = try decoder.container(keyedBy: Keys.self)
     self.activeIntent = try container.decode(ActiveIntent?.self, forKey: .activeIntent)
     let nodes = try container.decode([NodeRecord].self, forKey: .nodes)
-    self.nodes = nodes.reduce(into: [NodeID: NodeRecord]()) { partialResult, record in
-      partialResult[record.id] = record
+    self.nodes = nodes.reduce(into: OrderedDictionary<NodeID, NodeRecord>()) { acc, curr in
+      acc[curr.id] = curr
     }
     if let root = nodes.first {
       self.root = root.id
@@ -59,20 +60,17 @@ public struct TreeStateRecord: TreeState {
   ///
   /// > Tip: ``formattedJSON`` allows for easy readable JSON serialization.
   public func encode(to encoder: Encoder) throws {
-    var container = encoder.container(keyedBy: Keys.self)
-    if
-      let rootID = root,
-      let root = nodes[rootID]
-    {
-      try container
-        .encode(
-          [root] + nodes
-            .values.filter { $0.id != rootID }
-            .sorted(by: { $0.id < $1.id }),
-          forKey: .nodes
-        )
-    }
-    try container.encode(activeIntent, forKey: .activeIntent)
+    var container = encoder.container(
+      keyedBy: Keys.self
+    )
+    try container.encode(
+      nodes.values.elements,
+      forKey: .nodes
+    )
+    try container.encode(
+      activeIntent,
+      forKey: .activeIntent
+    )
   }
 
   // MARK: Internal
@@ -83,8 +81,8 @@ public struct TreeStateRecord: TreeState {
   }
 
   var root: NodeID?
-  var nodes: [NodeID: NodeRecord] = [:]
+  var nodes: OrderedDictionary<NodeID, NodeRecord> = [:]
   var activeIntent: ActiveIntent?
 
-  var nodeIDs: [NodeID] { nodes.keys.sorted() }
+  var nodeIDs: [NodeID] { nodes.keys.elements }
 }

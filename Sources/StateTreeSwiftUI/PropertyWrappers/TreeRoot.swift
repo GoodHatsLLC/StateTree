@@ -9,10 +9,15 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
   // MARK: Lifecycle
 
   public init(
+    tree: Tree = Tree.main,
     wrappedValue: N
   ) {
-    let root = ObservableRoot(root: wrappedValue)
-    _observed = .init(wrappedValue: root)
+    do {
+      let root = try ObservableRoot(tree: tree, root: wrappedValue)
+      _observed = .init(wrappedValue: root)
+    } catch {
+      preconditionFailure(error.localizedDescription)
+    }
   }
 
   // MARK: Public

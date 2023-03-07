@@ -11,3 +11,13 @@ extension Collection {
     }
   }
 }
+
+extension Collection {
+  func at(index: Index) -> Element? {
+    if endIndex > index {
+      return self[index]
+    } else {
+      return nil
+    }
+  }
+}

@@ -25,8 +25,8 @@ final class ObservableNode<N: Node>: ObservableObject {
 
   let scope: NodeScope<N>
 
-  func start(didStop: @escaping () -> Void) -> AnyDisposable {
-    scope
+  func startIfNeeded() {
+    disposable = disposable ?? scope
       .runtime
       .updateEmitter
       .compactMap { [id = scope.nid] change in
@@ -46,7 +46,8 @@ final class ObservableNode<N: Node>: ObservableObject {
         case .update:
           self?.objectWillChange.send()
         case .stop:
-          didStop()
+          self?.disposable?.dispose()
+          self?.disposable = nil
         }
       }
   }

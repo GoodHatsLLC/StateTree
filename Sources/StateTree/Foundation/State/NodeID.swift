@@ -6,7 +6,7 @@ import TreeState
 /// The runtime identifier  representing a ``Node``.
 ///
 /// String serialised `NodeIDs` are formatted as `<UUID>:<CUID>`
-public struct NodeID: TreeState, LosslessStringConvertible, Comparable {
+public struct NodeID: TreeState, LosslessStringConvertible {
 
   // MARK: Lifecycle
 
@@ -52,12 +52,6 @@ public struct NodeID: TreeState, LosslessStringConvertible, Comparable {
   /// `"<UUID>:<OptionalMetadata>"`
   public var description: String {
     "\(uuid.description):\(cuid?.description ?? "")"
-  }
-
-  /// `NodeID` ordering is not generally meaningful — but allows for stable ordering in
-  /// serialization.
-  public static func < (lhs: NodeID, rhs: NodeID) -> Bool {
-    lhs.description < rhs.description
   }
 
   /// Encode a `NodeID` to a serialised representation.

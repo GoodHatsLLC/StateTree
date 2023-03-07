@@ -40,7 +40,14 @@ public struct Route<Router: RouterType>: RouteField {
 
   // MARK: Public
 
-  @TreeActor public var _routed: (idSet: RouteRecord, value: Router.Value)? {
+  @TreeActor public var record: RouteRecord? {
+    connection?
+      .runtime
+      .getRoutedNodeSet(at: connection?.fieldID ?? .invalid)
+  }
+
+  @_spi(Implementation)
+  @TreeActor  public var current: (idSet: RouteRecord, value: Router.Value)? {
     guard let connection
     else {
       return nil
@@ -59,6 +66,21 @@ public struct Route<Router: RouterType>: RouteField {
     return (idSet, value)
   }
 
+  @_spi(Implementation)
+  @TreeActor  public var endIndex: Int {
+    guard
+      let connection,
+      let idSet = connection
+        .runtime
+        .getRoutedNodeSet(at: connection.fieldID)
+    else {
+      return 0
+    }
+    return idSet
+      .ids
+      .endIndex
+  }
+
   /// The current routed ``Node``
   ///
   /// This value is optional — there is only a current routed node if a route
@@ -72,7 +94,7 @@ public struct Route<Router: RouterType>: RouteField {
   /// }
   /// ```
   @TreeActor public var wrappedValue: Router.Value? {
-    _routed?.value
+    current?.value
   }
 
   /// The `Route` itself, used for routing with ``route(to:)-2xtev``
