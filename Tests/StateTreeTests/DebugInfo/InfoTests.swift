@@ -20,7 +20,7 @@ final class InfoTests: XCTestCase {
     XCTAssertFalse(testTree._info?.isActive == true)
 
     let lifetime = try testTree
-      .start(root: DeepNode(depth: 1))
+      .start(root: DeepNode(height: 1))
 
     XCTAssert(testTree._info?.isActive == true)
 
@@ -36,30 +36,65 @@ final class InfoTests: XCTestCase {
     XCTAssertEqual(0, testTree._info?.nodeCount ?? 0)
 
     let lifetime = try testTree
-      .start(root: DeepNode(depth: 3))
+      .start(root: DeepNode(height: 7))
 
-    XCTAssertEqual(4, testTree._info?.depth)
-    XCTAssertEqual(11, testTree._info?.nodeCount)
+    XCTAssertEqual(7, testTree._info?.height)
+    XCTAssertEqual(7, testTree._info?.nodeCount)
 
-    lifetime.rootNode.depth = 3
-    XCTAssertEqual(4, testTree._info?.depth)
-    XCTAssertEqual(11, testTree._info?.nodeCount)
-
-    lifetime.rootNode.depth = 5
-
-    XCTAssertEqual(6, testTree._info?.depth)
-    XCTAssertEqual(17, testTree._info?.nodeCount)
-
-    lifetime.rootNode.depth = 3
-    XCTAssertEqual(4, testTree._info?.depth)
-    XCTAssertEqual(11, testTree._info?.nodeCount)
-
-    lifetime.rootNode.depth = 1
-    XCTAssertEqual(2, testTree._info?.depth)
+    lifetime.rootNode.height = 3
+    XCTAssertEqual(3, testTree._info?.height)
     XCTAssertEqual(3, testTree._info?.nodeCount)
 
+    lifetime.rootNode.height = 2
+    XCTAssertEqual(2, testTree._info?.height)
+    XCTAssertEqual(2, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 10
+
+    XCTAssertEqual(10, testTree._info?.height)
+    XCTAssertEqual(10, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 4
+    XCTAssertEqual(4, testTree._info?.height)
+    XCTAssertEqual(4, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 1
+    XCTAssertEqual(1, testTree._info?.height)
+    XCTAssertEqual(1, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 21
+
+    XCTAssertEqual(21, testTree._info?.height)
+    // height above 10 triggers the 10-long side chain
+    XCTAssertEqual(31, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 10
+
+    XCTAssertEqual(10, testTree._info?.height)
+    XCTAssertEqual(10, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 25
+
+    XCTAssertEqual(25, testTree._info?.height)
+    // height above 10 triggers the 10-long side chain
+    XCTAssertEqual(35, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 22
+
+    XCTAssertEqual(22, testTree._info?.height)
+    XCTAssertEqual(32, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 7
+
+    XCTAssertEqual(7, testTree._info?.height)
+    XCTAssertEqual(7, testTree._info?.nodeCount)
+
+    lifetime.rootNode.height = 2
+    XCTAssertEqual(2, testTree._info?.height)
+    XCTAssertEqual(2, testTree._info?.nodeCount)
+
     lifetime.dispose()
-    XCTAssertEqual(0, testTree._info?.depth ?? 0)
+    XCTAssertEqual(0, testTree._info?.height ?? 0)
     XCTAssertEqual(0, testTree._info?.nodeCount ?? 0)
   }
 
@@ -71,43 +106,37 @@ extension InfoTests {
 
   struct DeepNode: Node {
 
-    @Route(ANode.self) var one
     @Route(BNode.self) var next
-    @Value var depth: Int
+    @Value var height: Int
 
     var rules: some Rules {
-      $one.route(to: ANode())
-      if depth > 0 {
+      if height > 1 {
         $next.route {
-          BNode(parentDepth: $depth)
+          BNode(parentHeight: $height)
         }
       }
     }
   }
 
-  struct ANode: Node {
-    var rules: some Rules { () }
-  }
-
   struct BNode: Node {
 
     @Route(BNode.self) var next
-    @Route(BNode.self) var always
-    @Value var depth: Int = 0
-    @Value var alwaysZero = 0
-    @Projection var parentDepth: Int
+    @Route(BNode.self) var sideChain
+    @Value var sideChainHeight: Int = 11
+    @Value var height: Int = 0
+    @Projection var parentHeight: Int
 
     var rules: some Rules {
-      OnChange(parentDepth) { _ in
-        depth = parentDepth - 1
+      OnChange(parentHeight) { _ in
+        height = parentHeight - 1
       }
-      if depth > 0 {
+      if height > 1 {
         $next.route {
-          BNode(parentDepth: $depth)
+          BNode(parentHeight: $height)
         }
       }
-      if depth > -1 {
-        $always.route(to: BNode(parentDepth: $alwaysZero))
+      if height == 11 {
+        $sideChain.route(to: .init(parentHeight: $sideChainHeight))
       }
     }
   }

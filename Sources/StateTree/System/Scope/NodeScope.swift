@@ -119,6 +119,7 @@ extension NodeScope: Scoped {
   }
 
   public func stop() throws {
+    assert(activeRules != nil)
     activeRules = nil
     for behavior in behaviors {
       behavior.dispose()
@@ -131,16 +132,14 @@ extension NodeScope: Scoped {
   // MARK: Private
 
   private func stopSubtree() throws {
-    if var activeRules {
-      try activeRules.removeRule(with: context)
-      self.activeRules = activeRules
-    }
+    assert(activeRules != nil)
+    try activeRules?.removeRule(with: context)
   }
 
   private func start() throws {
-    var rules = node.rules
-    try rules.applyRule(with: context)
-    activeRules = rules
+    assert(activeRules == nil)
+    activeRules = node.rules
+    try activeRules?.applyRule(with: context)
   }
 
   private func rebuild() throws {
@@ -157,9 +156,8 @@ extension NodeScope: Scoped {
 
   private func update() throws {
     assert(activeRules != nil)
-    let new = node.rules
     try activeRules?.updateRule(
-      from: new,
+      from: node.rules,
       with: context
     )
   }
@@ -169,7 +167,7 @@ extension NodeScope: Scoped {
     _ = activeRules?.act(
       for: .didUpdate,
       with: context
-    ) ?? .init()
+    )
   }
 
   private func willStop() {
@@ -177,7 +175,7 @@ extension NodeScope: Scoped {
     _ = activeRules?.act(
       for: .willStop,
       with: context
-    ) ?? .init()
+    )
   }
 
   private func didStart() {
@@ -185,7 +183,7 @@ extension NodeScope: Scoped {
     _ = activeRules?.act(
       for: .didStart,
       with: context
-    ) ?? .init()
+    )
   }
 
   private func handleIntents() {
@@ -195,6 +193,7 @@ extension NodeScope: Scoped {
     else {
       return
     }
+    assert(activeRules != nil)
     if
       let applicableResolutions = activeRules?
         .act(for: .handleIntent(intent.intent), with: context)
@@ -424,14 +423,6 @@ extension NodeScope {
       }
     }
 
-    var needsStart: Bool {
-      switch self {
-      case .shouldStart: return true
-      case .didStart: return true
-      default: return false
-      }
-    }
-
     var isClean: Bool {
       switch self {
       case .clean: return true
@@ -446,24 +437,70 @@ extension NodeScope {
       }
     }
 
-    mutating func mark(requirement: ExternalRequirement) {
-      if requiresFinishing {
-        // stopping scopes must stop.
+    mutating func triggerUpdate() {
+      switch self {
+      case .clean:
+        self = .shouldUpdate
+      case .finished:
         return
-      } else if requirement == .stop {
-        if needsStart {
-          // skip running any willStop notifications. minimise footprint.
-          self = .finished
-        } else {
-          self = .shouldPrepareStop
-        }
+      case .shouldStart:
+        return
+      case .didStart:
+        self = .shouldUpdate
+      case .shouldUpdate:
+        return
+      case .didUpdate:
+        self = .shouldUpdate
+      case .shouldHandleIntents:
+        self = .shouldUpdate
+      case .shouldBecomeClean:
+        self = .shouldUpdate
+      case .shouldPrepareStop:
+        return
+      case .shouldNotifyStop:
+        return
+      case .shouldStop:
+        return
+      case .rebuild:
+        return
+      }
+    }
+
+    mutating func triggerFinalization() {
+      switch self {
+      case .clean:
+        self = .shouldPrepareStop
+      case .finished:
+        return
+      case .shouldStart:
+        self = .finished
+      case .didStart:
+        self = .shouldPrepareStop
+      case .shouldUpdate:
+        self = .shouldPrepareStop
+      case .didUpdate:
+        self = .shouldPrepareStop
+      case .shouldHandleIntents:
+        self = .shouldPrepareStop
+      case .shouldBecomeClean:
+        self = .shouldPrepareStop
+      case .shouldPrepareStop:
+        return
+      case .shouldNotifyStop:
+        return
+      case .shouldStop:
+        return
+      case .rebuild:
+        self = .shouldPrepareStop
+      }
+    }
+
+    mutating func mark(requirement: ExternalRequirement) {
+      if requirement == .stop {
+        triggerFinalization()
         return
       } else if requirement == .update {
-        // must start before updating,
-        // didStart is a superset of update.
-        if !needsStart {
-          self = .shouldUpdate
-        }
+        triggerUpdate()
       } else if requirement == .rebuild {
         self = .rebuild
       } else {
@@ -483,9 +520,3 @@ extension NodeScope {
   }
 
 }
-
-//
-//
-// extension NodeScope: Identifiable where N: Identifiable {
-//
-// }

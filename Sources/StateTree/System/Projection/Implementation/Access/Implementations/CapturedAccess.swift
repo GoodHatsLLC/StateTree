@@ -19,7 +19,6 @@ struct CapturedAccess<Value>: Accessor {
   }
 
   func isValid() -> Bool { isValidFunc() }
-  func erase() -> AnyAccess<Value> { AnyAccess(self) }
 
   private let getterFunc: () -> Value
   private let setterFunc: (Value) -> Void

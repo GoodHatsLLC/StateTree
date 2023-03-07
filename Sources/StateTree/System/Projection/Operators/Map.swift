@@ -4,6 +4,28 @@ extension Projection {
   // MARK: Public
 
   public func map<Downstream>(
+    _ keyPath: WritableKeyPath<Value, Downstream>,
+    isValid: @escaping (_ upstream: Value) -> Bool = { _ in true }
+  ) -> Projection<Downstream> {
+    .init(
+      upstream: self,
+      map: Transform.Stateless(
+        downwards: { upstream in
+          upstream[keyPath: keyPath]
+        },
+        upwards: { downstream in
+          var value = value
+          value[keyPath: keyPath] = downstream
+          return value
+        },
+        isValid: isValid
+      )
+    )
+  }
+
+  // MARK: Internal
+
+  func map<Downstream>(
     downwards: @escaping (
       _ upstream: Value
     ) -> Downstream,
@@ -26,28 +48,6 @@ extension Projection {
       )
     )
   }
-
-  public func map<Downstream>(
-    _ keyPath: WritableKeyPath<Value, Downstream>,
-    isValid: @escaping (_ upstream: Value) -> Bool = { _ in true }
-  ) -> Projection<Downstream> {
-    .init(
-      upstream: self,
-      map: Transform.Stateless(
-        downwards: { upstream in
-          upstream[keyPath: keyPath]
-        },
-        upwards: { downstream in
-          var value = value
-          value[keyPath: keyPath] = downstream
-          return value
-        },
-        isValid: isValid
-      )
-    )
-  }
-
-  // MARK: Internal
 
   func map<Downstream>(
     _ map: some Transformer<Value, Downstream>

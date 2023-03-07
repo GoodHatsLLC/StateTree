@@ -40,7 +40,6 @@ struct TransformedAccess<Value>: Accessor {
   }
 
   func isValid() -> Bool { isValidFunc() }
-  func erase() -> AnyAccess<Value> { AnyAccess(self) }
 
   // MARK: Private
 

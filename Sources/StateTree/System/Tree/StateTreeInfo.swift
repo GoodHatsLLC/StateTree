@@ -31,10 +31,10 @@ public struct StateTreeInfo {
     runtime.nodeIDs.count
   }
 
-  public var depth: Int {
+  public var height: Int {
     scopes.depth(
       from: runtime.root
-    )
+    ) + ((runtime.root?.isActive ?? false) ? 1 : 0)
   }
 
   public var pendingIntent: Intent? {
