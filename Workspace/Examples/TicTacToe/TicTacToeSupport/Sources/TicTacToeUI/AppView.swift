@@ -1,6 +1,6 @@
-import GameDomain
 import StateTreeSwiftUI
 import SwiftUI
+import TicTacToeDomain
 
 // MARK: - AppView
 
@@ -11,7 +11,9 @@ public struct AppView: View {
   @TreeRoot var root = AppModel()
 
   public var body: some View {
-    RootView(model: $root.root)
+    PlaybackView(root: $root) { _ in
+      RootView(model: $root.root)
+    }
   }
 
 }

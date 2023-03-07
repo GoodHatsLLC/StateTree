@@ -1,6 +1,6 @@
-import GameDomain
 import StateTreeSwiftUI
 import SwiftUI
+import TicTacToeDomain
 
 // MARK: - LoggedInView
 

@@ -4,16 +4,16 @@
 import PackageDescription
 
 let package = Package(
-  name: "Game",
+  name: "TicTacToeSupport",
   platforms: [.macOS(.v12), .iOS(.v15)],
   products: [
     .library(
-      name: "GameUI",
-      targets: ["GameUI"]
+      name: "TicTacToeUI",
+      targets: ["TicTacToeUI"]
     ),
     .library(
-      name: "GameDomain",
-      targets: ["GameDomain"]
+      name: "TicTacToeDomain",
+      targets: ["TicTacToeDomain"]
     ),
   ],
   dependencies: [
@@ -21,22 +21,22 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "GameUI",
+      name: "TicTacToeUI",
       dependencies: [
-        "GameDomain",
+        "TicTacToeDomain",
         .product(name: "StateTreeSwiftUI", package: "StateTree"),
       ]
     ),
     .target(
-      name: "GameDomain",
+      name: "TicTacToeDomain",
       dependencies: [
         .product(name: "StateTree", package: "StateTree"),
       ]
     ),
     .testTarget(
-      name: "GameDomainTests",
+      name: "TicTacToeDomainTests",
       dependencies: [
-        "GameDomain",
+        "TicTacToeDomain",
       ]
     ),
   ]

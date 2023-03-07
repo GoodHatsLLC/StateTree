@@ -10,10 +10,10 @@
 		F7B9BED329753D9A006E5DCE /* TicTacToeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B9BED229753D9A006E5DCE /* TicTacToeApp.swift */; };
 		F7B9BED729753D9B006E5DCE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F7B9BED629753D9B006E5DCE /* Assets.xcassets */; };
 		F7B9BEDB29753D9B006E5DCE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F7B9BEDA29753D9B006E5DCE /* Preview Assets.xcassets */; };
-		F7CA67D629829E2F00A77EAB /* GameDomain in Frameworks */ = {isa = PBXBuildFile; productRef = F7CA67D529829E2F00A77EAB /* GameDomain */; };
-		F7CA67D829829E2F00A77EAB /* GameUI in Frameworks */ = {isa = PBXBuildFile; productRef = F7CA67D729829E2F00A77EAB /* GameUI */; };
 		F7CA67DA29829E2F00A77EAB /* StateTree in Frameworks */ = {isa = PBXBuildFile; productRef = F7CA67D929829E2F00A77EAB /* StateTree */; };
 		F7CA67DC29829E2F00A77EAB /* StateTreeSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = F7CA67DB29829E2F00A77EAB /* StateTreeSwiftUI */; };
+		F7E840B329B70B0900DBA18B /* TicTacToeDomain in Frameworks */ = {isa = PBXBuildFile; productRef = F7E840B229B70B0900DBA18B /* TicTacToeDomain */; };
+		F7E840B529B70B0900DBA18B /* TicTacToeUI in Frameworks */ = {isa = PBXBuildFile; productRef = F7E840B429B70B0900DBA18B /* TicTacToeUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,8 +22,8 @@
 		F7B9BED629753D9B006E5DCE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F7B9BED829753D9B006E5DCE /* TicTacToe.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TicTacToe.entitlements; sourceTree = "<group>"; };
 		F7B9BEDA29753D9B006E5DCE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		F7CA67D329829DCB00A77EAB /* Game */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Game; sourceTree = "<group>"; };
 		F7CA67D429829E1A00A77EAB /* StateTree */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = StateTree; path = ../../..; sourceTree = "<group>"; };
+		F7E840B129B70AD400DBA18B /* TicTacToeSupport */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = TicTacToeSupport; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,8 +32,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F7CA67DC29829E2F00A77EAB /* StateTreeSwiftUI in Frameworks */,
-				F7CA67D829829E2F00A77EAB /* GameUI in Frameworks */,
-				F7CA67D629829E2F00A77EAB /* GameDomain in Frameworks */,
+				F7E840B529B70B0900DBA18B /* TicTacToeUI in Frameworks */,
+				F7E840B329B70B0900DBA18B /* TicTacToeDomain in Frameworks */,
 				F7CA67DA29829E2F00A77EAB /* StateTree in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -88,7 +88,7 @@
 		F7CA67D229829DCB00A77EAB /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				F7CA67D329829DCB00A77EAB /* Game */,
+				F7E840B129B70AD400DBA18B /* TicTacToeSupport */,
 				F7CA67D429829E1A00A77EAB /* StateTree */,
 			);
 			name = Packages;
@@ -111,10 +111,10 @@
 			);
 			name = TicTacToe;
 			packageProductDependencies = (
-				F7CA67D529829E2F00A77EAB /* GameDomain */,
-				F7CA67D729829E2F00A77EAB /* GameUI */,
 				F7CA67D929829E2F00A77EAB /* StateTree */,
 				F7CA67DB29829E2F00A77EAB /* StateTreeSwiftUI */,
+				F7E840B229B70B0900DBA18B /* TicTacToeDomain */,
+				F7E840B429B70B0900DBA18B /* TicTacToeUI */,
 			);
 			productName = TicTacToe;
 			productReference = F7B9BECF29753D9A006E5DCE /* TicTacToe.app */;
@@ -394,14 +394,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		F7CA67D529829E2F00A77EAB /* GameDomain */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = GameDomain;
-		};
-		F7CA67D729829E2F00A77EAB /* GameUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = GameUI;
-		};
 		F7CA67D929829E2F00A77EAB /* StateTree */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = StateTree;
@@ -409,6 +401,14 @@
 		F7CA67DB29829E2F00A77EAB /* StateTreeSwiftUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = StateTreeSwiftUI;
+		};
+		F7E840B229B70B0900DBA18B /* TicTacToeDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TicTacToeDomain;
+		};
+		F7E840B429B70B0900DBA18B /* TicTacToeUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TicTacToeUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

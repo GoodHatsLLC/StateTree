@@ -1,6 +1,6 @@
-import GameDomain
-import GameUI
 import SwiftUI
+import TicTacToeDomain
+import TicTacToeUI
 
 @main
 struct TicTacToeApp: App {

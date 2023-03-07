@@ -1,5 +1,5 @@
 import XCTest
-@testable import GameDomain
+@testable import TicTacToeDomain
 
 final class GameTests: XCTestCase {
   func testExample() throws { }

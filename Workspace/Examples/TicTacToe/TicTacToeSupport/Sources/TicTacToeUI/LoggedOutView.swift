@@ -1,6 +1,6 @@
-import GameDomain
 import StateTreeSwiftUI
 import SwiftUI
+import TicTacToeDomain
 
 // MARK: - LoggedOutView
 
@@ -102,7 +102,13 @@ struct LoggedOutView: View {
 struct LoggedOut_Previews: PreviewProvider {
 
   @PreviewNode static var root = UnauthenticatedModel(
-    authentication: .stored(Authentication())
+    authentication: .stored(
+      Authentication(
+        playerX: "one",
+        playerO: "two",
+        token: "abc"
+      )
+    )
   )
 
   static var previews: some View {

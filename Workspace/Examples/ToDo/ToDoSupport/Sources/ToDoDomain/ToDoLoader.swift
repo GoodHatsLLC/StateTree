@@ -9,7 +9,7 @@ struct ToDoLoader: Node {
     OnStart {
       toDoData = Array(
         repeating: (),
-        count: 100
+        count: 1000
       ).map {
         ToDoData(
           id: UUID(),
