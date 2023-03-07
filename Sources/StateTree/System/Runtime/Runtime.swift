@@ -142,7 +142,7 @@ extension Runtime {
         && hasRootUnlessEmpty
     )
     assert(
-      isConsistent,
+      isConsistent || isPerformingStateChange,
       InternalStateInconsistency(
         state: state.snapshot(),
         scopes: scopes.scopes
@@ -268,6 +268,7 @@ extension Runtime {
         error.localizedDescription
       )
     }
+    assert(isConsistent)
     return value
   }
 
@@ -410,12 +411,24 @@ extension Runtime {
   ) throws
     -> [NodeChange]
   {
+    guard
+      transactionCount == 0,
+      updates == .none
+    else {
+      throw InTransactionError()
+    }
+    transactionCount += 1
     let applier = StateApplier(
       state: state,
       scopes: scopes
     )
     changeManager = applier
-    defer { changeManager = nil }
+    defer {
+      assert(updates == .none)
+      assert(isConsistent)
+      transactionCount -= 1
+      changeManager = nil
+    }
     return try applier.apply(
       state: newState
     )
