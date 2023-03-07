@@ -302,15 +302,10 @@ extension NodeScope {
 
     /// The scope is dirty and must update.
     case shouldUpdate
-    /// The scope has updated but must fire a ``didUpdate`` event and handle intents before
-    /// transitioning to ``shouldHandleIntents``.
-    case didUpdate
 
     /// The scope must finally handle any pending applicable ``Intent`` before transitioning to
     /// ``shouldHandleIntents``.
     case shouldHandleIntents
-    /// The scope may now become ``clean`` and exit the queue.
-    case shouldBecomeClean
 
     // ## 'finalizing' cases resolved max-depth-first.
 
@@ -339,33 +334,22 @@ extension NodeScope {
       assert(requiresReadying)
       switch self {
       case .shouldStart:
-        self = .didStart
-        return {
-          try scope.start()
-        }
-      case .didStart:
         self = .shouldHandleIntents
         return {
+          try scope.start()
           scope.didStart()
         }
       case .shouldUpdate:
-        self = .didUpdate
-        return {
-          try scope.update()
-        }
-      case .didUpdate:
         self = .shouldHandleIntents
         return {
+          try scope.update()
           scope.didUpdate()
         }
       case .shouldHandleIntents:
-        self = .shouldBecomeClean
+        self = .clean
         return {
           scope.handleIntents()
         }
-      case .shouldBecomeClean:
-        self = .clean
-        return nil
       case .rebuild:
         self = .clean
         return {
@@ -402,11 +386,8 @@ extension NodeScope {
     var requiresReadying: Bool {
       switch self {
       case .shouldStart: return true
-      case .didStart: return true
       case .shouldUpdate: return true
-      case .didUpdate: return true
       case .shouldHandleIntents: return true
-      case .shouldBecomeClean: return true
       case .clean: return true
       case .rebuild: return true
       default: return false
@@ -449,11 +430,7 @@ extension NodeScope {
         self = .shouldUpdate
       case .shouldUpdate:
         return
-      case .didUpdate:
-        self = .shouldUpdate
       case .shouldHandleIntents:
-        self = .shouldUpdate
-      case .shouldBecomeClean:
         self = .shouldUpdate
       case .shouldPrepareStop:
         return
@@ -478,11 +455,7 @@ extension NodeScope {
         self = .shouldPrepareStop
       case .shouldUpdate:
         self = .shouldPrepareStop
-      case .didUpdate:
-        self = .shouldPrepareStop
       case .shouldHandleIntents:
-        self = .shouldPrepareStop
-      case .shouldBecomeClean:
         self = .shouldPrepareStop
       case .shouldPrepareStop:
         return
