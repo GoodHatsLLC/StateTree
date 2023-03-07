@@ -96,17 +96,12 @@ struct NeverScope: Scoped {
     return false
   }
 
-  var isClean: Bool {
-    assertionFailure("NeverScope should never be invoked")
-    return false
-  }
-
-  var requiresFinishing: Bool {
+  var isStable: Bool {
     assertionFailure("NeverScope should never be invoked")
     return true
   }
 
-  var isFinished: Bool {
+  var requiresFinishing: Bool {
     assertionFailure("NeverScope should never be invoked")
     return true
   }
@@ -144,8 +139,9 @@ struct NeverScope: Scoped {
     disposable.dispose()
   }
 
-  func stepTowardsFinished() throws {
+  func stepTowardsFinished() throws -> Bool {
     assertionFailure("NeverScope should never be invoked")
+    throw NeverScopeError()
   }
 
   func stop() throws {
@@ -156,7 +152,7 @@ struct NeverScope: Scoped {
     assertionFailure("NeverScope should never be invoked")
   }
 
-  func stepTowardsReady() throws {
+  func stepTowardsReady() throws -> Bool {
     assertionFailure("NeverScope should never be invoked")
     throw NeverScopeError()
   }

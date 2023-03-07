@@ -204,69 +204,57 @@ final class StateApplier: ChangeManager {
     try handle(changes: initialChanges)
 
     while !priorityQueue.isEmpty {
-      // Check if the deepest scope requires 'finalization'
-      // actions to progress it further towards stopping.
+      // Forward the root-most node.
       if
-        let scope = priorityQueue.max,
-        scope.requiresFinishing
-      {
-        // Remove the scope if fully finished.
-        if scope.isFinished {
-          priorityQueue.popMax()
-          // add to record for external consumers
-          updateCollector.stopped(id: scope.nid, depth: scope.depth)
-          continue
-        }
-        // Take the next finalization action to
-        // progress towards removal.
-        try scope.stepTowardsFinished()
-      }
-      // If there was no scope to finalize check for
-      // if the least deep node can be forwarded towards
-      // being clean.
-      else if
         let scope = priorityQueue.min,
         scope.requiresReadying
       {
-        // If already clean remove.
-        if scope.isClean, let scope = priorityQueue.popMin() {
-          // add to record for external consumers
-          // avoid overwriting '.start' — as that's more informative.
+        // if true, the node is now clean
+        if
+          try scope.stepTowardsReady(),
+          let scope = priorityQueue.popMin()
+        {
           updateCollector.updated(id: scope.nid, depth: scope.depth)
+        }
+      }
+      // Check if the deepest scope requires 'finalization'
+      // actions to progress it further towards stopping.
+      else if
+        let scope = priorityQueue.max,
+        scope.requiresFinishing
+      {
+        // Act, and remove the scope if fully finished.
+        if
+          try scope.stepTowardsFinished(),
+          let scope = priorityQueue.popMax()
+        {
+          updateCollector.stopped(id: scope.nid, depth: scope.depth)
           continue
         }
-        // Forward if required.
-        try scope.stepTowardsReady()
       }
-      // If the deepest scope needs forwarding, not finalizing,
-      // and the scope closest to the root can't be forwarded
-      // we must break the impasse.
+      // When the deepest changed scope needs to be forwarded and
+      // the changed scope closest to the root needs to be finished
+      // neither scope has yet been removed from the queue.
       //
-      // A scope can only be in the queue if it needs progress
-      // towards either being fully updated or removed.
-      //
-      // Remove or further finalize the root-most node if possible.
+      // Since a scope can only be in the queue if it still needs progress
+      // towards either being fully updated or removed we can finalize
+      // the root-most scope to avoid an impasse.
       else if
         let scope = priorityQueue.min,
         scope.requiresFinishing
       {
-        if scope.isFinished {
-          priorityQueue.popMin()
+        // if true, the node is now clean
+        if
+          try scope.stepTowardsFinished(),
+          let scope = priorityQueue.popMin()
+        {
           updateCollector.stopped(id: scope.nid, depth: scope.depth)
-          continue
         }
-        try scope.stepTowardsFinished()
       }
-      // No change to the queue was possible.
-      // The queue must be empty.
+      // If no change to the queue are possible the queue must be empty.
       else {
         assert(priorityQueue.isEmpty)
       }
-
-      // Before looking at the queue for actions again, handle any
-      // changes that were made based on the last actions taken.
-      // This may add new scopes to the queue or change the states
-      // of nodes already in the queue.
       try handle(changes: stagedChanges.take())
     }
     // Return the list of updated nodes to fire notifications

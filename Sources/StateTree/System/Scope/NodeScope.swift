@@ -232,12 +232,8 @@ extension NodeScope {
     state.requiresFinishing
   }
 
-  public var isClean: Bool {
-    state.isClean
-  }
-
-  public var isFinished: Bool {
-    state.isFinished
+  public var isStable: Bool {
+    state.isStable
   }
 
   public var ancestors: [NodeID] {
@@ -258,15 +254,21 @@ extension NodeScope {
     return first
   }
 
-  public func stepTowardsReady() throws {
+  public func stepTowardsReady() throws -> Bool {
     if let act = state.forward(scope: self) {
-      try act()
+      return try act()
+    } else {
+      assertionFailure()
+      return false
     }
   }
 
-  public func stepTowardsFinished() throws {
+  public func stepTowardsFinished() throws -> Bool {
     if let act = state.finalize(scope: self) {
-      try act()
+      return try act()
+    } else {
+      assertionFailure()
+      return false
     }
   }
 
@@ -330,7 +332,7 @@ extension NodeScope {
 
     public mutating func forward(
       scope: NodeScope<N>
-    ) -> (() throws -> Void)? {
+    ) -> (() throws -> Bool)? {
       assert(requiresReadying)
       switch self {
       case .shouldStart:
@@ -338,44 +340,51 @@ extension NodeScope {
         return {
           try scope.start()
           scope.didStart()
+          return false
         }
       case .shouldUpdate:
         self = .shouldHandleIntents
         return {
           try scope.update()
           scope.didUpdate()
+          return false
         }
       case .shouldHandleIntents:
         self = .clean
         return {
           scope.handleIntents()
+          return true
         }
       case .rebuild:
         self = .clean
         return {
           try scope.rebuild()
+          return true
         }
       default: return nil
       }
     }
 
-    public mutating func finalize(scope: NodeScope<N>) -> (() throws -> Void)? {
+    public mutating func finalize(scope: NodeScope<N>) -> (() throws -> Bool)? {
       assert(requiresFinishing)
       switch self {
       case .shouldPrepareStop:
         self = .shouldNotifyStop
         return {
           try scope.stopSubtree()
+          return false
         }
       case .shouldNotifyStop:
         self = .shouldStop
         return {
           scope.willStop()
+          return false
         }
       case .shouldStop:
         self = .finished
         return {
           try scope.stop()
+          return true
         }
       default: return nil
       }
@@ -388,7 +397,6 @@ extension NodeScope {
       case .shouldStart: return true
       case .shouldUpdate: return true
       case .shouldHandleIntents: return true
-      case .clean: return true
       case .rebuild: return true
       default: return false
       }
@@ -404,15 +412,9 @@ extension NodeScope {
       }
     }
 
-    var isClean: Bool {
+    var isStable: Bool {
       switch self {
       case .clean: return true
-      default: return false
-      }
-    }
-
-    var isFinished: Bool {
-      switch self {
       case .finished: return true
       default: return false
       }
@@ -423,7 +425,7 @@ extension NodeScope {
       case .clean:
         self = .shouldUpdate
       case .finished:
-        return
+        self = .shouldUpdate
       case .shouldStart:
         return
       case .didStart:
@@ -468,14 +470,17 @@ extension NodeScope {
       }
     }
 
+    mutating func triggerRebuild() {
+      self = .rebuild
+    }
+
     mutating func mark(requirement: ExternalRequirement) {
       if requirement == .stop {
         triggerFinalization()
-        return
       } else if requirement == .update {
         triggerUpdate()
       } else if requirement == .rebuild {
-        self = .rebuild
+        triggerRebuild()
       } else {
         assertionFailure("scope-dirtying logic failure")
       }

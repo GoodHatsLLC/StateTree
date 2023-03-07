@@ -84,17 +84,16 @@ extension AnyScope: Scoping {
   var dependencies: DependencyValues { underlying.dependencies }
   var initialCapture: NodeCapture { underlying.initialCapture }
   var isActive: Bool { underlying.isActive }
-  var isClean: Bool { underlying.isClean }
-  var isFinished: Bool { underlying.isFinished }
+  var isStable: Bool { underlying.isStable }
   var record: NodeRecord { underlying.record }
   var requiresFinishing: Bool { underlying.requiresFinishing }
   var requiresReadying: Bool { underlying.requiresReadying }
 
-  func stepTowardsReady() throws {
+  func stepTowardsReady() throws -> Bool {
     try underlying.stepTowardsReady()
   }
 
-  func stepTowardsFinished() throws {
+  func stepTowardsFinished() throws -> Bool {
     try underlying.stepTowardsFinished()
   }
 

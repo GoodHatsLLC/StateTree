@@ -189,16 +189,13 @@ final class StateUpdater: ChangeManager {
         let scope = priorityQueue.min,
         scope.requiresReadying
       {
-        // If already clean remove.
+        // if true, the node is now clean
         if
-          scope.isClean,
+          try scope.stepTowardsReady(),
           let scope = priorityQueue.popMin()
         {
           updateCollector.updated(id: scope.nid, depth: scope.depth)
-          continue
         }
-        // Forward if required.
-        try scope.stepTowardsReady()
       }
       // Check if the deepest scope requires 'finalization'
       // actions to progress it further towards stopping.
@@ -206,17 +203,14 @@ final class StateUpdater: ChangeManager {
         let scope = priorityQueue.max,
         scope.requiresFinishing
       {
-        // Remove the scope if fully finished.
+        // Act, and remove the scope if fully finished.
         if
-          scope.isFinished,
+          try scope.stepTowardsFinished(),
           let scope = priorityQueue.popMax()
         {
           updateCollector.stopped(id: scope.nid, depth: scope.depth)
           continue
         }
-        // Take the next finalization action to
-        // progress towards removal.
-        try scope.stepTowardsFinished()
       }
       // When the deepest changed scope needs to be forwarded and
       // the changed scope closest to the root needs to be finished
@@ -229,14 +223,13 @@ final class StateUpdater: ChangeManager {
         let scope = priorityQueue.min,
         scope.requiresFinishing
       {
+        // if true, the node is now clean
         if
-          scope.isFinished,
+          try scope.stepTowardsFinished(),
           let scope = priorityQueue.popMin()
         {
           updateCollector.stopped(id: scope.nid, depth: scope.depth)
-          continue
         }
-        try scope.stepTowardsFinished()
       }
       // If no change to the queue are possible the queue must be empty.
       else {

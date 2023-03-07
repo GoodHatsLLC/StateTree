@@ -29,8 +29,7 @@ public protocol Scoped<N>: Scoping, Hashable {
   var requiresReadying: Bool { get }
   var requiresFinishing: Bool { get }
   var isActive: Bool { get }
-  var isClean: Bool { get }
-  var isFinished: Bool { get }
+  var isStable: Bool { get }
   var childScopes: [AnyScope] { get }
   var initialCapture: NodeCapture { get }
   var record: NodeRecord { get }
@@ -39,9 +38,9 @@ public protocol Scoped<N>: Scoping, Hashable {
   var behaviorResolutions: [BehaviorResolution] { get async }
   func applyIntent(_ intent: Intent) -> StepResolutionInternal
   func own(_ disposable: some Disposable)
-  func stepTowardsReady() throws
   func markDirty(pending: ExternalRequirement)
-  func stepTowardsFinished() throws
+  func stepTowardsReady() throws -> Bool
+  func stepTowardsFinished() throws -> Bool
   func stop() throws
   func erase() -> AnyScope
 }
