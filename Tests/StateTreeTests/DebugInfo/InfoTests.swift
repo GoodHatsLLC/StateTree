@@ -41,10 +41,22 @@ final class InfoTests: XCTestCase {
     XCTAssertEqual(4, testTree._info?.depth)
     XCTAssertEqual(11, testTree._info?.nodeCount)
 
+    lifetime.rootNode.depth = 3
+    XCTAssertEqual(4, testTree._info?.depth)
+    XCTAssertEqual(11, testTree._info?.nodeCount)
+
     lifetime.rootNode.depth = 5
 
     XCTAssertEqual(6, testTree._info?.depth)
     XCTAssertEqual(17, testTree._info?.nodeCount)
+
+    lifetime.rootNode.depth = 3
+    XCTAssertEqual(4, testTree._info?.depth)
+    XCTAssertEqual(11, testTree._info?.nodeCount)
+
+    lifetime.rootNode.depth = 1
+    XCTAssertEqual(2, testTree._info?.depth)
+    XCTAssertEqual(3, testTree._info?.nodeCount)
 
     lifetime.dispose()
     XCTAssertEqual(0, testTree._info?.depth ?? 0)
