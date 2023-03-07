@@ -3,13 +3,8 @@ import TreeState
 // MARK: - FieldRecord
 
 struct FieldRecord: TreeState {
-  struct SourceFieldMetadata: TreeState {
-    let label: String?
-    let typeof: String
-  }
 
   let id: FieldID
-  let meta: SourceFieldMetadata
   var payload: FieldRecordPayload?
 
   var type: FieldType {

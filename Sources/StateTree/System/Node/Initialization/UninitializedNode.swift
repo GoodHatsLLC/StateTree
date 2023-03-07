@@ -50,13 +50,6 @@ extension UninitializedNode {
     for i in 0 ..< record.records.count {
       let captureField = capture.fields[i]
       let fieldRecord = record.records[i]
-      guard
-        fieldRecord.meta.label == captureField.label,
-        fieldRecord.meta.typeof == captureField.typeDescription.description
-      else {
-        runtimeWarning("Node field mismatch")
-        throw NodeInitializationError()
-      }
       switch (captureField, fieldRecord.type) {
       case (.dependency(let field), .dependency):
         field.value.inner.dependencies = dependencies
@@ -117,7 +110,6 @@ extension UninitializedNode {
           )
           return FieldRecord(
             id: fieldID,
-            meta: .init(label: field.label, typeof: field.typeDescription.description),
             payload: nil
           )
         case .projection(let projection):
@@ -128,7 +120,6 @@ extension UninitializedNode {
           )
           return FieldRecord(
             id: fieldID,
-            meta: .init(label: field.label, typeof: field.typeDescription.description),
             payload: .projection(projection.value.source)
           )
         case .route:
@@ -140,7 +131,6 @@ extension UninitializedNode {
           // NOTE: route records are always created with no sub-routes.
           return FieldRecord(
             id: fieldID,
-            meta: .init(label: field.label, typeof: field.typeDescription.description),
             payload: .route(route.emptyRecord())
           )
         case .scope:
@@ -151,7 +141,6 @@ extension UninitializedNode {
           )
           return FieldRecord(
             id: fieldID,
-            meta: .init(label: field.label, typeof: field.typeDescription.description),
             payload: nil
           )
         case .value(_, let initial):
@@ -162,7 +151,6 @@ extension UninitializedNode {
           )
           return FieldRecord(
             id: fieldID,
-            meta: .init(label: field.label, typeof: field.typeDescription.description),
             payload: .value(initial.anyTreeState)
           )
         case .unmanaged:
@@ -173,7 +161,6 @@ extension UninitializedNode {
           )
           return FieldRecord(
             id: fieldID,
-            meta: .init(label: field.label, typeof: field.typeDescription.description),
             payload: nil
           )
         }

@@ -18,7 +18,7 @@ final class SerializationTests: XCTestCase {
   }
 
   @TreeActor
-  func _test_dump_prime() async throws {
+  func test_dump_prime() async throws {
     let life = try Tree()
       .start(
         root: PrimeSquare()
@@ -29,7 +29,7 @@ final class SerializationTests: XCTestCase {
   }
 
   @TreeActor
-  func _test_dump_nonprime() async throws {
+  func test_dump_nonprime() async throws {
     let life = try Tree()
       .start(
         root: PrimeSquare()
