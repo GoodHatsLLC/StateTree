@@ -1,4 +1,5 @@
 import Disposable
+import Emitter
 
 // MARK: - AnyScope
 
@@ -8,7 +9,7 @@ public struct AnyScope: Hashable {
 
   // MARK: Lifecycle
 
-  nonisolated init<N: Node>(scope: some Scoped<N>) {
+  nonisolated init<N: Node>(scope: some ScopeType<N>) {
     self.nid = scope.nid
     self.depth = scope.depth
     self.underlying = scope
@@ -25,7 +26,7 @@ public struct AnyScope: Hashable {
 
   // MARK: Public
 
-  public let underlying: any Scoped
+  public let underlying: any ScopeType
 
   public let cuid: CUID?
 
@@ -55,21 +56,11 @@ extension AnyScope: Scoping {
 
   public var valueFieldDependencies: Set<FieldID> { underlying.valueFieldDependencies }
 
-  public func host<Behavior: BehaviorType>(behavior: Behavior, input: Behavior.Input) -> Behavior
-    .Action?
-  { underlying.host(behavior: behavior, input: input) }
-
   public func applyIntent(_ intent: Intent) -> StepResolutionInternal { underlying
     .applyIntent(intent)
   }
 
   // MARK: Internal
-
-  var behaviorResolutions: [BehaviorResolution] {
-    get async {
-      await underlying.behaviorResolutions
-    }
-  }
 
   var node: any Node {
     get {
@@ -88,6 +79,10 @@ extension AnyScope: Scoping {
   var record: NodeRecord { underlying.record }
   var requiresFinishing: Bool { underlying.requiresFinishing }
   var requiresReadying: Bool { underlying.requiresReadying }
+
+  func resolveBehaviors() async -> [Behaviors.Resolved] {
+    await underlying.resolveBehaviors()
+  }
 
   func stepTowardsReady() throws -> Bool {
     try underlying.stepTowardsReady()

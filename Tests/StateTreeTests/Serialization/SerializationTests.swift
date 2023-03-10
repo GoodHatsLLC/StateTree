@@ -193,7 +193,7 @@ extension SerializationTests {
           ]
         }
       }
-      OnIntent(step: SomeIntentStep.self) { _ in
+      OnIntent(SomeIntentStep.self) { _ in
         // keep the intent pending to keep it present in the state.
         .pending
       }

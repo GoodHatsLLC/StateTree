@@ -1,7 +1,8 @@
+import Emitter
 import Foundation
 // MARK: - NeverScope
 
-struct NeverScope: Scoped {
+struct NeverScope: ScopeType {
 
   // MARK: Lifecycle
 
@@ -39,13 +40,6 @@ struct NeverScope: Scoped {
   var cuid: CUID? {
     assertionFailure("NeverScope should never be invoked")
     return .invalid
-  }
-
-  var behaviorResolutions: [BehaviorResolution] {
-    get async {
-      assertionFailure("NeverScope should never be invoked")
-      return []
-    }
   }
 
   var node: N {
@@ -111,6 +105,11 @@ struct NeverScope: Scoped {
     return false
   }
 
+  func resolveBehaviors() async -> [Behaviors.Resolved] {
+    assertionFailure("NeverScope should never be invoked")
+    return []
+  }
+
   func focus() {
     assertionFailure("NeverScope should never be invoked")
   }
@@ -126,12 +125,6 @@ struct NeverScope: Scoped {
 
   func hash(into _: inout Hasher) {
     assertionFailure("NeverScope should never be invoked")
-  }
-
-  func host<B: BehaviorType>(behavior: B, input _: B.Input) -> B.Action? {
-    assertionFailure("NeverScope should never be invoked")
-    behavior.dispose()
-    return nil
   }
 
   func own(_ disposable: some Disposable) {

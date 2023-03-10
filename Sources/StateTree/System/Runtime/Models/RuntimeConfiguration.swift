@@ -16,10 +16,10 @@ public struct RuntimeConfiguration {
   /// at runtime. Useful for testing.
   public init(
     userError: ErrorHandler = .assertion,
-    behaviorHost: BehaviorHost = .init()
+    behaviorManager: BehaviorManager = .init()
   ) {
     self.userError = userError
-    self.behaviorHost = behaviorHost
+    self.behaviorManager = behaviorManager
   }
 
   // MARK: Public
@@ -39,7 +39,7 @@ public struct RuntimeConfiguration {
   // MARK: Internal
 
   let userError: ErrorHandler
-  let behaviorHost: BehaviorHost
+  let behaviorManager: BehaviorManager
 
 }
 

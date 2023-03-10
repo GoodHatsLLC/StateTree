@@ -317,7 +317,7 @@ extension IntentApplicationTests {
     @Value var value: Int?
 
     var rules: some Rules {
-      OnIntent(step: ValueSetStep.self) { step in
+      OnIntent(ValueSetStep.self) { step in
         .resolution {
           value = step.value
         }
@@ -328,7 +328,7 @@ extension IntentApplicationTests {
   fileprivate struct PrivateIntentNode: DefaultInitNode {
     @Value var payload: String?
     var rules: some Rules {
-      OnIntent(step: PrivateStep.self) { step in
+      OnIntent(PrivateStep.self) { step in
         .resolution {
           payload = step.payload
         }
@@ -341,12 +341,12 @@ extension IntentApplicationTests {
     @Value var value1: String?
     @Value var value2: String?
     var rules: some Rules {
-      OnIntent(step: RepeatStep1.self) { step in
+      OnIntent(RepeatStep1.self) { step in
         .resolution {
           value1 = step.value
         }
       }
-      OnIntent(step: RepeatStep2.self) { step in
+      OnIntent(RepeatStep2.self) { step in
         .resolution {
           value2 = step.value
         }
@@ -361,7 +361,7 @@ extension IntentApplicationTests {
       if shouldRoute {
         $child.route(to: Next())
       }
-      OnIntent(step: RouteTriggerStep.self) { step in
+      OnIntent(RouteTriggerStep.self) { step in
         .resolution {
           shouldRoute = step.shouldRoute
         }
@@ -386,7 +386,7 @@ extension IntentApplicationTests {
       if shouldRoute {
         $child.route(to: Next())
       }
-      OnIntent(step: PendingNodeStep.self) { step in
+      OnIntent(PendingNodeStep.self) { step in
         mayRoute
           ? .resolution { shouldRoute = step.shouldRoute }
           : .pending
@@ -412,7 +412,7 @@ extension IntentApplicationTests {
         case .later: $laterNext.route(to: Next())
         }
       }
-      OnIntent(step: MaybeInvalidatedStep.self) { step in
+      OnIntent(MaybeInvalidatedStep.self) { step in
         .resolution {
           shouldRoute = step.shouldRoute
         }

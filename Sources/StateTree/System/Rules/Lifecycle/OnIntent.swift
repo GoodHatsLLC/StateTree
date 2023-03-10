@@ -8,7 +8,7 @@ public struct OnIntent: Rules {
   // MARK: Lifecycle
 
   public init<Step: IntentStep>(
-    step _: Step.Type,
+    _: Step.Type,
     _ stepAction: @TreeActor @escaping (_ step: Step) -> IntentStepResolution
   ) {
     self.resolver = IntentStepResolver(id: UUID()) { step in

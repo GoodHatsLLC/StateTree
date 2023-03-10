@@ -1,5 +1,6 @@
 import Foundation
 
+/// FIXME: add randomness because the hash is probable terrible.
 public struct BehaviorID: TreeState, CustomStringConvertible {
 
   // MARK: Lifecycle
@@ -11,7 +12,7 @@ public struct BehaviorID: TreeState, CustomStringConvertible {
     custom: String?
   ) {
     let info = "\(fileID):\(line):\(column)"
-    let hashString = SimpleHash.hash(Data(info.utf8))
+    let hashString = SipHasher.hash(Data(info.utf8))
     #if DEBUG
     self.debugInfo = info
     #endif
@@ -31,7 +32,7 @@ public struct BehaviorID: TreeState, CustomStringConvertible {
 
   public var description: String {
     #if DEBUG
-    id + " (\(debugInfo))"
+    ".id(\(id))"
     #else
     id
     #endif
@@ -45,7 +46,7 @@ public struct BehaviorID: TreeState, CustomStringConvertible {
     -> BehaviorID
   {
     runtimeWarning(
-      "Autocreated BehaviorIDs will change if their callsite changes. Use a custom id when testing behaviors."
+      "Autocreated BehaviorIDs will change if their call-site changes. Use a custom id when testing behaviors."
     )
     return self.init(fileID: fileID, line: line, column: column, custom: nil)
   }
@@ -69,6 +70,12 @@ public struct BehaviorID: TreeState, CustomStringConvertible {
     // Note: encode dropping code location information in debug.
     var container = encoder.singleValueContainer()
     try container.encode(id)
+  }
+
+  // MARK: Internal
+
+  static var invalid: BehaviorID {
+    .init(fileID: "invalid", line: -1, column: -1, custom: "invalid")
   }
 
   // MARK: Private

@@ -40,15 +40,10 @@ public struct TreeLifetime<N: Node>: Disposable {
   }
 
   /// Fetch the ``BehaviorResolution`` values for each ``Behavior`` that was run on the runtime.
-  ///
-  /// > Tip: This method can be used
-  public func resolvedBehaviors() async -> [BehaviorResolution] {
-    guard runtime.isActive
-    else {
-      return []
-    }
-    return await runtime
-      .behaviorHost
+  @discardableResult
+  public func awaitBehaviors() async -> [Behaviors.Resolved] {
+    await runtime
+      .behaviorManager
       .resolvedBehaviors()
   }
 

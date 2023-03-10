@@ -35,7 +35,6 @@ public final class Runtime {
 
   private let state: StateStorage = .init()
   private let scopes: ScopeStorage = .init()
-  private let stage = DisposableStage()
   private let dependencies: DependencyValues
   private let didStabilizeSubject = PublishSubject<Void>()
   private let updateSubject = PublishSubject<NodeChange>()
@@ -92,7 +91,6 @@ extension Runtime {
           )
         )
       }
-      stage.reset()
     }
   }
 }
@@ -160,8 +158,8 @@ extension Runtime {
       || changeManager != nil
   }
 
-  var behaviorHost: BehaviorHost {
-    configuration.behaviorHost
+  var behaviorManager: BehaviorManager {
+    configuration.behaviorManager
   }
 
   var activeIntent: ActiveIntent? {

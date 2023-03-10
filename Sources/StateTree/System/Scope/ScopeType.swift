@@ -1,11 +1,5 @@
 import Disposable
-
-// MARK: - Scoping
-
-@TreeActor
-public protocol Scoping {
-  func host<Behavior: BehaviorType>(behavior: Behavior, input: Behavior.Input) -> Behavior.Action?
-}
+import Emitter
 
 // MARK: - ExternalRequirement
 
@@ -16,11 +10,17 @@ public enum ExternalRequirement {
   case stop
 }
 
-// MARK: - Scoped
+// MARK: - Scoping
+
+public protocol Scoping {
+  func own(_ disposable: some Disposable)
+}
+
+// MARK: - ScopeType
 
 @TreeActor
 @_spi(Implementation)
-public protocol Scoped<N>: Scoping, Hashable {
+public protocol ScopeType<N>: Scoping, Hashable {
   associatedtype N: Node
   nonisolated var nid: NodeID { get }
   nonisolated var cuid: CUID? { get }
@@ -35,9 +35,8 @@ public protocol Scoped<N>: Scoping, Hashable {
   var record: NodeRecord { get }
   var dependencies: DependencyValues { get }
   var valueFieldDependencies: Set<FieldID> { get }
-  var behaviorResolutions: [BehaviorResolution] { get async }
+  func resolveBehaviors() async -> [Behaviors.Resolved]
   func applyIntent(_ intent: Intent) -> StepResolutionInternal
-  func own(_ disposable: some Disposable)
   func markDirty(pending: ExternalRequirement)
   func stepTowardsReady() throws -> Bool
   func stepTowardsFinished() throws -> Bool

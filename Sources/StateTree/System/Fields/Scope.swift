@@ -41,8 +41,8 @@ public struct Scope: ScopeField {
     inner.treeScope?.scope?.isActive ?? false
   }
 
-  public func resolutions() async -> [BehaviorResolution] {
-    await inner.treeScope?.scope?.behaviorResolutions ?? []
+  public func resolutions() async -> [Behaviors.Resolved] {
+    await inner.treeScope?.scope?.resolveBehaviors() ?? []
   }
 
   @TreeActor
@@ -51,62 +51,133 @@ public struct Scope: ScopeField {
   }
 
   @TreeActor
-  public func run<T, S: AsyncSequence>(
+  public func run<T>(
     fileID: String = #fileID,
     line: Int = #line,
     column: Int = #column,
     _ id: BehaviorID? = nil,
-    _ sequenceAction: @escaping @Sendable () -> S
-  ) -> AsyncSequenceBehavior<Void, T>
-    where S.Element == T
+    action: @escaping @Sendable () async -> T
+  ) -> ScopedBehavior<Behaviors.AlwaysSingle<Void, T>> {
+    let id = id ?? .init(fileID: fileID, line: line, column: column, custom: nil)
+    let behavior = Behavior<Void, Never, T, Never>.single(id: id) { _, send in
+      await send(.finished(action()))
+    }
+    guard
+      let scope = inner.treeScope?.scope,
+      let manager = inner.treeScope?.runtime.behaviorManager
+    else {
+      runtimeWarning(
+        "Attempting to run a behavior with an unattached scope. This will always fail."
+      )
+      assertionFailure(
+        "Attempting to run a behavior with an unattached scope. This will always fail."
+      )
+      return ScopedBehavior(
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: Scope.invalid,
+        manager: .init()
+      )
+    }
+    let attachable = AttachableBehavior(behavior: behavior)
+    return ScopedBehavior(
+      behavior: attachable,
+      scope: scope,
+      manager: manager
+    )
+  }
+
+  @TreeActor
+  public func run<T>(
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    _ id: BehaviorID? = nil,
+    action: @escaping @Sendable () async throws -> T
+  ) -> ScopedBehavior<Behaviors.FailableSingle<Void, T>> {
+    let id = id ?? .init(fileID: fileID, line: line, column: column, custom: nil)
+    let behavior = Behavior<Void, Never, T, Error>.failableSingle(id: id) { _, send in
+      do {
+        try await send(.finished(action()))
+      } catch {
+        await send(.failed(error))
+      }
+    }
+    guard
+      let scope = inner.treeScope?.scope,
+      let manager = inner.treeScope?.runtime.behaviorManager
+    else {
+      runtimeWarning(
+        "Attempting to run a behavior with an unattached scope. This will always fail."
+      )
+      assertionFailure(
+        "Attempting to run a behavior with an unattached scope. This will always fail."
+      )
+      return ScopedBehavior(
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: Scope.invalid,
+        manager: .init()
+      )
+    }
+    let attachable = AttachableBehavior(behavior: behavior)
+    return ScopedBehavior(
+      behavior: attachable,
+      scope: scope,
+      manager: manager
+    )
+  }
+
+  @TreeActor
+  public func run<T, Seq: AsyncSequence>(
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    _ id: BehaviorID? = nil,
+    action: @escaping @Sendable () throws -> Seq
+  ) -> ScopedBehavior<Behaviors.Stream<Void, T, Error>>
+    where Seq.Element == T
   {
     let id = id ?? .init(fileID: fileID, line: line, column: column, custom: nil)
-    let behavior = AsyncSequenceBehavior(id: id) { AnyAsyncSequence<T>(sequenceAction()) }
-    guard let underlying = inner.treeScope?.scope
-    else {
-      runtimeWarning("The scope was not active and could not run the behavior")
-      return behavior
-    }
-    behavior.run(on: underlying, input: ())
-    return behavior
-  }
 
-  @TreeActor
-  public func run<T>(
-    fileID: String = #fileID,
-    line: Int = #line,
-    column: Int = #column,
-    _ id: BehaviorID? = nil,
-    _ action: @escaping @Sendable () async -> T
-  ) -> AsyncValueBehavior<Void, T> {
-    let id = id ?? .init(fileID: fileID, line: line, column: column, custom: nil)
-    let behavior = AsyncValueBehavior(id: id, action)
-    guard let underlying = inner.treeScope?.scope
-    else {
-      runtimeWarning("The scope was not active and could not run the behavior")
-      return behavior
+    let producerFunc: Behavior<Void, T, Never, Error>.StreamProducerFunc = { _, send in
+      let seq = try action()
+      Task {
+        do {
+          for try await value in seq {
+            await send(.emission(value))
+          }
+          await send(.finished)
+        } catch is CancellationError {
+          await send(.cancelled)
+        } catch {
+          await send(.failed(error))
+        }
+      }
     }
-    behavior.run(on: underlying, input: ())
-    return behavior
-  }
 
-  @TreeActor
-  public func run<T>(
-    fileID: String = #fileID,
-    line: Int = #line,
-    column: Int = #column,
-    _ id: BehaviorID? = nil,
-    _ action: @escaping @Sendable () async throws -> T
-  ) -> AsyncThrowingBehavior<Void, T> {
-    let id = id ?? .init(fileID: fileID, line: line, column: column, custom: nil)
-    let behavior = AsyncThrowingBehavior(id: id, action)
-    guard let underlying = inner.treeScope?.scope
+    let behavior = Behavior<Void, T, Never, Error>
+      .stream(id: id, eventProducer: producerFunc)
+    guard
+      let scope = inner.treeScope?.scope,
+      let manager = inner.treeScope?.runtime.behaviorManager
     else {
-      runtimeWarning("The scope was not active and could not run the behavior")
-      return behavior
+      runtimeWarning(
+        "Attempting to run a behavior with an unattached scope. This will always fail."
+      )
+      assertionFailure(
+        "Attempting to run a behavior with an unattached scope. This will always fail."
+      )
+      return ScopedBehavior(
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: Scope.invalid,
+        manager: .init()
+      )
     }
-    behavior.run(on: underlying, input: ())
-    return behavior
+    let attachable = AttachableBehavior(behavior: behavior)
+    return ScopedBehavior(
+      behavior: attachable,
+      scope: scope,
+      manager: manager
+    )
   }
 
   // MARK: Internal

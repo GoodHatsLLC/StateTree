@@ -99,7 +99,7 @@ extension IntentSnapshotTests {
     @Value var value: Int?
 
     var rules: some Rules {
-      OnIntent(step: ValueSetStep.self) { step in
+      OnIntent(ValueSetStep.self) { step in
         .resolution {
           value = step.value
         }
@@ -117,7 +117,7 @@ extension IntentSnapshotTests {
       if shouldRoute {
         $child.route(to: Next())
       }
-      OnIntent(step: PendingNodeStep.self) { step in
+      OnIntent(PendingNodeStep.self) { step in
         mayRoute
           ? .resolution { shouldRoute = step.shouldRoute }
           : .pending

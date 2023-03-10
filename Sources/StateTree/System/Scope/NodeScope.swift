@@ -1,4 +1,5 @@
 import Disposable
+import Emitter
 
 // MARK: - NodeScope
 
@@ -41,7 +42,6 @@ public final class NodeScope<N: Node> {
   // MARK: Private
 
   private let stage = DisposableStage()
-  private var behaviors: [PreparedBehavior] = []
   private var activeRules: N.NodeRules?
   private var state: ScopeLifecycle = .shouldStart
 
@@ -68,43 +68,14 @@ extension NodeScope: Hashable {
   }
 }
 
-// MARK: Scoped
+// MARK: ScopeType
 
-extension NodeScope: Scoped {
+extension NodeScope: ScopeType {
 
   // MARK: Public
 
   public var isActive: Bool { activeRules != nil }
   public var childScopes: [AnyScope] { runtime.childScopes(of: nid) }
-
-  public var behaviorResolutions: [BehaviorResolution] {
-    get async {
-      var resolutions: [BehaviorResolution] = []
-      for behavior in behaviors {
-        let resolution = await behavior.resolution()
-        resolutions.append(resolution)
-      }
-      return resolutions
-    }
-  }
-
-  public func host<Behavior>(behavior: Behavior, input: Behavior.Input) -> Behavior.Action?
-    where Behavior: BehaviorType
-  {
-    let action = runtime
-      .behaviorHost
-      .offerTestHooks(for: behavior, input: input)
-    behaviors
-      .append(
-        behavior.prepare(input)
-      )
-    defer {
-      if !isActive {
-        behavior.dispose()
-      }
-    }
-    return action
-  }
 
   public func own(_ disposable: some Disposable) {
     if isActive {
@@ -121,10 +92,6 @@ extension NodeScope: Scoped {
   public func stop() throws {
     assert(activeRules != nil)
     activeRules = nil
-    for behavior in behaviors {
-      behavior.dispose()
-    }
-    behaviors.removeAll()
     stage.dispose()
     disconnect()
   }
@@ -239,6 +206,8 @@ extension NodeScope {
   public var ancestors: [NodeID] {
     runtime.ancestors(of: nid) ?? []
   }
+
+  public func resolveBehaviors() async -> [Behaviors.Resolved] { [] } // TODO: impl
 
   public func applyIntent(_ intent: Intent) -> StepResolutionInternal {
     let resolutions = activeRules?
