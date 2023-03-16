@@ -1,3 +1,5 @@
+import Behaviors
+
 // MARK: - RuntimeConfiguration
 
 public struct RuntimeConfiguration {
@@ -11,7 +13,7 @@ public struct RuntimeConfiguration {
   ///   - userError: The runtime alerting and logging configuration for user errors like circular
   /// dependencies.
   ///   - behaviorHandleTracking: Whether to retain or release handles to created ``Behavior``
-  /// items. 'retain' is required for the ``TreeLifetime/resolvedBehaviors()`` testing hook.
+  /// items. 'retain' is required for the ``TreeLifetime/behaviorResolutions`` testing hook.
   ///   - behaviorInterceptors: ``BehaviorInterceptor`` items to be swapped for ``Behavior`` items
   /// at runtime. Useful for testing.
   public init(

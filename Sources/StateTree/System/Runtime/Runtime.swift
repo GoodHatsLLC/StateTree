@@ -1,6 +1,8 @@
+import Behaviors
 import Emitter
 import Foundation
 import HeapModule
+import Utilities
 
 // MARK: - Runtime
 

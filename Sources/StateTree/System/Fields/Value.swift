@@ -102,9 +102,9 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
 
   var source: ProjectionSource {
     if let id = inner.treeValue?.id {
-      return .valueField(id)
+      .valueField(id)
     } else {
-      return .programmatic
+      .programmatic
     }
   }
 

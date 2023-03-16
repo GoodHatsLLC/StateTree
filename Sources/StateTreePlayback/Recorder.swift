@@ -53,7 +53,7 @@ public final class Recorder<Root: Node> {
       .flatMapLatest { [lifetime] _ in lifetime.stateFrameSnapshot() }
       .subscribe { [weak self] snapshot in
         if let self {
-          self.frames
+          frames
             .append(snapshot)
         }
       }

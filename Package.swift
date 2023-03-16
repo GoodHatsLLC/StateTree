@@ -108,11 +108,33 @@ let package = Package(
   ],
   targets: [
     .target(
+      name: "TreeActor",
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "Utilities",
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "Behaviors",
+      dependencies: [
+        "TreeState",
+        "Disposable",
+        "Emitter",
+        "TreeActor",
+        "Utilities",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
       name: "StateTree",
       dependencies: [
+        "Behaviors",
         "Disposable",
         "Emitter",
         "TreeState",
+        "TreeActor",
+        "Utilities",
         .product(name: "HeapModule", package: "swift-collections"),
         .product(name: "OrderedCollections", package: "swift-collections"),
       ],
@@ -130,6 +152,7 @@ let package = Package(
       name: "StateTreeReporter",
       dependencies: [
         "StateTree",
+        "TreeActor",
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
@@ -142,6 +165,9 @@ let package = Package(
     ),
     .target(
       name: "TreeState",
+      dependencies: [
+        "TreeActor",
+      ],
       swiftSettings: Build.globalSwiftSettings
     ),
     .testTarget(
@@ -163,6 +189,10 @@ let package = Package(
       dependencies: [
         "StateTreeSwiftUI",
       ]
+    ),
+    .testTarget(
+      name: "BehaviorsTests",
+      dependencies: ["Behaviors"]
     ),
     .testTarget(
       name: "TreeStateTests",

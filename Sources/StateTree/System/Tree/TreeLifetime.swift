@@ -1,5 +1,9 @@
+import Behaviors
 import Disposable
 import Emitter
+import Foundation
+import TreeActor
+import Utilities
 
 // MARK: - TreeLifetime
 
@@ -26,6 +30,15 @@ public struct TreeLifetime<N: Node>: Disposable {
   public var updateEmitter: some Emitter<NodeChange> { runtime.updateEmitter }
   public var _info: StateTreeInfo { runtime._info }
 
+  /// Fetch the ``BehaviorResolution`` values for each ``Behavior`` that was run on the runtime.
+  public var behaviorResolutions: [Behaviors.Resolved] {
+    get async {
+      await runtime
+        .behaviorManager
+        .behaviorResolutions
+    }
+  }
+
   public nonisolated func dispose() {
     disposable.dispose()
   }
@@ -39,12 +52,19 @@ public struct TreeLifetime<N: Node>: Disposable {
     try runtime.set(state: state)
   }
 
-  /// Fetch the ``BehaviorResolution`` values for each ``Behavior`` that was run on the runtime.
-  @discardableResult
-  public func awaitBehaviors() async -> [Behaviors.Resolved] {
-    await runtime
+  @available(macOS 13.0, *)
+  public nonisolated func behaviorResolutions(timeout: Duration) async throws
+    -> [Behaviors.Resolved]
+  {
+    try await runtime
       .behaviorManager
-      .resolvedBehaviors()
+      .behaviorResolutions(timeout: timeout)
+  }
+
+  public nonisolated func behaviorResolutions(timeout: TimeInterval) async throws
+    -> [Behaviors.Resolved]
+  {
+    try await runtime.behaviorManager.behaviorResolutions(timeout: timeout)
   }
 
   public func snapshot() -> TreeStateRecord {

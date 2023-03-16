@@ -49,8 +49,8 @@ extension BoardState.Cell {
 extension Player {
   var icon: String {
     switch self {
-    case .O: return "🅾️"
-    case .X: return "❎"
+    case .O: "🅾️"
+    case .X: "❎"
     }
   }
 

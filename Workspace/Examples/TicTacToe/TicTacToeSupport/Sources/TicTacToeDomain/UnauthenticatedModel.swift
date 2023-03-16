@@ -32,7 +32,7 @@ public struct UnauthenticatedModel: Node {
             password: password
           )
       }
-      .onCompletion { result in
+      .onResult { result in
         $scope.transaction {
           do {
             let auth = try result.get()

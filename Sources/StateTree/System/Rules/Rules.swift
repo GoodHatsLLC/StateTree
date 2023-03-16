@@ -1,3 +1,5 @@
+import Behaviors
+
 // MARK: - RuleContext
 
 public struct RuleContext {

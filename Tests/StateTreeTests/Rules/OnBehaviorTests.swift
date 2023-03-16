@@ -1,5 +1,6 @@
 // import Emitter
 // import XCTest
+import Disposable
 // @_spi(Implementation) @testable import StateTree
 //
 //// MARK: - OnBehaviorTests
@@ -31,7 +32,7 @@
 //    subject.emit(.value(2))
 //    subject.emit(.finished)
 //    subject.emit(.failed(TestError()))
-//    _ = await tree.resolvedBehaviors()
+//    _ = await tree.behaviorResolutions
 //    XCTAssertEqual(
 //      events,
 //      [
@@ -57,7 +58,7 @@
 //    subject.emit(.value(1))
 //    subject.emit(.failed(TestError()))
 //    subject.emit(.finished)
-//    _ = await tree.resolvedBehaviors()
+//    _ = await tree.behaviorResolutions
 //    XCTAssertEqual(
 //      events,
 //      [

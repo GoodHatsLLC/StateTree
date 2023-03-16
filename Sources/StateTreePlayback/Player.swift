@@ -59,7 +59,7 @@ public final class Player<Root: Node>: Disposable {
           return
         }
         do {
-          try self.lifetime.set(state: frame.state)
+          try lifetime.set(state: frame.state)
         } catch {
           assertionFailure(error.localizedDescription)
         }

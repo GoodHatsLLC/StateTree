@@ -9,8 +9,8 @@ public enum StepResolutionInternal {
   var isApplicable: Bool {
     switch self {
     case .application,
-         .pending: return true
-    case .inapplicable: return false
+         .pending: true
+    case .inapplicable: false
     }
   }
 }

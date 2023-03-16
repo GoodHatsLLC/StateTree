@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - Union3Route
 
 protocol Union3Route: NodeUnionInternal {
@@ -57,13 +59,15 @@ extension Union {
     public init?(asCaseContaining node: some Node) {
       if let a = node as? A {
         self.init(a)
+        return
       } else if let b = node as? B {
         self.init(b)
+        return
       } else if let c = node as? C {
         self.init(c)
-      } else {
-        return nil
+        return
       }
+      return nil
     }
 
     public init?(maybe: A?) {
@@ -132,9 +136,9 @@ extension Union {
 
     public func idSet(from nodeID: NodeID) -> RouteRecord {
       switch self {
-      case .a: return .union3(.a(nodeID))
-      case .b: return .union3(.b(nodeID))
-      case .c: return .union3(.c(nodeID))
+      case .a: .union3(.a(nodeID))
+      case .b: .union3(.b(nodeID))
+      case .c: .union3(.c(nodeID))
       }
     }
 
@@ -206,7 +210,7 @@ extension Union {
     {
       switch self {
       case .a:
-        return try uninitialized
+        try uninitialized
           .initialize(
             as: A.self,
             depth: depth,
@@ -215,7 +219,7 @@ extension Union {
           )
           .erase()
       case .b:
-        return try uninitialized
+        try uninitialized
           .initialize(
             as: B.self,
             depth: depth,
@@ -223,7 +227,7 @@ extension Union {
             record: record
           ).erase()
       case .c:
-        return try uninitialized
+        try uninitialized
           .initialize(
             as: C.self,
             depth: depth,

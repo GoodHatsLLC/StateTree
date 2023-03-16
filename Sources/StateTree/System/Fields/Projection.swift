@@ -1,3 +1,5 @@
+import Utilities
+
 // MARK: - ProjectionField
 
 protocol ProjectionField<Value> {

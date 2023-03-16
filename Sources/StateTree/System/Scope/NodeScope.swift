@@ -1,5 +1,6 @@
+import Behaviors
 import Disposable
-import Emitter
+import Utilities
 
 // MARK: - NodeScope
 
@@ -363,29 +364,29 @@ extension NodeScope {
 
     var requiresReadying: Bool {
       switch self {
-      case .shouldStart: return true
-      case .shouldUpdate: return true
-      case .shouldHandleIntents: return true
-      case .rebuild: return true
-      default: return false
+      case .shouldStart: true
+      case .shouldUpdate: true
+      case .shouldHandleIntents: true
+      case .rebuild: true
+      default: false
       }
     }
 
     var requiresFinishing: Bool {
       switch self {
-      case .shouldStop: return true
-      case .shouldPrepareStop: return true
-      case .shouldNotifyStop: return true
-      case .finished: return true
-      default: return false
+      case .shouldStop: true
+      case .shouldPrepareStop: true
+      case .shouldNotifyStop: true
+      case .finished: true
+      default: false
       }
     }
 
     var isStable: Bool {
       switch self {
-      case .clean: return true
-      case .finished: return true
-      default: return false
+      case .clean: true
+      case .finished: true
+      default: false
       }
     }
 

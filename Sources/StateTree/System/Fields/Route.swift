@@ -47,7 +47,7 @@ public struct Route<Router: RouterType>: RouteField {
   }
 
   @_spi(Implementation)
-  @TreeActor  public var current: (idSet: RouteRecord, value: Router.Value)? {
+  @TreeActor public var current: (idSet: RouteRecord, value: Router.Value)? {
     guard let connection
     else {
       return nil
@@ -67,7 +67,7 @@ public struct Route<Router: RouterType>: RouteField {
   }
 
   @_spi(Implementation)
-  @TreeActor  public var endIndex: Int {
+  @TreeActor public var endIndex: Int {
     guard
       let connection,
       let idSet = connection
