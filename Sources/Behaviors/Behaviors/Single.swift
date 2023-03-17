@@ -53,10 +53,12 @@ extension Behaviors {
       let onCancel: @TreeActor () -> Void
 
       func handle(_ event: Immediate<Value>) -> AnyDisposable {
-        Task { @TreeActor in
-          let event = event.resolve()
-          onSuccess(event)
-        }.erase()
+        AnyDisposable(
+          Task { @TreeActor in
+            let event = event.resolve()
+            onSuccess(event)
+          }
+        )
       }
 
     }

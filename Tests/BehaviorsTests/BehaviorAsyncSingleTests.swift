@@ -2,6 +2,7 @@ import Behaviors
 import Disposable
 import Emitter
 import TreeActor
+import Utilities
 import XCTest
 
 // MARK: - BehaviorAsyncSingleTests
@@ -95,7 +96,7 @@ final class BehaviorAsyncSingleTests: XCTestCase {
         _ = try await behavior.get()
         XCTFail()
       } catch {
-        didThrow.resolve(true)
+        await didThrow.resolve(true)
       }
     }
     Task {

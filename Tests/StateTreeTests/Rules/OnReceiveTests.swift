@@ -22,13 +22,13 @@ final class OnReceiveTests: XCTestCase {
     tree.stage(on: stage)
     let node = tree.root.node
     XCTAssertEqual(node.val, nil)
-    subject.emit(.value(1))
+    subject.emit(value: 1)
     XCTAssertEqual(node.val, 1)
-    subject.emit(.value(2))
+    subject.emit(value: 2)
     XCTAssertEqual(node.val, 2)
-    subject.emit(.finished)
+    subject.finish()
     XCTAssertEqual(node.val, nil)
-    subject.emit(.failed(TestError()))
+    subject.fail(TestError())
     XCTAssertEqual(node.val, nil)
   }
 
@@ -40,11 +40,11 @@ final class OnReceiveTests: XCTestCase {
     tree.stage(on: stage)
     let node = tree.root.node
     XCTAssertEqual(node.val, nil)
-    subject.emit(.value(1))
+    subject.emit(value: 1)
     XCTAssertEqual(node.val, 1)
-    subject.emit(.failed(TestError()))
+    subject.fail(TestError())
     XCTAssertEqual(node.val, -1)
-    subject.emit(.finished)
+    subject.finish()
     XCTAssertEqual(node.val, -1)
   }
 }

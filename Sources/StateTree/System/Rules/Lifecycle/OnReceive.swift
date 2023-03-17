@@ -10,7 +10,7 @@ public struct OnReceive<Value: Sendable>: Rules {
   // MARK: Lifecycle
 
   public init(
-    _ emitter: some Emitter<Value>,
+    _ emitter: some Emitting<Value>,
     onValue: @escaping @TreeActor (Value) -> Void,
     onFinished: @escaping @TreeActor () -> Void = { },
     onError: @escaping @TreeActor (Error) -> Void = { _ in }
@@ -66,7 +66,7 @@ public struct OnReceive<Value: Sendable>: Rules {
 
 extension Rules {
   public func onReceive<Value>(
-    _ emitter: some Emitter<Value>,
+    _ emitter: some Emitting<Value>,
     onValue: @escaping @TreeActor (Value) -> Void,
     onFinished: @escaping @TreeActor () -> Void = { },
     onError: @escaping @TreeActor (Error) -> Void = { _ in }

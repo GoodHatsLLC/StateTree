@@ -81,10 +81,6 @@ extension AnyScope: Scoping {
   var requiresFinishing: Bool { underlying.requiresFinishing }
   var requiresReadying: Bool { underlying.requiresReadying }
 
-  func resolveBehaviors() async -> [Behaviors.Resolved] {
-    await underlying.resolveBehaviors()
-  }
-
   func stepTowardsReady() throws -> Bool {
     try underlying.stepTowardsReady()
   }

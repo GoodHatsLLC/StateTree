@@ -208,8 +208,6 @@ extension NodeScope {
     runtime.ancestors(of: nid) ?? []
   }
 
-  public func resolveBehaviors() async -> [Behaviors.Resolved] { [] } // TODO: impl
-
   public func applyIntent(_ intent: Intent) -> StepResolutionInternal {
     let resolutions = activeRules?
       .act(for: .handleIntent(intent), with: context)

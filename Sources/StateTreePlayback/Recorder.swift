@@ -27,7 +27,7 @@ public final class Recorder<Root: Node> {
     frameCountSubject.value
   }
 
-  public var frameCount: some Emitter<Int> { frameCountSubject }
+  public var frameCount: some Emitting<Int> { frameCountSubject }
 
   public var currentFrame: StateFrame? {
     frames.last

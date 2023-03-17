@@ -1,5 +1,7 @@
 import Emitter
+import Foundation
 import TreeActor
+@_spi(Implementation) import Utilities
 
 // MARK: - BehaviorManager
 
@@ -62,7 +64,7 @@ public actor BehaviorManager {
     }
   }
 
-  @available(macOS 13.0, *)
+  @available(macOS 13.0, iOS 16.0, *)
   public nonisolated func behaviorResolutions(timeout: Duration) async throws
     -> [Behaviors.Resolved]
   {
@@ -104,8 +106,6 @@ public actor BehaviorManager {
   private let trackingConfig: BehaviorTrackingConfig
 }
 
-#if canImport(Foundation)
-import Foundation
 extension BehaviorManager {
 
   public nonisolated func behaviorResolutions(timeout: TimeInterval) async throws
@@ -127,5 +127,3 @@ extension BehaviorManager {
     }
   }
 }
-
-#endif

@@ -27,7 +27,7 @@ public struct TreeLifetime<N: Node>: Disposable {
 
   public var tree: Tree { runtime.tree }
   public var rootNode: N { root.node }
-  public var updateEmitter: some Emitter<NodeChange> { runtime.updateEmitter }
+  public var updateEmitter: some Emitting<NodeChange> { runtime.updateEmitter }
   public var _info: StateTreeInfo { runtime._info }
 
   /// Fetch the ``BehaviorResolution`` values for each ``Behavior`` that was run on the runtime.
@@ -52,7 +52,7 @@ public struct TreeLifetime<N: Node>: Disposable {
     try runtime.set(state: state)
   }
 
-  @available(macOS 13.0, *)
+  @available(macOS 13.0, iOS 16.0, *)
   public nonisolated func behaviorResolutions(timeout: Duration) async throws
     -> [Behaviors.Resolved]
   {

@@ -28,10 +28,10 @@ import Disposable
 //        )
 //      )
 //    tree.stage(on: stage)
-//    subject.emit(.value(1))
-//    subject.emit(.value(2))
-//    subject.emit(.finished)
-//    subject.emit(.failed(TestError()))
+//    subject.emit(value: 1)
+//    subject.emit(value: 2)
+//    subject.finish()
+//    subject.fail(TestError())
 //    _ = await tree.behaviorResolutions
 //    XCTAssertEqual(
 //      events,
@@ -55,9 +55,9 @@ import Disposable
 //        )
 //      )
 //    tree.stage(on: stage)
-//    subject.emit(.value(1))
-//    subject.emit(.failed(TestError()))
-//    subject.emit(.finished)
+//    subject.emit(value: 1)
+//    subject.fail(TestError())
+//    subject.finish()
 //    _ = await tree.behaviorResolutions
 //    XCTAssertEqual(
 //      events,

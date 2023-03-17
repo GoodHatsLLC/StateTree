@@ -11,12 +11,6 @@ public enum ExternalRequirement {
   case stop
 }
 
-// MARK: - Scoping
-
-public protocol Scoping {
-  func own(_ disposable: some Disposable)
-}
-
 // MARK: - ScopeType
 
 @TreeActor
@@ -36,7 +30,6 @@ public protocol ScopeType<N>: Scoping, Hashable {
   var record: NodeRecord { get }
   var dependencies: DependencyValues { get }
   var valueFieldDependencies: Set<FieldID> { get }
-  func resolveBehaviors() async -> [Behaviors.Resolved]
   func applyIntent(_ intent: Intent) -> StepResolutionInternal
   func markDirty(pending: ExternalRequirement)
   func stepTowardsReady() throws -> Bool

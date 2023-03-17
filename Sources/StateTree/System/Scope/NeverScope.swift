@@ -106,19 +106,6 @@ struct NeverScope: ScopeType {
     return false
   }
 
-  func resolveBehaviors() async -> [Behaviors.Resolved] {
-    assertionFailure("NeverScope should never be invoked")
-    return []
-  }
-
-  func focus() {
-    assertionFailure("NeverScope should never be invoked")
-  }
-
-  func unfocus() {
-    assertionFailure("NeverScope should never be invoked")
-  }
-
   func applyIntent(_: Intent) -> StepResolutionInternal {
     assertionFailure("NeverScope should never be invoked")
     return .inapplicable

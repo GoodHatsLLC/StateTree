@@ -43,10 +43,6 @@ public struct Scope: ScopeField {
     inner.treeScope?.scope?.isActive ?? false
   }
 
-  public func resolutions() async -> [Behaviors.Resolved] {
-    await inner.treeScope?.scope?.resolveBehaviors() ?? []
-  }
-
   @TreeActor
   public func transaction<T>(_ action: @escaping () throws -> T) rethrows -> T? {
     try inner.treeScope?.runtime.transaction(action)

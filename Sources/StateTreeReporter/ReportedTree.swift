@@ -3,6 +3,7 @@ import Emitter
 import Foundation
 @_spi(Implementation) import StateTree
 import SwiftUI
+import Utilities
 
 // MARK: - ReportedTree
 
@@ -37,10 +38,10 @@ public final class ReportedTree<N: Node> {
     }
     let (reported, lifetime) = try reportedFunc()
     self.lifetime = lifetime
-    subject.emit(.value(reported))
+    subject.emit(value: reported)
     let asyncValue = AsyncThrowingValue<Void>()
     reported.onStop(subscriber: self) {
-      asyncValue.resolve(())
+      Task { await asyncValue.resolve(()) }
     }
     return try await withTaskCancellationHandler {
       try await asyncValue.value

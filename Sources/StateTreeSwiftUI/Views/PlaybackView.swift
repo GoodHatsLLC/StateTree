@@ -140,7 +140,8 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     .onReceive(
       scanReporter
         .flatMapLatest(producer: { $0 })
-        .combineDriver
+        .asCombinePublisher()
+        .replaceError(with: -1)
     ) { loc in
       switch mode {
       case .record(let recorder): frameRange = recorder.frameRangeDouble
@@ -166,7 +167,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
           let player = try life.player(frames: frames)
           try player.start()
           mode = .play(player)
-          scanReporter.emit(.value(player.currentFrameIndex.erase()))
+          scanReporter.emit(value: player.currentFrameIndex.erase())
         } catch {
           assertionFailure("❌ \(error.localizedDescription)")
         }
@@ -177,7 +178,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
           frameRange = 0.0 ... Double(max(1, keptFrames.count - 1))
           try recorder.start()
           mode = .record(recorder)
-          scanReporter.emit(.value(recorder.frameCount.erase()))
+          scanReporter.emit(value: recorder.frameCount.erase())
         } catch {
           assertionFailure("❌ \(error.localizedDescription)")
         }
@@ -186,7 +187,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
           let recorder = life.recorder()
           try recorder.start()
           mode = .record(recorder)
-          scanReporter.emit(.value(recorder.frameCount.erase()))
+          scanReporter.emit(value: recorder.frameCount.erase())
         } catch {
           assertionFailure("❌ \(error.localizedDescription)")
         }

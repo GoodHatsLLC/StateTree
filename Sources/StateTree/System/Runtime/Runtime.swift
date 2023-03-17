@@ -24,7 +24,7 @@ public final class Runtime {
 
   // MARK: Public
 
-  public var updateEmitter: some Emitter<NodeChange> {
+  public var updateEmitter: some Emitting<NodeChange> {
     updateSubject
   }
 
@@ -100,7 +100,7 @@ extension Runtime {
 // MARK: Computed properties
 extension Runtime {
 
-  var didStabilizeEmitter: some Emitter<Void> {
+  var didStabilizeEmitter: some Emitting<Void> {
     didStabilizeSubject
   }
 
@@ -383,9 +383,7 @@ extension Runtime {
 
   private func emitUpdates(changes: [NodeChange]) {
     for change in changes {
-      updateSubject.emit(
-        .value(change)
-      )
+      updateSubject.emit(value: change)
     }
   }
 

@@ -86,13 +86,13 @@ final class BehaviorStreamTests: XCTestCase {
     } onCancel: {
       XCTFail()
     }
-    subject.emit(.value(3))
-    subject.emit(.value(4))
-    subject.emit(.value(5))
+    subject.emit(value: 3)
+    subject.emit(value: 4)
+    subject.emit(value: 5)
     await asyncBlocks[0].value
-    subject.emit(.failed(TestError()))
+    subject.fail(TestError())
     await asyncBlocks[1].value
-    subject.emit(.value(3))
+    subject.emit(value: 3)
     let resolved = await subnodeResolution.value
     XCTAssertEqual(resolved.id, .id("stream_eventual_fail"))
     XCTAssertEqual(resolved.state, .failed)

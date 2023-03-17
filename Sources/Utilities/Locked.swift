@@ -20,12 +20,12 @@ public struct Locked<T>: LockedValue {
     get {
       withLock { $0 }
     }
-    _modify {
+    nonmutating _modify {
       underlying.lock()
       yield &underlying.unsafe_wrapped
       underlying.unlock()
     }
-    set {
+    nonmutating set {
       withLock { $0 = newValue }
     }
   }
