@@ -4,9 +4,9 @@ import Emitter
 import TreeActor
 import XCTest
 
-// MARK: - DisposableStage + Scoping
+// MARK: - DisposableStage + BehaviorScoping
 
-extension DisposableStage: Scoping {
+extension DisposableStage: BehaviorScoping {
   public func own(_ disposable: some Disposable) {
     disposable.stage(on: self)
   }

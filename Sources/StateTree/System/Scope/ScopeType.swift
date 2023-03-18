@@ -15,7 +15,7 @@ public enum ExternalRequirement {
 
 @TreeActor
 @_spi(Implementation)
-public protocol ScopeType<N>: Scoping, Hashable {
+public protocol ScopeType<N>: BehaviorScoping, Hashable {
   associatedtype N: Node
   nonisolated var nid: NodeID { get }
   nonisolated var cuid: CUID? { get }

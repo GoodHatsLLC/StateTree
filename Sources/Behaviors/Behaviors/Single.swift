@@ -4,23 +4,22 @@ import TreeActor
 // MARK: - Behaviors.Single
 
 extension Behaviors {
-  public struct Single<Input, Value>: BehaviorType {
+  public struct Single<Input, Value>: SingleBehaviorType {
 
     // MARK: Lifecycle
 
-    public init(_ id: BehaviorID, subscriber: Subscriber) {
+    public init(_ id: BehaviorID, subscriber: Behaviors.Subscriber<Input, Producer>) {
       self.id = id
       self.subscriber = subscriber
     }
 
     // MARK: Public
 
-    public typealias Value = Value
+    public typealias Func = (Input) async -> Value
     public typealias Resolution = Producer.Resolution
+    public typealias Producer = One<Eventual<Value>>
     public typealias Subscriber = Behaviors.Subscriber<Input, Producer>
 
-    public typealias Input = Input
-    public typealias Producer = OnlyOne<Immediate<Value>>
     public struct Handler: SingleHandlerType {
 
       // MARK: Lifecycle
@@ -41,7 +40,7 @@ extension Behaviors {
       // MARK: Public
 
       public typealias Behavior = Single<Input, Value>
-      public typealias Producer = OnlyOne<Immediate<Value>>
+      public typealias Producer = One<Eventual<Value>>
 
       public func cancel() async {
         await onCancel()
@@ -52,20 +51,11 @@ extension Behaviors {
       let onSuccess: @TreeActor (_ value: Value) -> Void
       let onCancel: @TreeActor () -> Void
 
-      func handle(_ event: Immediate<Value>) -> AnyDisposable {
-        AnyDisposable(
-          Task { @TreeActor in
-            let event = event.resolve()
-            onSuccess(event)
-          }
-        )
-      }
-
     }
 
     public let id: BehaviorID
 
-    public let subscriber: Behaviors.Subscriber<Input, Producer>
+    public let subscriber: Subscriber
 
     public func start(
       input: Input,
@@ -75,21 +65,18 @@ extension Behaviors {
       -> AnyDisposable
     {
       let producer = await subscriber.subscribe(input: input)
-      let task = Task { @TreeActor in
-        if Task.isCancelled {
-          return
-        }
-        let value = producer.value.resolve()
+      let task = Task {
+        try Task.checkCancellation()
+        let value = await producer.value.resolve()
+        try Task.checkCancellation()
         await resolution.resolve(to: .finished) {
-          if !Task.isCancelled {
-            handler.onSuccess(value)
-          }
+          await handler.onSuccess(value)
         }
       }
       return AnyDisposable {
+        task.cancel()
         Task {
           await resolution.resolve(to: .cancelled) {
-            task.cancel()
             await handler.onCancel()
           }
         }
@@ -100,13 +87,13 @@ extension Behaviors {
 }
 
 extension Behaviors {
-  public static func make<Input, Value>(
+  public static func make<Input, T>(
     _ id: BehaviorID,
-    _ maker: @escaping (_ input: Input) -> Value
-  ) -> Single<Input, Value> {
+    _ maker: @escaping (_ input: Input) async -> T
+  ) -> Single<Input, T> {
     .init(id, subscriber: .init { (input: Input) in
-      OnlyOne(value: .init {
-        maker(input)
+      One(value: .init {
+        await maker(input)
       })
     })
   }

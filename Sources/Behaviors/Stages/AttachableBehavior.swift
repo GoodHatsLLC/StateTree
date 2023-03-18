@@ -6,7 +6,7 @@ public struct AttachableBehavior<Behavior: BehaviorType> {
 
   // MARK: Lifecycle
 
-  init(
+  public init(
     behavior: Behavior
   ) {
     self.id = behavior.id

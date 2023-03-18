@@ -40,6 +40,7 @@ public struct AnyScope: Hashable {
   }
 
   public func own(_ disposable: some Disposable) { underlying.own(disposable) }
+  public func canOwn() -> Bool { underlying.canOwn() }
 
   // MARK: Internal
 
@@ -49,9 +50,9 @@ public struct AnyScope: Hashable {
   let setNodeFunc: @TreeActor (any Node) -> Void
 }
 
-// MARK: Scoping
+// MARK: BehaviorScoping
 
-extension AnyScope: Scoping {
+extension AnyScope: BehaviorScoping {
 
   // MARK: Public
 

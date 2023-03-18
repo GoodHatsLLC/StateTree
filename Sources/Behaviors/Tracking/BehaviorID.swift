@@ -5,11 +5,11 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
 
   // MARK: Lifecycle
 
-  init(
+  public init(
     fileID: String,
     line: Int,
     column: Int,
-    custom: String?
+    custom: String? = nil
   ) {
     let info = "\(fileID):\(line):\(column)"
     let hashString = StableHasher.hash(Data(info.utf8))

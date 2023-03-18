@@ -35,7 +35,7 @@ public struct StartableBehavior<Input> {
   func start(
     manager: BehaviorManager,
     input: Input,
-    scope: some Scoping
+    scope: some BehaviorScoping
   ) async
     -> ActivatedBehavior
   {
@@ -44,7 +44,7 @@ public struct StartableBehavior<Input> {
 
   // MARK: Private
 
-  private let starter: (BehaviorManager, Input, Behaviors.Resolution, any Scoping) async
+  private let starter: (BehaviorManager, Input, Behaviors.Resolution, any BehaviorScoping) async
     -> ActivatedBehavior
 
 }

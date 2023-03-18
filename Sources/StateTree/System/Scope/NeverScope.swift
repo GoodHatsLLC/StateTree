@@ -120,6 +120,11 @@ struct NeverScope: ScopeType {
     disposable.dispose()
   }
 
+  func canOwn() -> Bool {
+    assertionFailure("NeverScope should never be invoked")
+    return false
+  }
+
   func stepTowardsFinished() throws -> Bool {
     assertionFailure("NeverScope should never be invoked")
     throw NeverScopeError()

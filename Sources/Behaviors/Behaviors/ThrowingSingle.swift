@@ -1,10 +1,11 @@
 import Disposable
+import Emitter
 import TreeActor
 
-// MARK: - Behaviors.Sync.Throwing.Single
+// MARK: - Behaviors.Throwing.Single
 
-extension Behaviors.Sync.Throwing {
-  public struct Single<Input, Value>: BehaviorType {
+extension Behaviors.Throwing {
+  public struct Single<Input, Value>: SingleThrowingBehaviorType {
 
     // MARK: Lifecycle
 
@@ -15,11 +16,10 @@ extension Behaviors.Sync.Throwing {
 
     // MARK: Public
 
-    public typealias Input = Input
-    public typealias Value = Value
+    public typealias Func = (Input) async throws -> Value
     public typealias Resolution = Producer.Resolution
     public typealias Subscriber = Behaviors.Subscriber<Input, Producer>
-    public typealias Producer = OnlyOne<EventualThrowing<Value>>
+    public typealias Producer = One<EventualThrowing<Value>>
     public struct Handler: ThrowingSingleHandlerType {
       public init(
         onResult: @escaping @TreeActor (Result<Value, Error>) -> Void,
@@ -35,7 +35,7 @@ extension Behaviors.Sync.Throwing {
         self.onResult = { _ in }
       }
 
-      public typealias Producer = OnlyOne<EventualThrowing<Value>>
+      public typealias Producer = One<EventualThrowing<Value>>
       let onResult: @TreeActor (_ result: Result<Value, Error>) -> Void
       let onCancel: @TreeActor () -> Void
 
@@ -58,24 +58,20 @@ extension Behaviors.Sync.Throwing {
       let producer = await subscriber.subscribe(input: input)
       let task = Task {
         do {
-          let result = try await producer.value.resolve()
+          let value = try await producer.value.resolve()
           await resolution.resolve(to: .finished) {
-            if !Task.isCancelled {
-              await handler.onResult(.success(result))
-            }
+            await handler.onResult(.success(value))
           }
         } catch {
           await resolution.resolve(to: .failed) {
-            if !Task.isCancelled {
-              await handler.onResult(.failure(error))
-            }
+            await handler.onResult(.failure(error))
           }
         }
       }
       return AnyDisposable {
-        task.cancel()
         Task {
           await resolution.resolve(to: .cancelled) {
+            task.cancel()
             await handler.onCancel()
           }
         }
@@ -85,13 +81,13 @@ extension Behaviors.Sync.Throwing {
 }
 
 extension Behaviors {
-  public static func make<Input, Value>(
+  public static func make<Input, T>(
     _ id: BehaviorID,
-    _ maker: @escaping (_ input: Input) throws -> Value
-  ) -> Sync.Throwing.Single<Input, Value> {
+    _ maker: @escaping (_ input: Input) async throws -> T
+  ) -> Throwing.Single<Input, T> {
     .init(id, subscriber: .init { (input: Input) in
-      OnlyOne(value: .init {
-        try maker(input)
+      One(value: .init {
+        try await maker(input)
       })
     })
   }

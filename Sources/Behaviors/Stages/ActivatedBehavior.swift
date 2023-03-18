@@ -10,7 +10,7 @@ public struct ActivatedBehavior: Disposable, Hashable {
     manager: BehaviorManager,
     handler: Behavior.Handler,
     resolution: Behaviors.Resolution,
-    scope: some Scoping
+    scope: some BehaviorScoping
   ) async {
     self.id = behavior.id
     var behavior = behavior
@@ -19,7 +19,7 @@ public struct ActivatedBehavior: Disposable, Hashable {
         behavior: &behavior,
         input: input
       )
-    if scope.shouldStart() {
+    if scope.canOwn() {
       let disposable = await behavior
         .start(
           input: input,

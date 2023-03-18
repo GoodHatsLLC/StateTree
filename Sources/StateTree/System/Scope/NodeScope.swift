@@ -86,6 +86,11 @@ extension NodeScope: ScopeType {
     }
   }
 
+  public func canOwn() -> Bool {
+    // TODO: add func to stage
+    isActive && !stage.erase().isDisposed
+  }
+
   public func erase() -> AnyScope {
     AnyScope(scope: self)
   }

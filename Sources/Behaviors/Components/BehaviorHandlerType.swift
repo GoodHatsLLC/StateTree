@@ -3,8 +3,7 @@ import TreeActor
 // MARK: - HandlerType
 
 public protocol HandlerType {
-  associatedtype Value = Producer.Resolution.Value
-  associatedtype Producer: ProducerType
+  associatedtype Value
   associatedtype Behavior: BehaviorType where Behavior.Handler == Self
   init()
   func cancel() async
@@ -13,7 +12,10 @@ public protocol HandlerType {
 // MARK: - SingleHandlerType
 
 public protocol SingleHandlerType: HandlerType {
-  init(onSuccess: @escaping @TreeActor (Value) -> Void, onCancel: @escaping @TreeActor () -> Void)
+  init(
+    onSuccess: @escaping @TreeActor (Value) -> Void,
+    onCancel: @escaping @TreeActor () -> Void
+  )
 }
 
 // MARK: - ThrowingSingleHandlerType

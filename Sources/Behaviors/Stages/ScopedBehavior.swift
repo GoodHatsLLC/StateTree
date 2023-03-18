@@ -2,45 +2,27 @@ import Disposable
 import TreeActor
 import Utilities
 
-// MARK: - Scoping
-
-public protocol Scoping {
-  func own(_ disposable: some Disposable)
-}
-
-extension Scoping {
-  func shouldStart() -> Bool {
-    let reporter = ReportingDisposable_HACK()
-    own(reporter)
-    return !reporter.isDisposed
-  }
-}
-
-// MARK: - ReportingDisposable_HACK
-
-private final class ReportingDisposable_HACK: Disposable {
-  let lock = Locked(false)
-
-  var isDisposed: Bool {
-    lock.withLock { $0 }
-  }
-
-  func dispose() {
-    lock.withLock { isDisposed in
-      isDisposed = true
-    }
-  }
-}
-
 // MARK: - ScopedBehavior
 
 public struct ScopedBehavior<Behavior: BehaviorType> where Behavior.Input == Void {
 
   // MARK: Lifecycle
 
+  public init(
+    behavior: Behavior,
+    scope: any BehaviorScoping,
+    manager: BehaviorManager
+  ) {
+    self.init(
+      behavior: AttachableBehavior(behavior: behavior),
+      scope: scope,
+      manager: manager
+    )
+  }
+
   init(
     behavior: AttachableBehavior<Behavior>,
-    scope: any Scoping,
+    scope: any BehaviorScoping,
     manager: BehaviorManager
   ) {
     self.id = behavior.id
@@ -52,8 +34,11 @@ public struct ScopedBehavior<Behavior: BehaviorType> where Behavior.Input == Voi
   // MARK: Public
 
   public let id: BehaviorID
+
+  // MARK: Private
+
   private let behavior: AttachableBehavior<Behavior>
-  private let scope: any Scoping
+  private let scope: any BehaviorScoping
   private let manager: BehaviorManager
 
 }

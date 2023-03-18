@@ -44,24 +44,28 @@ final class BehaviorStreamTests: XCTestCase {
   }
 
   func test_immediate_failure() async throws {
-    var receivedError: Error?
-    let behavior = Behaviors.make(.id("stream_fail")) { () throws -> AnyAsyncSequence<Int> in
-      throw TestError()
-    }.scoped(to: stage, manager: .init())
+    let receivedError = AsyncValue<Error>()
+    let behavior = Behaviors
+      .make(.id("stream_fail")) { () async -> AsyncThrowingStream<Int, any Error> in
+        AsyncThrowingStream<Int, any Error> {
+          throw TestError()
+        }
+      }.scoped(to: stage, manager: .init())
     let subnodeResolution = await behavior
       .onValue { _ in
         XCTFail()
       } onFinish: {
         XCTFail()
       } onFailure: { error in
-        receivedError = error
+        Task { await receivedError.resolve(error) }
       } onCancel: {
         XCTFail()
       }
     let resolved = await subnodeResolution.value
     XCTAssertEqual(resolved.id, .id("stream_fail"))
     XCTAssertEqual(resolved.state, .failed)
-    XCTAssert(receivedError is TestError)
+    let error = await receivedError.value
+    XCTAssert(error is TestError)
   }
 
   func test_eventual_failure() async throws {
