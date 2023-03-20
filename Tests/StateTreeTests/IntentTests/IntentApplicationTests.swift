@@ -21,7 +21,7 @@ final class IntentApplicationTests: XCTestCase {
 
     // No value since intent has not triggered.
     XCTAssertNil(life.rootNode.value)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -33,7 +33,7 @@ final class IntentApplicationTests: XCTestCase {
     // intent has been applied
     XCTAssertEqual(life.rootNode.value, 123)
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
   }
 
   @TreeActor
@@ -44,7 +44,7 @@ final class IntentApplicationTests: XCTestCase {
 
     // No value is present since the intent has not triggered.
     XCTAssertNil(life.rootNode.payload)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -64,7 +64,7 @@ final class IntentApplicationTests: XCTestCase {
     // intent has been applied
     XCTAssertEqual(life.rootNode.payload, "PAYLOAD")
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
   }
 
   @TreeActor
@@ -75,7 +75,7 @@ final class IntentApplicationTests: XCTestCase {
 
     // No routed node since intent has not triggered.
     XCTAssertNil(life.rootNode.child)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -89,7 +89,7 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertNotNil(life.rootNode.child)
     XCTAssertEqual(life.rootNode.child?.value, 321)
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
   }
 
   @TreeActor
@@ -100,7 +100,7 @@ final class IntentApplicationTests: XCTestCase {
 
     // No routed node since intent has not triggered.
     XCTAssertNil(life.rootNode.child)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -119,7 +119,7 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertNotNil(life.rootNode.child)
     XCTAssertEqual(life.rootNode.child?.child?.value, 321)
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
   }
 
   @TreeActor
@@ -131,7 +131,7 @@ final class IntentApplicationTests: XCTestCase {
     // No value since intent has not triggered.
     XCTAssertNil(life.rootNode.value1)
     XCTAssertNil(life.rootNode.value2)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -145,7 +145,7 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertEqual(life.rootNode.value1, "stepOne")
     XCTAssertEqual(life.rootNode.value2, "stepTwo")
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
   }
 
   @TreeActor
@@ -159,7 +159,7 @@ final class IntentApplicationTests: XCTestCase {
     XCTAssertEqual(life.rootNode.mayRoute, false)
     XCTAssertNil(life.rootNode.child)
     // there is no active intent
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
 
     // make the intent
     let intent = try XCTUnwrap(
@@ -173,14 +173,14 @@ final class IntentApplicationTests: XCTestCase {
     // intent has not been fully applied and is still active
     XCTAssertEqual(life.rootNode.shouldRoute, false)
     XCTAssertNil(life.rootNode.child)
-    XCTAssertNotNil(life._info.pendingIntent)
+    XCTAssertNotNil(life.info.pendingIntent)
 
     life.rootNode.mayRoute = true
 
     // once the state changes, the intent applies and finishes
     XCTAssertEqual(life.rootNode.shouldRoute, true)
     XCTAssertNotNil(life.rootNode.child)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
   }
 
   @TreeActor
@@ -200,7 +200,7 @@ final class IntentApplicationTests: XCTestCase {
       XCTAssertNil(life.rootNode.initialNext)
       XCTAssertNil(life.rootNode.laterNext)
       // there is no active intent
-      XCTAssertNil(life._info.pendingIntent)
+      XCTAssertNil(life.info.pendingIntent)
 
       // make the intent
       let intent = try XCTUnwrap(
@@ -226,7 +226,7 @@ final class IntentApplicationTests: XCTestCase {
       // and so neither can the third
       XCTAssertNil(life.rootNode.initialNext?.child?.value)
       // the intent remains active as its step is pending
-      XCTAssertNotNil(life._info.pendingIntent)
+      XCTAssertNotNil(life.info.pendingIntent)
 
       if shouldInvalidate {
         let initialChildType = type(of: life.rootNode.initialNext)
@@ -241,7 +241,7 @@ final class IntentApplicationTests: XCTestCase {
         XCTAssertEqual("\(initialChildType)", "\(laterChildType)")
 
         // but the intent has finished
-        XCTAssertNil(life._info.pendingIntent)
+        XCTAssertNil(life.info.pendingIntent)
         // and the second and third steps never execute on the new node
         XCTAssertEqual(life.rootNode.laterNext?.shouldRoute, false)
 
@@ -255,7 +255,7 @@ final class IntentApplicationTests: XCTestCase {
         life.rootNode.initialNext?.mayRoute = true
         XCTAssertNotNil(life.rootNode.initialNext?.child)
         XCTAssertEqual(life.rootNode.initialNext?.child?.value, 111)
-        XCTAssertNil(life._info.pendingIntent)
+        XCTAssertNil(life.info.pendingIntent)
       }
     }
   }

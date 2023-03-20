@@ -1,41 +1,58 @@
 import Foundation
 import Utilities
 
+/// A custom, or build-stable, identifier associated with a ``Behavior``.
+///
+/// If a custom `.id("value")` identifier is passed to the `Behavior` it is used.
+/// If not a  `.auto()` is generated based on the source code location of the behavior's
+/// initialization.
+///
+/// - ``id(fileID:line:column:_:)
+/// - ``auto(fileID:line:column:)``
+///
+/// > Warning: An auto-generated `BehaviorID` will be stable only as long as the code around
+/// it remains unchanged. Prefer custom identifiers when testing `Behavior` identity.
 public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStringConvertible {
 
   // MARK: Lifecycle
 
-  public init(
+  private init(
     fileID: String,
     line: Int,
     column: Int,
-    custom: String? = nil
+    metadata: String?
   ) {
     let info = "\(fileID):\(line):\(column)"
     let hashString = StableHasher.hash(Data(info.utf8))
     #if DEBUG
     self.debugInfo = info
     #endif
-    self.id = custom ?? hashString
+
+    if let metadata {
+      self.value = hashString + "-\(metadata)"
+    } else {
+      self.value = hashString
+    }
+  }
+
+  private init(
+    value: String,
+    debugInfo: String?
+  ) {
+    #if DEBUG
+    self.debugInfo = debugInfo
+    #endif
+    self.value = value
   }
 
   // MARK: Public
 
-  /// A custom, or build-stable, identifier associated with a ``Behavior``.
-  ///
-  /// If a custom string identifier is passed to the Behavior it is used.
-  /// If not an id is generated based on the source code location of the behavior's initialization.
-  ///
-  /// > Warning: An auto-generated BehaviorID will be stable only as long as the code around
-  /// it remains unchanged. Prefer custom identifiers when testing Behavior identity.
-  public let id: String
+  public var id: String {
+    value
+  }
 
   public var description: String {
-    #if DEBUG
-    ".id(\(id))"
-    #else
-    id
-    #endif
+    ".id(\"\(value)\")"
   }
 
   public static func auto(
@@ -45,7 +62,19 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
   )
     -> BehaviorID
   {
-    self.init(fileID: fileID, line: line, column: column, custom: nil)
+    self.init(fileID: fileID, line: line, column: column, metadata: "auto")
+  }
+
+  @_spi(Implementation)
+  public static func meta(
+    fileID: String,
+    line: Int,
+    column: Int,
+    meta: String
+  )
+    -> BehaviorID
+  {
+    self.init(fileID: fileID, line: line, column: column, metadata: meta)
   }
 
   public static func id(
@@ -56,11 +85,11 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
   )
     -> BehaviorID
   {
-    .init(fileID: fileID, line: line, column: column, custom: id)
+    .init(value: id, debugInfo: "\(fileID):\(line):\(column)")
   }
 
   public static func == (lhs: BehaviorID, rhs: BehaviorID) -> Bool {
-    lhs.id == rhs.id
+    lhs.value == rhs.value
   }
 
   public func encode(to encoder: Encoder) throws {
@@ -72,13 +101,15 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
   // MARK: Internal
 
   static var invalid: BehaviorID {
-    .init(fileID: "invalid", line: -1, column: -1, custom: "invalid")
+    .init(value: "invalid", debugInfo: nil)
   }
 
   // MARK: Private
 
+  private let value: String
+
   #if DEBUG
   /// file, line, column information available in DEBUG builds only.
-  private let debugInfo: String
+  private let debugInfo: String?
   #endif
 }

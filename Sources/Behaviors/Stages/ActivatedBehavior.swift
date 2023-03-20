@@ -7,18 +7,11 @@ public struct ActivatedBehavior: Disposable, Hashable {
   init<Behavior: BehaviorType>(
     behavior: Behavior,
     input: Behavior.Input,
-    manager: BehaviorManager,
     handler: Behavior.Handler,
     resolution: Behaviors.Resolution,
     scope: some BehaviorScoping
   ) async {
     self.id = behavior.id
-    var behavior = behavior
-    manager
-      .intercept(
-        behavior: &behavior,
-        input: input
-      )
     if scope.canOwn() {
       let disposable = await behavior
         .start(
@@ -35,7 +28,6 @@ public struct ActivatedBehavior: Disposable, Hashable {
       self.resolution = resolution
       await handler.cancel()
     }
-    await manager.track(resolution: resolution)
   }
 
   // MARK: Public

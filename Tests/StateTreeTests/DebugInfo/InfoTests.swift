@@ -18,85 +18,85 @@ final class InfoTests: XCTestCase {
   func test_isActive() async throws {
     let testTree = Tree.main
 
-    XCTAssertFalse(testTree._info?.isActive == true)
+    XCTAssertFalse(testTree.info?.isActive == true)
 
     let lifetime = try testTree
       .start(root: DeepNode(height: 1))
 
-    XCTAssert(testTree._info?.isActive == true)
+    XCTAssert(testTree.info?.isActive == true)
 
     lifetime.dispose()
 
-    XCTAssertFalse(testTree._info?.isActive == true)
+    XCTAssertFalse(testTree.info?.isActive == true)
   }
 
   @TreeActor
   func test_count() async throws {
     let testTree = Tree.main
 
-    XCTAssertEqual(0, testTree._info?.nodeCount ?? 0)
+    XCTAssertEqual(0, testTree.info?.nodeCount ?? 0)
 
     let lifetime = try testTree
       .start(root: DeepNode(height: 7))
 
-    XCTAssertEqual(7, testTree._info?.height)
-    XCTAssertEqual(7, testTree._info?.nodeCount)
+    XCTAssertEqual(7, testTree.info?.height)
+    XCTAssertEqual(7, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 3
-    XCTAssertEqual(3, testTree._info?.height)
-    XCTAssertEqual(3, testTree._info?.nodeCount)
+    XCTAssertEqual(3, testTree.info?.height)
+    XCTAssertEqual(3, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 2
-    XCTAssertEqual(2, testTree._info?.height)
-    XCTAssertEqual(2, testTree._info?.nodeCount)
+    XCTAssertEqual(2, testTree.info?.height)
+    XCTAssertEqual(2, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 10
 
-    XCTAssertEqual(10, testTree._info?.height)
-    XCTAssertEqual(10, testTree._info?.nodeCount)
+    XCTAssertEqual(10, testTree.info?.height)
+    XCTAssertEqual(10, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 4
-    XCTAssertEqual(4, testTree._info?.height)
-    XCTAssertEqual(4, testTree._info?.nodeCount)
+    XCTAssertEqual(4, testTree.info?.height)
+    XCTAssertEqual(4, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 1
-    XCTAssertEqual(1, testTree._info?.height)
-    XCTAssertEqual(1, testTree._info?.nodeCount)
+    XCTAssertEqual(1, testTree.info?.height)
+    XCTAssertEqual(1, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 21
 
-    XCTAssertEqual(21, testTree._info?.height)
+    XCTAssertEqual(21, testTree.info?.height)
     // height above 10 triggers the 10-long side chain
-    XCTAssertEqual(31, testTree._info?.nodeCount)
+    XCTAssertEqual(31, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 10
 
-    XCTAssertEqual(10, testTree._info?.height)
-    XCTAssertEqual(10, testTree._info?.nodeCount)
+    XCTAssertEqual(10, testTree.info?.height)
+    XCTAssertEqual(10, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 25
 
-    XCTAssertEqual(25, testTree._info?.height)
+    XCTAssertEqual(25, testTree.info?.height)
     // height above 10 triggers the 10-long side chain
-    XCTAssertEqual(35, testTree._info?.nodeCount)
+    XCTAssertEqual(35, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 22
 
-    XCTAssertEqual(22, testTree._info?.height)
-    XCTAssertEqual(32, testTree._info?.nodeCount)
+    XCTAssertEqual(22, testTree.info?.height)
+    XCTAssertEqual(32, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 7
 
-    XCTAssertEqual(7, testTree._info?.height)
-    XCTAssertEqual(7, testTree._info?.nodeCount)
+    XCTAssertEqual(7, testTree.info?.height)
+    XCTAssertEqual(7, testTree.info?.nodeCount)
 
     lifetime.rootNode.height = 2
-    XCTAssertEqual(2, testTree._info?.height)
-    XCTAssertEqual(2, testTree._info?.nodeCount)
+    XCTAssertEqual(2, testTree.info?.height)
+    XCTAssertEqual(2, testTree.info?.nodeCount)
 
     lifetime.dispose()
-    XCTAssertEqual(0, testTree._info?.height ?? 0)
-    XCTAssertEqual(0, testTree._info?.nodeCount ?? 0)
+    XCTAssertEqual(0, testTree.info?.height ?? 0)
+    XCTAssertEqual(0, testTree.info?.nodeCount ?? 0)
   }
 
 }

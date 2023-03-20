@@ -32,7 +32,7 @@ final class StressTests: XCTestCase {
     let lifetime = try testTree
       .start(root: DeepNode(depth: 1))
     lifetime.stage(on: stage)
-    XCTAssert(testTree._info?.isActive == true)
+    XCTAssert(testTree.info?.isActive == true)
 
     let initialSnapshot = lifetime.snapshot()
 
@@ -59,7 +59,7 @@ final class StressTests: XCTestCase {
     let finalSnapshot = lifetime.snapshot()
 
     XCTAssertEqual(initialSnapshot, finalSnapshot)
-    XCTAssert(testTree._info?.isActive == true)
+    XCTAssert(testTree.info?.isActive == true)
   }
 }
 

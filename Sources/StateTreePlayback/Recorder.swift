@@ -36,7 +36,7 @@ public final class Recorder<Root: Node> {
   @TreeActor
   public func start() throws {
     guard
-      lifetime.runtime._info.isActive
+      lifetime.runtime.info.isActive
     else {
       throw RecorderRestartError()
     }
@@ -49,7 +49,7 @@ public final class Recorder<Root: Node> {
         )
     }
     lifetime
-      .updateEmitter
+      .updates
       .flatMapLatest { [lifetime] _ in lifetime.stateFrameSnapshot() }
       .subscribe { [weak self] snapshot in
         if let self {

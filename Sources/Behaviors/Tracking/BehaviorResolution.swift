@@ -10,7 +10,7 @@ extension Behaviors {
 
     init(id: BehaviorID, value: Resolved? = nil) {
       self.id = id
-      let res: AsyncValue<Resolved> = if let value {
+      let res: Async.Value<Resolved> = if let value {
         .init(value: value)
       } else {
         .init()
@@ -32,11 +32,20 @@ extension Behaviors {
       lhs.id == rhs.id
     }
 
+    public func awaitReady() async {
+      await started.value
+    }
+
     public func hash(into hasher: inout Hasher) {
       hasher.combine(id)
     }
 
+    public func markStarted() async {
+      await started.resolve(())
+    }
+
     public func resolve(to state: Resolved.State, act: @escaping () async -> Void = { }) async {
+      await started.resolve(())
       await resolution.resolve(.init(id: id, state: state), act: act)
     }
 
@@ -55,7 +64,8 @@ extension Behaviors {
 
     // MARK: Private
 
-    private let resolution: AsyncValue<Resolved>
+    private let resolution: Async.Value<Resolved>
+    private let started = Async.Value<Void>()
   }
 
   public struct Resolved: Sendable, Hashable {
@@ -68,5 +78,6 @@ extension Behaviors {
       case failed
       case finished
     }
+
   }
 }

@@ -1,36 +1,54 @@
-// MARK: - ResolverType
+// MARK: - One
 
-public protocol ResolverType<Value> {
-  associatedtype Value
-  associatedtype ResolveFunc
-}
-
-// MARK: - SingleResolverType
-
-public protocol SingleResolverType<Value>: ResolverType {
-  var resolve: ResolveFunc { get }
-}
-
-// MARK: - EventualThrowing
-
-public struct EventualThrowing<Value>: SingleResolverType {
-  public init(_ resolve: @escaping () async throws -> Value) {
-    self.resolve = resolve
+public struct One<Output, Failure: Error> {
+  fileprivate init(resolver: Any) {
+    self.resolver = resolver
   }
 
-  public let resolve: () async throws -> Value
-  public typealias Value = Value
-  public typealias ResolveFunc = () async throws -> Value
+  let resolver: Any
 }
 
-// MARK: - Eventual
+extension One where Failure == Never {
 
-public struct Eventual<Value>: SingleResolverType {
-  public init(_ resolve: @escaping () async -> Value) {
-    self.resolve = resolve
+  // MARK: Public
+
+  public func resolve() async -> Output {
+    await (resolver as! () async -> Output)()
   }
 
-  public var resolve: () async -> Value
-  public typealias Value = Value
-  public typealias ResolveFunc = () async -> Value
+  // MARK: Internal
+
+  static func always(action: @escaping () async throws -> Output) -> One<Output, Never>
+    where Failure == Never
+  {
+    .init(resolver: action)
+  }
+
+}
+
+extension One where Failure: Error {
+
+  // MARK: Public
+
+  public func resolve() async throws -> Output {
+    try await (resolver as! () async throws -> Output)()
+  }
+
+  // MARK: Internal
+
+  static func throwing(action: @escaping () async throws -> Output) -> One<Output, Error>
+    where Failure == Error
+  {
+    .init(resolver: action)
+  }
+
+}
+
+// MARK: - Behaviors.Make.Func
+
+extension Behaviors.Make {
+  public enum Func {
+    public typealias NonThrowing = (_ input: Input) async -> Output
+    public typealias Throwing = (_ input: Input) async throws -> Output
+  }
 }

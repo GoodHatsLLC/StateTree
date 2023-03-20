@@ -186,7 +186,7 @@ extension Runtime {
 
   // MARK: Public
 
-  public var _info: StateTreeInfo {
+  public var info: StateTreeInfo {
     StateTreeInfo(
       runtime: self,
       scopes: scopes

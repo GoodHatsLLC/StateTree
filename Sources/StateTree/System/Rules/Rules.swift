@@ -22,20 +22,16 @@ public enum RuleLifecycle {
 
 public struct LifecycleResult {
   init(
-    intentResolutions: [StepResolutionInternal] = [],
-    behaviors: [ActivatedBehavior] = []
+    intentResolutions: [StepResolutionInternal] = []
   ) {
     self.intentResolutions = intentResolutions
-    self.behaviors = behaviors
   }
 
   let intentResolutions: [StepResolutionInternal]
-  let behaviors: [ActivatedBehavior]
 
   public static func + (lhs: LifecycleResult, rhs: LifecycleResult) -> LifecycleResult {
     LifecycleResult(
-      intentResolutions: lhs.intentResolutions + rhs.intentResolutions,
-      behaviors: lhs.behaviors + rhs.behaviors
+      intentResolutions: lhs.intentResolutions + rhs.intentResolutions
     )
   }
 }

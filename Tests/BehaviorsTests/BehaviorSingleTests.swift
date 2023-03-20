@@ -21,7 +21,7 @@ final class BehaviorSingleTests: XCTestCase {
   }
 
   func test_onSuccess() async throws {
-    let didSucceed = AsyncValue<Bool>()
+    let didSucceed = Async.Value<Bool>()
     let behavior = Behaviors.make(.id("test_success")) { () async -> Int in
       123_321
     }
@@ -85,8 +85,8 @@ final class BehaviorSingleTests: XCTestCase {
   }
 
   func test_get_eventual_throwingCancel() async throws {
-    let value = AsyncValue<Int>()
-    let didThrow = AsyncValue<Bool>()
+    let value = Async.Value<Int>()
+    let didThrow = Async.Value<Bool>()
     let behavior = Behaviors.make(.auto()) { () async -> Int in
       await value.value
     }
@@ -109,7 +109,7 @@ final class BehaviorSingleTests: XCTestCase {
   }
 
   func test_sync_onSuccess() async throws {
-    let didSucceed = AsyncValue<Bool>()
+    let didSucceed = Async.Value<Bool>()
     let behavior = Behaviors.make(.id("test_sync_success")) { () -> Int in
       123_321
     }
@@ -173,13 +173,13 @@ final class BehaviorSingleTests: XCTestCase {
   }
 
   func test_sync_get_eventual_throwingCancel() async throws {
-    let value = AsyncValue<Int>()
-    let didThrow = AsyncValue<Bool>()
+    let value = Async.Value<Int>()
+    let didThrow = Async.Value<Bool>()
     let behavior = Behaviors.make(.auto()) { () -> Int in
       await value.value
     }
     .scoped(to: stage, manager: manager)
-
+    await manager.awaitReady()
     Task {
       do {
         _ = try await behavior.get()
@@ -194,5 +194,125 @@ final class BehaviorSingleTests: XCTestCase {
     _ = await manager.behaviorResolutions
     let didThrowValue = await didThrow.value
     XCTAssert(didThrowValue)
+  }
+
+  func test_throwing_success() async throws {
+    let shouldError = false
+    let didSucceed = Async.Value<Bool>()
+    let res = await Behaviors.make(.id("test_throwing_success")) { () async throws -> Int in
+      if shouldError {
+        XCTFail("test setup issue")
+        throw TestError()
+      } else {
+        234_124
+      }
+    }
+    .scoped(to: stage, manager: .init())
+    .onResult { result in
+      guard case .success(let value) = result
+      else {
+        XCTFail()
+        return
+      }
+      XCTAssertEqual(234_124, value)
+      Task { await didSucceed.resolve(true) }
+    } onCancel: {
+      XCTFail()
+    }
+    let resolved = await res.value
+    XCTAssertEqual(resolved.id, .id("test_throwing_success"))
+    XCTAssertEqual(resolved.state, .finished)
+    let success = await didSucceed.value
+    XCTAssert(success)
+  }
+
+  func test_throwing_failure() async throws {
+    let shouldError = true
+    var didFail = false
+    let res = await Behaviors.make(.id("test_throwing_failure")) { () async throws -> Int in
+      if shouldError {
+        throw TestError()
+      } else {
+        XCTFail("test setup issue")
+        return 234_124
+      }
+    }
+    .scoped(to: stage, manager: .init())
+    .onResult { result in
+      guard
+        case .failure(let error) = result,
+        error is TestError
+      else {
+        XCTFail()
+        return
+      }
+      didFail = true
+    } onCancel: {
+      XCTFail()
+    }
+    let resolved = await res.value
+    XCTAssertEqual(resolved.id, .id("test_throwing_failure"))
+    XCTAssertEqual(resolved.state, .failed)
+    XCTAssert(didFail)
+  }
+
+  func test_throwing_sync_success() async throws {
+    let shouldError = false
+    let didSucceed = Async.Value<Bool>()
+    let res = await Behaviors.make(.id("test_throwing_sync_success")) { () throws -> Int in
+      if shouldError {
+        XCTFail("test setup issue")
+        throw TestError()
+      } else {
+        234_124
+      }
+    }
+    .scoped(to: stage, manager: .init())
+    .onResult { result in
+      guard case .success(let value) = result
+      else {
+        XCTFail()
+        return
+      }
+      XCTAssertEqual(234_124, value)
+      Task { await didSucceed.resolve(true) }
+    } onCancel: {
+      XCTFail()
+    }
+    let resolved = await res.value
+    XCTAssertEqual(resolved.id, .id("test_throwing_sync_success"))
+    XCTAssertEqual(resolved.state, .finished)
+    let success = await didSucceed.value
+    XCTAssert(success)
+  }
+
+  func test_throwing_sync_failure() async throws {
+    let shouldError = true
+    var didFail = false
+    let res = await Behaviors.make(.id("test_throwing_sync_failure")) { () throws -> Int in
+      if shouldError {
+        throw TestError()
+      } else {
+        XCTFail("test setup issue")
+        return 234_124
+      }
+    }
+    .scoped(to: stage, manager: .init())
+    .onResult { result in
+      guard
+        case .failure(let error) = result,
+        error is TestError
+      else {
+        XCTFail()
+        return
+      }
+      didFail = true
+    } onCancel: {
+      XCTFail()
+    }
+    let resolved = await res.value
+    XCTAssertEqual(resolved.id, .id("test_throwing_sync_failure"))
+    XCTAssertEqual(resolved.state, .failed)
+    XCTAssert(didFail)
   }
 }

@@ -19,7 +19,7 @@ public final class Tree {
     _runtime
   }
 
-  public var _info: StateTreeInfo? { _runtime?._info }
+  public var info: StateTreeInfo? { _runtime?.info }
 
   // MARK: Private
 

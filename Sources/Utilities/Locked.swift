@@ -1,9 +1,13 @@
 // MARK: - Locked
 
+/// A lock wrapper which protects an instance of its generic `T` type with
+/// the best **general purpose** and **non-recursive** lock available
+/// in the compiled environment
 public struct Locked<T>: LockedValue {
 
   // MARK: Lifecycle
 
+  /// Create a new ``Locked`` protecting the given instance.
   public init(_ value: T) {
     let lock = Self.make(for: value)
     self.underlying = lock
@@ -16,6 +20,10 @@ public struct Locked<T>: LockedValue {
 
   // MARK: Public
 
+  /// Exclusive `{ get set }` access to the protected value.
+  ///
+  /// > Note: Use ``withLock(_:)`` instead of this accessor when
+  /// atomic read-evaluate-write access is needed.
   public var value: T {
     get {
       withLock { $0 }
@@ -30,6 +38,8 @@ public struct Locked<T>: LockedValue {
     }
   }
 
+  /// Take exclusive read-write access to the underlying protected `T` instance returning
+  /// any value returned by the given closure.
   @discardableResult
   public func withLock<aT>(_ act: (inout T) -> aT) -> aT {
     withLockImpl(act) as! aT

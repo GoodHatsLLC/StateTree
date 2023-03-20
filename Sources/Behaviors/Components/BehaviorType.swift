@@ -3,14 +3,14 @@ import TreeActor
 
 // MARK: - BehaviorType
 
-public protocol BehaviorType<Input, Value> {
+public protocol BehaviorType<Input, Output, Failure> {
   associatedtype Input
-  associatedtype Value
+  associatedtype Output
+  associatedtype Failure: Error
   associatedtype Func
   associatedtype Producer
-  associatedtype Resolution
   associatedtype Subscriber: SubscriberType where Subscriber.Input == Input
-  associatedtype Handler: HandlerType where Handler.Value == Value
+  associatedtype Handler: HandlerType where Handler.Output == Output
   init(
     _ id: BehaviorID,
     subscriber: Subscriber
@@ -34,23 +34,29 @@ extension BehaviorType {
   }
 }
 
-// MARK: - SingleBehaviorType
+// MARK: BehaviorType.Func
 
-public protocol SingleBehaviorType<Input, Value>: BehaviorType
-  where Func == (_ input: Input) async -> Value { }
+extension BehaviorType where Failure == Never {
+  public typealias Func = (_ input: Input) async -> Output
+}
 
-// MARK: - SingleThrowingBehaviorType
+// MARK: BehaviorType.Func
 
-public protocol SingleThrowingBehaviorType<Input, Value>: BehaviorType
-  where Func == (_ input: Input) async throws -> Value { }
+extension BehaviorType where Failure == (any Error) {
+  public typealias Func = (_ input: Input) async throws -> Output
+}
 
 // MARK: - StreamBehaviorType
 
 @rethrows
-public protocol StreamBehaviorType<Input, Producer>: BehaviorType
-  where Producer: AsyncSequence, Producer.Element == Value,
+public protocol StreamBehaviorType<Input, Output>: BehaviorType
+  where Producer: AsyncSequence, Producer.Element == Output,
   Subscriber == Behaviors.StreamSubscriber<
     Input,
     Producer
   >, Func == (_ input: Input) async -> Producer
 { }
+
+// MARK: - Make
+
+public enum Make<Input, Output> { }

@@ -113,6 +113,9 @@ let package = Package(
     ),
     .target(
       name: "Utilities",
+      dependencies: [
+        "Disposable",
+      ],
       swiftSettings: Build.globalSwiftSettings
     ),
     .target(

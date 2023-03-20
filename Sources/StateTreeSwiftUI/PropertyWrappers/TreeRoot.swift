@@ -27,10 +27,6 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
     observed.life.root
   }
 
-  public var tree: Tree {
-    observed.life.tree
-  }
-
   @_spi(Implementation) public var nid: NodeID {
     observed.life.root.nid
   }

@@ -23,7 +23,7 @@ final class IntentSnapshotTests: XCTestCase {
     XCTAssertEqual(life.rootNode.mayRoute, false)
     XCTAssertNil(life.rootNode.child)
     // there is no active intent
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(life.info.pendingIntent)
 
     // make the intent
     let intent = try XCTUnwrap(
@@ -38,7 +38,7 @@ final class IntentSnapshotTests: XCTestCase {
     // intent has not been fully applied and is still pending
     XCTAssertEqual(life.rootNode.shouldRoute, false)
     XCTAssertNil(life.rootNode.child)
-    XCTAssertNotNil(life._info.pendingIntent)
+    XCTAssertNotNil(life.info.pendingIntent)
 
     // save the current state
     let snapshot = life.snapshot()
@@ -47,14 +47,14 @@ final class IntentSnapshotTests: XCTestCase {
 
     // tear down the tree
     life.dispose()
-    XCTAssertFalse(life._info.isActive)
-    XCTAssert(life._info.isConsistent)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertFalse(life.info.isActive)
+    XCTAssert(life.info.isConsistent)
+    XCTAssertNil(life.info.pendingIntent)
 
     // create a new tree from the saved state
     let life2 = try Tree()
       .start(root: PendingNode<ValueSetNode>(), from: snapshot)
-    XCTAssert(life2._info.isConsistent)
+    XCTAssert(life2.info.isConsistent)
 
     // unblock the pending intent
     life2.rootNode.mayRoute = true
@@ -66,7 +66,7 @@ final class IntentSnapshotTests: XCTestCase {
     XCTAssertEqual(life2.rootNode.child?.value, 123)
 
     // and the intent finishes
-    XCTAssertNil(life2._info.pendingIntent)
+    XCTAssertNil(life2.info.pendingIntent)
   }
 }
 

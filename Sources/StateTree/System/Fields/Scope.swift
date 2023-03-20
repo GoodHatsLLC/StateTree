@@ -1,4 +1,4 @@
-import Behaviors
+@_spi(Implementation) import Behaviors
 import Utilities
 
 // MARK: - ScopeField
@@ -70,27 +70,32 @@ public struct Scope: ScopeField {
 // MARK: Single
 extension Scope {
   @TreeActor
-  public func run<Value>(
-    _ id: BehaviorID,
-    _ maker: @escaping Behaviors.Single<Void, Value>.Func
-  ) -> ScopedBehavior<Behaviors.Single<Void, Value>> {
-    ScopedBehavior(
-      behavior: Behaviors.make(id, maker),
+  public func run<Output>(
+    _ fileID: String = #fileID,
+    _ line: Int = #line,
+    _ column: Int = #column,
+    id: BehaviorID? = nil,
+    subscribe: @escaping Behaviors.Make<Void, Output>.Func.NonThrowing
+  ) -> ScopedBehavior<Behaviors.Single<Void, Output, Never>> {
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "run")
+    return ScopedBehavior(
+      behavior: Behaviors.make(id, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
       manager: inner.treeScope?.runtime.behaviorManager ?? .init()
     )
   }
-}
 
-// MARK: Throwing.Single
-extension Scope {
   @TreeActor
-  public func run<Value>(
-    _ id: BehaviorID,
-    _ maker: @escaping Behaviors.Throwing.Single<Void, Value>.Func
-  ) -> ScopedBehavior<Behaviors.Throwing.Single<Void, Value>> {
-    ScopedBehavior(
-      behavior: Behaviors.make(id, maker),
+  public func run<Output>(
+    _ fileID: String = #fileID,
+    _ line: Int = #line,
+    _ column: Int = #column,
+    id: BehaviorID? = nil,
+    subscribe: @escaping Behaviors.Make<Void, Output>.Func.Throwing
+  ) -> ScopedBehavior<Behaviors.Single<Void, Output, any Error>> {
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "run")
+    return ScopedBehavior(
+      behavior: Behaviors.make(id, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
       manager: inner.treeScope?.runtime.behaviorManager ?? .init()
     )
@@ -101,11 +106,15 @@ extension Scope {
 extension Scope {
   @TreeActor
   public func run<Value>(
-    _ id: BehaviorID,
-    _ maker: @escaping Behaviors.Stream<Void, Value>.Func
+    _ fileID: String = #fileID,
+    _ line: Int = #line,
+    _ column: Int = #column,
+    id: BehaviorID? = nil,
+    subscribe: @escaping Behaviors.Stream<Void, Value>.Func
   ) -> ScopedBehavior<Behaviors.Stream<Void, Value>> {
-    ScopedBehavior(
-      behavior: Behaviors.make(id, maker),
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "run")
+    return ScopedBehavior(
+      behavior: Behaviors.make(id, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
       manager: inner.treeScope?.runtime.behaviorManager ?? .init()
     )

@@ -1,11 +1,12 @@
 import Disposable
 import TreeActor
+import Utilities
 
 public struct StartableBehavior<Input> {
 
   // MARK: Lifecycle
 
-  init<Behavior: BehaviorType>(
+  public init<Behavior: BehaviorType>(
     behavior: Behavior,
     handler: Behavior.Handler
   ) where Behavior.Input == Input {
@@ -14,14 +15,32 @@ public struct StartableBehavior<Input> {
     self.id = id
     self.resolution = Behaviors.Resolution(id: id)
     self.starter = { manager, input, resolution, scope in
-      await ActivatedBehavior(
-        behavior: behavior,
-        input: input,
-        manager: manager,
-        handler: handler,
-        resolution: resolution,
-        scope: scope
-      )
+      var behavior = behavior
+      manager
+        .intercept(
+          behavior: &behavior,
+          input: input
+        )
+      manager.track(resolution: resolution)
+      return { [behavior] in
+        let task = Disposables.Task.detached {
+          let behavior = await ActivatedBehavior(
+            behavior: behavior,
+            input: input,
+            handler: handler,
+            resolution: resolution,
+            scope: scope
+          )
+          await resolution.markStarted()
+          return await behavior.resolution.value
+        } onDispose: {
+          Task.detached {
+            await resolution.resolve(to: .cancelled)
+          }
+        }
+        scope.own(task)
+        return task
+      }
     }
   }
 
@@ -30,21 +49,17 @@ public struct StartableBehavior<Input> {
   public let id: BehaviorID
   public let resolution: Behaviors.Resolution
 
-  // MARK: Internal
-
-  func start(
+  public func start(
     manager: BehaviorManager,
     input: Input,
     scope: some BehaviorScoping
-  ) async
-    -> ActivatedBehavior
-  {
-    await starter(manager, input, resolution, scope)
+  ) -> () async -> Disposables.Task<Behaviors.Resolved, Never> {
+    starter(manager, input, resolution, scope)
   }
 
   // MARK: Private
 
-  private let starter: (BehaviorManager, Input, Behaviors.Resolution, any BehaviorScoping) async
-    -> ActivatedBehavior
+  private let starter: (BehaviorManager, Input, Behaviors.Resolution, any BehaviorScoping)
+    -> () async -> Disposables.Task<Behaviors.Resolved, Never>
 
 }

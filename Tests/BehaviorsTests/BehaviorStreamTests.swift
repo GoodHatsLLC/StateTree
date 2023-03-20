@@ -20,7 +20,7 @@ final class BehaviorStreamTests: XCTestCase {
     let expected = [1, 2, 3, 4, 5, 6]
     var received: [Int] = []
     var didFinish = false
-    let asyncBlock = AsyncValue<Void>()
+    let asyncBlock = Async.Value<Void>()
     let behavior = Behaviors.make(.id("test_output_success")) {
       AnyAsyncSequence(expected)
     }.scoped(to: stage, manager: .init())
@@ -44,7 +44,7 @@ final class BehaviorStreamTests: XCTestCase {
   }
 
   func test_immediate_failure() async throws {
-    let receivedError = AsyncValue<Error>()
+    let receivedError = Async.Value<Error>()
     let behavior = Behaviors
       .make(.id("stream_fail")) { () async -> AsyncThrowingStream<Int, any Error> in
         AsyncThrowingStream<Int, any Error> {
@@ -72,11 +72,12 @@ final class BehaviorStreamTests: XCTestCase {
     let subject = PublishSubject<Int>()
     var receivedError: Error?
     var receivedOutput: [Int] = []
-    let asyncBlocks: [AsyncValue<Void>] = [.init(), .init()]
+    let asyncBlocks: [Async.Value<Void>] = [.init(), .init()]
+    let manager = BehaviorManager()
     let subnodeResolution = await Behaviors.make(.id("stream_eventual_fail")) {
       subject.values
     }
-    .scoped(to: stage, manager: .init())
+    .scoped(to: stage, manager: manager)
     .onValue { value in
       receivedOutput.append(value)
       if receivedOutput.count == 3 {
@@ -90,6 +91,7 @@ final class BehaviorStreamTests: XCTestCase {
     } onCancel: {
       XCTFail()
     }
+    await manager.awaitReady()
     subject.emit(value: 3)
     subject.emit(value: 4)
     subject.emit(value: 5)
@@ -105,3 +107,74 @@ final class BehaviorStreamTests: XCTestCase {
   }
 
 }
+
+#if canImport(Combine)
+import Combine
+extension BehaviorStreamTests {
+
+  func test_combine_publisher() async throws {
+    let publisher = [1, 2, 3, 4].publisher
+    var receivedOutput: [Int] = []
+    var didFinish = false
+    let manager = BehaviorManager()
+    let behavior = await Behaviors.make(.id("combine_stream")) {
+      publisher.values
+    }
+    .scoped(to: stage, manager: manager)
+    .onValue { value in
+      receivedOutput.append(value)
+    } onFinish: {
+      didFinish = true
+    } onFailure: { _ in
+      XCTFail()
+    } onCancel: {
+      XCTFail()
+    }
+    let resolved = await behavior.value
+    XCTAssert(didFinish)
+    XCTAssertEqual(resolved.id, .id("combine_stream"))
+    XCTAssertEqual(resolved.state, .finished)
+    XCTAssertEqual(receivedOutput, [1, 2, 3, 4])
+  }
+
+  func test_combine_subject() async throws {
+    let subject = PassthroughSubject<Int, Never>()
+    var receivedOutput: [Int] = []
+    var didFinish = false
+    let manager = BehaviorManager()
+    let value = Async.Value<Cancellable>()
+    let behavior = await Behaviors.make(.id("combine_stream")) {
+      let asyncSubject = Async.Subject<Int>()
+      let sub = subject
+        .sink { _ in
+          asyncSubject.finish()
+        } receiveValue: { value in
+          asyncSubject.send(value)
+        }
+      await value.resolve(sub)
+      return asyncSubject
+    }
+    .scoped(to: stage, manager: manager)
+    .onValue { value in
+      receivedOutput.append(value)
+    } onFinish: {
+      didFinish = true
+    } onFailure: { _ in
+      XCTFail()
+    } onCancel: {
+      XCTFail()
+    }
+    await manager.awaitReady()
+    subject.send(1)
+    subject.send(2)
+    subject.send(3)
+    subject.send(4)
+    subject.send(completion: .finished)
+    let resolved = await behavior.value
+    XCTAssert(didFinish)
+    XCTAssertEqual(resolved.id, .id("combine_stream"))
+    XCTAssertEqual(resolved.state, .finished)
+    XCTAssertEqual(receivedOutput, [1, 2, 3, 4])
+  }
+}
+#endif

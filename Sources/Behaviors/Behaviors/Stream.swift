@@ -1,10 +1,12 @@
 import Disposable
+import Emitter
 import TreeActor
+import Utilities
 
 // MARK: - Behaviors.Stream
 
 extension Behaviors {
-  public struct Stream<Input, Producer: AsyncSequence>: StreamBehaviorType {
+  public struct Stream<Input, Output>: StreamBehaviorType {
 
     // MARK: Lifecycle
 
@@ -15,7 +17,10 @@ extension Behaviors {
 
     // MARK: Public
 
-    public typealias Value = Producer.Element
+    public typealias Producer = AnyAsyncSequence<Output>
+    public typealias Input = Input
+    public typealias Output = Output
+    public typealias Failure = Error
     public typealias Func = (_ input: Input) async -> Producer
     public typealias Subscriber = Behaviors.StreamSubscriber<Input, Producer>
     public typealias Resolution = Producer.Element
@@ -24,7 +29,7 @@ extension Behaviors {
       // MARK: Lifecycle
 
       public init(
-        onValue: @escaping @TreeActor (Value) -> Void,
+        onValue: @escaping @TreeActor (Output) -> Void,
         onFinish: @escaping @TreeActor () -> Void,
         onFailure: @escaping @TreeActor (Error) -> Void,
         onCancel: @escaping @TreeActor () -> Void
@@ -44,8 +49,10 @@ extension Behaviors {
 
       // MARK: Public
 
-      public typealias Behavior = Stream<Input, Producer>
-      public typealias Value = Producer.Element
+      public typealias Failure = Error
+
+      public typealias Behavior = Stream<Input, Output>
+      public typealias Output = Producer.Element
 
       public func cancel() async {
         await onCancel()
@@ -53,7 +60,7 @@ extension Behaviors {
 
       // MARK: Internal
 
-      let onValue: @TreeActor (_ value: Value) -> Void
+      let onValue: @TreeActor (_ value: Output) -> Void
       let onFinish: @TreeActor () -> Void
       let onFailure: @TreeActor (_ error: any Error) -> Void
       let onCancel: @TreeActor () -> Void
@@ -75,7 +82,6 @@ extension Behaviors {
       let iterator = producer.makeAsyncIterator()
       let task = Task {
         do {
-          var iterator = iterator
           while let iteration = try await iterator.next() {
             try Task.checkCancellation()
             await resolution.ifMatching { value in
@@ -109,9 +115,26 @@ extension Behaviors {
 
 extension Behaviors {
   public static func make<Input, Seq: AsyncSequence>(
-    _ id: BehaviorID,
-    _ maker: @escaping (_ input: Input) async -> Seq
-  ) -> Behaviors.Stream<Input, Seq> {
-    .init(id, subscriber: .init(maker))
+    _ id: BehaviorID? = nil,
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    subscribe: @escaping (_ input: Input) async -> Seq
+  ) -> Behaviors.Stream<Input, Seq.Element> {
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "as-stream")
+    return .init(id, subscriber: .init { await AnyAsyncSequence<Seq.Element>(subscribe($0)) })
+  }
+
+  public static func make<Input, Output>(
+    _ id: BehaviorID? = nil,
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    subscribe: @escaping (_ input: Input) async -> some Emitting<Output>
+  ) -> Behaviors.Stream<Input, Output> {
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "e-stream")
+    return Behaviors.make(id) {
+      await subscribe($0).values
+    }
   }
 }

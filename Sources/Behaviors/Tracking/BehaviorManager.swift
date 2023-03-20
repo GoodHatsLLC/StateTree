@@ -5,7 +5,7 @@ import TreeActor
 
 // MARK: - BehaviorManager
 
-public actor BehaviorManager {
+public final class BehaviorManager {
 
   // MARK: Lifecycle
 
@@ -45,6 +45,10 @@ public actor BehaviorManager {
     var shouldTrack: Bool { self == .track }
   }
 
+  public var behaviors: [Behaviors.Resolution] {
+    trackedBehaviors.withLock { $0 }.map { $0 }
+  }
+
   public var behaviorResolutions: [Behaviors.Resolved] {
     get async {
       assert(
@@ -55,12 +59,19 @@ public actor BehaviorManager {
         assertionFailure()
       }
       var resolutions: [Behaviors.Resolved] = []
-      let behaviors = trackedBehaviors
+      let behaviors = trackedBehaviors.withLock { $0 }
       for behavior in behaviors {
         let resolution = await behavior.value
         resolutions.append(resolution)
       }
       return resolutions
+    }
+  }
+
+  public func awaitReady() async {
+    let behaviors = trackedBehaviors.withLock { $0 }
+    for behavior in behaviors {
+      await behavior.awaitReady()
     }
   }
 
@@ -77,6 +88,7 @@ public actor BehaviorManager {
         throw _Concurrency.CancellationError()
       }
       guard let first = try await group.next() else {
+        group.cancelAll()
         throw _Concurrency.CancellationError()
       }
       group.cancelAll()
@@ -93,16 +105,16 @@ public actor BehaviorManager {
     behaviorInterceptors[behavior.id]?.intercept(behavior: &behavior, input: input)
   }
 
-  func track(resolution: Behaviors.Resolution) {
+  nonisolated func track(resolution: Behaviors.Resolution) {
     if trackingConfig.shouldTrack {
-      trackedBehaviors.append(resolution)
+      trackedBehaviors.withLock { $0.insert(resolution) }
     }
   }
 
   // MARK: Private
 
   private let behaviorInterceptors: [BehaviorID: BehaviorInterceptor]
-  private var trackedBehaviors: [Behaviors.Resolution] = []
+  private var trackedBehaviors: Locked<Set<Behaviors.Resolution>> = .init([])
   private let trackingConfig: BehaviorTrackingConfig
 }
 

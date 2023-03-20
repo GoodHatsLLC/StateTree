@@ -1,10 +1,21 @@
 import Disposable
 import TreeActor
+import Utilities
+
+// MARK: - ThrowingSingleBehavior
+
+public protocol ThrowingSingleBehavior<Input, Output>: BehaviorType
+  where Failure: Error, Func == Behaviors.Make<Input, Output>.Func.Throwing { }
+
+// MARK: - NonThrowingSingleBehavior
+
+public protocol NonThrowingSingleBehavior<Input, Output, Failure>: BehaviorType
+  where Failure == Never, Func == Behaviors.Make<Input, Output>.Func.NonThrowing { }
 
 // MARK: - Behaviors.Single
 
 extension Behaviors {
-  public struct Single<Input, Value>: SingleBehaviorType {
+  public struct Single<Input, Output, Failure: Error>: BehaviorType {
 
     // MARK: Lifecycle
 
@@ -15,86 +26,180 @@ extension Behaviors {
 
     // MARK: Public
 
-    public typealias Func = (Input) async -> Value
-    public typealias Resolution = Producer.Resolution
-    public typealias Producer = One<Eventual<Value>>
+    public typealias Input = Input
+    public typealias Output = Output
+    public typealias Failure = Failure
+
+    public typealias Producer = One<Output, Failure>
     public typealias Subscriber = Behaviors.Subscriber<Input, Producer>
-
-    public struct Handler: SingleHandlerType {
-
-      // MARK: Lifecycle
-
-      public init(
-        onSuccess: @escaping @TreeActor (Value) -> Void,
-        onCancel: @escaping @TreeActor () -> Void
-      ) {
-        self.onSuccess = onSuccess
-        self.onCancel = onCancel
-      }
-
-      public init() {
-        self.onCancel = { }
-        self.onSuccess = { _ in }
-      }
-
-      // MARK: Public
-
-      public typealias Behavior = Single<Input, Value>
-      public typealias Producer = One<Eventual<Value>>
-
-      public func cancel() async {
-        await onCancel()
-      }
-
-      // MARK: Internal
-
-      let onSuccess: @TreeActor (_ value: Value) -> Void
-      let onCancel: @TreeActor () -> Void
-
-    }
-
+    public typealias Handler = SingleHandler<Output, Failure>
     public let id: BehaviorID
 
     public let subscriber: Subscriber
+  }
+}
 
-    public func start(
-      input: Input,
-      handler: Handler,
-      resolving resolution: Behaviors.Resolution
-    ) async
-      -> AnyDisposable
-    {
-      let producer = await subscriber.subscribe(input: input)
-      let task = Task {
-        try Task.checkCancellation()
-        let value = await producer.value.resolve()
+// MARK: - Behaviors.Single + ThrowingSingleBehavior
+
+extension Behaviors.Single: ThrowingSingleBehavior {
+
+  public func start(
+    input: Input,
+    handler: Handler,
+    resolving resolution: Behaviors.Resolution
+  ) async
+    -> AnyDisposable
+  {
+    let producer = await subscriber.subscribe(input: input)
+    return Disposables.Task.detached {
+      try Task.checkCancellation()
+      do {
+        let value = try await producer.resolve()
         try Task.checkCancellation()
         await resolution.resolve(to: .finished) {
-          await handler.onSuccess(value)
+          await handler.onResult(.success(value))
+        }
+      } catch let error as Failure {
+        await resolution.resolve(to: .failed) {
+          await handler.onResult(.failure(error))
         }
       }
-      return AnyDisposable {
-        task.cancel()
-        Task {
-          await resolution.resolve(to: .cancelled) {
-            await handler.onCancel()
-          }
+    } onDispose: {
+      Task.detached {
+        await resolution.resolve(to: .cancelled) {
+          await handler.onCancel()
+        }
+      }
+    }.erase()
+  }
+}
+
+extension Behaviors.Single where Failure == Never {
+
+  public func start(
+    input: Input,
+    handler: Handler,
+    resolving resolution: Behaviors.Resolution
+  ) async
+    -> AnyDisposable
+  {
+    let producer = await subscriber.subscribe(input: input)
+    let task = Task {
+      try Task.checkCancellation()
+      let value = await producer.resolve()
+      try Task.checkCancellation()
+      await resolution.resolve(to: .finished) {
+        await handler.onResult(.success(value))
+      }
+    }
+    return AnyDisposable {
+      task.cancel()
+      Task {
+        await resolution.resolve(to: .cancelled) {
+          await handler.onCancel()
         }
       }
     }
+  }
+}
 
+// MARK: - Behaviors.SingleHandler + HandlerType
+
+extension Behaviors.SingleHandler: HandlerType { }
+
+// MARK: - Behaviors.SingleHandler + ThrowingSingleHandlerType
+
+extension Behaviors.SingleHandler: ThrowingSingleHandlerType where Failure == any Error {
+  public init(
+    onResult: @escaping @TreeActor (_ result: Result<Output, Error>) -> Void,
+    onCancel: @escaping @TreeActor () -> Void
+  ) {
+    self.init(result: onResult, cancel: onCancel)
+  }
+}
+
+// MARK: - Behaviors.SingleHandler + SingleHandlerType
+
+extension Behaviors.SingleHandler: SingleHandlerType where Failure == Never {
+  public init(
+    onSuccess: @escaping @TreeActor (_ value: Output) -> Void,
+    onCancel: @escaping @TreeActor () -> Void
+  ) {
+    self.init(result: {
+      switch $0 {
+      case .success(let value):
+        onSuccess(value)
+      }
+    }, cancel: onCancel)
   }
 }
 
 extension Behaviors {
-  public static func make<Input, T>(
-    _ id: BehaviorID,
-    _ maker: @escaping (_ input: Input) async -> T
-  ) -> Single<Input, T> {
-    .init(id, subscriber: .init { (input: Input) in
-      One(value: .init {
-        await maker(input)
-      })
-    })
+  public static func make<Input, Output>(
+    _ id: BehaviorID? = nil,
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    subscribe: @escaping Behaviors.Make<Input, Output>.Func.NonThrowing
+  ) -> Single<Input, Output, Never> {
+    .init(
+      id ?? .meta(fileID: fileID, line: line, column: column, meta: "nt-single"),
+      subscriber: .init { (input: Input) in
+        One.always {
+          await subscribe(input)
+        }
+      }
+    )
+  }
+}
+
+extension Behaviors {
+  public static func make<Input, Output>(
+    _ id: BehaviorID? = nil,
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    subscribe: @escaping Behaviors.Make<Input, Output>.Func.Throwing
+  ) -> Single<Input, Output, any Error> {
+    .init(
+      id ?? .meta(fileID: fileID, line: line, column: column, meta: "t-single"),
+      subscriber: .init { (input: Input) in
+        One.throwing {
+          try await subscribe(input)
+        }
+      }
+    )
+  }
+}
+
+// MARK: - Behaviors.SingleHandler
+
+extension Behaviors {
+  public struct SingleHandler<Output, Failure: Error> {
+
+    // MARK: Lifecycle
+
+    init(
+      result: @escaping @TreeActor (_ result: Result<Output, Failure>) -> Void,
+      cancel: @escaping @TreeActor () -> Void
+    ) {
+      self.onResult = result
+      self.onCancel = cancel
+    }
+
+    public init() {
+      self.onCancel = { }
+      self.onResult = { _ in }
+    }
+
+    public func cancel() async {
+      await onCancel()
+    }
+
+    // MARK: Internal
+
+    let onResult: @TreeActor (_ value: Result<Output, Failure>) -> Void
+    let onCancel: @TreeActor () -> Void
+
   }
 }

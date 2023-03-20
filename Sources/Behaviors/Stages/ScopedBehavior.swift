@@ -47,84 +47,107 @@ extension ScopedBehavior {
 
   @discardableResult
   public func fireAndForget() -> Behaviors.Resolution {
-    let startable = behavior
+    let attached = behavior
       .attach(
         handler: .init()
       )
-
+    let startable = attached.start(
+      manager: manager,
+      input: (),
+      scope: scope
+    )
     Task {
-      await startable.start(
-        manager: manager,
-        input: (),
-        scope: scope
-      )
+      await startable()
     }
-    return startable.resolution
+    return attached.resolution
   }
 }
 
 // MARK: Single
 extension ScopedBehavior where Behavior.Handler: SingleHandlerType {
 
-  public var result: Result<Behavior.Value, Behaviors.Cancellation> {
+  public var result: Result<Behavior.Output, Behaviors.Cancellation> {
     get async {
-      let value = AsyncValue<Result<Behavior.Value, Behaviors.Cancellation>>()
-      let startable = behavior
+      let value = Async.Value<Result<Behavior.Output, Behaviors.Cancellation>>()
+      let attached = behavior
         .attach(handler: .init(
           onSuccess: { val in Task { await value.resolve(.success(val)) } },
           onCancel: { Task { await value.resolve(.failure(Behaviors.cancellation)) } }
         ))
-      _ = await startable.start(manager: manager, input: (), scope: scope)
+      let startable = attached.start(
+        manager: manager,
+        input: (),
+        scope: scope
+      )
+      Task {
+        await startable()
+      }
       return await value.value
     }
   }
 
   @discardableResult
   public func onSuccess(
-    _ onSuccess: @escaping @TreeActor (_ value: Behavior.Handler.Value) -> Void,
+    _ onSuccess: @escaping @TreeActor (_ value: Behavior.Handler.Output) -> Void,
     onCancel: @escaping @TreeActor () -> Void = { }
   ) async
     -> Behaviors.Resolution
   {
-    let startable = behavior
+    let attached = behavior
       .attach(handler: .init(onSuccess: onSuccess, onCancel: onCancel))
-
-    return await startable.start(manager: manager, input: (), scope: scope).resolution
+    let startable = attached.start(
+      manager: manager,
+      input: (),
+      scope: scope
+    )
+    scope.own(await startable())
+    return attached.resolution
   }
 
-  public func get() async throws -> Behavior.Value {
+  public func get() async throws -> Behavior.Output {
     try await result.get()
   }
 
 }
 
 extension ScopedBehavior where Behavior.Handler: ThrowingSingleHandlerType {
-  public var result: Result<Behavior.Value, any Error> {
+  public var result: Result<Behavior.Output, Error> {
     get async {
-      let value = AsyncValue<Result<Behavior.Value, any Error>>()
-      let startable = behavior
+      let value = Async.Value<Result<Behavior.Output, Error>>()
+      let attached = behavior
         .attach(handler: .init(
-          onResult: { val in Task { await value.resolve(val) } },
+          onResult: { val in Task { await value.resolve(val.mapError { $0 }) } },
           onCancel: { Task { await value.resolve(.failure(Behaviors.cancellation)) } }
         ))
-      _ = await startable.start(manager: manager, input: (), scope: scope)
+      let startable = attached.start(
+        manager: manager,
+        input: (),
+        scope: scope
+      )
+      Task { await startable() }
       return await value.value
     }
   }
 
   @discardableResult
   public func onResult(
-    _ onResult: @escaping @TreeActor (_ result: Result<Behavior.Handler.Value, Error>) -> Void,
+    _ onResult: @escaping @TreeActor (_ result: Result<Behavior.Output, Error>) -> Void,
     onCancel: @escaping @TreeActor () -> Void = { }
   ) async
     -> Behaviors.Resolution
   {
-    let startable = behavior
+    let attached = behavior
       .attach(handler: .init(onResult: onResult, onCancel: onCancel))
-    return await startable.start(manager: manager, input: (), scope: scope).resolution
+    let startable = attached.start(
+      manager: manager,
+      input: (),
+      scope: scope
+    )
+    scope.own(await startable())
+    return attached.resolution
   }
 
-  public func get() async throws -> Behavior.Value {
+  public func get() async throws -> Behavior.Output {
     try await result.get()
   }
 }
@@ -132,35 +155,47 @@ extension ScopedBehavior where Behavior.Handler: ThrowingSingleHandlerType {
 extension ScopedBehavior where Behavior.Handler: StreamHandlerType {
   @discardableResult
   public func onValue(
-    _ onValue: @escaping @TreeActor (Behavior.Handler.Value) -> Void,
+    _ onValue: @escaping @TreeActor (Behavior.Output) -> Void,
     onFinish: @escaping @TreeActor () -> Void,
     onCancel: @escaping @TreeActor () -> Void
   ) async
     -> Behaviors.Resolution
   {
-    let startable = behavior
+    let attached = behavior
       .attach(handler: .init(onValue: onValue, onFinish: onFinish, onCancel: onCancel))
-    return await startable.start(manager: manager, input: (), scope: scope).resolution
+    let startable = attached.start(
+      manager: manager,
+      input: (),
+      scope: scope
+    )
+    scope.own(await startable())
+    return attached.resolution
   }
 }
 
 extension ScopedBehavior where Behavior.Handler: ThrowingStreamHandlerType {
   @discardableResult
   public func onValue(
-    _ onValue: @escaping @TreeActor (Behavior.Handler.Value) -> Void,
+    _ onValue: @escaping @TreeActor (Behavior.Handler.Output) -> Void,
     onFinish: @escaping @TreeActor () -> Void,
     onFailure: @escaping @TreeActor (_ error: any Error) -> Void,
     onCancel: @escaping @TreeActor () -> Void
   ) async
     -> Behaviors.Resolution
   {
-    let startable = behavior
+    let attached = behavior
       .attach(handler: .init(
         onValue: onValue,
         onFinish: onFinish,
         onFailure: onFailure,
         onCancel: onCancel
       ))
-    return await startable.start(manager: manager, input: (), scope: scope).resolution
+    let startable = attached.start(
+      manager: manager,
+      input: (),
+      scope: scope
+    )
+    scope.own(await startable())
+    return attached.resolution
   }
 }
