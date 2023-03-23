@@ -35,13 +35,13 @@ public struct TreeLifetime<N: Node>: Disposable {
   public let rootID: NodeID
 
   /// The root ``Node`` in the state tree.
-  @TreeActor  public var rootNode: N { root.node }
+  @TreeActor public var rootNode: N { root.node }
 
   /// A stream of notifications updates emitted when nodes are updated.
-  @TreeActor  public var updates: some Emitting<NodeChange> { runtime.updateEmitter }
+  @TreeActor public var updates: some Emitting<NodeChange> { runtime.updateEmitter }
 
   /// Metadata about the current ``Tree`` and ``TreeLifetime``.
-  @TreeActor  public var info: StateTreeInfo { runtime.info }
+  @TreeActor public var info: StateTreeInfo { runtime.info }
 
   /// Fetch the ``BehaviorResolution`` values for each ``Behavior`` that was run on the runtime.
   public var behaviorResolutions: [Behaviors.Resolved] {
@@ -61,15 +61,18 @@ public struct TreeLifetime<N: Node>: Disposable {
   /// is invoked. This invocation happens concurrently.
   ///
   /// In production the underlying subscription will rarely need to be coordinated with a separate
-  /// source
-  /// and ``awaitReady()`` will not be useful.
+  /// source and ``awaitReady(timeout:)`` will rarely be useful.
   ///
   /// In unit tests it may be convenient to trigger asynchronous behavior from another source. If
   /// doing
   /// so this method can be useful to wait until all behaviors in the state tree are ready to accept
   /// data.
-  public func awaitReady() async {
-    await runtime.behaviorManager.awaitReady()
+  public func awaitReady(timeoutSeconds: Double? = nil) async throws {
+    try await runtime.behaviorManager.awaitReady(timeoutSeconds: timeoutSeconds)
+  }
+
+  public func awaitFinished(timeoutSeconds: Double? = nil) async throws {
+    try await runtime.behaviorManager.awaitFinished(timeoutSeconds: timeoutSeconds)
   }
 
   /// Shut down the tree removing all nodes and ending all behavior.
@@ -107,29 +110,16 @@ public struct TreeLifetime<N: Node>: Disposable {
     return runtime.snapshot()
   }
 
-  /// Fetch the resolved states of all behaviors triggered in the tree since starting.
-  ///
-  /// > Important: This method will not return until all behaviors tracked *at its call time* have
-  /// resolved.
-  @available(macOS 13.0, iOS 16.0, *)
-  public nonisolated func behaviorResolutions(timeout: Duration) async throws
-    -> [Behaviors.Resolved]
-  {
-    try await runtime
-      .behaviorManager
-      .behaviorResolutions(timeout: timeout)
-  }
-
   /// Fetch the `Resolved` states of all `Behaviors` triggered in the tree since starting.
   ///
   /// > Important: This method will not return until all behaviors tracked *at its call time* have
   /// resolved.
-  public nonisolated func behaviorResolutions(timeout: TimeInterval) async throws
+  public nonisolated func behaviorResolutions(timeoutSeconds: Double? = nil) async throws
     -> [Behaviors.Resolved]
   {
     try await runtime
       .behaviorManager
-      .behaviorResolutions(timeout: timeout)
+      .behaviorResolutions(timeoutSeconds: timeoutSeconds)
   }
 
   /// Begin evaluating an ``Intent`` allowing each ``IntentStep`` to be processed in turn.

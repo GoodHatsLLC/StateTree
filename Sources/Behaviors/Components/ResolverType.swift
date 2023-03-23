@@ -1,6 +1,8 @@
-// MARK: - One
+import TreeActor
 
-public struct One<Output, Failure: Error> {
+// MARK: - AsyncOne
+
+public struct AsyncOne<Output, Failure: Error> {
   fileprivate init(resolver: Any) {
     self.resolver = resolver
   }
@@ -8,47 +10,69 @@ public struct One<Output, Failure: Error> {
   let resolver: Any
 }
 
-extension One where Failure == Never {
+extension AsyncOne where Failure == Never {
 
-  // MARK: Public
-
-  public func resolve() async -> Output {
-    await (resolver as! () async -> Output)()
-  }
-
-  // MARK: Internal
-
-  static func always(action: @escaping () async throws -> Output) -> One<Output, Never>
+  public static func always(action: @escaping () async throws -> Output) -> AsyncOne<Output, Never>
     where Failure == Never
   {
     .init(resolver: action)
   }
 
-}
-
-extension One where Failure: Error {
-
-  // MARK: Public
-
-  public func resolve() async throws -> Output {
-    try await (resolver as! () async throws -> Output)()
+  public func resolve() async -> Output {
+    await (resolver as! () async -> Output)()
   }
 
-  // MARK: Internal
+}
 
-  static func throwing(action: @escaping () async throws -> Output) -> One<Output, Error>
+extension AsyncOne where Failure: Error {
+
+  public static func throwing(action: @escaping () async throws -> Output)
+    -> AsyncOne<Output, Error>
     where Failure == Error
   {
     .init(resolver: action)
   }
 
+  public func resolve() async throws -> Output {
+    try await (resolver as! () async throws -> Output)()
+  }
+
 }
 
-// MARK: - Behaviors.Make.Func
+// MARK: - SyncOne
 
-extension Behaviors.Make {
-  public enum Func {
-    public typealias NonThrowing = (_ input: Input) async -> Output
-    public typealias Throwing = (_ input: Input) async throws -> Output
+public struct SyncOne<Output, Failure: Error> {
+  private init(resolver: Any) {
+    self.resolver = resolver
   }
+
+  let resolver: Any
+}
+
+extension SyncOne where Failure == Never {
+
+  public static func always(action: @escaping () throws -> Output) -> SyncOne<Output, Never>
+    where Failure == Never
+  {
+    .init(resolver: action)
+  }
+
+  public func resolve() -> Output {
+    (resolver as! () -> Output)()
+  }
+
+}
+
+extension SyncOne where Failure: Error {
+
+  public static func throwing(action: @escaping () throws -> Output) -> SyncOne<Output, Error>
+    where Failure == Error
+  {
+    .init(resolver: action)
+  }
+
+  public func resolve() throws -> Output {
+    try (resolver as! () throws -> Output)()
+  }
+
 }

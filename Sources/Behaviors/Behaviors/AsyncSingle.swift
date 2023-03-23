@@ -2,24 +2,14 @@ import Disposable
 import TreeActor
 import Utilities
 
-// MARK: - ThrowingSingleBehavior
-
-public protocol ThrowingSingleBehavior<Input, Output>: BehaviorType
-  where Failure: Error, Func == Behaviors.Make<Input, Output>.Func.Throwing { }
-
-// MARK: - NonThrowingSingleBehavior
-
-public protocol NonThrowingSingleBehavior<Input, Output, Failure>: BehaviorType
-  where Failure == Never, Func == Behaviors.Make<Input, Output>.Func.NonThrowing { }
-
-// MARK: - Behaviors.Single
+// MARK: - Behaviors.AsyncSingle
 
 extension Behaviors {
-  public struct Single<Input, Output, Failure: Error>: BehaviorType {
+  public struct AsyncSingle<Input, Output, Failure: Error>: AsyncBehaviorType {
 
     // MARK: Lifecycle
 
-    public init(_ id: BehaviorID, subscriber: Behaviors.Subscriber<Input, Producer>) {
+    public init(_ id: BehaviorID, subscriber: Behaviors.AsyncSubscriber<Input, Producer>) {
       self.id = id
       self.subscriber = subscriber
     }
@@ -30,8 +20,8 @@ extension Behaviors {
     public typealias Output = Output
     public typealias Failure = Failure
 
-    public typealias Producer = One<Output, Failure>
-    public typealias Subscriber = Behaviors.Subscriber<Input, Producer>
+    public typealias Producer = AsyncOne<Output, Failure>
+    public typealias Subscriber = Behaviors.AsyncSubscriber<Input, Producer>
     public typealias Handler = SingleHandler<Output, Failure>
     public let id: BehaviorID
 
@@ -39,9 +29,8 @@ extension Behaviors {
   }
 }
 
-// MARK: - Behaviors.Single + ThrowingSingleBehavior
-
-extension Behaviors.Single: ThrowingSingleBehavior {
+extension Behaviors.AsyncSingle where Failure: Error {
+  public typealias Func = Behaviors.Make<Input, Output>.Func.NonThrowing
 
   public func start(
     input: Input,
@@ -74,7 +63,7 @@ extension Behaviors.Single: ThrowingSingleBehavior {
   }
 }
 
-extension Behaviors.Single where Failure == Never {
+extension Behaviors.AsyncSingle where Failure == Never {
 
   public func start(
     input: Input,
@@ -121,6 +110,7 @@ extension Behaviors.SingleHandler: ThrowingSingleHandlerType where Failure == an
 // MARK: - Behaviors.SingleHandler + SingleHandlerType
 
 extension Behaviors.SingleHandler: SingleHandlerType where Failure == Never {
+
   public init(
     onSuccess: @escaping @TreeActor (_ value: Output) -> Void,
     onCancel: @escaping @TreeActor () -> Void
@@ -141,11 +131,11 @@ extension Behaviors {
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping Behaviors.Make<Input, Output>.Func.NonThrowing
-  ) -> Single<Input, Output, Never> {
+  ) -> AsyncSingle<Input, Output, Never> {
     .init(
       id ?? .meta(fileID: fileID, line: line, column: column, meta: "nt-single"),
       subscriber: .init { (input: Input) in
-        One.always {
+        AsyncOne.always {
           await subscribe(input)
         }
       }
@@ -160,11 +150,11 @@ extension Behaviors {
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping Behaviors.Make<Input, Output>.Func.Throwing
-  ) -> Single<Input, Output, any Error> {
+  ) -> AsyncSingle<Input, Output, any Error> {
     .init(
       id ?? .meta(fileID: fileID, line: line, column: column, meta: "t-single"),
       subscriber: .init { (input: Input) in
-        One.throwing {
+        AsyncOne.throwing {
           try await subscribe(input)
         }
       }
@@ -192,8 +182,9 @@ extension Behaviors {
       self.onResult = { _ in }
     }
 
-    public func cancel() async {
-      await onCancel()
+    @TreeActor
+    public func cancel() {
+      onCancel()
     }
 
     // MARK: Internal

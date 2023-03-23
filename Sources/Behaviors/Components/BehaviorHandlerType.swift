@@ -6,7 +6,6 @@ public protocol HandlerType {
   associatedtype Output
   associatedtype Failure: Error
   init()
-  func cancel() async
 }
 
 // MARK: - SingleHandlerType
@@ -30,16 +29,6 @@ public protocol ThrowingSingleHandlerType: HandlerType where Failure: Error {
 // MARK: - StreamHandlerType
 
 public protocol StreamHandlerType: HandlerType {
-  init(
-    onValue: @escaping @TreeActor (Output) -> Void,
-    onFinish: @escaping @TreeActor () -> Void,
-    onCancel: @escaping @TreeActor () -> Void
-  )
-}
-
-// MARK: - ThrowingStreamHandlerType
-
-public protocol ThrowingStreamHandlerType: HandlerType {
   init(
     onValue: @escaping @TreeActor (Output) -> Void,
     onFinish: @escaping @TreeActor () -> Void,

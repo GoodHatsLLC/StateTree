@@ -97,15 +97,17 @@ public struct RunBehavior: Rules {
   {
     switch lifecycle {
     case .didStart:
-      let starter = startable.start(
+      let (_, finalizer) = startable.start(
         manager: context.runtime.behaviorManager,
         input: (),
         scope: context.scope
       )
-      let disposable = Disposables.Task.detached {
-        await starter()
-      } onDispose: { }
-      context.scope.own(disposable)
+      if let finalizer {
+        let disposable = Disposables.Task.detached {
+          await finalizer()
+        } onDispose: { }
+        context.scope.own(disposable)
+      }
     case .didUpdate:
       break
     case .willStop:

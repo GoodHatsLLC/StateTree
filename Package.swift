@@ -198,6 +198,10 @@ let package = Package(
       dependencies: ["Behaviors"]
     ),
     .testTarget(
+      name: "UtilitiesTests",
+      dependencies: ["Utilities"]
+    ),
+    .testTarget(
       name: "TreeStateTests",
       dependencies: [
         "TreeState",

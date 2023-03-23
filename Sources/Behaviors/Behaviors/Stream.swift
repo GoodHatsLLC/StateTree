@@ -24,7 +24,7 @@ extension Behaviors {
     public typealias Func = (_ input: Input) async -> Producer
     public typealias Subscriber = Behaviors.StreamSubscriber<Input, Producer>
     public typealias Resolution = Producer.Element
-    public struct Handler: ThrowingStreamHandlerType {
+    public struct Handler: StreamHandlerType {
 
       // MARK: Lifecycle
 
@@ -54,8 +54,9 @@ extension Behaviors {
       public typealias Behavior = Stream<Input, Output>
       public typealias Output = Producer.Element
 
-      public func cancel() async {
-        await onCancel()
+      @TreeActor
+      public func cancel() {
+        onCancel()
       }
 
       // MARK: Internal
@@ -125,6 +126,17 @@ extension Behaviors {
     return .init(id, subscriber: .init { await AnyAsyncSequence<Seq.Element>(subscribe($0)) })
   }
 
+  public static func make<Input, Seq: AsyncSequence>(
+    _ id: BehaviorID? = nil,
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    subscribe: @escaping (_ input: Input) -> Seq
+  ) -> Behaviors.Stream<Input, Seq.Element> {
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "as-stream")
+    return .init(id, subscriber: .init { AnyAsyncSequence<Seq.Element>(subscribe($0)) })
+  }
+
   public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
     fileID: String = #fileID,
@@ -137,4 +149,50 @@ extension Behaviors {
       await subscribe($0).values
     }
   }
+
+  public static func make<Input, Output>(
+    _ id: BehaviorID? = nil,
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    subscribe: @escaping (_ input: Input) -> some Emitting<Output>
+  ) -> Behaviors.Stream<Input, Output> {
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "e-stream")
+    return Behaviors.make(id) {
+      subscribe($0).values
+    }
+  }
+
 }
+
+#if canImport(Combine)
+import Combine
+extension Behaviors {
+  public static func make<Input, Output>(
+    _ id: BehaviorID? = nil,
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    subscribe: @escaping (_ input: Input) async -> some Publisher<Output, Never>
+  ) -> Behaviors.Stream<Input, Output> {
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "e-stream")
+    return Behaviors.make(id) {
+      await Async.Combine.bridge(publisher: subscribe($0))
+    }
+  }
+
+  public static func make<Input, Output>(
+    _ id: BehaviorID? = nil,
+    fileID: String = #fileID,
+    line: Int = #line,
+    column: Int = #column,
+    subscribe: @escaping (_ input: Input) -> some Publisher<Output, Never>
+  ) -> Behaviors.Stream<Input, Output> {
+    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "e-stream")
+    return Behaviors.make(id) {
+      Async.Combine.bridge(publisher: subscribe($0))
+    }
+  }
+}
+
+#endif

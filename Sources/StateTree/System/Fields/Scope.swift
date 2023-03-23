@@ -76,7 +76,7 @@ extension Scope {
     _ column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Make<Void, Output>.Func.NonThrowing
-  ) -> ScopedBehavior<Behaviors.Single<Void, Output, Never>> {
+  ) -> ScopedBehavior<Behaviors.AsyncSingle<Void, Output, Never>> {
     let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "run")
     return ScopedBehavior(
       behavior: Behaviors.make(id, subscribe: subscribe),
@@ -92,7 +92,7 @@ extension Scope {
     _ column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Make<Void, Output>.Func.Throwing
-  ) -> ScopedBehavior<Behaviors.Single<Void, Output, any Error>> {
+  ) -> ScopedBehavior<Behaviors.AsyncSingle<Void, Output, any Error>> {
     let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "run")
     return ScopedBehavior(
       behavior: Behaviors.make(id, subscribe: subscribe),

@@ -92,6 +92,10 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
     lhs.value == rhs.value
   }
 
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(value)
+  }
+
   public func encode(to encoder: Encoder) throws {
     // Note: encode dropping code location information in debug.
     var container = encoder.singleValueContainer()

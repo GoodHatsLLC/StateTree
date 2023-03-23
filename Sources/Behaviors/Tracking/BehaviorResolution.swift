@@ -10,12 +10,13 @@ extension Behaviors {
 
     init(id: BehaviorID, value: Resolved? = nil) {
       self.id = id
-      let res: Async.Value<Resolved> = if let value {
-        .init(value: value)
+      let (res, started) = if let value {
+        (Async.Value<Resolved>(value: value), Async.Value<Void>(value: ()))
       } else {
-        .init()
+        (.init(), .init())
       }
       self.resolution = res
+      self.started = started
     }
 
     // MARK: Public
@@ -65,7 +66,7 @@ extension Behaviors {
     // MARK: Private
 
     private let resolution: Async.Value<Resolved>
-    private let started = Async.Value<Void>()
+    private let started: Async.Value<Void>
   }
 
   public struct Resolved: Sendable, Hashable {

@@ -10,10 +10,10 @@ public final class BehaviorManager {
   // MARK: Lifecycle
 
   public init(
-    trackingConfig: BehaviorTrackingConfig = .defaults,
+    tracking: Tracking = .indefinitely,
     behaviorInterceptors: [BehaviorInterceptor] = []
   ) {
-    self.trackingConfig = trackingConfig
+    self.tracking = tracking
     let index = behaviorInterceptors.indexed(by: \.id)
     self.behaviorInterceptors = index
     assert(
@@ -24,25 +24,28 @@ public final class BehaviorManager {
 
   // MARK: Public
 
+  /// FIXME: implement
   /// Whether to track ``Behavior`` instances created during the runtime.
   /// ``BehaviorTrackingConfig/track`` is required to enable `await`ing
   /// ``TreeLifetime/behaviorResolutions`` in unit tests.
-  public enum BehaviorTrackingConfig {
-    /// Enable `await`ing ``TreeLifetime/behaviorResolutions`` in unit tests by retaining handles
-    /// to created ``Behavior``s.
-    case track
-    /// Don't track ``Behavior`` handles.
-    case none
+  public enum Tracking {
+    /// Track ``Behavior`` instances only until they have begun acting.
+    ///
+    /// Behaviors are always tracked until they have been subscribed to.
+    /// This allows async code to wait to act by `await`ing ``BehaviorManager/awaitReady()``
+    /// or the equivalent method on the `TreeLifetime`,
+    case untilSubscribed
 
-    public static var defaults: BehaviorTrackingConfig {
-      #if DEBUG
-        .track
-      #else
-        .none
-      #endif
-    }
+    /// Track ``Behavior`` instances until they have completed or cancelled.
+    ///
+    /// This allows testing code to `await` all inflight behaviors before making
+    /// assertions.
+    case untilComplete
 
-    var shouldTrack: Bool { self == .track }
+    /// Track ``Behavior`` instances indefinitely
+    ///
+    /// This allows testing code to inspect finished behavior resolutions.
+    case indefinitely
   }
 
   public var behaviors: [Behaviors.Resolution] {
@@ -51,13 +54,6 @@ public final class BehaviorManager {
 
   public var behaviorResolutions: [Behaviors.Resolved] {
     get async {
-      assert(
-        trackingConfig.shouldTrack,
-        "behaviorResolutions requires a RuntimeConfiguration with behaviorHandleTracking set to track"
-      )
-      if !trackingConfig.shouldTrack {
-        assertionFailure()
-      }
       var resolutions: [Behaviors.Resolved] = []
       let behaviors = trackedBehaviors.withLock { $0 }
       for behavior in behaviors {
@@ -68,31 +64,41 @@ public final class BehaviorManager {
     }
   }
 
-  public func awaitReady() async {
+  public func awaitReady(timeoutSeconds: Double? = nil) async throws {
     let behaviors = trackedBehaviors.withLock { $0 }
-    for behavior in behaviors {
-      await behavior.awaitReady()
+    if behaviors.isEmpty {
+      runtimeWarning("there are no registered behaviors to await")
+    }
+    let action = {
+      for behavior in behaviors {
+        await behavior.awaitReady()
+      }
+    }
+    if let timeoutSeconds {
+      try await Async.timeout(seconds: timeoutSeconds) {
+        await action()
+      }.get()
+    } else {
+      await action()
     }
   }
 
-  @available(macOS 13.0, iOS 16.0, *)
-  public nonisolated func behaviorResolutions(timeout: Duration) async throws
-    -> [Behaviors.Resolved]
-  {
-    try await withThrowingTaskGroup(of: [Behaviors.Resolved].self) { group in
-      group.addTask {
-        await self.behaviorResolutions
+  public func awaitFinished(timeoutSeconds: Double? = nil) async throws {
+    let behaviors = trackedBehaviors.withLock { $0 }
+    if behaviors.isEmpty {
+      runtimeWarning("there are no registered behaviors to await")
+    }
+    let action = {
+      for behavior in behaviors {
+        _ = await behavior.value
       }
-      group.addTask {
-        try await Task.sleep(for: timeout)
-        throw _Concurrency.CancellationError()
-      }
-      guard let first = try await group.next() else {
-        group.cancelAll()
-        throw _Concurrency.CancellationError()
-      }
-      group.cancelAll()
-      return first
+    }
+    if let timeoutSeconds {
+      try await Async.timeout(seconds: timeoutSeconds) {
+        await action()
+      }.get()
+    } else {
+      await action()
     }
   }
 
@@ -106,36 +112,28 @@ public final class BehaviorManager {
   }
 
   nonisolated func track(resolution: Behaviors.Resolution) {
-    if trackingConfig.shouldTrack {
-      trackedBehaviors.withLock { $0.insert(resolution) }
-    }
+    // FIXME: implement trackingConfig
+    trackedBehaviors.withLock { $0.insert(resolution) }
   }
 
   // MARK: Private
 
   private let behaviorInterceptors: [BehaviorID: BehaviorInterceptor]
   private var trackedBehaviors: Locked<Set<Behaviors.Resolution>> = .init([])
-  private let trackingConfig: BehaviorTrackingConfig
+  private let tracking: Tracking
 }
 
 extension BehaviorManager {
 
-  public nonisolated func behaviorResolutions(timeout: TimeInterval) async throws
+  public nonisolated func behaviorResolutions(timeoutSeconds: Double? = nil) async throws
     -> [Behaviors.Resolved]
   {
-    try await withThrowingTaskGroup(of: [Behaviors.Resolved].self) { group in
-      group.addTask {
-        await self.behaviorResolutions
-      }
-      group.addTask {
-        try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-        throw _Concurrency.CancellationError()
-      }
-      guard let first = try await group.next() else {
-        throw _Concurrency.CancellationError()
-      }
-      group.cancelAll()
-      return first
+    guard let timeoutSeconds
+    else {
+      return await behaviorResolutions
     }
+    return try await Async.timeout(seconds: timeoutSeconds) {
+      await self.behaviorResolutions
+    }.get()
   }
 }
