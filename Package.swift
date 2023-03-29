@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.8
 
 import class Foundation.ProcessInfo
 import PackageDescription
@@ -35,6 +35,13 @@ enum Build {
     } else {
       printContext("[🎨 - @TreeActor aliased to @MainActor]")
     }
+    settings.append(contentsOf: [
+      .enableUpcomingFeature("ConciseMagicFile"),
+      .enableUpcomingFeature("ExistentialAny"),
+      .enableUpcomingFeature("StrictConcurrency"),
+      .enableUpcomingFeature("ImplicitOpenExistentials"),
+      .enableUpcomingFeature("BareSlashRegexLiterals"),
+    ])
     return settings
   }()
 
