@@ -23,7 +23,7 @@ final class AsyncSingleTests: XCTestCase {
   func test_onSuccess() async throws {
     let didSucceed = Async.Value<Bool>()
     let behavior: Behaviors.AsyncSingle<Void, Int, Never> = Behaviors
-      .make(.id("test_success")) { () async -> Int in
+      .make(.id("test_success"), input: Void.self) { () async -> Int in
         123_321
       }
     let scoped = behavior
@@ -47,7 +47,7 @@ final class AsyncSingleTests: XCTestCase {
   func test_immediate_cancel_result() async throws {
     stage.dispose()
     let behavior: Behaviors.AsyncSingle<Void, Int, Never> = Behaviors
-      .make(.auto()) { () async -> Int in
+      .make(.auto(), input: Void.self) { () async -> Int in
         123
       }
     let scoped = behavior
@@ -61,7 +61,7 @@ final class AsyncSingleTests: XCTestCase {
 
   func test_get_success() async throws {
     let behavior: Behaviors.AsyncSingle<Void, Int, Never> = Behaviors
-      .make(.auto()) { () async -> Int in
+      .make(.auto(), input: Void.self) { () async -> Int in
         123_555
       }
     let scoped = behavior.scoped(to: stage, manager: manager)
@@ -77,7 +77,7 @@ final class AsyncSingleTests: XCTestCase {
     var didThrow = false
     do {
       let behavior: Behaviors.AsyncSingle<Void, Int, Error> = Behaviors
-        .make(.auto()) { () async -> Int in
+        .make(.auto(), input: Void.self) { () async -> Int in
           123
         }
       let scoped = behavior
@@ -96,7 +96,7 @@ final class AsyncSingleTests: XCTestCase {
     let didRunTask = Async.Value<Bool>()
     var didThrow = false
     let behavior: Behaviors.AsyncSingle<Void, Int, Never> = Behaviors
-      .make(.auto()) { () async -> Int in
+      .make(.auto(), input: Void.self) { () async -> Int in
         await never.value
       }
     let scoped = behavior.scoped(to: stage, manager: manager)
@@ -120,7 +120,7 @@ final class AsyncSingleTests: XCTestCase {
     let shouldError = false
     let didSucceed = Async.Value<Bool>()
     let behavior: Behaviors.AsyncSingle<Void, Int, Error> = Behaviors
-      .make(.id("test_throwing_success")) { () async throws -> Int in
+      .make(.id("test_throwing_success"), input: Void.self) { () async throws -> Int in
         if shouldError {
           XCTFail("test setup issue")
           throw TestError()
@@ -153,7 +153,7 @@ final class AsyncSingleTests: XCTestCase {
     let shouldError = true
     var didFail = false
     let behavior: Behaviors.AsyncSingle<Void, Int, Error> = Behaviors
-      .make(.id("test_throwing_failure")) { () async throws -> Int in
+      .make(.id("test_throwing_failure"), input: Void.self) { () async throws -> Int in
         if shouldError {
           throw TestError()
         } else {
@@ -195,7 +195,7 @@ final class AsyncSingleTests: XCTestCase {
       ),
     ])
     let behavior: Behaviors.AsyncSingle<Void, Int, Error> = Behaviors
-      .make(.id("test_interception")) { () async throws -> Int in
+      .make(.id("test_interception"), input: Void.self) { () async throws -> Int in
         initial
       }
     _ = behavior
@@ -214,7 +214,7 @@ final class AsyncSingleTests: XCTestCase {
 
   func test_inferredType_Throwing() async throws {
     let fun: () async -> Bool = { true }
-    let behavior = Behaviors.make {
+    let behavior = Behaviors.make(input: Void.self) {
       if await fun() {
         throw TestError()
       } else {
@@ -226,7 +226,7 @@ final class AsyncSingleTests: XCTestCase {
 
   func test_inferredType_NonThrowing() async throws {
     let fun: () async -> Bool = { true }
-    let behavior = Behaviors.make {
+    let behavior = Behaviors.make(input: Void.self) {
       await fun()
     }
     XCTAssert(type(of: behavior) == Behaviors.AsyncSingle<Void, Bool, Never>.self)

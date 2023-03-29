@@ -24,7 +24,7 @@ final class SyncSingleTests: XCTestCase {
   func test_sync_onSuccess() async throws {
     let didSucceed = Async.Value<Bool>()
     let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
-      .make(.id("test_sync_success")) { () -> Int in
+      .make(.id("test_sync_success"), input: Void.self) { () -> Int in
         123_321
       }
     let res = behavior
@@ -46,9 +46,10 @@ final class SyncSingleTests: XCTestCase {
   @TreeActor
   func test_sync_immediate_cancel_result() async throws {
     stage.dispose()
-    let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors.make(.auto()) { () -> Int in
-      123
-    }
+    let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
+      .make(.auto(), input: Void.self) { () -> Int in
+        123
+      }
     let scoped = behavior
       .scoped(to: stage, manager: manager)
 
@@ -62,9 +63,10 @@ final class SyncSingleTests: XCTestCase {
 
   @TreeActor
   func test_sync_get_success() async throws {
-    let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors.make(.auto()) { () -> Int in
-      123_555
-    }
+    let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
+      .make(.auto(), input: Void.self) { () -> Int in
+        123_555
+      }
     let scoped = behavior
       .scoped(to: stage, manager: manager)
 
@@ -82,9 +84,10 @@ final class SyncSingleTests: XCTestCase {
     stage.dispose()
     var didThrow = false
     do {
-      let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors.make(.auto()) { () -> Int in
-        123
-      }
+      let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
+        .make(.auto(), input: Void.self) { () -> Int in
+          123
+        }
       let scoped = behavior
         .scoped(to: stage, manager: manager)
 
@@ -103,7 +106,7 @@ final class SyncSingleTests: XCTestCase {
     let shouldError = false
     var didSucceed = false
     let behavior: Behaviors.SyncSingle<Void, Int, Error> = Behaviors
-      .make(.id("test_throwing_sync_success")) { () throws -> Int in
+      .make(.id("test_throwing_sync_success"), input: Void.self) { () throws -> Int in
         if shouldError {
           XCTFail("test setup issue")
           throw TestError()
@@ -139,7 +142,7 @@ final class SyncSingleTests: XCTestCase {
     let shouldError = true
     var didFail = false
     let behavior: Behaviors.SyncSingle<Void, Int, Error> = Behaviors
-      .make(.id("test_throwing_sync_failure")) { () throws -> Int in
+      .make(.id("test_throwing_sync_failure"), input: Void.self) { () throws -> Int in
         if shouldError {
           throw TestError()
         } else {
@@ -184,7 +187,7 @@ final class SyncSingleTests: XCTestCase {
       ),
     ])
     let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
-      .make(.id("test_interception")) { () -> Int in
+      .make(.id("test_interception"), input: Void.self) { () -> Int in
         initial
       }
     _ = behavior
@@ -201,7 +204,7 @@ final class SyncSingleTests: XCTestCase {
 
   func test_inferredType_Throwing() async throws {
     let fun: () -> Bool = { true }
-    let behavior = await Behaviors.make {
+    let behavior = await Behaviors.make(input: Void.self) {
       if fun() {
         throw TestError()
       } else {
@@ -213,7 +216,7 @@ final class SyncSingleTests: XCTestCase {
 
   func test_inferredType_NonThrowing() async throws {
     let fun: () -> Bool = { true }
-    let behavior = await Behaviors.make {
+    let behavior = await Behaviors.make(input: Void.self) {
       fun()
     }
     XCTAssert(type(of: behavior) == Behaviors.SyncSingle<Void, Bool, Never>.self)

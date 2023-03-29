@@ -79,7 +79,7 @@ extension Scope {
   ) -> ScopedBehavior<Behaviors.AsyncSingle<Void, Output, Never>> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
     return ScopedBehavior(
-      behavior: Behaviors.make(id, subscribe: subscribe),
+      behavior: Behaviors.make(id, input: Void.self, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
       manager: inner.treeScope?.runtime.behaviorManager ?? .init()
     )
@@ -95,7 +95,7 @@ extension Scope {
   ) -> ScopedBehavior<Behaviors.AsyncSingle<Void, Output, any Error>> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
     return ScopedBehavior(
-      behavior: Behaviors.make(id, subscribe: subscribe),
+      behavior: Behaviors.make(id, input: Void.self, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
       manager: inner.treeScope?.runtime.behaviorManager ?? .init()
     )
@@ -114,7 +114,7 @@ extension Scope {
   ) -> ScopedBehavior<Behaviors.Stream<Void, Value>> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
     return ScopedBehavior(
-      behavior: Behaviors.make(id, subscribe: subscribe),
+      behavior: Behaviors.make(id, input: Void.self, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
       manager: inner.treeScope?.runtime.behaviorManager ?? .init()
     )

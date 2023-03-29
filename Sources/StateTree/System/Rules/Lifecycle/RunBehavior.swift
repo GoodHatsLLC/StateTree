@@ -18,7 +18,8 @@ public struct RunBehavior: Rules {
     onSuccess: @escaping @TreeActor (_ value: Output) -> Void
   ) {
     let behavior = Behaviors.make(
-      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule"),
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-async-nothrow"),
+      input: Void.self,
       subscribe: subscribe
     )
     self.startable = StartableBehavior(
@@ -36,7 +37,8 @@ public struct RunBehavior: Rules {
     onResult: @escaping @TreeActor (Result<Output, any Error>) -> Void
   ) {
     let behavior = Behaviors.make(
-      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule"),
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-async-throws"),
+      input: Void.self,
       subscribe: subscribe
     )
     self.startable = StartableBehavior(
@@ -56,7 +58,8 @@ public struct RunBehavior: Rules {
     onFailure: @escaping @TreeActor (_ error: Error) -> Void
   ) {
     let behavior = Behaviors.make(
-      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule"),
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-stream"),
+      input: Void.self,
       subscribe: behavior
     )
     self.startable = StartableBehavior(
@@ -65,7 +68,7 @@ public struct RunBehavior: Rules {
     )
   }
 
-  public init<Value>(
+  init<Value>(
     _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,

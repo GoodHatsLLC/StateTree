@@ -21,9 +21,10 @@ final class StreamTests: XCTestCase {
     var received: [Int] = []
     var didFinish = false
     let asyncBlock = Async.Value<Void>()
-    let behavior: Behaviors.Stream<Void, Int> = Behaviors.make(.id("test_output_success")) {
-      AnyAsyncSequence(expected)
-    }
+    let behavior: Behaviors.Stream<Void, Int> = Behaviors
+      .make(.id("test_output_success"), input: Void.self) {
+        AnyAsyncSequence(expected)
+      }
     let res = behavior
       .scoped(to: stage, manager: .init())
       .onValue { value in
@@ -47,7 +48,10 @@ final class StreamTests: XCTestCase {
   func test_immediate_failure() async throws {
     let receivedError = Async.Value<Error>()
     let behavior: Behaviors.Stream<Void, Int> = Behaviors
-      .make(.id("stream_fail")) { () async -> AsyncThrowingStream<Int, any Error> in
+      .make(
+        .id("stream_fail"),
+        input: Void.self
+      ) { () async -> AsyncThrowingStream<Int, any Error> in
         AsyncThrowingStream<Int, any Error> {
           throw TestError()
         }
@@ -77,9 +81,10 @@ final class StreamTests: XCTestCase {
     var receivedOutput: [Int] = []
     let asyncBlocks: [Async.Value<Void>] = [.init(), .init()]
     let manager = BehaviorManager()
-    let behavior: Behaviors.Stream<Void, Int> = Behaviors.make(.id("stream_eventual_fail")) {
-      subject.values
-    }
+    let behavior: Behaviors.Stream<Void, Int> = Behaviors
+      .make(.id("stream_eventual_fail"), input: Void.self) {
+        subject.values
+      }
     let scoped = behavior
       .scoped(to: stage, manager: manager)
 
@@ -131,9 +136,10 @@ final class StreamTests: XCTestCase {
       ),
     ])
     var didFinish = false
-    let behavior: Behaviors.Stream<Void, Int> = Behaviors.make(.id("test_interception")) {
-      AnyAsyncSequence(original)
-    }
+    let behavior: Behaviors.Stream<Void, Int> = Behaviors
+      .make(.id("test_interception"), input: Void.self) {
+        AnyAsyncSequence(original)
+      }
     let res = behavior
       .scoped(to: stage, manager: manager)
       .onValue { value in
@@ -152,7 +158,7 @@ final class StreamTests: XCTestCase {
 
   func test_inferredType_async() async throws {
     let fun: () async -> Bool = { true }
-    let behavior = Behaviors.make {
+    let behavior = Behaviors.make(input: Void.self) {
       _ = await fun()
       return AnyAsyncSequence([true, false, true])
     }
@@ -160,7 +166,7 @@ final class StreamTests: XCTestCase {
   }
 
   func test_inferredType_sync() async throws {
-    let behavior = Behaviors.make {
+    let behavior = Behaviors.make(input: Void.self) {
       AnyAsyncSequence([true, false, true])
     }
     XCTAssert(type(of: behavior) == Behaviors.Stream<Void, Bool>.self)
@@ -177,7 +183,7 @@ extension StreamTests {
     var receivedOutput: [Int] = []
     var didFinish = false
     let manager = BehaviorManager()
-    let res = Behaviors.make(.id("combine_stream")) {
+    let res = Behaviors.make(.id("combine_stream"), input: Void.self) {
       publisher.values
     }
     .scoped(to: stage, manager: manager)
@@ -202,7 +208,7 @@ extension StreamTests {
     var receivedOutput: [Int] = []
     var didFinish = false
     let manager = BehaviorManager()
-    let behavior = Behaviors.make(.id("combine_stream")) {
+    let behavior = Behaviors.make(.id("combine_stream"), input: Void.self) {
       subject
     }
     let scoped = behavior

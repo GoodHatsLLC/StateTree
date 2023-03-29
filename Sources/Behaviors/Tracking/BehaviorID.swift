@@ -7,7 +7,7 @@ import Utilities
 /// If not a  `.auto()` is generated based on the source code location of the behavior's
 /// initialization.
 ///
-/// - ``id(moduleFile:line:column:_:)
+/// - ``id(moduleFile:line:column:_:)``
 /// - ``auto(moduleFile:line:column:)``
 ///
 /// > Warning: An auto-generated `BehaviorID` will be stable only as long as the code around
