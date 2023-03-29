@@ -86,13 +86,13 @@ extension Behaviors {
   @TreeActor
   public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping Behaviors.Make<Input, Output>.SyncFunc.NonThrowing
   ) -> SyncSingle<Input, Output, Never> {
     .init(
-      id ?? .meta(fileID: fileID, line: line, column: column, meta: "nt-single"),
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "nt-single"),
       subscriber: .init { (input: Input) in
         SyncOne.always {
           subscribe(input)
@@ -107,13 +107,13 @@ extension Behaviors {
   @TreeActor
   public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping Behaviors.Make<Input, Output>.SyncFunc.Throwing
   ) -> SyncSingle<Input, Output, any Error> {
     .init(
-      id ?? .meta(fileID: fileID, line: line, column: column, meta: "t-single"),
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "t-single"),
       subscriber: .init { (input: Input) in
         SyncOne.throwing {
           try subscribe(input)

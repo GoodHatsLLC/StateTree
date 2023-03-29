@@ -117,34 +117,34 @@ extension Behaviors {
 extension Behaviors {
   public static func make<Input, Seq: AsyncSequence>(
     _ id: BehaviorID? = nil,
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) async -> Seq
   ) -> Behaviors.Stream<Input, Seq.Element> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "as-stream")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "as-stream")
     return .init(id, subscriber: .init { await AnyAsyncSequence<Seq.Element>(subscribe($0)) })
   }
 
   public static func make<Input, Seq: AsyncSequence>(
     _ id: BehaviorID? = nil,
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) -> Seq
   ) -> Behaviors.Stream<Input, Seq.Element> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "as-stream")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "as-stream")
     return .init(id, subscriber: .init { AnyAsyncSequence<Seq.Element>(subscribe($0)) })
   }
 
   public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) async -> some Emitting<Output>
   ) -> Behaviors.Stream<Input, Output> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "e-stream")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "e-stream")
     return Behaviors.make(id) {
       await subscribe($0).values
     }
@@ -152,12 +152,12 @@ extension Behaviors {
 
   public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) -> some Emitting<Output>
   ) -> Behaviors.Stream<Input, Output> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "e-stream")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "e-stream")
     return Behaviors.make(id) {
       subscribe($0).values
     }
@@ -170,12 +170,12 @@ import Combine
 extension Behaviors {
   public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) async -> some Publisher<Output, Never>
   ) -> Behaviors.Stream<Input, Output> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "e-stream")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "e-stream")
     return Behaviors.make(id) {
       await Async.Combine.bridge(publisher: subscribe($0))
     }
@@ -183,12 +183,12 @@ extension Behaviors {
 
   public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) -> some Publisher<Output, Never>
   ) -> Behaviors.Stream<Input, Output> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "e-stream")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "e-stream")
     return Behaviors.make(id) {
       Async.Combine.bridge(publisher: subscribe($0))
     }

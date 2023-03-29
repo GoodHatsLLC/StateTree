@@ -71,13 +71,13 @@ public struct Scope: ScopeField {
 extension Scope {
   @TreeActor
   public func run<Output>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Make<Void, Output>.Func.NonThrowing
   ) -> ScopedBehavior<Behaviors.AsyncSingle<Void, Output, Never>> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "run")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
     return ScopedBehavior(
       behavior: Behaviors.make(id, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
@@ -87,13 +87,13 @@ extension Scope {
 
   @TreeActor
   public func run<Output>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Make<Void, Output>.Func.Throwing
   ) -> ScopedBehavior<Behaviors.AsyncSingle<Void, Output, any Error>> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "run")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
     return ScopedBehavior(
       behavior: Behaviors.make(id, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
@@ -106,13 +106,13 @@ extension Scope {
 extension Scope {
   @TreeActor
   public func run<Value>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Stream<Void, Value>.Func
   ) -> ScopedBehavior<Behaviors.Stream<Void, Value>> {
-    let id = id ?? .meta(fileID: fileID, line: line, column: column, meta: "run")
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
     return ScopedBehavior(
       behavior: Behaviors.make(id, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,

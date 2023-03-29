@@ -10,7 +10,7 @@ public struct RunBehavior: Rules {
   // MARK: Lifecycle
 
   public init<Output>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
@@ -18,7 +18,7 @@ public struct RunBehavior: Rules {
     onSuccess: @escaping @TreeActor (_ value: Output) -> Void
   ) {
     let behavior = Behaviors.make(
-      id ?? .meta(fileID: fileID, line: line, column: column, meta: "rule"),
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule"),
       subscribe: subscribe
     )
     self.startable = StartableBehavior(
@@ -28,7 +28,7 @@ public struct RunBehavior: Rules {
   }
 
   public init<Output>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
@@ -36,7 +36,7 @@ public struct RunBehavior: Rules {
     onResult: @escaping @TreeActor (Result<Output, any Error>) -> Void
   ) {
     let behavior = Behaviors.make(
-      id ?? .meta(fileID: fileID, line: line, column: column, meta: "rule"),
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule"),
       subscribe: subscribe
     )
     self.startable = StartableBehavior(
@@ -46,7 +46,7 @@ public struct RunBehavior: Rules {
   }
 
   public init<Seq: AsyncSequence>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
@@ -56,7 +56,7 @@ public struct RunBehavior: Rules {
     onFailure: @escaping @TreeActor (_ error: Error) -> Void
   ) {
     let behavior = Behaviors.make(
-      id ?? .meta(fileID: fileID, line: line, column: column, meta: "rule"),
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule"),
       subscribe: behavior
     )
     self.startable = StartableBehavior(
@@ -66,7 +66,7 @@ public struct RunBehavior: Rules {
   }
 
   public init<Value>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
@@ -76,7 +76,7 @@ public struct RunBehavior: Rules {
     onFailure: @escaping @TreeActor (_ error: Error) -> Void
   ) {
     self.init(
-      fileID,
+      moduleFile,
       line,
       column,
       id: id,
@@ -143,7 +143,7 @@ extension RunBehavior {
   /// Publishers like `PassthroughSubject` and `CurrentValueSubject` whose
   /// emissions are not all sent from the same actor will drop values when bridged with `.values`.
   public init<Element>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
@@ -153,7 +153,7 @@ extension RunBehavior {
     onFailure: @escaping @TreeActor (_ error: any Error) -> Void
   ) {
     self.init(
-      fileID,
+      moduleFile,
       line,
       column,
       id: id,
@@ -174,7 +174,7 @@ extension RunBehavior {
   /// Publishers like `PassthroughSubject` and `CurrentValueSubject` whose
   /// emissions are not all sent from the same actor will drop values when bridged with `.values`.
   public init<Element>(
-    _ fileID: String = #fileID,
+    _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
@@ -184,7 +184,7 @@ extension RunBehavior {
     onFailure: @escaping @TreeActor (_ error: any Error) -> Void
   ) {
     self.init(
-      fileID,
+      moduleFile,
       line,
       column,
       id: id,

@@ -11,13 +11,13 @@ public struct PreviewNode<N: Node> {
   // MARK: Lifecycle
 
   public init(
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     wrappedValue: N
   ) {
     self.wrappedValue = wrappedValue
-    self.fileID = fileID
+    self.moduleFile = moduleFile
     self.line = line
     self.column = column
   }
@@ -29,7 +29,7 @@ public struct PreviewNode<N: Node> {
   public var projectedValue: TreeNode<N> {
     PreviewLife(root: wrappedValue)
       .node(
-        fileID: fileID,
+        moduleFile: moduleFile,
         line: line,
         column: column
       )
@@ -37,7 +37,7 @@ public struct PreviewNode<N: Node> {
 
   // MARK: Private
 
-  private let fileID: String
+  private let moduleFile: String
   private let line: Int
   private let column: Int
 
@@ -54,7 +54,7 @@ public struct PreviewLife<N: Node> {
   }
 
   public func node(
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     tree: Tree = Tree(),
@@ -68,7 +68,7 @@ public struct PreviewLife<N: Node> {
         dependencies: dependencies,
         configuration: .init()
       )
-    life.stageOneByLocation(fileID: fileID, line: line, column: column)
+    life.stageOneByLocation(fileID: moduleFile, line: line, column: column)
     return TreeNode(scope: life.root)
   }
 
