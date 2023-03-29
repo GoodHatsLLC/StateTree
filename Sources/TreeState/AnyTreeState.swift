@@ -45,11 +45,11 @@ Sendable {
   var _runtime: any TreeState
 
   func get<T: TreeState>(as _: T.Type) throws -> T {
-    if let value = anyValue as? T {
-      value
-    } else {
+    guard let value = anyValue as? T
+    else {
       throw InvalidTreeState.errorFor(assumption: T.self, state: self)
     }
+    return value
   }
 
   mutating func set(to value: some TreeState) throws {

@@ -209,8 +209,8 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
 
     var icon: (String, Color) {
       switch self {
-      case .record: ("⏺️", .red)
-      case .play: ("▶️", .green)
+      case .record: return ("⏺️", .red)
+      case .play: return ("▶️", .green)
       }
     }
 

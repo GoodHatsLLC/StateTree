@@ -41,17 +41,17 @@ enum FieldType: TreeState, CaseIterable, LosslessStringConvertible {
   var description: String {
     switch self {
     case .dependency:
-      "d"
+      return "d"
     case .projection:
-      "p"
+      return "p"
     case .route:
-      "r"
+      return "r"
     case .scope:
-      "s"
+      return "s"
     case .value:
-      "v"
+      return "v"
     case .unmanaged:
-      "u"
+      return "u"
     }
   }
 }

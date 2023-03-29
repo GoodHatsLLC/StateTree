@@ -108,7 +108,7 @@ final class SyncSingleTests: XCTestCase {
           XCTFail("test setup issue")
           throw TestError()
         } else {
-          234_124
+          return 234_124
         }
       }
     let scoped = behavior

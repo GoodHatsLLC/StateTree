@@ -84,12 +84,10 @@ extension AnyCodable: Equatable {
 extension AnyCodable: CustomStringConvertible {
   public var description: String {
     switch value {
-    case is Void:
-      String(describing: nil as Any?)
     case let value as CustomStringConvertible:
-      value.description
+      return value.description
     default:
-      String(describing: value)
+      return String(describing: value)
     }
   }
 }
@@ -100,9 +98,9 @@ extension AnyCodable: CustomDebugStringConvertible {
   public var debugDescription: String {
     switch value {
     case let value as CustomDebugStringConvertible:
-      "AnyCodable(\(value.debugDescription))"
+      return "AnyCodable(\(value.debugDescription))"
     default:
-      "AnyCodable(\(description))"
+      return "AnyCodable(\(description))"
     }
   }
 }

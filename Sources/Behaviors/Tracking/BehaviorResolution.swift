@@ -10,10 +10,12 @@ extension Behaviors {
 
     init(id: BehaviorID, value: Resolved? = nil) {
       self.id = id
-      let (res, started) = if let value {
-        (Async.Value<Resolved>(value: value), Async.Value<Void>(value: ()))
+      let res: Async.Value<Resolved>
+      let started: Async.Value<Void>
+      if let value {
+        (res, started) = (Async.Value<Resolved>(value: value), Async.Value<Void>(value: ()))
       } else {
-        (.init(), .init())
+        (res, started) = (.init(), .init())
       }
       self.resolution = res
       self.started = started

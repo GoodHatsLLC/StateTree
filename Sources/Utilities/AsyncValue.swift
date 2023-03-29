@@ -16,9 +16,9 @@ extension Async {
     public var value: T {
       get async {
         if let _value {
-          _value
+          return _value
         } else {
-          await withCheckedContinuation { continuation in
+          return await withCheckedContinuation { continuation in
             self.continuations.append(continuation)
           }
         }
@@ -73,9 +73,9 @@ extension Async {
     public var value: T {
       get async throws {
         if let _value {
-          _value
+          return _value
         } else {
-          try await withCheckedThrowingContinuation { continuation in
+          return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
           }
         }

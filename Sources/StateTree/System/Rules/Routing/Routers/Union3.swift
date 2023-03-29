@@ -136,9 +136,9 @@ extension Union {
 
     public func idSet(from nodeID: NodeID) -> RouteRecord {
       switch self {
-      case .a: .union3(.a(nodeID))
-      case .b: .union3(.b(nodeID))
-      case .c: .union3(.c(nodeID))
+      case .a: return .union3(.a(nodeID))
+      case .b: return .union3(.b(nodeID))
+      case .c: return .union3(.c(nodeID))
       }
     }
 
@@ -210,7 +210,7 @@ extension Union {
     {
       switch self {
       case .a:
-        try uninitialized
+        return try uninitialized
           .initialize(
             as: A.self,
             depth: depth,
@@ -219,7 +219,7 @@ extension Union {
           )
           .erase()
       case .b:
-        try uninitialized
+        return try uninitialized
           .initialize(
             as: B.self,
             depth: depth,
@@ -227,7 +227,7 @@ extension Union {
             record: record
           ).erase()
       case .c:
-        try uninitialized
+        return try uninitialized
           .initialize(
             as: C.self,
             depth: depth,

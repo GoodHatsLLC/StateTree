@@ -76,9 +76,9 @@ public enum RouteRecord: TreeState {
       let pairs: [(CUID, NodeID)] = nodeIDs
         .compactMap { nid in
           if let cuid = nid.cuid {
-            (cuid, nid)
+            return (cuid, nid)
           } else {
-            nil
+            return nil
           }
         }
       return pairs

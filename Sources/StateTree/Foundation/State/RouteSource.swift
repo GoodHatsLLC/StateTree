@@ -39,13 +39,13 @@ public struct RouteSource: TreeState, CustomDebugStringConvertible {
   func emptyRecord() -> RouteRecord {
     switch type {
     case .single:
-      .single(nil)
+      return .single(nil)
     case .union2:
-      .union2(nil)
+      return .union2(nil)
     case .union3:
-      .union3(nil)
+      return .union3(nil)
     case .list:
-      .list(nil)
+      return .list(nil)
     }
   }
 }

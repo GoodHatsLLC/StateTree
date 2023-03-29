@@ -43,9 +43,9 @@ public enum NodeChange: Hashable, Sendable {
 
     func asChange(_ id: NodeID) -> NodeChange {
       switch self {
-      case .start: .started(id)
-      case .stop: .stopped(id)
-      case .update: .updated(id)
+      case .start: return .started(id)
+      case .stop: return .stopped(id)
+      case .update: return .updated(id)
       }
     }
   }
