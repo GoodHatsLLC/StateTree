@@ -9,6 +9,43 @@ public protocol BehaviorScoping {
   func canOwn() -> Bool
 }
 
+// MARK: - BehaviorScopeHandler
+
+public struct BehaviorScopeHandler: BehaviorScoping {
+  public init(
+    canHandle: @escaping () -> Bool = { true },
+    handler: @escaping (_ disposable: any Disposable) -> Void
+  ) {
+    self.owner = handler
+    self.checker = canHandle
+  }
+
+  private let owner: (any Disposable) -> Void
+  private let checker: () -> Bool
+  public func own(_ disposable: some Disposable) {
+    owner(disposable)
+  }
+
+  public func canOwn() -> Bool {
+    checker()
+  }
+}
+
+// MARK: - BehaviorStage
+
+public struct BehaviorStage: BehaviorScoping, Disposable {
+  public init() { }
+  private let stage = DisposableStage()
+  public func own(_ disposable: some Disposable) {
+    disposable.stage(on: stage)
+  }
+
+  public func dispose() {
+    stage.dispose()
+  }
+
+}
+
 extension BehaviorScoping {
   public func canOwn() -> Bool {
     let disp = ReportingDisposable_HACK()

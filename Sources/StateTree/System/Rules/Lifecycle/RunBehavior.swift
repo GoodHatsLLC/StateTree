@@ -16,15 +16,21 @@ public struct RunBehavior<Input>: Rules {
   }
 
   public init<Output>(
-    _ moduleFile: String = #file,
-    _ line: Int = #line,
-    _ column: Int = #column,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Make<Void, Output>.AsyncFunc.NonThrowing,
     onSuccess: @escaping @TreeActor (_ value: Output) -> Void
   ) where Input == Void {
+    let id = id ?? .meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: "rule-async-nothrow"
+    )
     let behavior = Behaviors.make(
-      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-async-nothrow"),
+      id,
       input: Void.self,
       subscribe: subscribe
     )

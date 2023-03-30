@@ -100,15 +100,15 @@ extension ScopedBehavior {
 }
 
 extension ScopedBehavior where Behavior.Handler: SingleHandlerType, Behavior: SyncBehaviorType {
-  public var result: Result<Behavior.Output, Behaviors.Cancellation> {
-    var result: Result<Behavior.Output, Behaviors.Cancellation>?
+  public var value: Behavior.Output? {
+    var value: Behavior.Output?
     let startable = behavior
       .attach(handler: .init(
         onSuccess: { val in
-          result = .success(val)
+          value = val
         },
         onCancel: {
-          result = .failure(.init())
+          value = nil
         }
       ))
     let (_, finalizer) = startable.start(
@@ -116,11 +116,10 @@ extension ScopedBehavior where Behavior.Handler: SingleHandlerType, Behavior: Sy
       input: input,
       scope: scope
     )
-    if let finalizer {
-      Task { await finalizer() }
+    if finalizer != nil {
+      assertionFailure()
     }
-    assert(result != nil)
-    return result ?? .failure(.init())
+    return value
   }
 
   @discardableResult

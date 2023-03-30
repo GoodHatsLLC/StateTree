@@ -1,23 +1,44 @@
+@_spi(Implementation) import Behaviors
 import Disposable
 
 // MARK: - Stage
 
-/// TODO: replace with behavior oriented lifecycle handlers
-@TreeActor
 public struct Stage: Rules {
 
   // MARK: Lifecycle
 
-  fileprivate init(builder: @escaping () -> AnyDisposable) {
-    self.builder = builder
+  public init(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    id: BehaviorID? = nil,
+    _ disposable: @escaping () -> any Disposable
+  ) {
+    self.init(moduleFile: moduleFile, line: line, column: column, id: id, disposable())
+  }
+
+  public init(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    id: BehaviorID? = nil,
+    _ disposable: @autoclosure @escaping () -> any Disposable
+  ) {
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-stage")
+    self.builder = Behaviors.make(id, input: Void.self, subscribe: { _ in
+      disposable()
+    })
   }
 
   // MARK: Public
 
-  public func act(for lifecycle: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
+  @TreeActor
+  public func act(for lifecycle: RuleLifecycle, with context: RuleContext) -> LifecycleResult {
     switch lifecycle {
     case .didStart:
-      builder().stage(on: stage)
+      if let disposable = builder.scoped(manager: context.runtime.behaviorManager).behavior.value {
+        disposable.stage(on: stage)
+      }
     case .didUpdate:
       break
     case .willStop:
@@ -28,10 +49,13 @@ public struct Stage: Rules {
     return .init()
   }
 
+  @TreeActor
   public mutating func applyRule(with _: RuleContext) throws { }
 
+  @TreeActor
   public mutating func removeRule(with _: RuleContext) throws { }
 
+  @TreeActor
   public mutating func updateRule(
     from _: Self,
     with _: RuleContext
@@ -39,28 +63,7 @@ public struct Stage: Rules {
 
   // MARK: Private
 
-  private var builder: () -> AnyDisposable
+  private var builder: Behaviors.SyncSingle<Void, any Disposable, Never>
   private let stage = DisposableStage()
 
-}
-
-extension Stage {
-
-  public init(
-    _ disposable: @escaping () -> some Disposable
-  ) {
-    self.init {
-      disposable()
-        .erase()
-    }
-  }
-
-  public init(
-    _ disposable: @autoclosure @escaping () -> some Disposable
-  ) {
-    self.init {
-      disposable()
-        .erase()
-    }
-  }
 }

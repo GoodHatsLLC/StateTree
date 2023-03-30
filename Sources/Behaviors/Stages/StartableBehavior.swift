@@ -30,7 +30,7 @@ public struct StartableBehavior<Input> {
         return (resolution: resolution, finalizer: nil)
       }
       // For an asynchronous behaviors:
-      // - we can start it immediately
+      // - we can not start immediately
       // - we return a finalizer that does so asynchronously.
       let resolution = Behaviors.Resolution(id: id)
       manager.track(resolution: resolution)
@@ -97,7 +97,7 @@ public struct StartableBehavior<Input> {
       scope.own(activated)
       return (
         resolution: resolution,
-        finalizer: { await resolution.value }
+        finalizer: nil
       )
     }
   }
@@ -125,8 +125,8 @@ public struct StartableBehavior<Input> {
         manager.track(resolution: resolution)
         return (resolution: resolution, finalizer: nil)
       }
-      // For an asynchronous behaviors:
-      // - we can start it immediately
+      // For stream behaviors:
+      // - we can not start immediately
       // - we return a finalizer that does so asynchronously.
       let resolution = Behaviors.Resolution(id: id)
       manager.track(resolution: resolution)

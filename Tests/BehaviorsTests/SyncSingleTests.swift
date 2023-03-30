@@ -53,11 +53,8 @@ final class SyncSingleTests: XCTestCase {
     let scoped = behavior
       .scoped(to: stage, manager: manager)
 
-    let result = scoped.result
-
-    XCTAssertEqual(
-      result,
-      .failure(Behaviors.cancellation)
+    XCTAssertNil(
+      scoped.value
     )
   }
 
@@ -70,33 +67,10 @@ final class SyncSingleTests: XCTestCase {
     let scoped = behavior
       .scoped(to: stage, manager: manager)
 
-    let value = try scoped.result.get()
     XCTAssertEqual(
-      value, 123_555,
-      "the success value should be passed through to get()"
+      scoped.value, 123_555,
+      "the success value should be available as the behavior is not cancelled"
     )
-    try await manager.awaitReady()
-    try await manager.awaitFinished()
-  }
-
-  @TreeActor
-  func test_sync_get_immediate_throwingCancel() async throws {
-    stage.dispose()
-    var didThrow = false
-    do {
-      let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
-        .make(.auto(), input: Void.self) { () -> Int in
-          123
-        }
-      let scoped = behavior
-        .scoped(to: stage, manager: manager)
-
-      _ = try scoped.result.get()
-      XCTFail()
-    } catch {
-      didThrow = true
-    }
-    XCTAssert(didThrow)
     try await manager.awaitReady()
     try await manager.awaitFinished()
   }
