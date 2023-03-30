@@ -12,19 +12,21 @@ public struct AsyncOne<Output, Failure: Error> {
 
 extension AsyncOne where Failure == Never {
 
-  public static func always(action: @escaping () async throws -> Output) -> AsyncOne<Output, Never>
+  static func always(action: @escaping () async throws -> Output) -> AsyncOne<Output, Never>
     where Failure == Never
   {
     .init(resolver: action)
   }
 
-  public func resolve() async -> Output {
+  func resolve() async -> Output {
     await (resolver as! () async -> Output)()
   }
 
 }
 
 extension AsyncOne where Failure: Error {
+
+  // MARK: Public
 
   public static func throwing(action: @escaping () async throws -> Output)
     -> AsyncOne<Output, Error>
@@ -33,7 +35,9 @@ extension AsyncOne where Failure: Error {
     .init(resolver: action)
   }
 
-  public func resolve() async throws -> Output {
+  // MARK: Internal
+
+  func resolve() async throws -> Output {
     try await (resolver as! () async throws -> Output)()
   }
 
@@ -51,13 +55,13 @@ public struct SyncOne<Output, Failure: Error> {
 
 extension SyncOne where Failure == Never {
 
-  public static func always(action: @escaping () throws -> Output) -> SyncOne<Output, Never>
+  static func always(action: @escaping () throws -> Output) -> SyncOne<Output, Never>
     where Failure == Never
   {
     .init(resolver: action)
   }
 
-  public func resolve() -> Output {
+  func resolve() -> Output {
     (resolver as! () -> Output)()
   }
 
@@ -65,13 +69,13 @@ extension SyncOne where Failure == Never {
 
 extension SyncOne where Failure: Error {
 
-  public static func throwing(action: @escaping () throws -> Output) -> SyncOne<Output, Error>
+  static func throwing(action: @escaping () throws -> Output) -> SyncOne<Output, Error>
     where Failure == Error
   {
     .init(resolver: action)
   }
 
-  public func resolve() throws -> Output {
+  func resolve() throws -> Output {
     try (resolver as! () throws -> Output)()
   }
 

@@ -47,12 +47,8 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
 
   // MARK: Public
 
-  public var id: String {
-    value
-  }
-
   public var description: String {
-    ".id(\"\(value)\")\(debugInfo.map { " [\($0)]" } ?? ")")"
+    ".id(\"\(value)\")\(debugInfo.map { " [\($0)]" } ?? "")"
   }
 
   public static func auto(
@@ -108,12 +104,18 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
     .init(value: "invalid", debugInfo: nil)
   }
 
+  var id: String {
+    value
+  }
+
+  #if DEBUG
+  /// file, line, column information available in DEBUG builds only.
+  let debugInfo: String?
+  #else
+  let debugInfo: String? = nil
+  #endif
   // MARK: Private
 
   private let value: String
 
-  #if DEBUG
-  /// file, line, column information available in DEBUG builds only.
-  private let debugInfo: String?
-  #endif
 }

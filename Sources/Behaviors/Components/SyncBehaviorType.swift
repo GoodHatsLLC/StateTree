@@ -3,13 +3,9 @@ import TreeActor
 
 // MARK: - SyncBehaviorType
 
-public protocol SyncBehaviorType<Input, Output, Failure>: BehaviorType
-  where Handler == Behaviors.SyncHandler<Output, Failure>
-{
-  var subscriber: Behaviors.SyncSubscriber<Input, SyncOne<Output, Failure>> { get }
-
-  func start(input: Input, handler: Behaviors.SyncHandler<Output, Failure>) -> Behaviors
-    .Resolved
+public protocol SyncBehaviorType<Input, Output, Failure>: BehaviorType {
+  var subscriber: Behaviors.SyncSubscriber<Input, Output, Failure> { get }
+  func start(input: Input, handler: Handler) -> Behaviors.Resolved
 }
 
 extension SyncBehaviorType {
@@ -52,11 +48,11 @@ extension SyncBehaviorType {
 // MARK: SyncBehaviorType.Func
 
 extension SyncBehaviorType where Failure == Never {
-  public typealias Func = (_ input: Input) -> Output
+  typealias Func = (_ input: Input) -> Output
 }
 
 // MARK: SyncBehaviorType.Func
 
 extension SyncBehaviorType where Failure == Error {
-  public typealias Func = (_ input: Input) throws -> Output
+  typealias Func = (_ input: Input) throws -> Output
 }

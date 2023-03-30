@@ -9,9 +9,20 @@ extension Behaviors {
 
     // MARK: Lifecycle
 
-    public init(_ id: BehaviorID, subscriber: Behaviors.SyncSubscriber<Input, Producer>) {
+    public init(
+      _ id: BehaviorID,
+      subscribeFunc: @escaping Behaviors.Make<Input, Output>.SyncFunc.NonThrowing
+    ) where Failure == Never {
       self.id = id
-      self.subscriber = subscriber
+      self.subscriber = .init { input in .always { subscribeFunc(input) } }
+    }
+
+    public init(
+      _ id: BehaviorID,
+      subscribeFunc: @escaping Behaviors.Make<Input, Output>.SyncFunc.Throwing
+    ) where Failure == Error {
+      self.id = id
+      self.subscriber = .init { input in .throwing { try subscribeFunc(input) } }
     }
 
     // MARK: Public
@@ -21,10 +32,10 @@ extension Behaviors {
     public typealias Failure = Failure
 
     public typealias Producer = SyncOne<Output, Failure>
-    public typealias Subscriber = Behaviors.SyncSubscriber<Input, Producer>
+    public typealias Subscriber = Behaviors.SyncSubscriber<Input, Output, Failure>
     public typealias Handler = SyncHandler<Output, Failure>
-    public let id: BehaviorID
 
+    public let id: BehaviorID
     public let subscriber: Subscriber
   }
 }
@@ -33,9 +44,25 @@ extension Behaviors {
 
 extension Behaviors.SyncSingle: SyncBehaviorType {
 
+  // MARK: Lifecycle
+
+  @_spi(Implementation)
+  public init(
+    _ id: BehaviorID,
+    subscriber: Behaviors.SyncSubscriber<Input, Output, Failure>
+  ) {
+    self.id = id
+    self.subscriber = subscriber
+  }
+
+  // MARK: Public
+
   @TreeActor
-  public func start(input: Input, handler: Behaviors.SyncHandler<Output, Failure>) -> Behaviors
-    .Resolved
+  public func start(
+    input: Input,
+    handler: Behaviors.SyncHandler<Output, Failure>
+  )
+    -> Behaviors.Resolved
   {
     let producer = subscriber.subscribe(input: input)
     do {
@@ -49,12 +76,13 @@ extension Behaviors.SyncSingle: SyncBehaviorType {
       return .init(id: id, state: .failed)
     }
   }
+
 }
 
 extension Behaviors.SyncSingle where Failure == Error {
 
   @TreeActor
-  public func start(input: Input, handler: Behaviors.SyncHandler<Output, Failure>) -> Behaviors
+  func start(input: Input, handler: Behaviors.SyncHandler<Output, Failure>) -> Behaviors
     .Resolved
   {
     let producer = subscriber.subscribe(input: input)
@@ -72,7 +100,7 @@ extension Behaviors.SyncSingle where Failure == Error {
 extension Behaviors.SyncSingle where Failure == Never {
 
   @TreeActor
-  public func start(input: Input, handler: Behaviors.SyncHandler<Output, Failure>) -> Behaviors
+  func start(input: Input, handler: Behaviors.SyncHandler<Output, Failure>) -> Behaviors
     .Resolved
   {
     let output = subscriber.subscribe(input: input)
@@ -85,9 +113,9 @@ extension Behaviors.SyncSingle where Failure == Never {
 
 extension Behaviors {
 
-  public struct SyncHandler<Output, Failure: Error> {
+  public struct SyncHandler<Output, Failure: Error>: HandlerType {
     init(
-      result: @escaping @TreeActor (Result<Output, Failure>) -> Void,
+      result: @escaping @TreeActor (_ result: Result<Output, Failure>) -> Void,
       cancel: @escaping @TreeActor () -> Void
     ) {
       self.onResult = result
@@ -106,22 +134,18 @@ extension Behaviors {
 
     // MARK: Internal
 
-    let onResult: @TreeActor (_ value: Result<Output, Failure>) -> Void
+    let onResult: @TreeActor (_ result: Result<Output, Failure>) -> Void
     let onCancel: @TreeActor () -> Void
 
   }
 }
-
-// MARK: - Behaviors.SyncHandler + HandlerType
-
-extension Behaviors.SyncHandler: HandlerType { }
 
 // MARK: - Behaviors.SyncHandler + ThrowingSingleHandlerType
 
 extension Behaviors.SyncHandler: ThrowingSingleHandlerType where Failure == any Error {
 
   public init(
-    onResult: @escaping @TreeActor (Result<Output, Error>) -> Void,
+    onResult: @escaping @TreeActor (_ result: Result<Output, Error>) -> Void,
     onCancel: @escaping @TreeActor () -> Void
   ) {
     self.init(result: onResult, cancel: onCancel)

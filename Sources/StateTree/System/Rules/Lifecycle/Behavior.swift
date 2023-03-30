@@ -46,7 +46,7 @@ public struct RunBehavior<Input>: Rules {
     _ column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Make<Void, Output>.AsyncFunc.Throwing,
-    onResult: @escaping @TreeActor (Result<Output, any Error>) -> Void
+    onResult: @escaping @TreeActor (_ result: Result<Output, any Error>) -> Void
   ) where Input == Void {
     let behavior = Behaviors.make(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-async-throws"),

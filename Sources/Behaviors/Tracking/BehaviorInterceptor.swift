@@ -14,11 +14,9 @@ public struct BehaviorInterceptor {
     self.handler = BehaviorInterceptionHandler<B>(id: id, filter: filter, subscriber: subscriber)
   }
 
-  // MARK: Public
-
-  public let id: BehaviorID
-
   // MARK: Internal
+
+  let id: BehaviorID
 
   func intercept<B: BehaviorType>(behavior: inout B, input: B.Input) {
     guard
@@ -48,7 +46,7 @@ private protocol BehaviorInterceptionHandlerType<B> {
 
 // MARK: - BehaviorInterceptionHandler
 
-public struct BehaviorInterceptionHandler<B: BehaviorType>: BehaviorInterceptionHandlerType {
+struct BehaviorInterceptionHandler<B: BehaviorType>: BehaviorInterceptionHandlerType {
   let id: BehaviorID
   let filter: @Sendable (B.Input) -> Bool
   let subscriber: B.Subscriber

@@ -9,7 +9,27 @@ extension Behaviors {
 
     // MARK: Lifecycle
 
-    public init(_ id: BehaviorID, subscriber: Behaviors.AsyncSubscriber<Input, Producer>) {
+    public init(
+      _ id: BehaviorID,
+      subscribeFunc: @escaping Behaviors.Make<Input, Output>.AsyncFunc.NonThrowing
+    ) where Failure == Never {
+      self.id = id
+      self.subscriber = .init { await subscribeFunc($0) }
+    }
+
+    public init(
+      _ id: BehaviorID,
+      subscribeFunc: @escaping Behaviors.Make<Input, Output>.AsyncFunc.Throwing
+    ) where Failure == Error {
+      self.id = id
+      self.subscriber = .init { try await subscribeFunc($0) }
+    }
+
+    @_spi(Implementation)
+    public init(
+      _ id: BehaviorID,
+      subscriber: Behaviors.AsyncSubscriber<Input, Output, Failure>
+    ) {
       self.id = id
       self.subscriber = subscriber
     }
@@ -21,16 +41,17 @@ extension Behaviors {
     public typealias Failure = Failure
 
     public typealias Producer = AsyncOne<Output, Failure>
-    public typealias Subscriber = Behaviors.AsyncSubscriber<Input, Producer>
+    public typealias Subscriber = Behaviors.AsyncSubscriber<Input, Output, Failure>
     public typealias Handler = SingleHandler<Output, Failure>
-    public let id: BehaviorID
 
+    public let id: BehaviorID
     public let subscriber: Subscriber
   }
 }
 
 extension Behaviors.AsyncSingle where Failure: Error {
-  public typealias Func = Behaviors.Make<Input, Output>.AsyncFunc.NonThrowing
+
+  // MARK: Public
 
   public func start(
     input: Input,
@@ -61,6 +82,11 @@ extension Behaviors.AsyncSingle where Failure: Error {
       }
     }.erase()
   }
+
+  // MARK: Internal
+
+  typealias Func = Behaviors.Make<Input, Output>.AsyncFunc.NonThrowing
+
 }
 
 extension Behaviors.AsyncSingle where Failure == Never {
@@ -83,7 +109,7 @@ extension Behaviors.AsyncSingle where Failure == Never {
     }
     return AnyDisposable {
       task.cancel()
-      Task {
+      Task.detached {
         await resolution.resolve(to: .cancelled) {
           await handler.onCancel()
         }
@@ -91,10 +117,6 @@ extension Behaviors.AsyncSingle where Failure == Never {
     }
   }
 }
-
-// MARK: - Behaviors.SingleHandler + HandlerType
-
-extension Behaviors.SingleHandler: HandlerType { }
 
 // MARK: - Behaviors.SingleHandler + ThrowingSingleHandlerType
 
@@ -127,7 +149,7 @@ extension Behaviors.SingleHandler: SingleHandlerType where Failure == Never {
 // MARK: - Behaviors.SingleHandler
 
 extension Behaviors {
-  public struct SingleHandler<Output, Failure: Error> {
+  public struct SingleHandler<Output, Failure: Error>: HandlerType {
 
     // MARK: Lifecycle
 

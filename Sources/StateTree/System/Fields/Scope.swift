@@ -158,13 +158,13 @@ extension Scope {
   /// - Parameter subscribe: the action which runs any of the Behavior's side effects and returns
   /// the `Output` emitting `AsyncSequence`.
   @TreeActor
-  public func run<Output>(
+  public func run<Seq: AsyncSequence>(
     _ moduleFile: String = #file,
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
-    subscribe: @escaping Behaviors.Make<Void, Output>.StreamFunc
-  ) -> ScopedBehavior<Behaviors.Stream<Void, Output>> {
+    subscribe: @escaping Behaviors.Make<Void, Seq.Element>.StreamFunc.Concrete<Seq>
+  ) -> ScopedBehavior<Behaviors.Stream<Void, Seq.Element, Error>> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
     return ScopedBehavior(
       behavior: Behaviors.make(id, input: Void.self, subscribe: subscribe),

@@ -3,11 +3,11 @@ import TreeActor
 
 // MARK: - StreamBehaviorType
 
-public protocol StreamBehaviorType<Input, Output>: BehaviorType
+public protocol StreamBehaviorType<Input, Output, Failure>: BehaviorType
   where Producer: AsyncSequence, Producer.Element == Output,
   Subscriber == Behaviors.StreamSubscriber<
     Input,
-    Producer
+    Output
   >
 {
   func start(
@@ -19,7 +19,7 @@ public protocol StreamBehaviorType<Input, Output>: BehaviorType
 }
 
 extension StreamBehaviorType {
-  public func scoped(
+  func scoped(
     to scope: some BehaviorScoping,
     manager: BehaviorManager,
     input: Input
@@ -27,14 +27,14 @@ extension StreamBehaviorType {
     .init(behavior: self, scope: scope, manager: manager, input: input)
   }
 
-  public func scoped(
+  func scoped(
     to scope: some BehaviorScoping,
     manager: BehaviorManager
   ) -> ScopedBehavior<Self> where Input == Void {
     .init(behavior: self, scope: scope, manager: manager, input: ())
   }
 
-  public func scoped(
+  func scoped(
     manager: BehaviorManager,
     input: Input
   ) -> (scope: some Disposable, behavior: ScopedBehavior<Self>) {
@@ -42,7 +42,7 @@ extension StreamBehaviorType {
     return (stage, .init(behavior: self, scope: stage, manager: manager, input: input))
   }
 
-  public func scoped(manager: BehaviorManager)
+  func scoped(manager: BehaviorManager)
     -> (scope: some Disposable, behavior: ScopedBehavior<Self>) where Input == Void
   {
     let stage = BehaviorStage()
@@ -53,5 +53,5 @@ extension StreamBehaviorType {
 // MARK: StreamBehaviorType.Func
 
 extension StreamBehaviorType {
-  public typealias Func = (_ input: Input) async -> Producer
+  typealias Func = (_ input: Input) async -> Producer
 }

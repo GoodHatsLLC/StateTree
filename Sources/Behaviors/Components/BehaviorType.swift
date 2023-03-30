@@ -10,6 +10,7 @@ public protocol BehaviorType<Input, Output, Failure> {
   associatedtype Producer
   associatedtype Subscriber: SubscriberType where Subscriber.Input == Input
   associatedtype Handler: HandlerType where Handler.Output == Output
+  @_spi(Implementation)
   init(
     _ id: BehaviorID,
     subscriber: Subscriber

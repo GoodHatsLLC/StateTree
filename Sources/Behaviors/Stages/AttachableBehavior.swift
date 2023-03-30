@@ -44,9 +44,9 @@ public struct AttachableBehavior<Behavior: BehaviorType> {
     }
   }
 
-  // MARK: Public
+  // MARK: Internal
 
-  public let id: BehaviorID
+  let id: BehaviorID
 
   // MARK: Private
 

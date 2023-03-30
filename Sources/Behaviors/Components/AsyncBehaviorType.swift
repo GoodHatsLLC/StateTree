@@ -3,7 +3,7 @@ import TreeActor
 
 // MARK: - AsyncBehaviorType
 
-public protocol AsyncBehaviorType: BehaviorType {
+public protocol AsyncBehaviorType<Input, Output, Failure>: BehaviorType {
   func start(
     input: Input,
     handler: Handler,
@@ -11,17 +11,12 @@ public protocol AsyncBehaviorType: BehaviorType {
   ) async
     -> AnyDisposable
 
-  var subscriber: Behaviors.AsyncSubscriber<Input, Producer> { get }
+  var subscriber: Behaviors.AsyncSubscriber<Input, Output, Failure> { get }
 }
 
 extension AsyncBehaviorType {
-  public func scoped(
-    to scope: some BehaviorScoping,
-    manager: BehaviorManager,
-    input: Input
-  ) -> ScopedBehavior<Self> {
-    .init(behavior: self, scope: scope, manager: manager, input: input)
-  }
+
+  // MARK: Public
 
   public func scoped(
     to scope: some BehaviorScoping,
@@ -30,7 +25,17 @@ extension AsyncBehaviorType {
     .init(behavior: self, scope: scope, manager: manager, input: ())
   }
 
-  public func scoped(
+  // MARK: Internal
+
+  func scoped(
+    to scope: some BehaviorScoping,
+    manager: BehaviorManager,
+    input: Input
+  ) -> ScopedBehavior<Self> {
+    .init(behavior: self, scope: scope, manager: manager, input: input)
+  }
+
+  func scoped(
     manager: BehaviorManager,
     input: Input
   ) -> (scope: some Disposable, behavior: ScopedBehavior<Self>) {
@@ -38,7 +43,7 @@ extension AsyncBehaviorType {
     return (stage, .init(behavior: self, scope: stage, manager: manager, input: input))
   }
 
-  public func scoped(manager: BehaviorManager)
+  func scoped(manager: BehaviorManager)
     -> (scope: some Disposable, behavior: ScopedBehavior<Self>) where Input == Void
   {
     let stage = BehaviorStage()
@@ -49,11 +54,11 @@ extension AsyncBehaviorType {
 // MARK: AsyncBehaviorType.Func
 
 extension AsyncBehaviorType where Failure == Never {
-  public typealias Func = (_ input: Input) async -> Output
+  typealias Func = (_ input: Input) async -> Output
 }
 
 // MARK: AsyncBehaviorType.Func
 
 extension AsyncBehaviorType where Failure == Error {
-  public typealias Func = (_ input: Input) async throws -> Output
+  typealias Func = (_ input: Input) async throws -> Output
 }

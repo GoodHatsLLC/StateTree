@@ -31,11 +31,7 @@ extension Behaviors {
   ) -> SyncSingle<Input, Output, Never> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "sync-single"),
-      subscriber: .init { (input: Input) in
-        SyncOne.always {
-          subscribe(input)
-        }
-      }
+      subscribeFunc: subscribe
     )
   }
 
@@ -65,11 +61,7 @@ extension Behaviors {
   ) -> SyncSingle<Input, Output, any Error> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "sync-single-throws"),
-      subscriber: .init { (input: Input) in
-        SyncOne.throwing {
-          try subscribe(input)
-        }
-      }
+      subscribeFunc: subscribe
     )
   }
 }
@@ -102,11 +94,7 @@ extension Behaviors {
   ) -> AsyncSingle<Input, Output, Never> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "async-single"),
-      subscriber: .init { (input: Input) in
-        AsyncOne.always {
-          await subscribe(input)
-        }
-      }
+      subscribeFunc: subscribe
     )
   }
 
@@ -135,11 +123,7 @@ extension Behaviors {
   ) -> AsyncSingle<Input, Output, any Error> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "async-single-throws"),
-      subscriber: .init { (input: Input) in
-        AsyncOne.throwing {
-          try await subscribe(input)
-        }
-      }
+      subscribeFunc: subscribe
     )
   }
 }
@@ -149,34 +133,6 @@ extension Behaviors {
 extension Behaviors {
 
   // MARK: Public
-
-  /// Make a `Stream<Input, Output>` behavior synchronously.
-  ///
-  /// Create a ``BehaviorType`` taking an `Input` type value, emitting a stream of `Output` values,
-  /// and potentially terminating with `any Error` — from a synchronous closure returning an
-  /// `AsyncSequence`.
-  ///
-  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
-  /// swapped
-  /// out in tests.
-  /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
-  /// any of the Behavior's side effects and to emit its `Output` values.
-  /// - Returns: A ``Behaviors/Behaviors/Stream`` taking an `Input` type value, emitting any number
-  /// of `Output` values before finishing successfully or failing with `any Error`.
-  ///
-  /// > Tip: The behavior is not executed and can be passed to other consumers.
-  public static func make<Input, Seq: AsyncSequence>(
-    _ id: BehaviorID? = nil,
-    input _: Input.Type,
-    moduleFile: String = #file,
-    line: Int = #line,
-    column: Int = #column,
-    subscribe: @escaping (_ input: Input) -> Seq
-  ) -> Stream<Input, Seq.Element> {
-    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "stream")
-    return .init(id, subscriber: .init { AnyAsyncSequence<Seq.Element>(subscribe($0)) })
-  }
 
   /// Make a `Stream<Input, Output>` behavior asynchronously.
   ///
@@ -200,15 +156,15 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping (_ input: Input) async -> Seq
-  ) -> Stream<Input, Seq.Element> {
+    subscribe: @escaping Make<Input, Seq.Element>.StreamFunc.Concrete<Seq>
+  ) -> Stream<Input, Seq.Element, Error> {
     let id = id ?? .meta(
       moduleFile: moduleFile,
       line: line,
       column: column,
       meta: "stream-asyncfunc"
     )
-    return .init(id, subscriber: .init { await AnyAsyncSequence<Seq.Element>(subscribe($0)) })
+    return .init(id, subscribeFunc: subscribe)
   }
 
   // MARK: Internal
@@ -236,7 +192,7 @@ extension Behaviors {
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) async -> some Emitting<Output>
-  ) -> Stream<Input, Output> {
+  ) -> Stream<Input, Output, Error> {
     let id = id ?? .meta(
       moduleFile: moduleFile,
       line: line,
@@ -271,7 +227,7 @@ extension Behaviors {
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) -> some Emitting<Output>
-  ) -> Stream<Input, Output> {
+  ) -> Stream<Input, Output, Error> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "stream-emitter")
     return make(id, input: input) {
       subscribe($0).values
@@ -306,7 +262,7 @@ extension Behaviors {
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) async -> some Publisher<Output, Never>
-  ) -> Stream<Input, Output> {
+  ) -> Stream<Input, Output, Error> {
     let id = id ?? .meta(
       moduleFile: moduleFile,
       line: line,
@@ -341,7 +297,7 @@ extension Behaviors {
     line: Int = #line,
     column: Int = #column,
     subscribe: @escaping (_ input: Input) -> some Publisher<Output, Never>
-  ) -> Stream<Input, Output> {
+  ) -> Stream<Input, Output, Error> {
     let id = id ?? .meta(
       moduleFile: moduleFile,
       line: line,

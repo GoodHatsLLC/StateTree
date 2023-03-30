@@ -24,6 +24,7 @@ public struct StartableBehavior<Input> {
 
       guard scope.canOwn()
       else {
+        handler.cancel()
         // If the scope itself can't own the behavior, return early without a finalizer.
         let resolution = Behaviors.Resolution(id: id, value: .init(id: id, state: .cancelled))
         manager.track(resolution: resolution)
@@ -49,7 +50,9 @@ public struct StartableBehavior<Input> {
             return await resolution.value
           } onDispose: {
             Task.detached {
-              await resolution.resolve(to: .cancelled)
+              await resolution.resolve(to: .cancelled) {
+                handler.cancel()
+              }
             }
           }
           scope.own(task)
@@ -78,7 +81,7 @@ public struct StartableBehavior<Input> {
 
       guard scope.canOwn()
       else {
-        handler.onCancel()
+        handler.cancel()
         // If the scope itself can't own the behavior, return early without a finalizer.
         let resolution = Behaviors.Resolution(id: id, value: .init(id: id, state: .cancelled))
         manager.track(resolution: resolution)
@@ -123,6 +126,7 @@ public struct StartableBehavior<Input> {
         // If the scope itself can't own the behavior, return early without a finalizer.
         let resolution = Behaviors.Resolution(id: id, value: .init(id: id, state: .cancelled))
         manager.track(resolution: resolution)
+        handler.cancel()
         return (resolution: resolution, finalizer: nil)
       }
       // For stream behaviors:
@@ -162,8 +166,6 @@ public struct StartableBehavior<Input> {
     finalizer: (() async -> Behaviors.Resolved)?
   )
 
-  public let id: BehaviorID
-
   public nonisolated func start(
     manager: BehaviorManager,
     input: Input,
@@ -173,6 +175,10 @@ public struct StartableBehavior<Input> {
   {
     starter(manager, input, scope)
   }
+
+  // MARK: Internal
+
+  let id: BehaviorID
 
   // MARK: Private
 

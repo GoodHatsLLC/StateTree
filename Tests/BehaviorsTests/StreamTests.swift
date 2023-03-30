@@ -1,9 +1,9 @@
-import Behaviors
 import Disposable
 import class Emitter.PublishSubject
 import TreeActor
 import Utilities
 import XCTest
+@testable import Behaviors
 
 // MARK: - StreamTests
 
@@ -21,7 +21,7 @@ final class StreamTests: XCTestCase {
     var received: [Int] = []
     var didFinish = false
     let asyncBlock = Async.Value<Void>()
-    let behavior: Behaviors.Stream<Void, Int> = Behaviors
+    let behavior: Behaviors.Stream<Void, Int, Error> = Behaviors
       .make(.id("test_output_success"), input: Void.self) {
         AnyAsyncSequence(expected)
       }
@@ -47,7 +47,7 @@ final class StreamTests: XCTestCase {
 
   func test_immediate_failure() async throws {
     let receivedError = Async.Value<Error>()
-    let behavior: Behaviors.Stream<Void, Int> = Behaviors
+    let behavior: Behaviors.Stream<Void, Int, Error> = Behaviors
       .make(
         .id("stream_fail"),
         input: Void.self
@@ -81,7 +81,7 @@ final class StreamTests: XCTestCase {
     var receivedOutput: [Int] = []
     let asyncBlocks: [Async.Value<Void>] = [.init(), .init()]
     let manager = BehaviorManager()
-    let behavior: Behaviors.Stream<Void, Int> = Behaviors
+    let behavior: Behaviors.Stream<Void, Int, Error> = Behaviors
       .make(.id("stream_eventual_fail"), input: Void.self) {
         subject.values
       }
@@ -128,7 +128,7 @@ final class StreamTests: XCTestCase {
     let manager = BehaviorManager(behaviorInterceptors: [
       .init(
         id: .id("test_interception"),
-        type: Behaviors.Stream<Void, Int>.self,
+        type: Behaviors.Stream<Void, Int, Error>.self,
         subscriber: .init {
           AnyAsyncSequence(expected)
         },
@@ -136,7 +136,7 @@ final class StreamTests: XCTestCase {
       ),
     ])
     var didFinish = false
-    let behavior: Behaviors.Stream<Void, Int> = Behaviors
+    let behavior: Behaviors.Stream<Void, Int, Error> = Behaviors
       .make(.id("test_interception"), input: Void.self) {
         AnyAsyncSequence(original)
       }
@@ -162,14 +162,7 @@ final class StreamTests: XCTestCase {
       _ = await fun()
       return AnyAsyncSequence([true, false, true])
     }
-    XCTAssert(type(of: behavior) == Behaviors.Stream<Void, Bool>.self)
-  }
-
-  func test_inferredType_sync() async throws {
-    let behavior = Behaviors.make(input: Void.self) {
-      AnyAsyncSequence([true, false, true])
-    }
-    XCTAssert(type(of: behavior) == Behaviors.Stream<Void, Bool>.self)
+    XCTAssert(type(of: behavior) == Behaviors.Stream<Void, Bool, Error>.self)
   }
 
 }

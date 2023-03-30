@@ -6,11 +6,23 @@ import Utilities
 // MARK: - Behaviors.Stream
 
 extension Behaviors {
-  public struct Stream<Input, Output>: StreamBehaviorType {
+  public struct Stream<Input, Output, Failure: Error>: StreamBehaviorType {
 
     // MARK: Lifecycle
 
-    public init(_ id: BehaviorID, subscriber: Behaviors.StreamSubscriber<Input, Producer>) {
+    public init<Seq: AsyncSequence>(
+      _ id: BehaviorID,
+      subscribeFunc: @escaping Behaviors.Make<Input, Output>.StreamFunc.Concrete<Seq>
+    ) where Output == Seq.Element {
+      self.id = id
+      self.subscriber = .init(subscribeFunc)
+    }
+
+    @_spi(Implementation)
+    public init(
+      _ id: BehaviorID,
+      subscriber: Behaviors.StreamSubscriber<Input, Output>
+    ) {
       self.id = id
       self.subscriber = subscriber
     }
@@ -20,53 +32,10 @@ extension Behaviors {
     public typealias Producer = AnyAsyncSequence<Output>
     public typealias Input = Input
     public typealias Output = Output
-    public typealias Failure = Error
     public typealias Func = Behaviors.Make<Input, Output>.StreamFunc
-    public typealias Subscriber = Behaviors.StreamSubscriber<Input, Producer>
+    public typealias Handler = Behaviors.StreamHandler<Output>
+    public typealias Subscriber = Behaviors.StreamSubscriber<Input, Output>
     public typealias Resolution = Producer.Element
-    public struct Handler: StreamHandlerType {
-
-      // MARK: Lifecycle
-
-      public init(
-        onValue: @escaping @TreeActor (Output) -> Void,
-        onFinish: @escaping @TreeActor () -> Void,
-        onFailure: @escaping @TreeActor (Error) -> Void,
-        onCancel: @escaping @TreeActor () -> Void
-      ) {
-        self.onValue = onValue
-        self.onFinish = onFinish
-        self.onFailure = onFailure
-        self.onCancel = onCancel
-      }
-
-      public init() {
-        self.onValue = { _ in }
-        self.onCancel = { }
-        self.onFailure = { _ in }
-        self.onFinish = { }
-      }
-
-      // MARK: Public
-
-      public typealias Failure = Error
-
-      public typealias Behavior = Stream<Input, Output>
-      public typealias Output = Producer.Element
-
-      @TreeActor
-      public func cancel() {
-        onCancel()
-      }
-
-      // MARK: Internal
-
-      let onValue: @TreeActor (_ value: Output) -> Void
-      let onFinish: @TreeActor () -> Void
-      let onFailure: @TreeActor (_ error: any Error) -> Void
-      let onCancel: @TreeActor () -> Void
-
-    }
 
     public let id: BehaviorID
 
@@ -111,5 +80,51 @@ extension Behaviors {
         }
       }
     }
+  }
+}
+
+// MARK: - Behaviors.StreamHandler
+
+extension Behaviors {
+  public struct StreamHandler<Output>: StreamHandlerType {
+
+    // MARK: Lifecycle
+
+    public init(
+      onValue: @escaping @TreeActor (_ value: Output) -> Void,
+      onFinish: @escaping @TreeActor () -> Void,
+      onFailure: @escaping @TreeActor (_ failure: Error) -> Void,
+      onCancel: @escaping @TreeActor () -> Void
+    ) {
+      self.onValue = onValue
+      self.onFinish = onFinish
+      self.onFailure = onFailure
+      self.onCancel = onCancel
+    }
+
+    public init() {
+      self.onValue = { _ in }
+      self.onCancel = { }
+      self.onFailure = { _ in }
+      self.onFinish = { }
+    }
+
+    // MARK: Public
+
+    public typealias Failure = Error
+    public typealias Output = Output
+
+    @TreeActor
+    public func cancel() {
+      onCancel()
+    }
+
+    // MARK: Internal
+
+    let onValue: @TreeActor (_ value: Output) -> Void
+    let onFinish: @TreeActor () -> Void
+    let onFailure: @TreeActor (_ error: any Error) -> Void
+    let onCancel: @TreeActor () -> Void
+
   }
 }

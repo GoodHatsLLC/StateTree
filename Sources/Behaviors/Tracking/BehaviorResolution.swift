@@ -43,26 +43,26 @@ extension Behaviors {
       hasher.combine(id)
     }
 
-    public func markStarted() async {
-      await started.resolve(())
-    }
-
-    public func resolve(to state: Resolved.State, act: @escaping () async -> Void = { }) async {
-      await started.resolve(())
-      await resolution.resolve(.init(id: id, state: state), act: act)
-    }
-
-    public func ifMatching(
-      _ filter: (_ value: Resolved.State?) -> Bool,
-      run act: @escaping () async -> Void
-    ) async {
-      await resolution.ifMatching({ filter($0?.state) }, run: act)
-    }
-
     // MARK: Internal
 
     static func cancelled(id: BehaviorID) -> Resolution {
       Self(id: id, value: .init(id: id, state: .cancelled))
+    }
+
+    func markStarted() async {
+      await started.resolve(())
+    }
+
+    func resolve(to state: Resolved.State, act: @escaping () async -> Void = { }) async {
+      await started.resolve(())
+      await resolution.resolve(.init(id: id, state: state), act: act)
+    }
+
+    func ifMatching(
+      _ filter: (_ value: Resolved.State?) -> Bool,
+      run act: @escaping () async -> Void
+    ) async {
+      await resolution.ifMatching({ filter($0?.state) }, run: act)
     }
 
     // MARK: Private

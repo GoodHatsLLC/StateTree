@@ -1,9 +1,9 @@
-import Behaviors
 import Disposable
 import Emitter
 import TreeActor
 import Utilities
 import XCTest
+@_spi(Implementation) @testable import Behaviors
 
 // MARK: - SyncSingleTests
 
@@ -44,7 +44,7 @@ final class SyncSingleTests: XCTestCase {
   }
 
   @TreeActor
-  func test_sync_immediate_cancel_result() async throws {
+  func test_spi_immediate_cancel_result() async throws {
     stage.dispose()
     let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
       .make(.auto(), input: Void.self) { () -> Int in
@@ -59,7 +59,7 @@ final class SyncSingleTests: XCTestCase {
   }
 
   @TreeActor
-  func test_sync_get_success() async throws {
+  func test_spi_get_success() async throws {
     let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
       .make(.auto(), input: Void.self) { () -> Int in
         123_555

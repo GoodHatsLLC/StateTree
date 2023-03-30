@@ -1,6 +1,6 @@
 import Disposable
 import TreeActor
-public struct ActivatedBehavior: Disposable, Hashable {
+struct ActivatedBehavior: Disposable, Hashable {
 
   // MARK: Lifecycle
 
@@ -52,19 +52,19 @@ public struct ActivatedBehavior: Disposable, Hashable {
     self.disposable = disposable
   }
 
-  // MARK: Public
+  // MARK: Internal
 
-  public let id: BehaviorID
+  let id: BehaviorID
 
-  public static func == (lhs: ActivatedBehavior, rhs: ActivatedBehavior) -> Bool {
+  static func == (lhs: ActivatedBehavior, rhs: ActivatedBehavior) -> Bool {
     lhs.id == rhs.id
   }
 
-  public func hash(into hasher: inout Hasher) {
+  func hash(into hasher: inout Hasher) {
     hasher.combine(id)
   }
 
-  public func dispose() {
+  func dispose() {
     disposable.dispose()
   }
 

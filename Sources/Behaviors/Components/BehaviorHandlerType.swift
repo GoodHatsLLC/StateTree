@@ -6,6 +6,7 @@ public protocol HandlerType {
   associatedtype Output
   associatedtype Failure: Error
   init()
+  func cancel()
 }
 
 // MARK: - SingleHandlerType
