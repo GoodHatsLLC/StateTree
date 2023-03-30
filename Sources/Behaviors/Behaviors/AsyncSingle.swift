@@ -30,7 +30,7 @@ extension Behaviors {
 }
 
 extension Behaviors.AsyncSingle where Failure: Error {
-  public typealias Func = Behaviors.Make<Input, Output>.Func.NonThrowing
+  public typealias Func = Behaviors.Make<Input, Output>.AsyncFunc.NonThrowing
 
   public func start(
     input: Input,

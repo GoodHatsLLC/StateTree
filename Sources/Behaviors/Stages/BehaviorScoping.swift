@@ -41,8 +41,6 @@ extension Behaviors {
     }
   }
 
-  public enum Make<Input, Output> { }
-
   public struct InvalidScope: BehaviorScoping {
     public func own(_ disposable: some Disposable) {
       disposable.dispose()

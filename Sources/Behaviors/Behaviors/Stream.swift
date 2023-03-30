@@ -21,7 +21,7 @@ extension Behaviors {
     public typealias Input = Input
     public typealias Output = Output
     public typealias Failure = Error
-    public typealias Func = (_ input: Input) async -> Producer
+    public typealias Func = Behaviors.Make<Input, Output>.StreamFunc
     public typealias Subscriber = Behaviors.StreamSubscriber<Input, Producer>
     public typealias Resolution = Producer.Element
     public struct Handler: StreamHandlerType {

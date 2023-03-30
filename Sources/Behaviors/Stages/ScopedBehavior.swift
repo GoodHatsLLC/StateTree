@@ -4,19 +4,21 @@ import Utilities
 
 // MARK: - ScopedBehavior
 
-public struct ScopedBehavior<Behavior: BehaviorType> where Behavior.Input == Void {
+public struct ScopedBehavior<Behavior: BehaviorType> {
 
   // MARK: Lifecycle
 
   public init(
     behavior: Behavior,
     scope: any BehaviorScoping,
-    manager: BehaviorManager
+    manager: BehaviorManager,
+    input: Behavior.Input
   ) where Behavior: AsyncBehaviorType {
     self.init(
       behavior: AttachableBehavior(behavior: behavior),
       scope: scope,
-      manager: manager
+      manager: manager,
+      input: input
     )
   }
 
@@ -24,36 +26,42 @@ public struct ScopedBehavior<Behavior: BehaviorType> where Behavior.Input == Voi
   public init(
     behavior: Behavior,
     scope: any BehaviorScoping,
-    manager: BehaviorManager
+    manager: BehaviorManager,
+    input: Behavior.Input
   ) where Behavior: SyncBehaviorType {
     self.init(
       behavior: AttachableBehavior(behavior: behavior),
       scope: scope,
-      manager: manager
+      manager: manager,
+      input: input
     )
   }
 
   public init(
     behavior: Behavior,
     scope: any BehaviorScoping,
-    manager: BehaviorManager
+    manager: BehaviorManager,
+    input: Behavior.Input
   ) where Behavior: StreamBehaviorType {
     self.init(
       behavior: AttachableBehavior(behavior: behavior),
       scope: scope,
-      manager: manager
+      manager: manager,
+      input: input
     )
   }
 
   fileprivate init(
     behavior: AttachableBehavior<Behavior>,
     scope: any BehaviorScoping,
-    manager: BehaviorManager
+    manager: BehaviorManager,
+    input: Behavior.Input
   ) {
     self.id = behavior.id
     self.behavior = behavior
     self.scope = scope
     self.manager = manager
+    self.input = input
   }
 
   // MARK: Public
@@ -62,6 +70,7 @@ public struct ScopedBehavior<Behavior: BehaviorType> where Behavior.Input == Voi
 
   // MARK: Private
 
+  private let input: Behavior.Input
   private let behavior: AttachableBehavior<Behavior>
   private let scope: any BehaviorScoping
   private let manager: BehaviorManager
@@ -78,7 +87,7 @@ extension ScopedBehavior {
       )
     let (resolution, finalizer) = startable.start(
       manager: manager,
-      input: (),
+      input: input,
       scope: scope
     )
     if let finalizer {
@@ -104,7 +113,7 @@ extension ScopedBehavior where Behavior.Handler: SingleHandlerType, Behavior: Sy
       ))
     let (_, finalizer) = startable.start(
       manager: manager,
-      input: (),
+      input: input,
       scope: scope
     )
     if let finalizer {
@@ -125,7 +134,7 @@ extension ScopedBehavior where Behavior.Handler: SingleHandlerType, Behavior: Sy
       .attach(handler: .init(onSuccess: onSuccess, onCancel: onCancel))
     let (resolution, finalizer) = startable.start(
       manager: manager,
-      input: (),
+      input: input,
       scope: scope
     )
     Task {
@@ -155,7 +164,7 @@ extension ScopedBehavior where Behavior.Handler: ThrowingSingleHandlerType,
       ))
     let (_, finalizer) = startable.start(
       manager: manager,
-      input: (),
+      input: input,
       scope: scope
     )
     Task { await finalizer?() }
@@ -174,7 +183,7 @@ extension ScopedBehavior where Behavior.Handler: ThrowingSingleHandlerType,
       .attach(handler: .init(onResult: onResult, onCancel: onCancel))
     let (resolution, finalizer) = startable.start(
       manager: manager,
-      input: (),
+      input: input,
       scope: scope
     )
     Task {
@@ -212,7 +221,7 @@ extension ScopedBehavior where Behavior.Handler: SingleHandlerType, Behavior: As
         ))
       let (_, finalizer) = startable.start(
         manager: manager,
-        input: (),
+        input: input,
         scope: scope
       )
       if let finalizer {
@@ -233,7 +242,7 @@ extension ScopedBehavior where Behavior.Handler: SingleHandlerType, Behavior: As
       .attach(handler: .init(onSuccess: onSuccess, onCancel: onCancel))
     let (resolution, finalizer) = startable.start(
       manager: manager,
-      input: (),
+      input: input,
       scope: scope
     )
     Task {
@@ -272,7 +281,7 @@ extension ScopedBehavior where Behavior.Handler: ThrowingSingleHandlerType,
         ))
       let (_, finalizer) = startable.start(
         manager: manager,
-        input: (),
+        input: input,
         scope: scope
       )
       if let finalizer {
@@ -293,7 +302,7 @@ extension ScopedBehavior where Behavior.Handler: ThrowingSingleHandlerType,
       .attach(handler: .init(onResult: onResult, onCancel: onCancel))
     let (resolution, finalizer) = startable.start(
       manager: manager,
-      input: (),
+      input: input,
       scope: scope
     )
     Task {
@@ -324,7 +333,7 @@ extension ScopedBehavior where Behavior.Handler: StreamHandlerType {
       ))
     let (resolution, finalizer) = startable.start(
       manager: manager,
-      input: (),
+      input: input,
       scope: scope
     )
     Task {

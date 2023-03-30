@@ -1,8 +1,8 @@
 import Disposable
 import Emitter
-import StateTree
 import Utilities
 import XCTest
+@testable import StateTree
 
 // MARK: - RunBehaviorTests
 

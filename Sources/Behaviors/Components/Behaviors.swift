@@ -1,4 +1,5 @@
 import TreeActor
+import Utilities
 
 // MARK: - Behaviors
 
@@ -43,15 +44,24 @@ extension Behaviors {
   }
 }
 
-// MARK: - Behaviors.Make.Func
+// MARK: Behaviors.Make
+
+extension Behaviors {
+  public enum Make<Input, Output> { }
+}
+
+// MARK: - Behaviors.Make
 
 extension Behaviors.Make {
+
+  public typealias StreamFunc = (_ input: Input) async -> AnyAsyncSequence<Output>
+
   public enum SyncFunc {
     public typealias NonThrowing = @TreeActor (_ input: Input) -> Output
     public typealias Throwing = @TreeActor (_ input: Input) throws -> Output
   }
 
-  public enum Func {
+  public enum AsyncFunc {
     public typealias NonThrowing = (_ input: Input) async -> Output
     public typealias Throwing = (_ input: Input) async throws -> Output
   }

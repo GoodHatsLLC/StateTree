@@ -21,9 +21,18 @@ public protocol StreamBehaviorType<Input, Output>: BehaviorType
 extension StreamBehaviorType {
   public func scoped(
     to scope: some BehaviorScoping,
-    manager: BehaviorManager
+    manager: BehaviorManager,
+    input: Input
   ) -> ScopedBehavior<Self> {
-    .init(behavior: self, scope: scope, manager: manager)
+    .init(behavior: self, scope: scope, manager: manager, input: input)
+  }
+
+  @TreeActor
+  public func scoped(
+    to scope: some BehaviorScoping,
+    manager: BehaviorManager
+  ) -> ScopedBehavior<Self> where Input == Void {
+    .init(behavior: self, scope: scope, manager: manager, input: ())
   }
 }
 

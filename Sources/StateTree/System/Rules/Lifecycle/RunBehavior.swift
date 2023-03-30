@@ -5,27 +5,14 @@ import Utilities
 
 // MARK: - RunBehavior
 
-public struct RunBehavior: Rules {
+public struct RunBehavior<Input>: Rules {
 
   // MARK: Lifecycle
 
-  public init<Output>(
-    _ moduleFile: String = #file,
-    _ line: Int = #line,
-    _ column: Int = #column,
-    id: BehaviorID? = nil,
-    subscribe: @escaping Behaviors.Make<Void, Output>.Func.NonThrowing,
-    onSuccess: @escaping @TreeActor (_ value: Output) -> Void
-  ) {
-    let behavior = Behaviors.make(
-      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-async-nothrow"),
-      input: Void.self,
-      subscribe: subscribe
-    )
-    self.startable = StartableBehavior(
-      behavior: behavior,
-      handler: .init(onSuccess: onSuccess, onCancel: { })
-    )
+  public init<B: SyncBehaviorType>(_ behavior: B, input: Input, handler: B.Handler)
+    where B.Input == Input
+  {
+    self.startable = (input, StartableBehavior<Input>(behavior: behavior, handler: handler))
   }
 
   public init<Output>(
@@ -33,18 +20,37 @@ public struct RunBehavior: Rules {
     _ line: Int = #line,
     _ column: Int = #column,
     id: BehaviorID? = nil,
-    subscribe: @escaping Behaviors.Make<Void, Output>.Func.Throwing,
+    subscribe: @escaping Behaviors.Make<Void, Output>.AsyncFunc.NonThrowing,
+    onSuccess: @escaping @TreeActor (_ value: Output) -> Void
+  ) where Input == Void {
+    let behavior = Behaviors.make(
+      id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-async-nothrow"),
+      input: Void.self,
+      subscribe: subscribe
+    )
+    self.startable = ((), StartableBehavior<Void>(
+      behavior: behavior,
+      handler: .init(onSuccess: onSuccess, onCancel: { })
+    ))
+  }
+
+  public init<Output>(
+    _ moduleFile: String = #file,
+    _ line: Int = #line,
+    _ column: Int = #column,
+    id: BehaviorID? = nil,
+    subscribe: @escaping Behaviors.Make<Void, Output>.AsyncFunc.Throwing,
     onResult: @escaping @TreeActor (Result<Output, any Error>) -> Void
-  ) {
+  ) where Input == Void {
     let behavior = Behaviors.make(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-async-throws"),
       input: Void.self,
       subscribe: subscribe
     )
-    self.startable = StartableBehavior(
+    self.startable = ((), StartableBehavior<Void>(
       behavior: behavior,
       handler: .init(onResult: onResult, onCancel: { })
-    )
+    ))
   }
 
   public init<Seq: AsyncSequence>(
@@ -56,16 +62,16 @@ public struct RunBehavior: Rules {
     onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
     onFinish: @escaping @TreeActor () -> Void,
     onFailure: @escaping @TreeActor (_ error: Error) -> Void
-  ) {
+  ) where Input == Void {
     let behavior = Behaviors.make(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-stream"),
       input: Void.self,
       subscribe: behavior
     )
-    self.startable = StartableBehavior(
+    self.startable = ((), StartableBehavior<Void>(
       behavior: behavior,
       handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
-    )
+    ))
   }
 
   init<Value>(
@@ -77,7 +83,7 @@ public struct RunBehavior: Rules {
     onValue: @escaping @TreeActor (_ value: Value) -> Void,
     onFinish: @escaping @TreeActor () -> Void,
     onFailure: @escaping @TreeActor (_ error: Error) -> Void
-  ) {
+  ) where Input == Void {
     self.init(
       moduleFile,
       line,
@@ -98,11 +104,12 @@ public struct RunBehavior: Rules {
   )
     -> LifecycleResult
   {
+    let (input, behavior) = startable
     switch lifecycle {
     case .didStart:
-      let (_, finalizer) = startable.start(
+      let (_, finalizer) = behavior.start(
         manager: context.runtime.behaviorManager,
-        input: (),
+        input: input,
         scope: context.scope
       )
       if let finalizer {
@@ -132,7 +139,7 @@ public struct RunBehavior: Rules {
 
   // MARK: Internal
 
-  let startable: StartableBehavior<Void>
+  let startable: (input: Input, behavior: StartableBehavior<Input>)
 
 }
 
@@ -154,7 +161,7 @@ extension RunBehavior {
     onValue: @escaping @TreeActor (_ value: Element) -> Void,
     onFinish: @escaping @TreeActor () -> Void,
     onFailure: @escaping @TreeActor (_ error: any Error) -> Void
-  ) {
+  ) where Input == Void {
     self.init(
       moduleFile,
       line,
@@ -185,7 +192,7 @@ extension RunBehavior {
     onValue: @escaping @TreeActor (_ value: Element) -> Void,
     onFinish: @escaping @TreeActor () -> Void,
     onFailure: @escaping @TreeActor (_ error: any Error) -> Void
-  ) {
+  ) where Input == Void {
     self.init(
       moduleFile,
       line,

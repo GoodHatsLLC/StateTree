@@ -10,11 +10,12 @@ extension Behaviors {
   ///
   /// Create a non-erroring `Output` emitting, synchronous, behavior taking an `Input` type value.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to create its `Output` value.
   /// - Returns: A ``Behaviors/Behaviors/SyncSingle`` taking an `Input` type value and synchronously
   /// emitting an `Output` value.
   ///
@@ -43,11 +44,12 @@ extension Behaviors {
   /// Create an `Output` emitting, synchronous, behavior taking an `Input` type value, and
   /// potentially throwing `any Error`.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to create its `Output` value.
   /// - Returns: A ``Behaviors/Behaviors/SyncSingle`` taking an `Input` type value and synchronously
   /// emitting an `Output` value, or failing with an `any Error`.
   ///
@@ -80,11 +82,12 @@ extension Behaviors {
   ///
   /// Create a non-erroring `Output` emitting, asynchronous, behavior taking an `Input` type value.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to create its `Output` value.
   /// - Returns: A ``Behaviors/Behaviors/AsyncSingle`` taking an `Input` type value and
   /// asynchronously emitting an `Output` value.
   ///
@@ -95,7 +98,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Input, Output>.Func.NonThrowing
+    subscribe: @escaping Make<Input, Output>.AsyncFunc.NonThrowing
   ) -> AsyncSingle<Input, Output, Never> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "async-single"),
@@ -112,11 +115,12 @@ extension Behaviors {
   /// Create a `Output` emitting, asynchronous, behavior taking an `Input` type value, and
   /// potentially throwing `any Error`.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to create its `Output` value.
   /// - Returns: A ``Behaviors/Behaviors/AsyncSingle`` taking an `Input` type value and
   /// asynchronously emitting an `Output` value, or failing with an `any Error`.
   ///
@@ -127,7 +131,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Input, Output>.Func.Throwing
+    subscribe: @escaping Make<Input, Output>.AsyncFunc.Throwing
   ) -> AsyncSingle<Input, Output, any Error> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "async-single-throws"),
@@ -152,11 +156,12 @@ extension Behaviors {
   /// and potentially terminating with `any Error` — from a synchronous closure returning an
   /// `AsyncSequence`.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to emit its `Output` values.
   /// - Returns: A ``Behaviors/Behaviors/Stream`` taking an `Input` type value, emitting any number
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
@@ -179,11 +184,12 @@ extension Behaviors {
   /// and potentially terminating with `any Error` — from an asynchronous closure returning an
   /// `AsyncSequence`.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
   /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// any of the Behavior's side effects and to emit its `Output` values.
   /// - Returns: A ``Behaviors/Behaviors/Stream`` taking an `Input` type value, emitting any number
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
@@ -213,11 +219,12 @@ extension Behaviors {
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Publisher`.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to emit its `Output` values.
   /// - Returns: A ``Behaviors/Behaviors/Stream`` taking an `Input` type value, emitting any number
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
@@ -247,11 +254,12 @@ extension Behaviors {
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Publisher`.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to emit its `Output` values.
   /// - Returns: A ``Behaviors/Behaviors/Stream`` taking an `Input` type value, emitting any number
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
@@ -281,11 +289,12 @@ extension Behaviors {
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Combine` `Publisher`.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to emit its `Output` values.
   /// - Returns: A ``Behaviors/Behaviors/Stream`` taking an `Input` type value, emitting any number
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
@@ -315,11 +324,12 @@ extension Behaviors {
   /// and potentially terminating with `any Error` — from a synchronous closure returning a
   /// `Publisher`.
   ///
-  /// - Parameter id: the ``BehaviorID`` representing the created id — with which it can be swapped
+  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
+  /// swapped
   /// out in tests.
   /// - Parameter input: `Input.self` — the `Input` type the created `Behavior` will require.
-  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input` and to run
-  /// any of the behaviors side effects.
+  /// - Parameter subscribe: the action run to subscribe the `Behavior` to the `Input`,  to run
+  /// any of the Behavior's side effects and to emit its `Output` values.
   /// - Returns: A ``Behaviors/Behaviors/Stream`` taking an `Input` type value, emitting any number
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
