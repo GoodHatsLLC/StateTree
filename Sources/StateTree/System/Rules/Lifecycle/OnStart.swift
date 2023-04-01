@@ -1,49 +1,98 @@
+@_spi(Implementation) import Behaviors
+import Disposable
+import Emitter
+import TreeActor
+import Utilities
+
 // MARK: - OnStart
 
-@TreeActor
-public struct OnStart: Rules {
+public struct OnStart<Behavior: BehaviorType>: Rules where Behavior.Input == Void {
 
   // MARK: Lifecycle
 
+  @TreeActor
   public init(
-    action: @escaping () -> Void
-  ) {
-    self.action = action
+    _ action: @TreeActor @escaping () -> Void
+  ) where Behavior == Behaviors.SyncSingle<Void, Void, Never> {
+    let behavior: Behaviors.SyncSingle<Behavior.Input, Void, Never> = Behaviors
+      .make(input: Behavior.Input.self) { action() }
+    self.behaviorMaker = { scope, manager in
+      Surface(
+        input: (),
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
+  }
+
+  @TreeActor
+  public init(
+    run behavior: Behavior
+  )
+    where Behavior: SyncBehaviorType
+  {
+    self.behaviorMaker = { scope, manager in
+      Surface<Behavior>(
+        input: (),
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
+  }
+
+  public init(
+    run behavior: Behavior
+  ) where Behavior: AsyncBehaviorType {
+    self.behaviorMaker = { scope, manager in
+      Surface<Behavior>(
+        input: (),
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
+  }
+
+  public init(
+    run behavior: Behavior
+  ) where Behavior: StreamBehaviorType {
+    self.behaviorMaker = { scope, manager in
+      Surface<Behavior>(
+        input: (),
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
   }
 
   // MARK: Public
 
-  public func act(for lifecycle: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
-    switch lifecycle {
-    case .didStart:
-      action()
-    case .didUpdate:
-      break
-    case .willStop:
-      break
-    case .handleIntent:
-      break
-    }
-    return .init()
+  public func act(
+    for _: RuleLifecycle,
+    with _: RuleContext
+  )
+    -> LifecycleResult
+  {
+    .init()
   }
 
-  public mutating func applyRule(with _: RuleContext) throws { }
+  public mutating func applyRule(with context: RuleContext) throws {
+    behaviorMaker(scope, context.runtime.behaviorManager)
+      .fireAndForget()
+  }
 
   public mutating func removeRule(with _: RuleContext) throws { }
 
   public mutating func updateRule(
-    from _: OnStart,
+    from _: Self,
     with _: RuleContext
   ) throws { }
 
-  // MARK: Private
+  // MARK: Internal
 
-  private var action: () -> Void
-
-}
-
-extension Rules {
-  public func onStart(action: @escaping () -> Void) -> some Rules {
-    OnStart(action: action)
-  }
+  let behaviorMaker: (any BehaviorScoping, BehaviorManager) -> Surface<Behavior>
+  let scope: BehaviorStage = .init()
 }

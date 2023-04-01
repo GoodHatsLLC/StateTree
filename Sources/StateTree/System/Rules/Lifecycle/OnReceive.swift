@@ -3,7 +3,6 @@ import Emitter
 
 // MARK: - OnReceive
 
-/// TODO: replace with behavior oriented lifecycle handlers
 @TreeActor
 public struct OnReceive<Value: Sendable>: Rules {
 
