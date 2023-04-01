@@ -7,6 +7,19 @@ public struct AttachableBehavior<Behavior: BehaviorType> {
 
   // MARK: Lifecycle
 
+  @TreeActor
+  public init(
+    behavior: Behavior
+  ) where Behavior: SyncBehaviorType {
+    self.id = behavior.id
+    self.attacher = { handler in
+      StartableBehavior(
+        behavior: behavior,
+        handler: handler
+      )
+    }
+  }
+
   public init(
     behavior: Behavior
   ) where Behavior: AsyncBehaviorType {
@@ -22,19 +35,6 @@ public struct AttachableBehavior<Behavior: BehaviorType> {
   public init(
     behavior: Behavior
   ) where Behavior: StreamBehaviorType {
-    self.id = behavior.id
-    self.attacher = { handler in
-      StartableBehavior(
-        behavior: behavior,
-        handler: handler
-      )
-    }
-  }
-
-  @TreeActor
-  public init(
-    behavior: Behavior
-  ) where Behavior: SyncBehaviorType {
     self.id = behavior.id
     self.attacher = { handler in
       StartableBehavior(

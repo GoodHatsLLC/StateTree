@@ -1,53 +1,114 @@
+@_spi(Implementation) import Behaviors
+import Disposable
+import Emitter
+import TreeActor
+import Utilities
+
 // MARK: - OnChange
 
-@TreeActor
-public struct OnChange<Value: Equatable>: Rules {
+public struct OnChange<Behavior: BehaviorType>: Rules where Behavior.Input: Equatable {
 
   // MARK: Lifecycle
 
+  @TreeActor
+  public init<Value: Equatable>(
+    _ input: Value,
+    _ action: @TreeActor @escaping (_ value: Behavior.Input) -> Void
+  ) where Behavior == Behaviors.SyncSingle<Value, Void, Never> {
+    self.value = input
+    let behavior: Behaviors.SyncSingle<Behavior.Input, Void, Never> = Behaviors
+      .make(input: Behavior.Input.self) { action($0) }
+    self.behaviorMaker = { input, scope, manager in
+      Surface(
+        input: input,
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
+  }
+
+  @TreeActor
   public init(
-    _ value: Value,
-    _ action: @TreeActor @escaping (_ value: Value) -> Void
-  ) {
-    self.value = value
-    self.lastValue = value
-    self.action = action
+    _ input: Behavior.Input,
+    run behavior: Behavior
+  )
+    where Behavior: SyncBehaviorType
+  {
+    self.value = input
+    self.behaviorMaker = { input, scope, manager in
+      Surface<Behavior>(
+        input: input,
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
+  }
+
+  public init(
+    _ input: Behavior.Input,
+    run behavior: Behavior
+  ) where Behavior: AsyncBehaviorType {
+    self.value = input
+    self.behaviorMaker = { input, scope, manager in
+      Surface<Behavior>(
+        input: input,
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
+  }
+
+  public init(
+    _ input: Behavior.Input,
+    run behavior: Behavior
+  ) where Behavior: StreamBehaviorType {
+    self.value = input
+    self.behaviorMaker = { input, scope, manager in
+      Surface<Behavior>(
+        input: input,
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
   }
 
   // MARK: Public
 
-  public func act(for lifecycle: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
-    switch lifecycle {
-    case .didStart:
-      action(value)
-    case .didUpdate:
-      if value != lastValue {
-        action(value)
-      }
-    case .willStop:
-      break
-    case .handleIntent:
-      break
-    }
-    return .init()
+  public func act(
+    for _: RuleLifecycle,
+    with _: RuleContext
+  )
+    -> LifecycleResult
+  {
+    .init()
   }
 
-  public mutating func applyRule(with _: RuleContext) throws { }
+  public mutating func applyRule(with context: RuleContext) throws {
+    behaviorMaker(value, scope, context.runtime.behaviorManager)
+      .fireAndForget()
+  }
 
   public mutating func removeRule(with _: RuleContext) throws { }
 
   public mutating func updateRule(
-    from new: Self,
-    with _: RuleContext
+    from newRule: Self,
+    with context: RuleContext
   ) throws {
-    lastValue = value
-    value = new.value
+    if value != newRule.value {
+      value = newRule.value
+      scope.reset()
+      behaviorMaker(value, scope, context.runtime.behaviorManager)
+        .fireAndForget()
+    }
   }
 
-  // MARK: Private
+  // MARK: Internal
 
-  private var lastValue: Value
-  private var value: Value
-  private var action: @TreeActor (_ value: Value) -> Void
-
+  let behaviorMaker: (Behavior.Input, any BehaviorScoping, BehaviorManager) -> Surface<Behavior>
+  let scope: BehaviorStage = .init()
+  var value: Behavior.Input
 }
