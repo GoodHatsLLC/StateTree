@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.8
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -25,12 +25,26 @@ let package = Package(
       dependencies: [
         "TicTacToeDomain",
         .product(name: "StateTreeSwiftUI", package: "StateTree"),
+      ],
+      swiftSettings: [
+        .enableUpcomingFeature("ConciseMagicFile"),
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("StrictConcurrency"),
+        .enableUpcomingFeature("ImplicitOpenExistentials"),
+        .enableUpcomingFeature("BareSlashRegexLiterals"),
       ]
     ),
     .target(
       name: "TicTacToeDomain",
       dependencies: [
         .product(name: "StateTree", package: "StateTree"),
+      ],
+      swiftSettings: [
+        .enableUpcomingFeature("ConciseMagicFile"),
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("StrictConcurrency"),
+        .enableUpcomingFeature("ImplicitOpenExistentials"),
+        .enableUpcomingFeature("BareSlashRegexLiterals"),
       ]
     ),
     .testTarget(

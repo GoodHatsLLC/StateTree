@@ -34,9 +34,9 @@ public struct GameInfoModel: Node {
   public func name(of player: Player) -> String {
     switch player {
     case .X:
-      authentication.playerX
+      return authentication.playerX
     case .O:
-      authentication.playerO
+      return authentication.playerO
     }
   }
 

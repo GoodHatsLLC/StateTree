@@ -8,8 +8,8 @@ public enum Player: TreeState {
 
   func other() -> Player {
     switch self {
-    case .O: .X
-    case .X: .O
+    case .O: return .X
+    case .X: return .O
     }
   }
 }
