@@ -10,6 +10,19 @@ public struct AttachableBehavior<B: Behavior> {
   @TreeActor
   public init(
     behavior: B
+  ) {
+    self.id = behavior.id
+    self.attacher = { handler in
+      StartableBehavior(
+        behavior: behavior,
+        handler: handler
+      )
+    }
+  }
+
+  @TreeActor
+  public init(
+    behavior: B
   ) where B: SyncBehaviorType {
     self.id = behavior.id
     self.attacher = { handler in

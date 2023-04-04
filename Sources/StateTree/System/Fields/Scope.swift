@@ -70,6 +70,24 @@ public struct Scope: ScopeField {
 // MARK: Single
 extension Scope {
 
+  @TreeActor
+  public func run<B: Behavior>(
+    id: BehaviorID? = nil,
+    _ behavior: B,
+    input: B.Input
+  ) -> ScopedBehavior<B> {
+    var behavior = behavior
+    if let id = id {
+      behavior.setID(to: id)
+    }
+    return ScopedBehavior<B>(
+      behavior: behavior,
+      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
+      manager: inner.treeScope?.runtime.behaviorManager ?? .init(),
+      input: input
+    )
+  }
+
   /// Run the passed `BehaviorType`
   ///
   /// Create a `BehaviorType` emitting a single of `Output` value or an `any Error` from a
@@ -81,9 +99,14 @@ extension Scope {
   /// synchronously returns the `Output` value.
   @TreeActor
   public func run<B: SyncBehaviorType>(
+    id: BehaviorID? = nil,
     _ behavior: B,
     input: B.Input
   ) -> ScopedBehavior<B> {
+    var behavior = behavior
+    if let id = id {
+      behavior.setID(to: id)
+    }
     return ScopedBehavior<B>(
       behavior: behavior,
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,

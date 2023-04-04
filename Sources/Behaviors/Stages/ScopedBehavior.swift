@@ -8,6 +8,21 @@ public struct ScopedBehavior<B: Behavior>: HandlerSurface {
 
   // MARK: Lifecycle
 
+  @TreeActor
+  public init(
+    behavior: B,
+    scope: any BehaviorScoping,
+    manager: BehaviorManager,
+    input: B.Input
+  ) where B: Behavior {
+    self.init(
+      behavior: AttachableBehavior(behavior: behavior),
+      scope: scope,
+      manager: manager,
+      input: input
+    )
+  }
+
   public init(
     behavior: B,
     scope: any BehaviorScoping,

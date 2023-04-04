@@ -20,6 +20,33 @@ public struct StartableBehavior<Input> {
     }
   }
 
+  @TreeActor
+  public init<B: Behavior>(
+    behavior proposedBehavior: B,
+    handler: B.Handler
+  ) where B.Input == Input {
+    switch proposedBehavior.switchType {
+    case .async(let asyncB):
+      let handler = handler as? Behaviors.SingleHandler<Asynchronous, B.Output, B.Failure> ?? {
+        assertionFailure("bad handler type")
+        return .init()
+      }()
+      self = .init(behavior: asyncB, handler: handler)
+    case .sync(let syncB):
+      let handler = handler as? Behaviors.SingleHandler<Synchronous, B.Output, B.Failure> ?? {
+        assertionFailure("bad handler type")
+        return .init()
+      }()
+      self = .init(behavior: syncB, handler: handler)
+    case .stream(let streamB):
+      let handler = handler as? Behaviors.StreamHandler<Asynchronous, B.Output, B.Failure> ?? {
+        assertionFailure("bad handler type")
+        return .init()
+      }()
+      self = .init(behavior: streamB, handler: handler)
+    }
+  }
+
   public init<Behavior: AsyncBehaviorType>(
     behavior proposedBehavior: Behavior,
     handler: Behavior.Handler
