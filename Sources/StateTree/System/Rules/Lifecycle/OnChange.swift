@@ -28,6 +28,23 @@ public struct OnChange<Behavior: BehaviorType>: Rules where Behavior.Input: Equa
     }
   }
 
+  public init<Value: Equatable>(
+    _ input: Value,
+    _ action: @TreeActor @escaping (_ value: Behavior.Input) async -> Void
+  ) where Behavior == Behaviors.AsyncSingle<Value, Void, Never> {
+    self.value = input
+    let behavior: Behaviors.AsyncSingle<Behavior.Input, Void, Never> = Behaviors
+      .make(input: Behavior.Input.self) { await action($0) }
+    self.behaviorMaker = { input, scope, manager in
+      Surface(
+        input: input,
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
+  }
+
   @TreeActor
   public init(
     _ input: Behavior.Input,

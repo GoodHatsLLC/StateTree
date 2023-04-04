@@ -3,14 +3,14 @@ import TreeActor
 
 // MARK: - AttachableBehavior
 
-public struct AttachableBehavior<Behavior: BehaviorType> {
+public struct AttachableBehavior<B: BehaviorType> {
 
   // MARK: Lifecycle
 
   @TreeActor
   public init(
-    behavior: Behavior
-  ) where Behavior: SyncBehaviorType {
+    behavior: B
+  ) where B: SyncBehaviorType {
     self.id = behavior.id
     self.attacher = { handler in
       StartableBehavior(
@@ -21,8 +21,8 @@ public struct AttachableBehavior<Behavior: BehaviorType> {
   }
 
   public init(
-    behavior: Behavior
-  ) where Behavior: AsyncBehaviorType {
+    behavior: B
+  ) where B: AsyncBehaviorType {
     self.id = behavior.id
     self.attacher = { handler in
       StartableBehavior(
@@ -33,8 +33,8 @@ public struct AttachableBehavior<Behavior: BehaviorType> {
   }
 
   public init(
-    behavior: Behavior
-  ) where Behavior: StreamBehaviorType {
+    behavior: B
+  ) where B: StreamBehaviorType {
     self.id = behavior.id
     self.attacher = { handler in
       StartableBehavior(
@@ -50,13 +50,13 @@ public struct AttachableBehavior<Behavior: BehaviorType> {
 
   // MARK: Private
 
-  private let attacher: (Behavior.Handler) -> StartableBehavior<Behavior.Input>
+  private let attacher: (B.Handler) -> StartableBehavior<B.Input>
 }
 
 extension AttachableBehavior {
   func attach(
-    handler: Behavior.Handler
-  ) -> StartableBehavior<Behavior.Input> {
+    handler: B.Handler
+  ) -> StartableBehavior<B.Input> {
     attacher(handler)
   }
 }

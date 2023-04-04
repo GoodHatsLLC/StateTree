@@ -21,7 +21,7 @@ public struct RunBehavior<Input>: Rules {
     column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Make<Void, Output>.AsyncFunc.NonThrowing,
-    onSuccess: @escaping @TreeActor (_ value: Output) -> Void
+    onSuccess _: @escaping @TreeActor (_ value: Output) -> Void
   ) where Input == Void {
     let id = id ?? .meta(
       moduleFile: moduleFile,
@@ -35,8 +35,7 @@ public struct RunBehavior<Input>: Rules {
       subscribe: subscribe
     )
     self.startable = ((), StartableBehavior<Void>(
-      behavior: behavior,
-      handler: .init(onSuccess: onSuccess, onCancel: { })
+      behavior: behavior
     ))
   }
 
@@ -46,7 +45,7 @@ public struct RunBehavior<Input>: Rules {
     _ column: Int = #column,
     id: BehaviorID? = nil,
     subscribe: @escaping Behaviors.Make<Void, Output>.AsyncFunc.Throwing,
-    onResult: @escaping @TreeActor (_ result: Result<Output, any Error>) -> Void
+    onResult _: @escaping @TreeActor (_ result: Result<Output, any Error>) -> Void
   ) where Input == Void {
     let behavior = Behaviors.make(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "rule-async-throws"),
@@ -54,8 +53,7 @@ public struct RunBehavior<Input>: Rules {
       subscribe: subscribe
     )
     self.startable = ((), StartableBehavior<Void>(
-      behavior: behavior,
-      handler: .init(onResult: onResult, onCancel: { })
+      behavior: behavior
     ))
   }
 

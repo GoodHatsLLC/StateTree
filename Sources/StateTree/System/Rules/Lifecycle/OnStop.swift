@@ -28,6 +28,22 @@ public struct OnStop<Behavior: BehaviorType>: Rules where Behavior.Input == Void
 
   @TreeActor
   public init(
+    _ action: @TreeActor @escaping () async -> Void
+  ) where Behavior == Behaviors.AsyncSingle<Void, Void, Never> {
+    let behavior: Behaviors.AsyncSingle<Behavior.Input, Void, Never> = Behaviors
+      .make(input: Behavior.Input.self) { await action() }
+    self.behaviorMaker = { scope, manager in
+      Surface(
+        input: (),
+        behavior: AttachableBehavior(behavior: behavior),
+        scope: scope,
+        manager: manager
+      )
+    }
+  }
+
+  @TreeActor
+  public init(
     run behavior: Behavior
   )
     where Behavior: SyncBehaviorType

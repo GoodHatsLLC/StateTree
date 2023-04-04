@@ -4,12 +4,9 @@ import TreeActor
 // MARK: - StreamBehaviorType
 
 public protocol StreamBehaviorType<Input, Output, Failure>: BehaviorType
-  where Producer: AsyncSequence, Producer.Element == Output,
-  Subscriber == Behaviors.StreamSubscriber<
-    Input,
-    Output
-  >
+  where Producer: AsyncSequence, Producer.Element == Output
 {
+  var subscriber: Behaviors.StreamSubscriber<Input, Output, Failure> { get }
   func start(
     input: Input,
     handler: Handler,

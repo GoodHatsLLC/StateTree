@@ -21,7 +21,7 @@ extension Behaviors {
     @_spi(Implementation)
     public init(
       _ id: BehaviorID,
-      subscriber: Behaviors.StreamSubscriber<Input, Output>
+      subscriber: Behaviors.StreamSubscriber<Input, Output, Failure>
     ) {
       self.id = id
       self.subscriber = subscriber
@@ -33,13 +33,17 @@ extension Behaviors {
     public typealias Input = Input
     public typealias Output = Output
     public typealias Func = Behaviors.Make<Input, Output>.StreamFunc
-    public typealias Handler = Behaviors.StreamHandler<Output>
-    public typealias Subscriber = Behaviors.StreamSubscriber<Input, Output>
+    public typealias Handler = Behaviors.StreamHandler<Output, Failure>
+    public typealias Subscriber = Behaviors.StreamSubscriber<Input, Output, Failure>
     public typealias Resolution = Producer.Element
 
     public let id: BehaviorID
 
     public let subscriber: Subscriber
+
+    public var switchType: BehaviorEmissionType<Input, Output, Failure> {
+      .stream(self)
+    }
 
     public func start(
       input: Input,
@@ -86,7 +90,7 @@ extension Behaviors {
 // MARK: - Behaviors.StreamHandler
 
 extension Behaviors {
-  public struct StreamHandler<Output>: StreamHandlerType {
+  public struct StreamHandler<Output, Failure: Error>: StreamHandlerType {
 
     // MARK: Lifecycle
 
@@ -111,7 +115,6 @@ extension Behaviors {
 
     // MARK: Public
 
-    public typealias Failure = Error
     public typealias Output = Output
 
     @TreeActor

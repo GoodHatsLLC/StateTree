@@ -57,7 +57,7 @@ extension HandlerSurface {
   }
 }
 
-extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior: SyncBehaviorType {
+extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior.Failure == Never {
   @_spi(Implementation) public var value: Behavior.Output? {
     var value: Behavior.Output?
     let startable = surface.behavior
@@ -74,8 +74,10 @@ extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior: Sy
       input: surface.input,
       scope: surface.scope
     )
-    if finalizer != nil {
-      assertionFailure()
+    if let finalizer {
+      Task {
+        _ = await finalizer()
+      }
     }
     return value
   }
@@ -94,8 +96,8 @@ extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior: Sy
       input: surface.input,
       scope: surface.scope
     )
-    Task {
-      if let finalizer {
+    if let finalizer {
+      Task {
         _ = await finalizer()
       }
     }
@@ -104,9 +106,7 @@ extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior: Sy
 
 }
 
-extension HandlerSurface where Behavior.Handler: ThrowingSingleHandlerType,
-  Behavior: SyncBehaviorType
-{
+extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior.Failure == any Error {
 
   @discardableResult
   public func onResult(
@@ -122,62 +122,8 @@ extension HandlerSurface where Behavior.Handler: ThrowingSingleHandlerType,
       input: surface.input,
       scope: surface.scope
     )
-    Task {
-      if let finalizer {
-        _ = await finalizer()
-      }
-    }
-    return resolution
-  }
-}
-
-// MARK: Single
-extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior: AsyncBehaviorType {
-
-  @discardableResult
-  public func onSuccess(
-    _ onSuccess: @escaping (_ value: Behavior.Handler.Output) -> Void,
-    onCancel: @escaping () -> Void = { }
-  )
-    -> Behaviors.Resolution
-  {
-    let startable = surface.behavior
-      .attach(handler: .init(onSuccess: onSuccess, onCancel: onCancel))
-    let (resolution, finalizer) = startable.start(
-      manager: surface.manager,
-      input: surface.input,
-      scope: surface.scope
-    )
-    Task {
-      if let finalizer {
-        _ = await finalizer()
-      }
-    }
-    return resolution
-  }
-
-}
-
-extension HandlerSurface where Behavior.Handler: ThrowingSingleHandlerType,
-  Behavior: AsyncBehaviorType
-{
-
-  @discardableResult
-  public func onResult(
-    _ onResult: @escaping (_ result: Result<Behavior.Output, Error>) -> Void,
-    onCancel: @escaping () -> Void = { }
-  )
-    -> Behaviors.Resolution
-  {
-    let startable = surface.behavior
-      .attach(handler: .init(onResult: onResult, onCancel: onCancel))
-    let (resolution, finalizer) = startable.start(
-      manager: surface.manager,
-      input: surface.input,
-      scope: surface.scope
-    )
-    Task {
-      if let finalizer {
+    if let finalizer {
+      Task {
         _ = await finalizer()
       }
     }
@@ -207,8 +153,8 @@ extension HandlerSurface where Behavior.Handler: StreamHandlerType {
       input: surface.input,
       scope: surface.scope
     )
-    Task {
-      if let finalizer {
+    if let finalizer {
+      Task {
         _ = await finalizer()
       }
     }

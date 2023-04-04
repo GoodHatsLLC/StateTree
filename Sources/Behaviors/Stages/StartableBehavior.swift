@@ -6,6 +6,20 @@ public struct StartableBehavior<Input> {
 
   // MARK: Lifecycle
 
+  @TreeActor
+  public init<B: BehaviorEffect>(
+    behavior proposedBehavior: B
+  ) where B.Input == Input {
+    switch proposedBehavior.switchType {
+    case .async(let asyncB):
+      self = .init(behavior: asyncB, handler: .init())
+    case .sync(let syncB):
+      self = .init(behavior: syncB, handler: .init())
+    case .stream(let streamB):
+      self = .init(behavior: streamB, handler: .init())
+    }
+  }
+
   public init<Behavior: AsyncBehaviorType>(
     behavior proposedBehavior: Behavior,
     handler: Behavior.Handler

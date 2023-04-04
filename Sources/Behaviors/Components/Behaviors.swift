@@ -49,10 +49,10 @@ extension Behaviors {
     }
   }
 
-  public struct StreamSubscriber<Input, Output>: SubscriberType {
+  public struct StreamSubscriber<Input, Output, Failure: Error>: SubscriberType {
     public typealias Input = Input
     public typealias Output = Output
-    public typealias Failure = Error
+    public typealias Failure = Failure
     public typealias Producer = AnyAsyncSequence<Output>
     init<Seq: AsyncSequence>(
       _ type: @escaping Behaviors.Make<Input, Output>.StreamFunc

@@ -33,7 +33,7 @@ extension Behaviors {
 
     public typealias Producer = SyncOne<Output, Failure>
     public typealias Subscriber = Behaviors.SyncSubscriber<Input, Output, Failure>
-    public typealias Handler = SyncHandler<Output, Failure>
+    public typealias Handler = SingleHandler<Output, Failure>
 
     public let id: BehaviorID
     public let subscriber: Subscriber
@@ -46,21 +46,21 @@ extension Behaviors.SyncSingle: SyncBehaviorType {
 
   // MARK: Lifecycle
 
-  @_spi(Implementation)
-  public init(
-    _ id: BehaviorID,
-    subscriber: Behaviors.SyncSubscriber<Input, Output, Failure>
-  ) {
+  public init(_ id: BehaviorID, subscriber: Behaviors.SyncSubscriber<Input, Output, Failure>) {
     self.id = id
     self.subscriber = subscriber
   }
 
   // MARK: Public
 
+  public var switchType: BehaviorEmissionType<Input, Output, Failure> {
+    .sync(self)
+  }
+
   @TreeActor
   public func start(
     input: Input,
-    handler: Behaviors.SyncHandler<Output, Failure>
+    handler: Behaviors.SingleHandler<Output, Failure>
   )
     -> Behaviors.Resolved
   {
@@ -82,7 +82,7 @@ extension Behaviors.SyncSingle: SyncBehaviorType {
 extension Behaviors.SyncSingle where Failure == Error {
 
   @TreeActor
-  func start(input: Input, handler: Behaviors.SyncHandler<Output, Failure>) -> Behaviors
+  func start(input: Input, handler: Behaviors.SingleHandler<Output, Failure>) -> Behaviors
     .Resolved
   {
     let producer = subscriber.subscribe(input: input)
@@ -100,7 +100,7 @@ extension Behaviors.SyncSingle where Failure == Error {
 extension Behaviors.SyncSingle where Failure == Never {
 
   @TreeActor
-  func start(input: Input, handler: Behaviors.SyncHandler<Output, Failure>) -> Behaviors
+  func start(input: Input, handler: Behaviors.SingleHandler<Output, Failure>) -> Behaviors
     .Resolved
   {
     let output = subscriber.subscribe(input: input)
@@ -109,17 +109,17 @@ extension Behaviors.SyncSingle where Failure == Never {
   }
 }
 
-// MARK: - Behaviors.SyncHandler
+// MARK: - Behaviors.SingleHandler
 
 extension Behaviors {
 
-  public struct SyncHandler<Output, Failure: Error>: HandlerType {
-    init(
-      result: @escaping @TreeActor (_ result: Result<Output, Failure>) -> Void,
-      cancel: @escaping @TreeActor () -> Void
+  public struct SingleHandler<Output, Failure: Error>: SingleHandlerType {
+    public init(
+      onResult: @escaping @TreeActor (_ result: Result<Output, Failure>) -> Void,
+      onCancel: @escaping @TreeActor () -> Void
     ) {
-      self.onResult = result
-      self.onCancel = cancel
+      self.onResult = onResult
+      self.onCancel = onCancel
     }
 
     public init() {
@@ -137,37 +137,5 @@ extension Behaviors {
     let onResult: @TreeActor (_ result: Result<Output, Failure>) -> Void
     let onCancel: @TreeActor () -> Void
 
-  }
-}
-
-// MARK: - Behaviors.SyncHandler + ThrowingSingleHandlerType
-
-extension Behaviors.SyncHandler: ThrowingSingleHandlerType where Failure == any Error {
-
-  public init(
-    onResult: @escaping @TreeActor (_ result: Result<Output, Error>) -> Void,
-    onCancel: @escaping @TreeActor () -> Void
-  ) {
-    self.init(result: onResult, cancel: onCancel)
-  }
-}
-
-// MARK: - Behaviors.SyncHandler + SingleHandlerType
-
-extension Behaviors.SyncHandler: SingleHandlerType where Failure == Never {
-
-  public init(
-    onSuccess: @escaping @TreeActor (_ value: Output) -> Void,
-    onCancel: @escaping @TreeActor () -> Void
-  ) {
-    self.init(
-      result: { result in
-        switch result {
-        case .success(let value):
-          onSuccess(value)
-        }
-      },
-      cancel: onCancel
-    )
   }
 }

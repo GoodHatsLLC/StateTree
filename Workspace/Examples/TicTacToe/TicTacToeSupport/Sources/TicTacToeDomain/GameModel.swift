@@ -26,7 +26,7 @@ public struct GameModel: Node {
   }
 
   public var rules: some Rules {
-    OnChange(board) { _ in
+    OnChange(board) { board in
       if board.boardFilled || board.winner != nil {
         finishHandler(board.winner.map { .win($0) } ?? .draw)
       }

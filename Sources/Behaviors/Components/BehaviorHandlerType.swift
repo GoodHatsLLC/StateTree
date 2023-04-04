@@ -2,7 +2,7 @@ import TreeActor
 
 // MARK: - HandlerType
 
-public protocol HandlerType {
+public protocol HandlerType<Output, Failure> {
   associatedtype Output
   associatedtype Failure: Error
   init()
@@ -11,20 +11,25 @@ public protocol HandlerType {
 
 // MARK: - SingleHandlerType
 
-public protocol SingleHandlerType: HandlerType where Failure == Never {
+public protocol SingleHandlerType: HandlerType {
   init(
-    onSuccess: @escaping @TreeActor (Output) -> Void,
+    onResult: @escaping @TreeActor (Result<Output, Failure>) -> Void,
     onCancel: @escaping @TreeActor () -> Void
   )
 }
 
-// MARK: - ThrowingSingleHandlerType
-
-public protocol ThrowingSingleHandlerType: HandlerType where Failure: Error {
-  init(
-    onResult: @escaping @TreeActor (Result<Output, Error>) -> Void,
+extension SingleHandlerType where Failure == Never {
+  public init(
+    onSuccess: @escaping @TreeActor (Output) -> Void,
     onCancel: @escaping @TreeActor () -> Void
-  )
+  ) {
+    self.init(onResult: { result in
+      switch result {
+      case .success(let output):
+        onSuccess(output)
+      }
+    }, onCancel: onCancel)
+  }
 }
 
 // MARK: - StreamHandlerType
