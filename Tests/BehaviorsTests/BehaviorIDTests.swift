@@ -16,8 +16,6 @@ final class BehaviorIDTests: XCTestCase {
     XCTAssertEqual(four, .id("f49bac42475760f9-auto"))
     XCTAssertEqual(five, .id("9abbb59b6a4c28e9-auto"))
     XCTAssertEqual(six, .id("custom-name"))
-    print(five)
-    print(six)
   }
 
 }

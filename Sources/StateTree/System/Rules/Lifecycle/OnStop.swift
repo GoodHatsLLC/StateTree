@@ -6,81 +6,59 @@ import Utilities
 
 // MARK: - OnStop
 
-public struct OnStop<Behavior: BehaviorType>: Rules where Behavior.Input == Void {
+public struct OnStop<B: BehaviorEffect>: Rules where B.Input == Void,
+  B.Output: Sendable
+{
 
   // MARK: Lifecycle
 
-  @TreeActor
   public init(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    id: BehaviorID? = nil,
     _ action: @TreeActor @escaping () -> Void
-  ) where Behavior == Behaviors.SyncSingle<Void, Void, Never> {
-    let behavior: Behaviors.SyncSingle<Behavior.Input, Void, Never> = Behaviors
-      .make(input: Behavior.Input.self) { action() }
-    self.behaviorMaker = { scope, manager in
-      Surface(
-        input: (),
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
+  ) where B == Behaviors.SyncSingle<Void, Void, Never> {
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.SyncSingle<Void, Void, Never> = Behaviors
+      .make(id, input: Void.self) { action() }
+    self.callback = { scope, manager in
+      behavior.run(manager: manager, scope: scope, input: ())
     }
   }
 
   @TreeActor
   public init(
-    _ action: @TreeActor @escaping () async -> Void
-  ) where Behavior == Behaviors.AsyncSingle<Void, Void, Never> {
-    let behavior: Behaviors.AsyncSingle<Behavior.Input, Void, Never> = Behaviors
-      .make(input: Behavior.Input.self) { await action() }
-    self.behaviorMaker = { scope, manager in
-      Surface(
-        input: (),
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
+    id: BehaviorID? = nil,
+    run behavior: B
+  ) where B.Handler == Behaviors.SingleHandler<
+    Synchronous,
+    B.Output,
+    B.Failure
+  > {
+    var behavior = behavior
+    if let id {
+      behavior.setID(to: id)
+    }
+    self.callback = { scope, manager in
+      behavior.run(manager: manager, scope: scope, input: ())
     }
   }
 
   @TreeActor
   public init(
-    run behavior: Behavior
+    id: BehaviorID? = nil,
+    run behavior: B,
+    handler: B.Handler
   )
-    where Behavior: SyncBehaviorType
+    where B.Handler.SubscribeType == Synchronous
   {
-    self.behaviorMaker = { scope, manager in
-      Surface<Behavior>(
-        input: (),
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
+    var behavior = behavior
+    if let id {
+      behavior.setID(to: id)
     }
-  }
-
-  public init(
-    run behavior: Behavior
-  ) where Behavior: AsyncBehaviorType {
-    self.behaviorMaker = { scope, manager in
-      Surface<Behavior>(
-        input: (),
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
-    }
-  }
-
-  public init(
-    run behavior: Behavior
-  ) where Behavior: StreamBehaviorType {
-    self.behaviorMaker = { scope, manager in
-      Surface<Behavior>(
-        input: (),
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
+    self.callback = { scope, manager in
+      behavior.run(manager: manager, scope: scope, input: (), handler: handler)
     }
   }
 
@@ -98,8 +76,8 @@ public struct OnStop<Behavior: BehaviorType>: Rules where Behavior.Input == Void
   public mutating func applyRule(with _: RuleContext) throws { }
 
   public mutating func removeRule(with context: RuleContext) throws {
-    behaviorMaker(scope, context.runtime.behaviorManager)
-      .fireAndForget()
+    callback(scope, context.runtime.behaviorManager)
+    scope.dispose()
   }
 
   public mutating func updateRule(
@@ -107,8 +85,8 @@ public struct OnStop<Behavior: BehaviorType>: Rules where Behavior.Input == Void
     with _: RuleContext
   ) throws { }
 
-  // MARK: Internal
+  // MARK: Private
 
-  let behaviorMaker: (any BehaviorScoping, BehaviorManager) -> Surface<Behavior>
-  let scope: BehaviorStage = .init()
+  private let callback: (any BehaviorScoping, BehaviorManager) -> Void
+  private let scope: BehaviorStage = .init()
 }

@@ -3,6 +3,7 @@ import TreeActor
 // MARK: - HandlerType
 
 public protocol HandlerType<Output, Failure> {
+  associatedtype SubscribeType: BehaviorSubscribeType
   associatedtype Output
   associatedtype Failure: Error
   init()

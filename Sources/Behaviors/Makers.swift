@@ -132,11 +132,10 @@ extension Behaviors {
 
 extension Behaviors {
 
-  // MARK: Public
-
   /// Make a `Stream<Input, Output>` behavior asynchronously.
   ///
-  /// Create a ``BehaviorType`` taking an `Input` type value, emitting a stream of `Output` values,
+  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// values,
   /// and potentially terminating with `any Error` — from an asynchronous closure returning an
   /// `AsyncSequence`.
   ///
@@ -167,11 +166,10 @@ extension Behaviors {
     return .init(id, subscribeFunc: subscribe)
   }
 
-  // MARK: Internal
-
   /// **Convenience:* Make a `Stream<Input, Output>` behavior from an `Emitter`.
   ///
-  /// Create a ``BehaviorType`` taking an `Input` type value, emitting a stream of `Output` values,
+  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// values,
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Publisher`.
   ///
@@ -185,7 +183,8 @@ extension Behaviors {
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
   /// > Tip: The `Behavior` is not executed and can be passed to other consumers.
-  static func make<Input, Output>(
+  @_spi(Implementation)
+  public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
     input: Input.Type,
     moduleFile: String = #file,
@@ -206,7 +205,8 @@ extension Behaviors {
 
   /// *Convenience:* Make a `Stream<Input, Output>` behavior from a `Combine` `Publisher`.
   ///
-  /// Create a ``BehaviorType`` taking an `Input` type value, emitting a stream of `Output` values,
+  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// values,
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Publisher`.
   ///
@@ -220,7 +220,8 @@ extension Behaviors {
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
   /// > Tip: The `Behavior` is not executed and can be passed to other consumers.
-  static func make<Input, Output>(
+  @_spi(Implementation)
+  public static func make<Input, Output>(
     _ id: BehaviorID? = nil,
     input: Input.Type,
     moduleFile: String = #file,
@@ -241,7 +242,8 @@ import Combine
 extension Behaviors {
   /// *Convenience:* Make a `Stream<Input, Output>` behavior from a `Combine` `Publisher`.
   ///
-  /// Create a ``BehaviorType`` taking an `Input` type value, emitting a stream of `Output` values,
+  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// values,
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Combine` `Publisher`.
   ///
@@ -276,7 +278,8 @@ extension Behaviors {
 
   /// *Convenience:* Make a `Stream<Input, Output>` behavior from a `Publisher`.
   ///
-  /// Create a ``BehaviorType`` taking an `Input` type value, emitting a stream of `Output` values,
+  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// values,
   /// and potentially terminating with `any Error` — from a synchronous closure returning a
   /// `Publisher`.
   ///
@@ -296,7 +299,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping (_ input: Input) -> some Publisher<Output, Never>
+    subscribe: @escaping (_ input: Input) -> some Publisher<Output, some Error>
   ) -> Stream<Input, Output, Error> {
     let id = id ?? .meta(
       moduleFile: moduleFile,

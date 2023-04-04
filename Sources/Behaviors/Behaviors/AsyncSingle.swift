@@ -33,7 +33,7 @@ extension Behaviors {
 
     public typealias Producer = AsyncOne<Output, Failure>
     public typealias Subscriber = Behaviors.AsyncSubscriber<Input, Output, Failure>
-    public typealias Handler = SingleHandler<Output, Failure>
+    public typealias Handler = SingleHandler<Asynchronous, Output, Failure>
 
     public let id: BehaviorID
     public let subscriber: Subscriber
@@ -47,7 +47,11 @@ extension Behaviors {
 
 // MARK: - Behaviors.AsyncSingle + BehaviorEffect
 
-extension Behaviors.AsyncSingle: BehaviorEffect where Failure == Handler.Failure { }
+extension Behaviors.AsyncSingle: BehaviorEffect where Failure == Handler.Failure {
+  public mutating func setID(to: BehaviorID) {
+    self = .init(to, subscriber: subscriber)
+  }
+}
 
 // MARK: - Behaviors.AsyncSingle + BehaviorType
 

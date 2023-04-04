@@ -34,7 +34,7 @@ extension Async {
     ///
     /// Publishers like `PassthroughSubject` and `CurrentValueSubject` whose
     /// emissions are not all sent from the same actor will drop values when bridged with `.values`.
-    public static func bridge<Value>(publisher: some Publisher<Value, Error>) -> Async
+    public static func bridge<Value>(publisher: some Publisher<Value, some Error>) -> Async
       .ThrowingSubject<Value>
     {
       let asyncSubject = Async.ThrowingSubject<Value>()

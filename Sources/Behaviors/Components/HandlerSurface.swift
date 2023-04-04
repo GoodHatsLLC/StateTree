@@ -4,7 +4,7 @@ import Utilities
 
 // MARK: - Surface
 
-public struct Surface<Behavior: BehaviorType>: HandlerSurface {
+public struct Surface<Behavior: BehaviorEffect>: HandlerSurface {
   public var surface: Surface<Behavior> { self }
 
   public init(
@@ -30,7 +30,7 @@ public struct Surface<Behavior: BehaviorType>: HandlerSurface {
 // MARK: - HandlerSurface
 
 public protocol HandlerSurface<Behavior> {
-  associatedtype Behavior: BehaviorType
+  associatedtype Behavior: BehaviorEffect
   var surface: Surface<Behavior> { get }
 
 }

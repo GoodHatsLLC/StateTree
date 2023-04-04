@@ -6,90 +6,105 @@ import Utilities
 
 // MARK: - OnChange
 
-public struct OnChange<Behavior: BehaviorType>: Rules where Behavior.Input: Equatable {
+public struct OnChange<B: BehaviorEffect>: Rules where B.Input: Equatable,
+  B.Output: Sendable
+{
 
   // MARK: Lifecycle
 
-  @TreeActor
-  public init<Value: Equatable>(
-    _ input: Value,
-    _ action: @TreeActor @escaping (_ value: Behavior.Input) -> Void
-  ) where Behavior == Behaviors.SyncSingle<Value, Void, Never> {
-    self.value = input
-    let behavior: Behaviors.SyncSingle<Behavior.Input, Void, Never> = Behaviors
-      .make(input: Behavior.Input.self) { action($0) }
-    self.behaviorMaker = { input, scope, manager in
-      Surface(
-        input: input,
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
+  public init<Input>(
+    _ value: Input,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    id: BehaviorID? = nil,
+    _ action: @TreeActor @escaping (_ value: Input) -> Void
+  ) where B == Behaviors.SyncSingle<Input, Void, Never> {
+    self.value = value
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.SyncSingle<Input, Void, Never> = Behaviors
+      .make(id, input: Input.self) { action($0) }
+    self.callback = { scope, manager, input in
+      behavior.run(manager: manager, scope: scope, input: input)
     }
   }
 
-  public init<Value: Equatable>(
-    _ input: Value,
-    _ action: @TreeActor @escaping (_ value: Behavior.Input) async -> Void
-  ) where Behavior == Behaviors.AsyncSingle<Value, Void, Never> {
-    self.value = input
-    let behavior: Behaviors.AsyncSingle<Behavior.Input, Void, Never> = Behaviors
-      .make(input: Behavior.Input.self) { await action($0) }
-    self.behaviorMaker = { input, scope, manager in
-      Surface(
-        input: input,
-        behavior: AttachableBehavior(behavior: behavior),
+  public init<Input>(
+    _ value: Input,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    id: BehaviorID? = nil,
+    _ action: @TreeActor @escaping (_ value: Input) async -> Void
+  ) where B == Behaviors.AsyncSingle<Input, Void, Never> {
+    self.value = value
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.AsyncSingle<Input, Void, Never> = Behaviors
+      .make(id, input: B.Input.self) { await action($0) }
+    self.callback = { scope, manager, input in
+      behavior.run(manager: manager, scope: scope, input: input)
+    }
+  }
+
+  public init<Input, Seq: AsyncSequence>(
+    _ value: Input,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    id: BehaviorID? = nil,
+    behavior behaviorFunc: @escaping (_ value: Input) async -> Seq,
+    onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
+    onFinish: @escaping @TreeActor () -> Void = { },
+    onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }
+  ) where B == Behaviors.Stream<Input, Seq.Element, Error> {
+    self.value = value
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.Stream<Input, Seq.Element, Error> = Behaviors
+      .make(id, input: Input.self) {
+        await behaviorFunc($0)
+      }
+    self.callback = { scope, manager, value in
+      behavior.run(
+        manager: manager,
         scope: scope,
-        manager: manager
+        input: value,
+        handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
       )
     }
   }
 
   @TreeActor
   public init(
-    _ input: Behavior.Input,
-    run behavior: Behavior
+    _ value: B.Input,
+    id: BehaviorID? = nil,
+    run behavior: B
+  ) {
+    var behavior = behavior
+    self.value = value
+    if let id = id {
+      behavior.setID(to: id)
+    }
+    self.callback = { scope, manager, value in
+      behavior.run(manager: manager, scope: scope, input: value)
+    }
+  }
+
+  @TreeActor
+  public init(
+    _ value: B.Input,
+    id: BehaviorID? = nil,
+    run behavior: B,
+    handler: B.Handler
   )
-    where Behavior: SyncBehaviorType
+    where B: BehaviorEffect
   {
-    self.value = input
-    self.behaviorMaker = { input, scope, manager in
-      Surface<Behavior>(
-        input: input,
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
+    self.value = value
+    var behavior = behavior
+    if let id = id {
+      behavior.setID(to: id)
     }
-  }
-
-  public init(
-    _ input: Behavior.Input,
-    run behavior: Behavior
-  ) where Behavior: AsyncBehaviorType {
-    self.value = input
-    self.behaviorMaker = { input, scope, manager in
-      Surface<Behavior>(
-        input: input,
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
-    }
-  }
-
-  public init(
-    _ input: Behavior.Input,
-    run behavior: Behavior
-  ) where Behavior: StreamBehaviorType {
-    self.value = input
-    self.behaviorMaker = { input, scope, manager in
-      Surface<Behavior>(
-        input: input,
-        behavior: AttachableBehavior(behavior: behavior),
-        scope: scope,
-        manager: manager
-      )
+    self.callback = { scope, manager, value in
+      behavior.run(manager: manager, scope: scope, input: value, handler: handler)
     }
   }
 
@@ -105,27 +120,27 @@ public struct OnChange<Behavior: BehaviorType>: Rules where Behavior.Input: Equa
   }
 
   public mutating func applyRule(with context: RuleContext) throws {
-    behaviorMaker(value, scope, context.runtime.behaviorManager)
-      .fireAndForget()
+    callback(scope, context.runtime.behaviorManager, value)
   }
 
-  public mutating func removeRule(with _: RuleContext) throws { }
+  public mutating func removeRule(with _: RuleContext) throws {
+    scope.dispose()
+  }
 
   public mutating func updateRule(
-    from newRule: Self,
+    from other: Self,
     with context: RuleContext
   ) throws {
-    if value != newRule.value {
-      value = newRule.value
+    if other.value != value {
       scope.reset()
-      behaviorMaker(value, scope, context.runtime.behaviorManager)
-        .fireAndForget()
+      value = other.value
+      callback(scope, context.runtime.behaviorManager, value)
     }
   }
 
-  // MARK: Internal
+  // MARK: Private
 
-  let behaviorMaker: (Behavior.Input, any BehaviorScoping, BehaviorManager) -> Surface<Behavior>
-  let scope: BehaviorStage = .init()
-  var value: Behavior.Input
+  private var value: B.Input
+  private let callback: (any BehaviorScoping, BehaviorManager, B.Input) -> Void
+  private let scope: BehaviorStage = .init()
 }

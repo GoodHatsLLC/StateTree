@@ -10,6 +10,7 @@ public protocol BehaviorEffect<Input, Output, Failure> {
   associatedtype Handler: HandlerType where Handler.Output == Output, Handler.Failure == Failure
   var id: BehaviorID { get }
   var switchType: BehaviorEmissionType<Input, Output, Failure> { get }
+  mutating func setID(to: BehaviorID)
 }
 
 extension BehaviorEffect {
@@ -43,7 +44,7 @@ extension BehaviorEffect {
   {
     switch switchType {
     case .async(let asyncB):
-      guard let h = handler as? Behaviors.SingleHandler<Output, Failure>
+      guard let h = handler as? Behaviors.SingleHandler<Asynchronous, Output, Failure>
       else {
         return .cancelled(id: id)
       }
@@ -54,7 +55,7 @@ extension BehaviorEffect {
       }
       return resolution
     case .sync(let syncB):
-      guard let h = handler as? Behaviors.SingleHandler<Output, Failure>
+      guard let h = handler as? Behaviors.SingleHandler<Synchronous, Output, Failure>
       else {
         return .cancelled(id: id)
       }
@@ -65,7 +66,7 @@ extension BehaviorEffect {
       }
       return resolution
     case .stream(let streamB):
-      guard let h = handler as? Behaviors.StreamHandler<Output, Failure>
+      guard let h = handler as? Behaviors.StreamHandler<Asynchronous, Output, Failure>
       else {
         return .cancelled(id: id)
       }
@@ -84,7 +85,6 @@ extension BehaviorEffect {
 public protocol BehaviorType<Input, Output, Failure>: BehaviorEffect {
   associatedtype Producer
   associatedtype Subscriber: SubscriberType where Subscriber.Input == Input
-  @_spi(Implementation)
   init(
     _ id: BehaviorID,
     subscriber: Subscriber
@@ -107,10 +107,24 @@ public struct AnyBehavior<Input, Handler: HandlerType>: BehaviorEffect {
   public typealias Failure = Handler.Failure
 
   init(_ behavior: some BehaviorEffect<Input, Output, Failure>) {
+    var behavior = behavior
     self.id = behavior.id
-    self.switchType = behavior.switchType
+    self.setIDFunc = {
+      behavior.setID(to: $0)
+    }
+    self.switchTypeFunc = {
+      behavior.switchType
+    }
   }
 
   public let id: BehaviorID
-  public let switchType: BehaviorEmissionType<Input, Output, Failure>
+  public var switchType: BehaviorEmissionType<Input, Output, Failure> {
+    switchTypeFunc()
+  }
+
+  private let setIDFunc: (BehaviorID) -> Void
+  private let switchTypeFunc: () -> BehaviorEmissionType<Input, Output, Failure>
+  public func setID(to: BehaviorID) {
+    setIDFunc(to)
+  }
 }

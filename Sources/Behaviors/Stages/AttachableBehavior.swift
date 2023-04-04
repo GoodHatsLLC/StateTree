@@ -3,7 +3,7 @@ import TreeActor
 
 // MARK: - AttachableBehavior
 
-public struct AttachableBehavior<B: BehaviorType> {
+public struct AttachableBehavior<B: BehaviorEffect> {
 
   // MARK: Lifecycle
 

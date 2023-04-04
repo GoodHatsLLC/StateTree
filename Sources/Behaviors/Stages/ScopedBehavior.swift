@@ -4,7 +4,7 @@ import Utilities
 
 // MARK: - ScopedBehavior
 
-public struct ScopedBehavior<Behavior: BehaviorType>: HandlerSurface {
+public struct ScopedBehavior<Behavior: BehaviorEffect>: HandlerSurface {
 
   // MARK: Lifecycle
 

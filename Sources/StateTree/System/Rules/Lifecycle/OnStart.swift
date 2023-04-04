@@ -6,47 +6,58 @@ import Utilities
 
 // MARK: - OnStart
 
-public struct OnStart<Behavior: BehaviorType>: Rules where Behavior.Input == Void {
+public struct OnStart<B: BehaviorEffect>: Rules where B.Input == Void,
+  B.Output: Sendable
+{
 
   // MARK: Lifecycle
 
-  @TreeActor
   public init(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    id: BehaviorID? = nil,
     _ action: @TreeActor @escaping () -> Void
-  ) where Behavior == Behaviors.SyncSingle<Void, Void, Never> {
-    let behavior: Behaviors.SyncSingle<Behavior.Input, Void, Never> = Behaviors
-      .make(input: Behavior.Input.self) { action() }
-    self.start = { scope, manager in
+  ) where B == Behaviors.SyncSingle<Void, Void, Never> {
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.SyncSingle<Void, Void, Never> = Behaviors
+      .make(id, input: Void.self) { action() }
+    self.callback = { scope, manager in
       behavior.run(manager: manager, scope: scope, input: ())
     }
   }
 
   public init(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    id: BehaviorID? = nil,
     _ action: @TreeActor @escaping () async -> Void
-  ) where Behavior == Behaviors.AsyncSingle<Void, Void, Never> {
-    let behavior: Behaviors.AsyncSingle<Behavior.Input, Void, Never> = Behaviors
-      .make(input: Behavior.Input.self) { await action() }
-    self.start = { scope, manager in
+  ) where B == Behaviors.AsyncSingle<Void, Void, Never> {
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.AsyncSingle<Void, Void, Never> = Behaviors
+      .make(id, input: Void.self) { await action() }
+    self.callback = { scope, manager in
       behavior.run(manager: manager, scope: scope, input: ())
     }
   }
 
   public init<Seq: AsyncSequence>(
-    _ moduleFile: String = #file,
-    _ line: Int = #line,
-    _ column: Int = #column,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
     id: BehaviorID? = nil,
-    behavior behaviorFunc: @escaping () async -> Seq,
+    _ behaviorFunc: @escaping () async -> Seq,
     onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
-    onFinish: @escaping @TreeActor () -> Void,
-    onFailure: @escaping @TreeActor (_ error: Error) -> Void
-  ) where Behavior == Behaviors.Stream<Void, Seq.Element, Error> {
+    onFinish: @escaping @TreeActor () -> Void = { },
+    onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }
+  ) where B == Behaviors.Stream<Void, Seq.Element, Error> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.Stream<Void, Seq.Element, Error> = Behaviors
-      .make(id, input: Void.self) { _ in
+      .make(id, input: Void.self) {
         await behaviorFunc()
       }
-    self.start = { scope, manager in
+    self.callback = { scope, manager in
       behavior.run(
         manager: manager,
         scope: scope,
@@ -58,12 +69,32 @@ public struct OnStart<Behavior: BehaviorType>: Rules where Behavior.Input == Voi
 
   @TreeActor
   public init(
-    run behavior: Behavior
-  )
-    where Behavior: BehaviorEffect
-  {
-    self.start = { scope, manager in
+    _: B.Input,
+    id: BehaviorID? = nil,
+    run behavior: B
+  ) {
+    var behavior = behavior
+    if let id {
+      behavior.setID(to: id)
+    }
+    self.callback = { scope, manager in
       behavior.run(manager: manager, scope: scope, input: ())
+    }
+  }
+
+  @TreeActor
+  public init(
+    _ value: B.Input,
+    id: BehaviorID? = nil,
+    run behavior: B,
+    handler: B.Handler
+  ) {
+    var behavior = behavior
+    if let id {
+      behavior.setID(to: id)
+    }
+    self.callback = { scope, manager in
+      behavior.run(manager: manager, scope: scope, input: value, handler: handler)
     }
   }
 
@@ -79,18 +110,20 @@ public struct OnStart<Behavior: BehaviorType>: Rules where Behavior.Input == Voi
   }
 
   public mutating func applyRule(with context: RuleContext) throws {
-    start(scope, context.runtime.behaviorManager)
+    callback(scope, context.runtime.behaviorManager)
   }
 
-  public mutating func removeRule(with _: RuleContext) throws { }
+  public mutating func removeRule(with _: RuleContext) throws {
+    scope.dispose()
+  }
 
   public mutating func updateRule(
     from _: Self,
     with _: RuleContext
   ) throws { }
 
-  // MARK: Internal
+  // MARK: Private
 
-  let start: (any BehaviorScoping, BehaviorManager) -> Void
-  let scope: BehaviorStage = .init()
+  private let callback: (any BehaviorScoping, BehaviorManager) -> Void
+  private let scope: BehaviorStage = .init()
 }

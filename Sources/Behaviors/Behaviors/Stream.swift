@@ -6,7 +6,7 @@ import Utilities
 // MARK: - Behaviors.Stream
 
 extension Behaviors {
-  public struct Stream<Input, Output, Failure: Error>: StreamBehaviorType {
+  public struct Stream<Input, Output, Failure: Error> {
 
     // MARK: Lifecycle
 
@@ -33,7 +33,7 @@ extension Behaviors {
     public typealias Input = Input
     public typealias Output = Output
     public typealias Func = Behaviors.Make<Input, Output>.StreamFunc
-    public typealias Handler = Behaviors.StreamHandler<Output, Failure>
+    public typealias Handler = Behaviors.StreamHandler<Asynchronous, Output, Failure>
     public typealias Subscriber = Behaviors.StreamSubscriber<Input, Output, Failure>
     public typealias Resolution = Producer.Element
 
@@ -87,10 +87,22 @@ extension Behaviors {
   }
 }
 
+// MARK: - Behaviors.Stream + StreamBehaviorType
+
+extension Behaviors.Stream: StreamBehaviorType where Failure == Handler.Failure {
+  public mutating func setID(to: BehaviorID) {
+    self = .init(to, subscriber: subscriber)
+  }
+}
+
 // MARK: - Behaviors.StreamHandler
 
 extension Behaviors {
-  public struct StreamHandler<Output, Failure: Error>: StreamHandlerType {
+  public struct StreamHandler<
+    SubscribeType: BehaviorSubscribeType,
+    Output,
+    Failure: Error
+  >: StreamHandlerType {
 
     // MARK: Lifecycle
 
