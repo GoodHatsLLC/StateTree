@@ -6,7 +6,7 @@ import Utilities
 
 // MARK: - OnStop
 
-public struct OnStop<B: BehaviorEffect>: Rules where B.Input == Void,
+public struct OnStop<B: Behavior>: Rules where B.Input == Void,
   B.Output: Sendable
 {
 

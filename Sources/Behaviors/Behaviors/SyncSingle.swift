@@ -40,9 +40,9 @@ extension Behaviors {
   }
 }
 
-// MARK: - Behaviors.SyncSingle + BehaviorEffect
+// MARK: - Behaviors.SyncSingle + Behavior
 
-extension Behaviors.SyncSingle: BehaviorEffect where Failure == Handler.Failure {
+extension Behaviors.SyncSingle: Behavior where Failure == Handler.Failure {
   public var switchType: BehaviorEmissionType<Input, Output, Failure> {
     .sync(self)
   }

@@ -1,9 +1,9 @@
 import Disposable
 import TreeActor
 
-// MARK: - BehaviorEffect
+// MARK: - Behavior
 
-public protocol BehaviorEffect<Input, Output, Failure> {
+public protocol Behavior<Input, Output, Failure> {
   associatedtype Input
   associatedtype Output
   associatedtype Failure: Error
@@ -13,7 +13,7 @@ public protocol BehaviorEffect<Input, Output, Failure> {
   mutating func setID(to: BehaviorID)
 }
 
-extension BehaviorEffect {
+extension Behavior {
 
   public func erase() -> AnyBehavior<Input, Handler> {
     .init(self)
@@ -82,7 +82,7 @@ extension BehaviorEffect {
 
 // MARK: - BehaviorType
 
-public protocol BehaviorType<Input, Output, Failure>: BehaviorEffect {
+public protocol BehaviorType<Input, Output, Failure>: Behavior {
   associatedtype Producer
   associatedtype Subscriber: SubscriberType where Subscriber.Input == Input
   init(
@@ -102,11 +102,11 @@ public enum BehaviorEmissionType<Input, Output, Failure: Error> {
 
 // MARK: - AnyBehavior
 
-public struct AnyBehavior<Input, Handler: HandlerType>: BehaviorEffect {
+public struct AnyBehavior<Input, Handler: HandlerType>: Behavior {
   public typealias Output = Handler.Output
   public typealias Failure = Handler.Failure
 
-  init(_ behavior: some BehaviorEffect<Input, Output, Failure>) {
+  init(_ behavior: some Behavior<Input, Output, Failure>) {
     var behavior = behavior
     self.id = behavior.id
     self.setIDFunc = {

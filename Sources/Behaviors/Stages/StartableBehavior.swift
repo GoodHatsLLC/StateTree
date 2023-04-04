@@ -7,7 +7,7 @@ public struct StartableBehavior<Input> {
   // MARK: Lifecycle
 
   @TreeActor
-  public init<B: BehaviorEffect>(
+  public init<B: Behavior>(
     behavior proposedBehavior: B
   ) where B.Input == Input {
     switch proposedBehavior.switchType {

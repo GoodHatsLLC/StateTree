@@ -45,9 +45,9 @@ extension Behaviors {
   }
 }
 
-// MARK: - Behaviors.AsyncSingle + BehaviorEffect
+// MARK: - Behaviors.AsyncSingle + Behavior
 
-extension Behaviors.AsyncSingle: BehaviorEffect where Failure == Handler.Failure {
+extension Behaviors.AsyncSingle: Behavior where Failure == Handler.Failure {
   public mutating func setID(to: BehaviorID) {
     self = .init(to, subscriber: subscriber)
   }

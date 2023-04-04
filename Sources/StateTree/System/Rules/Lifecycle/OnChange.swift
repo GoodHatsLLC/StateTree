@@ -6,7 +6,7 @@ import Utilities
 
 // MARK: - OnChange
 
-public struct OnChange<B: BehaviorEffect>: Rules where B.Input: Equatable,
+public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
   B.Output: Sendable
 {
 
@@ -96,7 +96,7 @@ public struct OnChange<B: BehaviorEffect>: Rules where B.Input: Equatable,
     run behavior: B,
     handler: B.Handler
   )
-    where B: BehaviorEffect
+    where B: Behavior
   {
     self.value = value
     var behavior = behavior

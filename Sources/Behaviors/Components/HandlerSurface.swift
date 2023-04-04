@@ -4,12 +4,12 @@ import Utilities
 
 // MARK: - Surface
 
-public struct Surface<Behavior: BehaviorEffect>: HandlerSurface {
-  public var surface: Surface<Behavior> { self }
+public struct Surface<B: Behavior>: HandlerSurface {
+  public var surface: Surface<B> { self }
 
   public init(
-    input: Behavior.Input,
-    behavior: AttachableBehavior<Behavior>,
+    input: B.Input,
+    behavior: AttachableBehavior<B>,
     scope: any BehaviorScoping,
     manager: BehaviorManager
   ) {
@@ -21,17 +21,17 @@ public struct Surface<Behavior: BehaviorEffect>: HandlerSurface {
   }
 
   let id: BehaviorID
-  let input: Behavior.Input
-  let behavior: AttachableBehavior<Behavior>
+  let input: B.Input
+  let behavior: AttachableBehavior<B>
   let scope: any BehaviorScoping
   let manager: BehaviorManager
 }
 
 // MARK: - HandlerSurface
 
-public protocol HandlerSurface<Behavior> {
-  associatedtype Behavior: BehaviorEffect
-  var surface: Surface<Behavior> { get }
+public protocol HandlerSurface<B> {
+  associatedtype B: Behavior
+  var surface: Surface<B> { get }
 
 }
 
@@ -57,9 +57,9 @@ extension HandlerSurface {
   }
 }
 
-extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior.Failure == Never {
-  @_spi(Implementation) public var value: Behavior.Output? {
-    var value: Behavior.Output?
+extension HandlerSurface where B.Handler: SingleHandlerType, B.Failure == Never {
+  @_spi(Implementation) public var value: B.Output? {
+    var value: B.Output?
     let startable = surface.behavior
       .attach(handler: .init(
         onSuccess: { val in
@@ -84,7 +84,7 @@ extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior.Fai
 
   @discardableResult
   public func onSuccess(
-    _ onSuccess: @escaping (_ value: Behavior.Handler.Output) -> Void,
+    _ onSuccess: @escaping (_ value: B.Handler.Output) -> Void,
     onCancel: @escaping () -> Void = { }
   )
     -> Behaviors.Resolution
@@ -106,11 +106,11 @@ extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior.Fai
 
 }
 
-extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior.Failure == any Error {
+extension HandlerSurface where B.Handler: SingleHandlerType, B.Failure == any Error {
 
   @discardableResult
   public func onResult(
-    _ onResult: @escaping (_ result: Result<Behavior.Output, Error>) -> Void,
+    _ onResult: @escaping (_ result: Result<B.Output, Error>) -> Void,
     onCancel: @escaping () -> Void = { }
   )
     -> Behaviors.Resolution
@@ -131,10 +131,10 @@ extension HandlerSurface where Behavior.Handler: SingleHandlerType, Behavior.Fai
   }
 }
 
-extension HandlerSurface where Behavior.Handler: StreamHandlerType {
+extension HandlerSurface where B.Handler: StreamHandlerType {
   @discardableResult
   public func onValue(
-    _ onValue: @escaping (_ value: Behavior.Handler.Output) -> Void,
+    _ onValue: @escaping (_ value: B.Handler.Output) -> Void,
     onFinish: @escaping () -> Void,
     onFailure: @escaping (_ error: any Error) -> Void,
     onCancel: @escaping () -> Void

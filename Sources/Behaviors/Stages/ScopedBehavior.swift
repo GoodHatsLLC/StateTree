@@ -4,16 +4,16 @@ import Utilities
 
 // MARK: - ScopedBehavior
 
-public struct ScopedBehavior<Behavior: BehaviorEffect>: HandlerSurface {
+public struct ScopedBehavior<B: Behavior>: HandlerSurface {
 
   // MARK: Lifecycle
 
   public init(
-    behavior: Behavior,
+    behavior: B,
     scope: any BehaviorScoping,
     manager: BehaviorManager,
-    input: Behavior.Input
-  ) where Behavior: AsyncBehaviorType {
+    input: B.Input
+  ) where B: AsyncBehaviorType {
     self.init(
       behavior: AttachableBehavior(behavior: behavior),
       scope: scope,
@@ -24,11 +24,11 @@ public struct ScopedBehavior<Behavior: BehaviorEffect>: HandlerSurface {
 
   @TreeActor
   public init(
-    behavior: Behavior,
+    behavior: B,
     scope: any BehaviorScoping,
     manager: BehaviorManager,
-    input: Behavior.Input
-  ) where Behavior: SyncBehaviorType {
+    input: B.Input
+  ) where B: SyncBehaviorType {
     self.init(
       behavior: AttachableBehavior(behavior: behavior),
       scope: scope,
@@ -38,11 +38,11 @@ public struct ScopedBehavior<Behavior: BehaviorEffect>: HandlerSurface {
   }
 
   public init(
-    behavior: Behavior,
+    behavior: B,
     scope: any BehaviorScoping,
     manager: BehaviorManager,
-    input: Behavior.Input
-  ) where Behavior: StreamBehaviorType {
+    input: B.Input
+  ) where B: StreamBehaviorType {
     self.init(
       behavior: AttachableBehavior(behavior: behavior),
       scope: scope,
@@ -52,10 +52,10 @@ public struct ScopedBehavior<Behavior: BehaviorEffect>: HandlerSurface {
   }
 
   fileprivate init(
-    behavior: AttachableBehavior<Behavior>,
+    behavior: AttachableBehavior<B>,
     scope: any BehaviorScoping,
     manager: BehaviorManager,
-    input: Behavior.Input
+    input: B.Input
   ) {
     self.id = behavior.id
     self.behavior = behavior
@@ -66,7 +66,7 @@ public struct ScopedBehavior<Behavior: BehaviorEffect>: HandlerSurface {
 
   // MARK: Public
 
-  public var surface: Surface<Behavior> {
+  public var surface: Surface<B> {
     .init(input: input, behavior: behavior, scope: scope, manager: manager)
   }
 
@@ -76,8 +76,8 @@ public struct ScopedBehavior<Behavior: BehaviorEffect>: HandlerSurface {
 
   // MARK: Private
 
-  private let input: Behavior.Input
-  private let behavior: AttachableBehavior<Behavior>
+  private let input: B.Input
+  private let behavior: AttachableBehavior<B>
   private let scope: any BehaviorScoping
   private let manager: BehaviorManager
 

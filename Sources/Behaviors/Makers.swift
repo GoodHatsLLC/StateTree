@@ -134,7 +134,7 @@ extension Behaviors {
 
   /// Make a `Stream<Input, Output>` behavior asynchronously.
   ///
-  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// Create a ``Behavior`` taking an `Input` type value, emitting a stream of `Output`
   /// values,
   /// and potentially terminating with `any Error` — from an asynchronous closure returning an
   /// `AsyncSequence`.
@@ -168,7 +168,7 @@ extension Behaviors {
 
   /// **Convenience:* Make a `Stream<Input, Output>` behavior from an `Emitter`.
   ///
-  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// Create a ``Behavior`` taking an `Input` type value, emitting a stream of `Output`
   /// values,
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Publisher`.
@@ -205,7 +205,7 @@ extension Behaviors {
 
   /// *Convenience:* Make a `Stream<Input, Output>` behavior from a `Combine` `Publisher`.
   ///
-  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// Create a ``Behavior`` taking an `Input` type value, emitting a stream of `Output`
   /// values,
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Publisher`.
@@ -242,7 +242,7 @@ import Combine
 extension Behaviors {
   /// *Convenience:* Make a `Stream<Input, Output>` behavior from a `Combine` `Publisher`.
   ///
-  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// Create a ``Behavior`` taking an `Input` type value, emitting a stream of `Output`
   /// values,
   /// and potentially terminating with `any Error` — from an asynchronous closure returning a
   /// `Combine` `Publisher`.
@@ -278,7 +278,7 @@ extension Behaviors {
 
   /// *Convenience:* Make a `Stream<Input, Output>` behavior from a `Publisher`.
   ///
-  /// Create a ``BehaviorEffect`` taking an `Input` type value, emitting a stream of `Output`
+  /// Create a ``Behavior`` taking an `Input` type value, emitting a stream of `Output`
   /// values,
   /// and potentially terminating with `any Error` — from a synchronous closure returning a
   /// `Publisher`.
