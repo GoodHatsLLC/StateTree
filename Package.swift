@@ -102,7 +102,7 @@ let package = Package(
     ),
     .package(
       url: "https://github.com/GoodHatsLLC/Emitter.git",
-      "0.4.0" ..< "0.5.0"
+      "0.5.0" ..< "0.6.0"
     ),
     .package(
       url: "https://github.com/apple/swift-collections.git",

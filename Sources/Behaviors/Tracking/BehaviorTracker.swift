@@ -1,5 +1,4 @@
-import protocol Emitter.Emitter
-import class Emitter.PublishSubject
+import Emitter
 import Foundation
 import TreeActor
 @_spi(Implementation) import Utilities
