@@ -5,7 +5,7 @@ import TreeActor
 
 // MARK: - BehaviorEvent
 
-public enum BehaviorEvent {
+public enum BehaviorEvent: Hashable {
   case created(BehaviorID)
   case started(BehaviorID)
   case finished(BehaviorID)

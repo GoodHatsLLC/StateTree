@@ -1,7 +1,21 @@
+import Behaviors
 import Disposable
 import Emitter
 import Foundation
 @_spi(Implementation) import StateTree
+
+extension BehaviorEvent {
+  func asTreeEvent() -> TreeEvent {
+    switch self {
+    case .created(let id):
+      return .behaviorCreated(id)
+    case .started(let id):
+      return .behaviorStarted(id)
+    case .finished(let id):
+      return .behaviorFinished(id)
+    }
+  }
+}
 
 // MARK: - Recorder
 
@@ -44,24 +58,40 @@ public final class Recorder<Root: Node> {
       frames
         .append(
           StateFrame(
-            record: lifetime.snapshot()
+            record: lifetime.snapshot(),
+            event: .treeStarted
           )
         )
     }
     lifetime
       .updates
-      .flatMapLatest { [lifetime] _ in lifetime.stateFrameSnapshot() }
-      .subscribe { [weak self] snapshot in
+      .subscribe { [weak self] event in
         if let self {
           frames
-            .append(snapshot)
+            .append(
+              StateFrame(
+                record: lifetime.snapshot(),
+                event: event
+              )
+            )
         }
       }
       .stage(on: stage)
-    lifetime.runtime
+    lifetime
+      .runtime
       .behaviorEvents
-      .subscribe { value in
-        print("event: \(value)")
+      .map { $0.asTreeEvent() }
+      .merge(lifetime.updates) // TODO: fix union API
+      .subscribe { [weak self] event in
+        if let self {
+          frames
+            .append(
+              StateFrame(
+                record: lifetime.snapshot(),
+                event: event
+              )
+            )
+        }
       }
       .stage(on: stage)
   }

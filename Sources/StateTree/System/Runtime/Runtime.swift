@@ -24,7 +24,7 @@ public final class Runtime {
 
   // MARK: Public
 
-  public var updateEmitter: some Emitter<NodeChange> {
+  public var updateEmitter: some Emitter<TreeEvent> {
     updateSubject
   }
 
@@ -39,7 +39,7 @@ public final class Runtime {
   private let scopes: ScopeStorage = .init()
   private let dependencies: DependencyValues
   private let didStabilizeSubject = PublishSubject<Void>()
-  private let updateSubject = PublishSubject<NodeChange>()
+  private let updateSubject = PublishSubject<TreeEvent>()
   private var transactionCount: Int = 0
   private var updates: TreeChanges = .none
   private var changeManager: (any ChangeManager)?
@@ -389,7 +389,7 @@ extension Runtime {
 
   // MARK: Private
 
-  private func emitUpdates(changes: [NodeChange]) {
+  private func emitUpdates(changes: [TreeEvent]) {
     for change in changes {
       updateSubject.emit(value: change)
     }
@@ -411,7 +411,7 @@ extension Runtime {
   private func updateScopes(
     lastValidState: TreeStateRecord
   ) throws
-    -> [NodeChange]
+    -> [TreeEvent]
   {
     let updater = StateUpdater(
       changes: updates.take(),
@@ -428,7 +428,7 @@ extension Runtime {
   private func apply(
     state newState: TreeStateRecord
   ) throws
-    -> [NodeChange]
+    -> [TreeEvent]
   {
     guard
       transactionCount == 0,

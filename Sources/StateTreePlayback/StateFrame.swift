@@ -7,13 +7,15 @@ import StateTree
 ///
 /// `StateFrames` contain the `TreeStateRecord` state and metadata
 public struct StateFrame: TreeState, Identifiable {
-  init(record: TreeStateRecord) {
+  init(record: TreeStateRecord, event: TreeEvent) {
     self.id = .init()
     self.date = .init()
     self.state = record
+    self.event = event
   }
 
   public let id: UUID
+  public let event: TreeEvent
   public let state: TreeStateRecord
   public let date: Date
 }

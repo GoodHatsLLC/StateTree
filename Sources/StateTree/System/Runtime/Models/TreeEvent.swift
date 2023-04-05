@@ -1,10 +1,16 @@
+import Behaviors
+
 // MARK: - NodeChanges
 
-public enum NodeChange: Hashable, Sendable {
+public enum TreeEvent: TreeState {
 
+  case treeStarted
   case started(NodeID)
   case updated(NodeID)
   case stopped(NodeID)
+  case behaviorCreated(BehaviorID)
+  case behaviorStarted(BehaviorID)
+  case behaviorFinished(BehaviorID)
 
   // MARK: Public
 
@@ -41,7 +47,7 @@ public enum NodeChange: Hashable, Sendable {
       }
     }
 
-    func asChange(_ id: NodeID) -> NodeChange {
+    func asTreeEvent(_ id: NodeID) -> TreeEvent {
       switch self {
       case .start: return .started(id)
       case .stop: return .stopped(id)
@@ -50,9 +56,7 @@ public enum NodeChange: Hashable, Sendable {
     }
   }
 
-  // MARK: Internal
-
-  var id: NodeID {
+  public var nodeID: NodeID? {
     switch self {
     case .started(let nodeID):
       return nodeID
@@ -60,6 +64,19 @@ public enum NodeChange: Hashable, Sendable {
       return nodeID
     case .stopped(let nodeID):
       return nodeID
+    default:
+      return nil
+    }
+  }
+
+  public var behaviorID: BehaviorID? {
+    switch self {
+    case .behaviorCreated(let id),
+         .behaviorFinished(let id),
+         .behaviorStarted(let id):
+      return id
+    default:
+      return nil
     }
   }
 }

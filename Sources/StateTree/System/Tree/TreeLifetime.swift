@@ -38,7 +38,7 @@ public struct TreeLifetime<N: Node>: Disposable {
   @TreeActor public var rootNode: N { root.node }
 
   /// A stream of notifications updates emitted when nodes are updated.
-  @TreeActor public var updates: some Emitter<NodeChange> { runtime.updateEmitter }
+  @TreeActor public var updates: some Emitter<TreeEvent> { runtime.updateEmitter }
 
   /// Metadata about the current ``Tree`` and ``TreeLifetime``.
   @TreeActor public var info: StateTreeInfo { runtime.info }

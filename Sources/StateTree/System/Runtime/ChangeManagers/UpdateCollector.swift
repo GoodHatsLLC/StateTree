@@ -1,17 +1,17 @@
 // MARK: - UpdateCollector
 
 struct UpdateCollector {
-  var updates: [NodeID: NodeChange.MetaData] = [:]
+  var updates: [NodeID: TreeEvent.MetaData] = [:]
 }
 
 extension UpdateCollector {
-  func collectChanges() -> [NodeChange] {
+  func collectChanges() -> [TreeEvent] {
     updates
       .sorted { lhs, rhs in
         lhs.value.depthOrder < rhs.value.depthOrder
       }
       .map { pair in
-        pair.value.asChange(pair.key)
+        pair.value.asTreeEvent(pair.key)
       }
   }
 
