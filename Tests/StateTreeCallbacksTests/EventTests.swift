@@ -2,7 +2,7 @@ import Disposable
 import SwiftUI
 import XCTest
 @_spi(Implementation) @testable import StateTree
-@_spi(Implementation) @testable import StateTreeReporter
+@_spi(Implementation) @testable import StateTreeCallbacks
 
 // MARK: - EventTests
 

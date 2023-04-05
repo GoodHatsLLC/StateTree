@@ -89,9 +89,9 @@ let package = Package(
       ]
     ),
     .library(
-      name: "StateTreeReporter",
+      name: "StateTreeCallbacks",
       targets: [
-        "StateTreeReporter",
+        "StateTreeCallbacks",
       ]
     ),
   ],
@@ -159,7 +159,7 @@ let package = Package(
       swiftSettings: Build.globalSwiftSettings
     ),
     .target(
-      name: "StateTreeReporter",
+      name: "StateTreeCallbacks",
       dependencies: [
         "StateTree",
         "TreeActor",
@@ -189,9 +189,9 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "StateTreeReporterTests",
+      name: "StateTreeCallbacksTests",
       dependencies: [
-        "StateTreeReporter",
+        "StateTreeCallbacks",
       ]
     ),
     .testTarget(

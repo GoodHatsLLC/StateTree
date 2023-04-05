@@ -1,5 +1,5 @@
 import CounterDomain
-import StateTreeReporter
+import StateTreeCallbacks
 import UIKit
 
 public class RootViewController: UIViewController {

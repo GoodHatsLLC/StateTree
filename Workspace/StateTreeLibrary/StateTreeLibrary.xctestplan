@@ -18,8 +18,8 @@
     {
       "target" : {
         "containerPath" : "container:..\/..",
-        "identifier" : "StateTreeReporterTests",
-        "name" : "StateTreeReporterTests"
+        "identifier" : "StateTreeCallbacksTests",
+        "name" : "StateTreeCallbacksTests"
       }
     },
     {

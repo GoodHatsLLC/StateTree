@@ -1,7 +1,7 @@
 import CounterDomain
 import CounterUI
 import StateTree
-import StateTreeReporter
+import StateTreeCallbacks
 import UIKit
 
 /// We use the SceneDelegate as our entry point into our StateTree

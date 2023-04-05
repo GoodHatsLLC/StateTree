@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F786F20029B09D7600DE459C /* StateTreeReporter in Frameworks */ = {isa = PBXBuildFile; productRef = F786F1FF29B09D7600DE459C /* StateTreeReporter */; };
+		F786F20029B09D7600DE459C /* StateTreeCallbacks in Frameworks */ = {isa = PBXBuildFile; productRef = F786F1FF29B09D7600DE459C /* StateTreeCallbacks */; };
 		F7B9BEF629754F8C006E5DCE /* StateTreeLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = F7B9BEF529754F8C006E5DCE /* StateTreeLibrary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F7B9BF0029754FBE006E5DCE /* StateTree in Frameworks */ = {isa = PBXBuildFile; productRef = F7B9BEFF29754FBE006E5DCE /* StateTree */; };
 		F7B9BF0229754FBE006E5DCE /* StateTreeSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = F7B9BF0129754FBE006E5DCE /* StateTreeSwiftUI */; };
@@ -26,7 +26,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F7B9BF0229754FBE006E5DCE /* StateTreeSwiftUI in Frameworks */,
-				F786F20029B09D7600DE459C /* StateTreeReporter in Frameworks */,
+				F786F20029B09D7600DE459C /* StateTreeCallbacks in Frameworks */,
 				F7B9BF0029754FBE006E5DCE /* StateTree in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -115,7 +115,7 @@
 			packageProductDependencies = (
 				F7B9BEFF29754FBE006E5DCE /* StateTree */,
 				F7B9BF0129754FBE006E5DCE /* StateTreeSwiftUI */,
-				F786F1FF29B09D7600DE459C /* StateTreeReporter */,
+				F786F1FF29B09D7600DE459C /* StateTreeCallbacks */,
 			);
 			productName = StateTreeLibrary;
 			productReference = F7B9BEF229754F8C006E5DCE /* StateTreeLibrary.framework */;
@@ -396,9 +396,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		F786F1FF29B09D7600DE459C /* StateTreeReporter */ = {
+		F786F1FF29B09D7600DE459C /* StateTreeCallbacks */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = StateTreeReporter;
+			productName = StateTreeCallbacks;
 		};
 		F7B9BEFF29754FBE006E5DCE /* StateTree */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -10,9 +10,3 @@ extension Projection {
     }
   }
 }
-
-extension Binding {
-  public func compact<T>() -> Binding<T>? where Value == T? {
-    Binding<T>(self)
-  }
-}

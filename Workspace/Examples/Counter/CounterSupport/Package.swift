@@ -28,7 +28,7 @@ let package = Package(
       name: "CounterUI",
       dependencies: [
         "CounterDomain",
-        .product(name: "StateTreeReporter", package: "StateTree"),
+        .product(name: "StateTreeCallbacks", package: "StateTree"),
       ]
     ),
     .target(
