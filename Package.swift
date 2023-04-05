@@ -195,6 +195,12 @@ let package = Package(
       ]
     ),
     .testTarget(
+      name: "StateTreePlaybackTests",
+      dependencies: [
+        "StateTreePlayback",
+      ]
+    ),
+    .testTarget(
       name: "StateTreeSwiftUITests",
       dependencies: [
         "StateTreeSwiftUI",

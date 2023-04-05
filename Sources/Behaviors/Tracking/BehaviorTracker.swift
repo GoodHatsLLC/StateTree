@@ -63,7 +63,6 @@ public final class BehaviorTracker {
 
   public var behaviorEventEmitter: some Emitter<BehaviorEvent> {
     behaviorEventSubject
-      .onMainActor()
   }
 
   public var behaviorResolutions: [Behaviors.Resolved] {

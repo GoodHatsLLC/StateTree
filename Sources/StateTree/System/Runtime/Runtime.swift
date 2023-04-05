@@ -100,6 +100,14 @@ extension Runtime {
 // MARK: Computed properties
 extension Runtime {
 
+  // MARK: Public
+
+  public var behaviorEvents: some Emitter<BehaviorEvent> {
+    configuration.behaviorTracker.behaviorEventEmitter
+  }
+
+  // MARK: Internal
+
   var didStabilizeEmitter: some Emitter<Void> {
     didStabilizeSubject
   }

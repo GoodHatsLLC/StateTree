@@ -58,6 +58,12 @@ public final class Recorder<Root: Node> {
         }
       }
       .stage(on: stage)
+    lifetime.runtime
+      .behaviorEvents
+      .subscribe { value in
+        print("event: \(value)")
+      }
+      .stage(on: stage)
   }
 
   @TreeActor
