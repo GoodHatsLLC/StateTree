@@ -22,8 +22,8 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.SyncSingle<Void, Void, Never> = Behaviors
       .make(id, input: Void.self) { action() }
-    self.callback = { scope, manager in
-      behavior.run(manager: manager, scope: scope, input: ())
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: ())
     }
   }
 
@@ -37,8 +37,8 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.AsyncSingle<Void, Void, Never> = Behaviors
       .make(id, input: Void.self) { await action() }
-    self.callback = { scope, manager in
-      behavior.run(manager: manager, scope: scope, input: ())
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: ())
     }
   }
 
@@ -57,9 +57,9 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
       .make(id, input: Void.self) {
         await behaviorFunc()
       }
-    self.callback = { scope, manager in
+    self.callback = { scope, tracker in
       behavior.run(
-        manager: manager,
+        tracker: tracker,
         scope: scope,
         input: (),
         handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
@@ -77,8 +77,8 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     if let id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, manager in
-      behavior.run(manager: manager, scope: scope, input: ())
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: ())
     }
   }
 
@@ -93,8 +93,8 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     if let id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, manager in
-      behavior.run(manager: manager, scope: scope, input: value, handler: handler)
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
     }
   }
 
@@ -110,7 +110,7 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
   }
 
   public mutating func applyRule(with context: RuleContext) throws {
-    callback(scope, context.runtime.behaviorManager)
+    callback(scope, context.runtime.behaviorTracker)
   }
 
   public mutating func removeRule(with _: RuleContext) throws {
@@ -124,6 +124,6 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
 
   // MARK: Private
 
-  private let callback: (any BehaviorScoping, BehaviorManager) -> Void
+  private let callback: (any BehaviorScoping, BehaviorTracker) -> Void
   private let scope: BehaviorStage = .init()
 }

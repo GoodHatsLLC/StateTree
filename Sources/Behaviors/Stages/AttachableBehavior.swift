@@ -9,50 +9,58 @@ public struct AttachableBehavior<B: Behavior> {
 
   @TreeActor
   public init(
-    behavior: B
+    behavior: B,
+    tracker: BehaviorTracker
   ) {
     self.id = behavior.id
     self.attacher = { handler in
       StartableBehavior(
         behavior: behavior,
-        handler: handler
+        handler: handler,
+        tracker: tracker
       )
     }
   }
 
   @TreeActor
   public init(
-    behavior: B
+    behavior: B,
+    tracker: BehaviorTracker
   ) where B: SyncBehaviorType {
     self.id = behavior.id
     self.attacher = { handler in
       StartableBehavior(
-        behavior: behavior,
-        handler: handler
+        syncBehavior: behavior,
+        handler: handler,
+        tracker: tracker
       )
     }
   }
 
   public init(
-    behavior: B
+    behavior: B,
+    tracker: BehaviorTracker
   ) where B: AsyncBehaviorType {
     self.id = behavior.id
     self.attacher = { handler in
       StartableBehavior(
-        behavior: behavior,
-        handler: handler
+        asyncBehavior: behavior,
+        handler: handler,
+        tracker: tracker
       )
     }
   }
 
   public init(
-    behavior: B
+    behavior: B,
+    tracker: BehaviorTracker
   ) where B: StreamBehaviorType {
     self.id = behavior.id
     self.attacher = { handler in
       StartableBehavior(
-        behavior: behavior,
-        handler: handler
+        streamBehavior: behavior,
+        handler: handler,
+        tracker: tracker
       )
     }
   }

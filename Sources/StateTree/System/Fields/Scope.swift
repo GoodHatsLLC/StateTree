@@ -83,7 +83,7 @@ extension Scope {
     return ScopedBehavior<B>(
       behavior: behavior,
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      manager: inner.treeScope?.runtime.behaviorManager ?? .init(),
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
       input: input
     )
   }
@@ -110,7 +110,7 @@ extension Scope {
     return ScopedBehavior<B>(
       behavior: behavior,
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      manager: inner.treeScope?.runtime.behaviorManager ?? .init(),
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
       input: input
     )
   }
@@ -136,7 +136,7 @@ extension Scope {
     return ScopedBehavior(
       behavior: Behaviors.make(id, input: Void.self, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      manager: inner.treeScope?.runtime.behaviorManager ?? .init(),
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
       input: ()
     )
   }
@@ -162,7 +162,7 @@ extension Scope {
     return ScopedBehavior(
       behavior: Behaviors.make(id, input: Void.self, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      manager: inner.treeScope?.runtime.behaviorManager ?? .init(),
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
       input: ()
     )
   }
@@ -192,7 +192,7 @@ extension Scope {
     return ScopedBehavior(
       behavior: Behaviors.make(id, input: Void.self, subscribe: subscribe),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      manager: inner.treeScope?.runtime.behaviorManager ?? .init(),
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
       input: ()
     )
   }

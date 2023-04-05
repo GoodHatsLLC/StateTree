@@ -8,22 +8,24 @@ public struct StartableBehavior<Input> {
 
   @TreeActor
   public init<B: Behavior>(
-    behavior proposedBehavior: B
+    behavior proposedBehavior: B,
+    tracker: BehaviorTracker
   ) where B.Input == Input {
     switch proposedBehavior.switchType {
     case .async(let asyncB):
-      self = .init(behavior: asyncB, handler: .init())
+      self = .init(behavior: asyncB, handler: .init(), tracker: tracker)
     case .sync(let syncB):
-      self = .init(behavior: syncB, handler: .init())
+      self = .init(behavior: syncB, handler: .init(), tracker: tracker)
     case .stream(let streamB):
-      self = .init(behavior: streamB, handler: .init())
+      self = .init(behavior: streamB, handler: .init(), tracker: tracker)
     }
   }
 
   @TreeActor
   public init<B: Behavior>(
     behavior proposedBehavior: B,
-    handler: B.Handler
+    handler: B.Handler,
+    tracker: BehaviorTracker
   ) where B.Input == Input {
     switch proposedBehavior.switchType {
     case .async(let asyncB):
@@ -31,32 +33,33 @@ public struct StartableBehavior<Input> {
         assertionFailure("bad handler type")
         return .init()
       }()
-      self = .init(behavior: asyncB, handler: handler)
+      self = .init(asyncBehavior: asyncB, handler: handler, tracker: tracker)
     case .sync(let syncB):
       let handler = handler as? Behaviors.SingleHandler<Synchronous, B.Output, B.Failure> ?? {
         assertionFailure("bad handler type")
         return .init()
       }()
-      self = .init(behavior: syncB, handler: handler)
+      self = .init(syncBehavior: syncB, handler: handler, tracker: tracker)
     case .stream(let streamB):
       let handler = handler as? Behaviors.StreamHandler<Asynchronous, B.Output, B.Failure> ?? {
         assertionFailure("bad handler type")
         return .init()
       }()
-      self = .init(behavior: streamB, handler: handler)
+      self = .init(streamBehavior: streamB, handler: handler, tracker: tracker)
     }
   }
 
   public init<Behavior: AsyncBehaviorType>(
-    behavior proposedBehavior: Behavior,
-    handler: Behavior.Handler
+    asyncBehavior proposedBehavior: Behavior,
+    handler: Behavior.Handler,
+    tracker: BehaviorTracker
   ) where Behavior.Input == Input {
     let id = proposedBehavior.id
     let handler = handler
     self.id = id
-    self.starter = { manager, input, scope in
+    self.starter = { tracker, input, scope in
       var mutBehavior = proposedBehavior
-      manager
+      tracker
         .intercept(
           behavior: &mutBehavior,
           input: input
@@ -67,15 +70,21 @@ public struct StartableBehavior<Input> {
       else {
         handler.cancel()
         // If the scope itself can't own the behavior, return early without a finalizer.
-        let resolution = Behaviors.Resolution(id: id, value: .init(id: id, state: .cancelled))
-        manager.track(resolution: resolution)
+        let resolution = Behaviors.Resolution(
+          id: id,
+          tracker: tracker,
+          value: .init(id: id, state: .cancelled)
+        )
+
         return (resolution: resolution, finalizer: nil)
       }
       // For an asynchronous behaviors:
       // - we can not start immediately
       // - we return a finalizer that does so asynchronously.
-      let resolution = Behaviors.Resolution(id: id)
-      manager.track(resolution: resolution)
+      let resolution = Behaviors.Resolution(
+        id: id,
+        tracker: tracker
+      )
       return (
         resolution: resolution,
         finalizer: {
@@ -105,15 +114,16 @@ public struct StartableBehavior<Input> {
 
   @TreeActor
   public init<Behavior: SyncBehaviorType>(
-    behavior proposedBehavior: Behavior,
-    handler: Behavior.Handler
+    syncBehavior proposedBehavior: Behavior,
+    handler: Behavior.Handler,
+    tracker: BehaviorTracker
   ) where Behavior.Input == Input {
     let id = proposedBehavior.id
     let handler = handler
     self.id = id
-    self.starter = { manager, input, scope in
+    self.starter = { tracker, input, scope in
       var mutBehavior = proposedBehavior
-      manager
+      tracker
         .intercept(
           behavior: &mutBehavior,
           input: input
@@ -124,20 +134,23 @@ public struct StartableBehavior<Input> {
       else {
         handler.cancel()
         // If the scope itself can't own the behavior, return early without a finalizer.
-        let resolution = Behaviors.Resolution(id: id, value: .init(id: id, state: .cancelled))
-        manager.track(resolution: resolution)
+        let resolution = Behaviors.Resolution(
+          id: id,
+          tracker: tracker,
+          value: .init(id: id, state: .cancelled)
+        )
+
         return (resolution: resolution, finalizer: nil)
       }
       // For a synchronous behavior, we can start and resolve it
       // immediately and synchronously — and return a stub finalizer.
-      var resolution = Behaviors.Resolution(id: id)
+      let resolution = Behaviors.Resolution(id: id, tracker: tracker)
       let activated = ActivatedBehavior(
         behavior: finalBehavior,
         input: input,
         handler: handler,
-        resolution: &resolution
+        resolution: resolution
       )
-      manager.track(resolution: resolution)
       scope.own(activated)
       return (
         resolution: resolution,
@@ -147,15 +160,16 @@ public struct StartableBehavior<Input> {
   }
 
   public init<Behavior: StreamBehaviorType>(
-    behavior proposedBehavior: Behavior,
-    handler: Behavior.Handler
+    streamBehavior proposedBehavior: Behavior,
+    handler: Behavior.Handler,
+    tracker: BehaviorTracker
   ) where Behavior.Input == Input {
     let id = proposedBehavior.id
     let handler = handler
     self.id = id
-    self.starter = { manager, input, scope in
+    self.starter = { tracker, input, scope in
       var mutBehavior = proposedBehavior
-      manager
+      tracker
         .intercept(
           behavior: &mutBehavior,
           input: input
@@ -165,16 +179,19 @@ public struct StartableBehavior<Input> {
       guard scope.canOwn()
       else {
         // If the scope itself can't own the behavior, return early without a finalizer.
-        let resolution = Behaviors.Resolution(id: id, value: .init(id: id, state: .cancelled))
-        manager.track(resolution: resolution)
+        let resolution = Behaviors.Resolution(
+          id: id,
+          tracker: tracker,
+          value: .init(id: id, state: .cancelled)
+        )
+
         handler.cancel()
         return (resolution: resolution, finalizer: nil)
       }
       // For stream behaviors:
       // - we can not start immediately
       // - we return a finalizer that does so asynchronously.
-      let resolution = Behaviors.Resolution(id: id)
-      manager.track(resolution: resolution)
+      let resolution = Behaviors.Resolution(id: id, tracker: tracker)
       return (
         resolution: resolution,
         finalizer: {
@@ -208,13 +225,13 @@ public struct StartableBehavior<Input> {
   )
 
   public nonisolated func start(
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     input: Input,
     scope: some BehaviorScoping
   )
     -> Starter
   {
-    starter(manager, input, scope)
+    starter(tracker, input, scope)
   }
 
   // MARK: Internal
@@ -223,7 +240,7 @@ public struct StartableBehavior<Input> {
 
   // MARK: Private
 
-  private let starter: (BehaviorManager, Input, any BehaviorScoping)
+  private let starter: (BehaviorTracker, Input, any BehaviorScoping)
     -> Starter
 
 }

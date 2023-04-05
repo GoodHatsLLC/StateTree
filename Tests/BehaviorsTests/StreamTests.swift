@@ -26,7 +26,7 @@ final class StreamTests: XCTestCase {
         AnyAsyncSequence(expected)
       }
     let res = behavior
-      .scoped(to: stage, manager: .init())
+      .scoped(to: stage, tracker: .init())
       .onValue { value in
         received.append(value)
       } onFinish: {
@@ -58,7 +58,7 @@ final class StreamTests: XCTestCase {
       }
 
     let res = behavior
-      .scoped(to: stage, manager: .init())
+      .scoped(to: stage, tracker: .init())
       .onValue { _ in
         XCTFail()
       } onFinish: {
@@ -80,13 +80,13 @@ final class StreamTests: XCTestCase {
     var receivedError: Error?
     var receivedOutput: [Int] = []
     let asyncBlocks: [Async.Value<Void>] = [.init(), .init()]
-    let manager = BehaviorManager()
+    let tracker = BehaviorTracker()
     let behavior: Behaviors.Stream<Void, Int, Error> = Behaviors
       .make(.id("stream_eventual_fail"), input: Void.self) {
         subject.values
       }
     let scoped = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
 
     let res = scoped
       .onValue { value in
@@ -106,7 +106,7 @@ final class StreamTests: XCTestCase {
       } onCancel: {
         XCTFail()
       }
-    try await manager.awaitReady()
+    try await tracker.awaitReady()
     subject.emit(value: 3)
     subject.emit(value: 4)
     subject.emit(value: 5)
@@ -125,7 +125,7 @@ final class StreamTests: XCTestCase {
     let original = [1, 2, 3, 4, 5, 6]
     let expected = [0, 0, 0]
     var received: [Int] = []
-    let manager = BehaviorManager(behaviorInterceptors: [
+    let tracker = BehaviorTracker(behaviorInterceptors: [
       .init(
         id: .id("test_interception"),
         type: Behaviors.Stream<Void, Int, Error>.self,
@@ -141,7 +141,7 @@ final class StreamTests: XCTestCase {
         AnyAsyncSequence(original)
       }
     let res = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
       .onValue { value in
         received.append(value)
       } onFinish: {
@@ -175,11 +175,11 @@ extension StreamTests {
     let publisher = [1, 2, 3, 4].publisher
     var receivedOutput: [Int] = []
     var didFinish = false
-    let manager = BehaviorManager()
+    let tracker = BehaviorTracker()
     let res = Behaviors.make(.id("combine_stream"), input: Void.self) {
       publisher.values
     }
-    .scoped(to: stage, manager: manager)
+    .scoped(to: stage, tracker: tracker)
     .onValue { value in
       receivedOutput.append(value)
     } onFinish: {
@@ -200,12 +200,12 @@ extension StreamTests {
     let subject = PassthroughSubject<Int, Never>()
     var receivedOutput: [Int] = []
     var didFinish = false
-    let manager = BehaviorManager()
+    let tracker = BehaviorTracker()
     let behavior = Behaviors.make(.id("combine_stream"), input: Void.self) {
       subject
     }
     let scoped = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
 
     let resolution = scoped
       .onValue { value in
@@ -217,7 +217,7 @@ extension StreamTests {
       } onCancel: {
         XCTFail()
       }
-    try await manager.awaitReady()
+    try await tracker.awaitReady()
     subject.send(1)
     subject.send(2)
     subject.send(3)

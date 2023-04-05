@@ -18,10 +18,10 @@ public struct RuntimeConfiguration {
   /// at runtime. Useful for testing.
   public init(
     userError: ErrorHandler = .assertion,
-    behaviorManager: BehaviorManager = .init()
+    behaviorTracker: BehaviorTracker = .init()
   ) {
     self.userError = userError
-    self.behaviorManager = behaviorManager
+    self.behaviorTracker = behaviorTracker
   }
 
   // MARK: Public
@@ -41,7 +41,7 @@ public struct RuntimeConfiguration {
   // MARK: Internal
 
   let userError: ErrorHandler
-  let behaviorManager: BehaviorManager
+  let behaviorTracker: BehaviorTracker
 
 }
 

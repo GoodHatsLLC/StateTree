@@ -22,8 +22,8 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.SyncSingle<Void, Void, Never> = Behaviors
       .make(id, input: Void.self) { action() }
-    self.callback = { scope, manager in
-      behavior.run(manager: manager, scope: scope, input: ())
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: ())
     }
   }
 
@@ -40,8 +40,8 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
     if let id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, manager in
-      behavior.run(manager: manager, scope: scope, input: ())
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: ())
     }
   }
 
@@ -57,8 +57,8 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
     if let id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, manager in
-      behavior.run(manager: manager, scope: scope, input: (), handler: handler)
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: (), handler: handler)
     }
   }
 
@@ -76,7 +76,7 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
   public mutating func applyRule(with _: RuleContext) throws { }
 
   public mutating func removeRule(with context: RuleContext) throws {
-    callback(scope, context.runtime.behaviorManager)
+    callback(scope, context.runtime.behaviorTracker)
     scope.dispose()
   }
 
@@ -87,6 +87,6 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
 
   // MARK: Private
 
-  private let callback: (any BehaviorScoping, BehaviorManager) -> Void
+  private let callback: (any BehaviorScoping, BehaviorTracker) -> Void
   private let scope: BehaviorStage = .init()
 }

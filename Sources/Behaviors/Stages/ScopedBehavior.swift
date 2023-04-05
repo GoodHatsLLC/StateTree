@@ -12,13 +12,13 @@ public struct ScopedBehavior<B: Behavior>: HandlerSurface {
   public init(
     behavior: B,
     scope: any BehaviorScoping,
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     input: B.Input
   ) where B: Behavior {
     self.init(
-      behavior: AttachableBehavior(behavior: behavior),
+      behavior: AttachableBehavior(behavior: behavior, tracker: tracker),
       scope: scope,
-      manager: manager,
+      tracker: tracker,
       input: input
     )
   }
@@ -26,13 +26,13 @@ public struct ScopedBehavior<B: Behavior>: HandlerSurface {
   public init(
     behavior: B,
     scope: any BehaviorScoping,
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     input: B.Input
   ) where B: AsyncBehaviorType {
     self.init(
-      behavior: AttachableBehavior(behavior: behavior),
+      behavior: AttachableBehavior(behavior: behavior, tracker: tracker),
       scope: scope,
-      manager: manager,
+      tracker: tracker,
       input: input
     )
   }
@@ -41,13 +41,13 @@ public struct ScopedBehavior<B: Behavior>: HandlerSurface {
   public init(
     behavior: B,
     scope: any BehaviorScoping,
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     input: B.Input
   ) where B: SyncBehaviorType {
     self.init(
-      behavior: AttachableBehavior(behavior: behavior),
+      behavior: AttachableBehavior(behavior: behavior, tracker: tracker),
       scope: scope,
-      manager: manager,
+      tracker: tracker,
       input: input
     )
   }
@@ -55,13 +55,13 @@ public struct ScopedBehavior<B: Behavior>: HandlerSurface {
   public init(
     behavior: B,
     scope: any BehaviorScoping,
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     input: B.Input
   ) where B: StreamBehaviorType {
     self.init(
-      behavior: AttachableBehavior(behavior: behavior),
+      behavior: AttachableBehavior(behavior: behavior, tracker: tracker),
       scope: scope,
-      manager: manager,
+      tracker: tracker,
       input: input
     )
   }
@@ -69,20 +69,20 @@ public struct ScopedBehavior<B: Behavior>: HandlerSurface {
   fileprivate init(
     behavior: AttachableBehavior<B>,
     scope: any BehaviorScoping,
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     input: B.Input
   ) {
     self.id = behavior.id
     self.behavior = behavior
     self.scope = scope
-    self.manager = manager
+    self.tracker = tracker
     self.input = input
   }
 
   // MARK: Public
 
   public var surface: Surface<B> {
-    .init(input: input, behavior: behavior, scope: scope, manager: manager)
+    .init(input: input, behavior: behavior, scope: scope, tracker: tracker)
   }
 
   // MARK: Internal
@@ -94,6 +94,6 @@ public struct ScopedBehavior<B: Behavior>: HandlerSurface {
   private let input: B.Input
   private let behavior: AttachableBehavior<B>
   private let scope: any BehaviorScoping
-  private let manager: BehaviorManager
+  private let tracker: BehaviorTracker
 
 }

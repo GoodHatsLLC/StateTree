@@ -69,61 +69,33 @@ extension Behaviors.SyncSingle: SyncBehaviorType where Failure == Handler.Failur
   @TreeActor
   public func start(
     input: Input,
-    handler: Behaviors.SingleHandler<Synchronous, Output, Failure>
+    handler: Behaviors.SingleHandler<Synchronous, Output, Failure>,
+    resolving resolution: Behaviors.Resolution
   )
-    -> Behaviors.Resolved
+    -> AnyDisposable
   {
     let producer = subscriber.subscribe(input: input)
     do {
       let out = try producer.resolve()
       handler.onResult(.success(out))
-      return .init(id: id, state: .finished)
+      Task {
+        await resolution.resolve(to: .finished) { }
+      }
+      return AnyDisposable { }
     } catch let error as Failure {
       handler.onResult(.failure(error))
-      return .init(id: id, state: .failed)
+      Task {
+        await resolution.resolve(to: .failed) { }
+      }
+      return AnyDisposable { }
     } catch {
-      return .init(id: id, state: .failed)
+      Task {
+        await resolution.resolve(to: .failed) { }
+      }
+      return AnyDisposable { }
     }
   }
 
-}
-
-extension Behaviors.SyncSingle where Failure == Error {
-
-  @TreeActor
-  func start(
-    input: Input,
-    handler: Behaviors.SingleHandler<Synchronous, Output, Failure>
-  )
-    -> Behaviors
-    .Resolved
-  {
-    let producer = subscriber.subscribe(input: input)
-    do {
-      let out = try producer.resolve()
-      handler.onResult(.success(out))
-      return .init(id: id, state: .finished)
-    } catch {
-      handler.onResult(.failure(error))
-      return .init(id: id, state: .failed)
-    }
-  }
-}
-
-extension Behaviors.SyncSingle where Failure == Never {
-
-  @TreeActor
-  func start(
-    input: Input,
-    handler: Behaviors.SingleHandler<Synchronous, Output, Failure>
-  )
-    -> Behaviors
-    .Resolved
-  {
-    let output = subscriber.subscribe(input: input)
-    handler.onResult(.success(output.resolve()))
-    return .init(id: id, state: .finished)
-  }
 }
 
 // MARK: - BehaviorSubscribeType

@@ -11,20 +11,20 @@ public struct Surface<B: Behavior>: HandlerSurface {
     input: B.Input,
     behavior: AttachableBehavior<B>,
     scope: any BehaviorScoping,
-    manager: BehaviorManager
+    tracker: BehaviorTracker
   ) {
     self.id = behavior.id
     self.input = input
     self.behavior = behavior
     self.scope = scope
-    self.manager = manager
+    self.tracker = tracker
   }
 
   let id: BehaviorID
   let input: B.Input
   let behavior: AttachableBehavior<B>
   let scope: any BehaviorScoping
-  let manager: BehaviorManager
+  let tracker: BehaviorTracker
 }
 
 // MARK: - HandlerSurface
@@ -44,7 +44,7 @@ extension HandlerSurface {
         handler: .init()
       )
     let (resolution, finalizer) = startable.start(
-      manager: surface.manager,
+      tracker: surface.tracker,
       input: surface.input,
       scope: surface.scope
     )
@@ -70,7 +70,7 @@ extension HandlerSurface where B.Handler: SingleHandlerType, B.Failure == Never 
         }
       ))
     let (_, finalizer) = startable.start(
-      manager: surface.manager,
+      tracker: surface.tracker,
       input: surface.input,
       scope: surface.scope
     )
@@ -92,7 +92,7 @@ extension HandlerSurface where B.Handler: SingleHandlerType, B.Failure == Never 
     let startable = surface.behavior
       .attach(handler: .init(onSuccess: onSuccess, onCancel: onCancel))
     let (resolution, finalizer) = startable.start(
-      manager: surface.manager,
+      tracker: surface.tracker,
       input: surface.input,
       scope: surface.scope
     )
@@ -118,7 +118,7 @@ extension HandlerSurface where B.Handler: SingleHandlerType, B.Failure == any Er
     let startable = surface.behavior
       .attach(handler: .init(onResult: onResult, onCancel: onCancel))
     let (resolution, finalizer) = startable.start(
-      manager: surface.manager,
+      tracker: surface.tracker,
       input: surface.input,
       scope: surface.scope
     )
@@ -149,7 +149,7 @@ extension HandlerSurface where B.Handler: StreamHandlerType {
         onCancel: onCancel
       ))
     let (resolution, finalizer) = startable.start(
-      manager: surface.manager,
+      tracker: surface.tracker,
       input: surface.input,
       scope: surface.scope
     )

@@ -10,10 +10,10 @@ import XCTest
 final class SyncSingleTests: XCTestCase {
 
   let stage = DisposableStage()
-  var manager: BehaviorManager!
+  var tracker: BehaviorTracker!
 
   override func setUp() {
-    manager = BehaviorManager()
+    tracker = BehaviorTracker()
   }
 
   override func tearDown() {
@@ -28,7 +28,7 @@ final class SyncSingleTests: XCTestCase {
         123_321
       }
     let res = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
       .onSuccess { value in
         XCTAssertEqual(value, 123_321)
         Task { await didSucceed.resolve(true) }
@@ -51,7 +51,7 @@ final class SyncSingleTests: XCTestCase {
         123
       }
     let scoped = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
 
     XCTAssertNil(
       scoped.value
@@ -65,14 +65,14 @@ final class SyncSingleTests: XCTestCase {
         123_555
       }
     let scoped = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
 
     XCTAssertEqual(
       scoped.value, 123_555,
       "the success value should be available as the behavior is not cancelled"
     )
-    try await manager.awaitReady()
-    try await manager.awaitFinished()
+    try await tracker.awaitReady()
+    try await tracker.awaitFinished()
   }
 
   @TreeActor
@@ -89,7 +89,7 @@ final class SyncSingleTests: XCTestCase {
         }
       }
     let scoped = behavior
-      .scoped(to: stage, manager: .init())
+      .scoped(to: stage, tracker: .init())
 
     let res = scoped
       .onResult { result in
@@ -107,8 +107,8 @@ final class SyncSingleTests: XCTestCase {
     let resolved = await res.value
     XCTAssertEqual(resolved.id, .id("test_throwing_sync_success"))
     XCTAssertEqual(resolved.state, .finished)
-    try await manager.awaitReady()
-    try await manager.awaitFinished()
+    try await tracker.awaitReady()
+    try await tracker.awaitFinished()
   }
 
   @TreeActor
@@ -125,7 +125,7 @@ final class SyncSingleTests: XCTestCase {
         }
       }
     let res = behavior
-      .scoped(to: stage, manager: .init())
+      .scoped(to: stage, tracker: .init())
       .onResult { result in
         guard
           case .failure(let error) = result,
@@ -142,8 +142,8 @@ final class SyncSingleTests: XCTestCase {
     let resolved = await res.value
     XCTAssertEqual(resolved.id, .id("test_throwing_sync_failure"))
     XCTAssertEqual(resolved.state, .failed)
-    try await manager.awaitReady()
-    try await manager.awaitFinished()
+    try await tracker.awaitReady()
+    try await tracker.awaitFinished()
   }
 
   @TreeActor
@@ -151,7 +151,7 @@ final class SyncSingleTests: XCTestCase {
     let initial = 123_321
     let replacement = 100_000
     var received: Int?
-    manager = .init(behaviorInterceptors: [
+    tracker = .init(behaviorInterceptors: [
       BehaviorInterceptor(
         id: .id("test_interception"),
         type: Behaviors.SyncSingle<Void, Int, Never>.self,
@@ -165,15 +165,15 @@ final class SyncSingleTests: XCTestCase {
         initial
       }
     _ = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
       .onSuccess { value in
         received = value
       } onCancel: {
         XCTFail()
       }
     XCTAssertEqual(received, replacement)
-    try await manager.awaitReady()
-    try await manager.awaitFinished()
+    try await tracker.awaitReady()
+    try await tracker.awaitFinished()
   }
 
   func test_inferredType_Throwing() async throws {

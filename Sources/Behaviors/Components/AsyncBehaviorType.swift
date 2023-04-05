@@ -20,34 +20,34 @@ extension AsyncBehaviorType {
 
   public func scoped(
     to scope: some BehaviorScoping,
-    manager: BehaviorManager
+    tracker: BehaviorTracker
   ) -> ScopedBehavior<Self> where Input == Void {
-    .init(behavior: self, scope: scope, manager: manager, input: ())
+    .init(behavior: self, scope: scope, tracker: tracker, input: ())
   }
 
   // MARK: Internal
 
   func scoped(
     to scope: some BehaviorScoping,
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     input: Input
   ) -> ScopedBehavior<Self> {
-    .init(behavior: self, scope: scope, manager: manager, input: input)
+    .init(behavior: self, scope: scope, tracker: tracker, input: input)
   }
 
   func scoped(
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     input: Input
   ) -> (scope: some Disposable, behavior: ScopedBehavior<Self>) {
     let stage = BehaviorStage()
-    return (stage, .init(behavior: self, scope: stage, manager: manager, input: input))
+    return (stage, .init(behavior: self, scope: stage, tracker: tracker, input: input))
   }
 
-  func scoped(manager: BehaviorManager)
+  func scoped(tracker: BehaviorTracker)
     -> (scope: some Disposable, behavior: ScopedBehavior<Self>) where Input == Void
   {
     let stage = BehaviorStage()
-    return (stage, .init(behavior: self, scope: stage, manager: manager, input: ()))
+    return (stage, .init(behavior: self, scope: stage, tracker: tracker, input: ()))
   }
 }
 

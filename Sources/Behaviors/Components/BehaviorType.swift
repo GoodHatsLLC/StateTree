@@ -21,11 +21,11 @@ extension Behavior {
 
   @discardableResult
   @TreeActor
-  public func run(manager: BehaviorManager, scope: some BehaviorScoping, input: Input) -> Behaviors
+  public func run(tracker: BehaviorTracker, scope: some BehaviorScoping, input: Input) -> Behaviors
     .Resolution
   {
-    let (resolution, finalizer) = StartableBehavior(behavior: self)
-      .start(manager: manager, input: input, scope: scope)
+    let (resolution, finalizer) = StartableBehavior(behavior: self, tracker: tracker)
+      .start(tracker: tracker, input: input, scope: scope)
     Task {
       await finalizer?()
     }
@@ -35,7 +35,7 @@ extension Behavior {
   @discardableResult
   @TreeActor
   public func run(
-    manager: BehaviorManager,
+    tracker: BehaviorTracker,
     scope: some BehaviorScoping,
     input: Input,
     handler: Handler
@@ -46,10 +46,14 @@ extension Behavior {
     case .async(let asyncB):
       guard let h = handler as? Behaviors.SingleHandler<Asynchronous, Output, Failure>
       else {
-        return .cancelled(id: id)
+        return .cancelled(id: id, tracker: tracker)
       }
-      let (resolution, finalizer) = StartableBehavior(behavior: asyncB, handler: h)
-        .start(manager: manager, input: input, scope: scope)
+      let (resolution, finalizer) = StartableBehavior(
+        behavior: asyncB,
+        handler: h,
+        tracker: tracker
+      )
+      .start(tracker: tracker, input: input, scope: scope)
       Task {
         await finalizer?()
       }
@@ -57,10 +61,10 @@ extension Behavior {
     case .sync(let syncB):
       guard let h = handler as? Behaviors.SingleHandler<Synchronous, Output, Failure>
       else {
-        return .cancelled(id: id)
+        return .cancelled(id: id, tracker: tracker)
       }
-      let (resolution, finalizer) = StartableBehavior(behavior: syncB, handler: h)
-        .start(manager: manager, input: input, scope: scope)
+      let (resolution, finalizer) = StartableBehavior(behavior: syncB, handler: h, tracker: tracker)
+        .start(tracker: tracker, input: input, scope: scope)
       Task {
         await finalizer?()
       }
@@ -68,10 +72,14 @@ extension Behavior {
     case .stream(let streamB):
       guard let h = handler as? Behaviors.StreamHandler<Asynchronous, Output, Failure>
       else {
-        return .cancelled(id: id)
+        return .cancelled(id: id, tracker: tracker)
       }
-      let (resolution, finalizer) = StartableBehavior(behavior: streamB, handler: h)
-        .start(manager: manager, input: input, scope: scope)
+      let (resolution, finalizer) = StartableBehavior(
+        behavior: streamB,
+        handler: h,
+        tracker: tracker
+      )
+      .start(tracker: tracker, input: input, scope: scope)
       Task {
         await finalizer?()
       }

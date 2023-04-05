@@ -62,7 +62,7 @@ public struct StateTreeInfo {
   /// Behaviors present here may not yet be started (``TreeLifetime/awaitReady()``)
   /// or resolved (``TreeLifetime/behaviorResolutions``).
   @TreeActor public var behaviors: [Behaviors.Resolution] {
-    runtime.behaviorManager.behaviors
+    runtime.behaviorTracker.behaviors
   }
 
   /// The pending ``Intent`` if one exists.

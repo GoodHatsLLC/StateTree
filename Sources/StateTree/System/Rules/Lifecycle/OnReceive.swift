@@ -26,9 +26,9 @@ public struct OnReceive<Value: Sendable>: Rules {
       .make(id, input: Void.self) {
         seq
       }
-    self.callback = { scope, manager in
+    self.callback = { scope, tracker in
       behavior.run(
-        manager: manager,
+        tracker: tracker,
         scope: scope,
         input: (),
         handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
@@ -43,7 +43,7 @@ public struct OnReceive<Value: Sendable>: Rules {
   }
 
   public mutating func applyRule(with context: RuleContext) throws {
-    callback(scope, context.runtime.behaviorManager)
+    callback(scope, context.runtime.behaviorTracker)
   }
 
   public mutating func removeRule(with _: RuleContext) throws {
@@ -57,7 +57,7 @@ public struct OnReceive<Value: Sendable>: Rules {
 
   // MARK: Private
 
-  private let callback: (any BehaviorScoping, BehaviorManager) -> Void
+  private let callback: (any BehaviorScoping, BehaviorTracker) -> Void
   private let scope: BehaviorStage = .init()
 }
 
@@ -84,9 +84,9 @@ extension OnReceive {
     let behavior: Behaviors.Stream<Void, Value, Error> = Behaviors.make(id, input: Void.self) {
       emitter
     }
-    self.callback = { scope, manager in
+    self.callback = { scope, tracker in
       behavior.run(
-        manager: manager,
+        tracker: tracker,
         scope: scope,
         input: (),
         handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
@@ -118,9 +118,9 @@ extension OnReceive {
     let behavior: Behaviors.Stream<Void, Value, Error> = Behaviors.make(id, input: Void.self) {
       publisher
     }
-    self.callback = { scope, manager in
+    self.callback = { scope, tracker in
       behavior.run(
-        manager: manager,
+        tracker: tracker,
         scope: scope,
         input: (),
         handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })

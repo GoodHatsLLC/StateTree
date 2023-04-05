@@ -47,7 +47,7 @@ public struct TreeLifetime<N: Node>: Disposable {
   public var behaviorResolutions: [Behaviors.Resolved] {
     get async {
       await runtime
-        .behaviorManager
+        .behaviorTracker
         .behaviorResolutions
     }
   }
@@ -68,11 +68,11 @@ public struct TreeLifetime<N: Node>: Disposable {
   /// so this method can be useful to wait until all behaviors in the state tree are ready to accept
   /// data.
   public func awaitReady(timeoutSeconds: Double? = nil) async throws {
-    try await runtime.behaviorManager.awaitReady(timeoutSeconds: timeoutSeconds)
+    try await runtime.behaviorTracker.awaitReady(timeoutSeconds: timeoutSeconds)
   }
 
   public func awaitFinished(timeoutSeconds: Double? = nil) async throws {
-    try await runtime.behaviorManager.awaitFinished(timeoutSeconds: timeoutSeconds)
+    try await runtime.behaviorTracker.awaitFinished(timeoutSeconds: timeoutSeconds)
   }
 
   /// Shut down the tree removing all nodes and ending all behavior.
@@ -118,7 +118,7 @@ public struct TreeLifetime<N: Node>: Disposable {
     -> [Behaviors.Resolved]
   {
     try await runtime
-      .behaviorManager
+      .behaviorTracker
       .behaviorResolutions(timeoutSeconds: timeoutSeconds)
   }
 

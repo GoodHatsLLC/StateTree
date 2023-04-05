@@ -8,17 +8,31 @@ extension Behaviors {
 
     // MARK: Lifecycle
 
-    init(id: BehaviorID, value: Resolved? = nil) {
+    init(
+      id: BehaviorID,
+      tracker: BehaviorTracker,
+      value: Resolved? = nil
+    ) {
       self.id = id
       let res: Async.Value<Resolved>
       let started: Async.Value<Void>
+      let isFinished: Bool
       if let value {
         (res, started) = (Async.Value<Resolved>(value: value), Async.Value<Void>(value: ()))
+        isFinished = true
       } else {
         (res, started) = (.init(), .init())
+        isFinished = false
       }
       self.resolution = res
       self.started = started
+      let (startedCallback, finishedCallback) = tracker.trackCreate(resolution: self)
+      self.startedCallback = startedCallback
+      self.finishedCallback = finishedCallback
+      if isFinished {
+        startedCallback()
+        finishedCallback()
+      }
     }
 
     // MARK: Public
@@ -45,17 +59,22 @@ extension Behaviors {
 
     // MARK: Internal
 
-    static func cancelled(id: BehaviorID) -> Resolution {
-      Self(id: id, value: .init(id: id, state: .cancelled))
+    static func cancelled(id: BehaviorID, tracker: BehaviorTracker) -> Resolution {
+      Self(id: id, tracker: tracker, value: .init(id: id, state: .cancelled))
     }
 
     func markStarted() async {
       await started.resolve(())
+      startedCallback?()
     }
 
-    func resolve(to state: Resolved.State, act: @escaping () async -> Void = { }) async {
+    func resolve(
+      to state: Resolved.State,
+      act: @escaping () async -> Void = { }
+    ) async {
       await started.resolve(())
       await resolution.resolve(.init(id: id, state: state), act: act)
+      finishedCallback?()
     }
 
     func ifMatching(
@@ -66,6 +85,9 @@ extension Behaviors {
     }
 
     // MARK: Private
+
+    private var startedCallback: (@Sendable () -> Void)?
+    private var finishedCallback: (@Sendable () -> Void)?
 
     private let resolution: Async.Value<Resolved>
     private let started: Async.Value<Void>

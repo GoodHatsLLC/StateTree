@@ -24,16 +24,15 @@ struct ActivatedBehavior: Disposable, Hashable {
     behavior: Behavior,
     input: Behavior.Input,
     handler: Behavior.Handler,
-    resolution: inout Behaviors.Resolution
+    resolution: Behaviors.Resolution
   ) where Behavior.Handler: HandlerType {
     self.id = behavior.id
-    let res = behavior
+    self.disposable = behavior
       .start(
         input: input,
-        handler: handler
+        handler: handler,
+        resolving: resolution
       )
-    resolution = .init(id: behavior.id, value: res)
-    self.disposable = AnyDisposable { }
   }
 
   init<Behavior: StreamBehaviorType>(

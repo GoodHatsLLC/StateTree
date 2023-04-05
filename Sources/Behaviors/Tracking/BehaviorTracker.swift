@@ -3,14 +3,14 @@ import Foundation
 import TreeActor
 @_spi(Implementation) import Utilities
 
-// MARK: - BehaviorManager
+// MARK: - BehaviorTracker
 
-public final class BehaviorManager {
+public final class BehaviorTracker {
 
   // MARK: Lifecycle
 
   public init(
-    tracking: Tracking = .indefinitely,
+    tracking: Tracking = .defaults,
     behaviorInterceptors: [BehaviorInterceptor] = []
   ) {
     self.tracking = tracking
@@ -24,17 +24,18 @@ public final class BehaviorManager {
 
   // MARK: Public
 
-  /// FIXME: implement
   /// Whether to track ``Behavior`` instances created during the runtime.
   /// ``BehaviorTrackingConfig/track`` is required to enable `await`ing
   /// ``TreeLifetime/behaviorResolutions`` in unit tests.
   public enum Tracking {
-    /// Track ``Behavior`` instances only until they have begun acting.
-    ///
-    /// Behaviors are always tracked until they have been subscribed to.
-    /// This allows async code to wait to act by `await`ing ``BehaviorManager/awaitReady()``
-    /// or the equivalent method on the `TreeLifetime`,
-    case untilSubscribed
+
+    public static var defaults: Tracking {
+      #if DEBUG
+        .indefinitely
+      #else
+        .untilComplete
+      #endif
+    }
 
     /// Track ``Behavior`` instances until they have completed or cancelled.
     ///
@@ -111,9 +112,22 @@ public final class BehaviorManager {
     behaviorInterceptors[behavior.id]?.intercept(behavior: &behavior, input: input)
   }
 
-  nonisolated func track(resolution: Behaviors.Resolution) {
-    // FIXME: implement trackingConfig
-    trackedBehaviors.withLock { $0.insert(resolution) }
+  nonisolated func trackCreate(
+    resolution: Behaviors
+      .Resolution
+  ) -> (started: @Sendable () -> Void, finished: @Sendable () -> Void) {
+    trackedBehaviors
+      .withLock { $0.insert(resolution) }
+
+    return (
+      started: { },
+      finished: {
+        if self.tracking == .untilComplete {
+          self.trackedBehaviors
+            .withLock { $0.remove(resolution) }
+        }
+      }
+    )
   }
 
   // MARK: Private
@@ -123,7 +137,7 @@ public final class BehaviorManager {
   private let tracking: Tracking
 }
 
-extension BehaviorManager {
+extension BehaviorTracker {
 
   public nonisolated func behaviorResolutions(timeoutSeconds: Double? = nil) async throws
     -> [Behaviors.Resolved]

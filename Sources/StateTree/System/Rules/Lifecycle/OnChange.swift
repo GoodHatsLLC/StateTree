@@ -24,8 +24,8 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.SyncSingle<Input, Void, Never> = Behaviors
       .make(id, input: Input.self) { action($0) }
-    self.callback = { scope, manager, input in
-      behavior.run(manager: manager, scope: scope, input: input)
+    self.callback = { scope, tracker, input in
+      behavior.run(tracker: tracker, scope: scope, input: input)
     }
   }
 
@@ -41,8 +41,8 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.AsyncSingle<Input, Void, Never> = Behaviors
       .make(id, input: B.Input.self) { await action($0) }
-    self.callback = { scope, manager, input in
-      behavior.run(manager: manager, scope: scope, input: input)
+    self.callback = { scope, tracker, input in
+      behavior.run(tracker: tracker, scope: scope, input: input)
     }
   }
 
@@ -63,9 +63,9 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
       .make(id, input: Input.self) {
         await behaviorFunc($0)
       }
-    self.callback = { scope, manager, value in
+    self.callback = { scope, tracker, value in
       behavior.run(
-        manager: manager,
+        tracker: tracker,
         scope: scope,
         input: value,
         handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
@@ -84,8 +84,8 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
     if let id = id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, manager, value in
-      behavior.run(manager: manager, scope: scope, input: value)
+    self.callback = { scope, tracker, value in
+      behavior.run(tracker: tracker, scope: scope, input: value)
     }
   }
 
@@ -103,8 +103,8 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
     if let id = id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, manager, value in
-      behavior.run(manager: manager, scope: scope, input: value, handler: handler)
+    self.callback = { scope, tracker, value in
+      behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
     }
   }
 
@@ -120,7 +120,7 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
   }
 
   public mutating func applyRule(with context: RuleContext) throws {
-    callback(scope, context.runtime.behaviorManager, value)
+    callback(scope, context.runtime.behaviorTracker, value)
   }
 
   public mutating func removeRule(with _: RuleContext) throws {
@@ -134,13 +134,13 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
     if other.value != value {
       scope.reset()
       value = other.value
-      callback(scope, context.runtime.behaviorManager, value)
+      callback(scope, context.runtime.behaviorTracker, value)
     }
   }
 
   // MARK: Private
 
   private var value: B.Input
-  private let callback: (any BehaviorScoping, BehaviorManager, B.Input) -> Void
+  private let callback: (any BehaviorScoping, BehaviorTracker, B.Input) -> Void
   private let scope: BehaviorStage = .init()
 }

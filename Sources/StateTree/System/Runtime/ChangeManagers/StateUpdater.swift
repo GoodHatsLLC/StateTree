@@ -109,7 +109,7 @@ final class StateUpdater: ChangeManager {
     // future calls to this function methods.
     func addChangesToQueue(_ changes: TreeChanges) throws {
       // Added scopes have been built by a router rule and registered
-      // with the manager via `updateRoutedNodes(at:to:)`.
+      // with the tracker via `updateRoutedNodes(at:to:)`.
       // The scopes have not yet been started or reacted to their
       // initial state.
       //

@@ -10,10 +10,10 @@ import XCTest
 final class AsyncSingleTests: XCTestCase {
 
   let stage = DisposableStage()
-  var manager: BehaviorManager!
+  var tracker: BehaviorTracker!
 
   override func setUp() {
-    manager = BehaviorManager()
+    tracker = BehaviorTracker()
   }
 
   override func tearDown() {
@@ -27,7 +27,7 @@ final class AsyncSingleTests: XCTestCase {
         123_321
       }
     let scoped = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
 
     let res = scoped
       .onSuccess { value in
@@ -52,13 +52,13 @@ final class AsyncSingleTests: XCTestCase {
         123
       }
     behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
       .onResult { _ in
         XCTFail()
       } onCancel: {
         didCancel = true
       }
-    try await manager.awaitReady()
+    try await tracker.awaitReady()
     XCTAssert(didCancel)
   }
 
@@ -70,7 +70,7 @@ final class AsyncSingleTests: XCTestCase {
       .make(.auto(), input: Void.self) { () async -> Int in
         await never.value
       }
-    let scoped = behavior.scoped(to: stage, manager: manager)
+    let scoped = behavior.scoped(to: stage, tracker: tracker)
     Task {
       await Flush.tasks()
       stage.dispose()
@@ -81,7 +81,7 @@ final class AsyncSingleTests: XCTestCase {
     } onCancel: {
       didCancel = true
     }
-    try await manager.awaitFinished()
+    try await tracker.awaitFinished()
     XCTAssert(didCancel)
     let didRun = await didRunTask.value
     XCTAssert(didRun)
@@ -100,7 +100,7 @@ final class AsyncSingleTests: XCTestCase {
         }
       }
     let scoped = behavior
-      .scoped(to: stage, manager: .init())
+      .scoped(to: stage, tracker: .init())
     let res = scoped
       .onResult { result in
         guard case .success(let value) = result
@@ -133,7 +133,7 @@ final class AsyncSingleTests: XCTestCase {
         }
       }
     let res = behavior
-      .scoped(to: stage, manager: .init())
+      .scoped(to: stage, tracker: .init())
       .onResult { result in
         guard
           case .failure(let error) = result,
@@ -156,7 +156,7 @@ final class AsyncSingleTests: XCTestCase {
     let initial = 123_321
     let replacement = 100_000
     var received: Int?
-    manager = .init(behaviorInterceptors: [
+    tracker = .init(behaviorInterceptors: [
       BehaviorInterceptor(
         id: .id("test_interception"),
         type: Behaviors.AsyncSingle<Void, Int, Error>.self,
@@ -168,7 +168,7 @@ final class AsyncSingleTests: XCTestCase {
         initial
       }
     _ = behavior
-      .scoped(to: stage, manager: manager)
+      .scoped(to: stage, tracker: tracker)
       .onResult {
         switch $0 {
         case .success(let value):
@@ -177,7 +177,7 @@ final class AsyncSingleTests: XCTestCase {
           XCTFail()
         }
       }
-    try await manager.awaitFinished()
+    try await tracker.awaitFinished()
     XCTAssertEqual(received, replacement)
   }
 

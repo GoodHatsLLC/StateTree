@@ -160,8 +160,8 @@ extension Runtime {
       || changeManager != nil
   }
 
-  var behaviorManager: BehaviorManager {
-    configuration.behaviorManager
+  var behaviorTracker: BehaviorTracker {
+    configuration.behaviorTracker
   }
 
   var activeIntent: ActiveIntent? {
