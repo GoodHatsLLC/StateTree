@@ -24,7 +24,7 @@ public final class Runtime {
 
   // MARK: Public
 
-  public var updateEmitter: some Emitting<NodeChange> {
+  public var updateEmitter: some Emitter<NodeChange> {
     updateSubject
   }
 
@@ -100,7 +100,7 @@ extension Runtime {
 // MARK: Computed properties
 extension Runtime {
 
-  var didStabilizeEmitter: some Emitting<Void> {
+  var didStabilizeEmitter: some Emitter<Void> {
     didStabilizeSubject
   }
 

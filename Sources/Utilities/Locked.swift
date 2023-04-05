@@ -1,37 +1,53 @@
 // MARK: - Locked
 
 /// A lock wrapper which protects an instance of its generic `T` type with
-/// the best **general purpose** and **non-recursive** lock available
-/// in the compiled environment
-public struct Locked<T>: LockedValue {
+/// the best available **general purpose**, **non-recursive**, lock available
+/// to the platform.
+///
+/// Use `Locked` only if details of the underlying lock implementation are non-critical.
+///
+/// > Info: The current implementation prefers locks as follows:
+/// 1. `OSAllocatedUnfairLock`
+/// 2. `NSLock`
+/// 3. `pthread_mutex_t`
+public struct Locked<T> {
 
   // MARK: Lifecycle
 
-  /// Create a new ``Locked`` protecting the given instance.
+  /// Create a non-recursive``Locked`` protecting the given instance of `T`.
+  ///
+  /// - Parameters:
+  ///   - value: the instance to be protected by the lock.
+  @inline(__always)
   public init(_ value: T) {
-    let lock = Self.make(for: value)
-    self.underlying = lock
-    self.withLockImpl = { act in
-      lock.lock()
-      defer { lock.unlock() }
-      return act(&lock.unsafe_wrapped)
-    }
+    self.underlying = Self.make(for: value)
+  }
+
+  /// Create a non-recursive ``Locked`` that doesn't protect an instance
+  /// but instead provides lower level ``lock()`` and ``unlock()`` access.
+  ///
+  /// - Parameters:
+  ///   - value: the instance to be protected by the lock.
+  @inline(__always)
+  public init() where T == Void {
+    self.underlying = Self.make(for: ())
   }
 
   // MARK: Public
 
   /// Exclusive `{ get set }` access to the protected value.
   ///
-  /// > Note: Use ``withLock(_:)`` instead of this accessor when
-  /// atomic read-evaluate-write access is needed.
-  public var value: T {
+  /// > Note: Use ``withLock(action:)-7qgic`` for atomic
+  /// read-evaluate-write access to the underlying variable.
+  @inline(__always)  public var value: T {
     get {
       withLock { $0 }
     }
     nonmutating _modify {
-      underlying.lock()
-      yield &underlying.unsafe_wrapped
-      underlying.unlock()
+      let lock = underlying
+      lock.lock()
+      yield &lock.unsafe_wrapped
+      lock.unlock()
     }
     nonmutating set {
       withLock { $0 = newValue }
@@ -39,17 +55,56 @@ public struct Locked<T>: LockedValue {
   }
 
   /// Take exclusive read-write access to the underlying protected `T` instance returning
-  /// any value returned by the given closure.
+  /// any value it returns
+  ///
+  /// - Parameters:
+  ///   - action: A closure accepting an `inout` instance of `T` and optionally returning a value of
+  /// `aT`.
+  /// - Returns: The instance of `aT` created by the action.
+  @inline(__always)
   @discardableResult
-  public func withLock<aT>(_ act: (inout T) -> aT) -> aT {
-    withLockImpl(act) as! aT
+  public func withLock<aT>(action: (inout T) throws -> aT) rethrows -> aT {
+    let lock = underlying
+    lock.lock()
+    defer { lock.unlock() }
+    return try action(&lock.unsafe_wrapped)
   }
 
   // MARK: Private
 
-  private let withLockImpl: ((inout T) -> Any) -> Any
   private let underlying: any LockType<T>
+}
 
+extension Locked where T == Void {
+  /// Take exclusive access to the lock while executing the passed closure returning
+  /// any value it returns.
+  ///
+  /// - Parameters:
+  ///   - action: A closure accepting an `inout` instance of `T` and optionally returning a value of
+  /// `aT`.
+  /// - Returns: The instance of `aT` created by the action.
+  @inline(__always)
+  @discardableResult
+  public func withLock<P>(action: () throws -> P) rethrows -> P {
+    let lock = underlying
+    lock.lock()
+    defer { lock.unlock() }
+    return try action()
+  }
+
+  /// Take exclusive access to the lock.
+  ///
+  /// Prefer ``withLock(action:)-7ntrz``.
+  @inline(__always)
+  public func lock() {
+    underlying.lock()
+  }
+
+  /// Release exclusive access taken with ``lock()``
+  @inline(__always)
+  public func unlock() {
+    underlying.unlock()
+  }
 }
 
 // MARK: Sendable
@@ -73,15 +128,6 @@ extension Locked {
   }
 }
 
-// MARK: - LockedValue
-
-private protocol LockedValue<T> {
-  associatedtype T
-  @discardableResult
-  init(_: T)
-  func withLock<aT>(_: (inout T) -> aT) -> aT
-}
-
 // MARK: - LockType
 
 private protocol LockType<T>: AnyObject {
@@ -90,7 +136,7 @@ private protocol LockType<T>: AnyObject {
   func lock()
   @inline(__always)
   func unlock()
-  var unsafe_wrapped: T { get set }
+  @inline(__always)  var unsafe_wrapped: T { get set }
 }
 
 #if canImport(Foundation)
@@ -99,6 +145,7 @@ private final class NSLocked<T>: LockType {
 
   // MARK: Lifecycle
 
+  @inline(__always)
   fileprivate init(_ value: T) {
     self.unsafe_wrapped = value
   }
@@ -130,6 +177,7 @@ private final class OSUnfairLocked<T>: LockType {
 
   // MARK: Lifecycle
 
+  @inline(__always)
   fileprivate init(_ value: T) {
     self.oslock = .init(initialState: ())
     self.unsafe_wrapped = value
@@ -161,6 +209,7 @@ private final class PThreadLock<T>: LockType {
 
   // MARK: Lifecycle
 
+  @inline(__always)
   fileprivate init(_ value: T) {
     self.unsafe_wrapped = value
   }

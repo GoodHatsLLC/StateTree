@@ -188,8 +188,10 @@ public struct Route<Router: RouterType>: RouteField {
   /// Route to the passed ``Node``, attaching it to the NodeTree ``Tree`` as a sub-node of the
   /// routing node.
   ///
-  /// > Parameters:
-  /// - to: A closure building the node — within the wrapper required by the route if required.
+  /// - Parameters:
+  ///   - to: A closure returning a ``Node`` instance. If building a node for a union-type route, it
+  /// should be
+  ///   wrapped in a union type indicator. i.e. `.a(node)`, `.b(node)`, or `.c(node)`.
   ///
   /// A single-type `Route` doesn't require a wrapper. A union type `Route` requires a wrapper
   /// identifying the

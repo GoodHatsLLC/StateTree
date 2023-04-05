@@ -44,7 +44,7 @@ final class Reporter<N: Node> {
     onStopSubscribers.removeValue(forKey: subscriber)
   }
 
-  func start() -> AnyDisposable {
+  func start() -> AutoDisposable {
     scope
       .runtime
       .updateEmitter
@@ -80,7 +80,7 @@ final class Reporter<N: Node> {
   private let id: NodeID
   private var onChangeSubscribers: [ObjectIdentifier: [@Sendable @TreeActor () -> Void]] = [:]
   private var onStopSubscribers: [ObjectIdentifier: [@Sendable @TreeActor () -> Void]] = [:]
-  private var disposable: AnyDisposable?
+  private var disposable: AutoDisposable?
   private var runtime: Runtime?
 
 }

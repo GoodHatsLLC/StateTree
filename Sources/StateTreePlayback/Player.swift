@@ -23,7 +23,7 @@ public final class Player<Root: Node>: Disposable {
 
   public let frames: [StateFrame]
 
-  public var currentFrameIndex: some Emitting<Int> { current }
+  public var currentFrameIndex: some Emitter<Int> { current }
 
   public var currentFrame: StateFrame {
     frames[current.value]
@@ -39,6 +39,10 @@ public final class Player<Root: Node>: Disposable {
         current.value = newValue
       }
     }
+  }
+
+  public var isDisposed: Bool {
+    stage.isDisposed
   }
 
   @TreeActor

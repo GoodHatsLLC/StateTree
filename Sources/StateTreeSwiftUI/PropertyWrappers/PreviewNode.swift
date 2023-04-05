@@ -1,4 +1,5 @@
 @_spi(Implementation) import StateTree
+@_spi(Implementation) import Disposable
 import StateTreePlayback
 import SwiftUI
 
@@ -68,7 +69,7 @@ public struct PreviewLife<N: Node> {
         dependencies: dependencies,
         configuration: .init()
       )
-    life.stageOneByLocation(fileID: moduleFile, line: line, column: column)
+    life.stageByUniqueCallSite(fileID: moduleFile, line: line, column: column)
     return TreeNode(scope: life.root)
   }
 

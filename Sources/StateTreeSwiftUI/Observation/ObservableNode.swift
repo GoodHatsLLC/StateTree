@@ -54,6 +54,6 @@ final class ObservableNode<N: Node>: ObservableObject {
 
   // MARK: Private
 
-  private var disposable: AnyDisposable?
+  private var disposable: AutoDisposable?
 
 }

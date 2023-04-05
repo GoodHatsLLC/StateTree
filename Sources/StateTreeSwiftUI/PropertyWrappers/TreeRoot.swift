@@ -61,5 +61,5 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
 
   // MARK: Private
 
-  private var disposable: AnyDisposable?
+  private var disposable: AutoDisposable?
 }

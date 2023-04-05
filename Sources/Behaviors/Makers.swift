@@ -190,7 +190,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping (_ input: Input) async -> some Emitting<Output>
+    subscribe: @escaping (_ input: Input) async -> some Emitter<Output>
   ) -> Stream<Input, Output, Error> {
     let id = id ?? .meta(
       moduleFile: moduleFile,
@@ -227,7 +227,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping (_ input: Input) -> some Emitting<Output>
+    subscribe: @escaping (_ input: Input) -> some Emitter<Output>
   ) -> Stream<Input, Output, Error> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "stream-emitter")
     return make(id, input: input) {

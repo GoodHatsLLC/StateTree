@@ -91,6 +91,6 @@ public final class PublishedNode<N: Node> {
 
   // MARK: Private
 
-  private var disposable: AnyDisposable?
+  private var disposable: AutoDisposable?
 
 }

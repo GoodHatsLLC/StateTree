@@ -73,7 +73,7 @@ extension Behaviors.AsyncSingle: AsyncBehaviorType where Failure == Handler.Fail
     handler: Handler,
     resolving resolution: Behaviors.Resolution
   ) async
-    -> AnyDisposable
+    -> AutoDisposable
   {
     let producer = await subscriber.subscribe(input: input)
     return Disposables.Task.detached {
@@ -95,7 +95,7 @@ extension Behaviors.AsyncSingle: AsyncBehaviorType where Failure == Handler.Fail
           await handler.onCancel()
         }
       }
-    }.erase()
+    }.auto()
   }
 
   // MARK: Internal

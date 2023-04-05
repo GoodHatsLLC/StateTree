@@ -52,7 +52,7 @@ extension Tree {
     )
 
     assert(runtime.isConsistent)
-    let disposable = AnyDisposable {
+    let disposable = AutoDisposable {
       assert(runtime.isConsistent)
       runtime.stop()
       assert(runtime.isConsistent)

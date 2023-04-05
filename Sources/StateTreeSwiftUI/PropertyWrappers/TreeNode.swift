@@ -53,7 +53,7 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
 
   // MARK: Private
 
-  private var disposable: AnyDisposable?
+  private var disposable: AutoDisposable?
 }
 
 // MARK: Identifiable

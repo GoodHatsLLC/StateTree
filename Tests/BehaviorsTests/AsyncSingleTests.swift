@@ -32,7 +32,7 @@ final class AsyncSingleTests: XCTestCase {
     let res = scoped
       .onSuccess { value in
         XCTAssertEqual(value, 123_321)
-        Task { await didSucceed.resolve(true) }
+        Task { await didSucceed.resolve(to: true) }
       } onCancel: {
         XCTFail()
       }
@@ -74,7 +74,7 @@ final class AsyncSingleTests: XCTestCase {
     Task {
       await Flush.tasks()
       stage.dispose()
-      await didRunTask.resolve(true)
+      await didRunTask.resolve(to: true)
     }
     _ = scoped.onSuccess { _ in
       XCTFail()
@@ -109,7 +109,7 @@ final class AsyncSingleTests: XCTestCase {
           return
         }
         XCTAssertEqual(234_124, value)
-        Task { await didSucceed.resolve(true) }
+        Task { await didSucceed.resolve(to: true) }
       } onCancel: {
         XCTFail()
       }

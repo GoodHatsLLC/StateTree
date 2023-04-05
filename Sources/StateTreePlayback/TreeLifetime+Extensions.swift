@@ -20,8 +20,8 @@ extension TreeLifetime {
   // MARK: Internal
 
   /// A `nonisolated` snapshot accessor that can be used in an emitter chain.
-  nonisolated func stateFrameSnapshot() -> some Emitting<StateFrame> {
-    Emitter.create(StateFrame.self) { emit in
+  nonisolated func stateFrameSnapshot() -> some Emitter<StateFrame> {
+    Emitters.create(StateFrame.self) { emit in
       Task { @TreeActor in
         emit(
           .value(

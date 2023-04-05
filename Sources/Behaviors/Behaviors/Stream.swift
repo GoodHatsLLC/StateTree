@@ -50,7 +50,7 @@ extension Behaviors {
       handler: Handler,
       resolving resolution: Behaviors.Resolution
     ) async
-      -> AnyDisposable
+      -> AutoDisposable
     {
       let producer = await subscriber.subscribe(input: input)
       let iterator = producer.makeAsyncIterator()
@@ -75,7 +75,7 @@ extension Behaviors {
           }
         }
       }
-      return AnyDisposable {
+      return AutoDisposable {
         task.cancel()
         Task {
           await resolution.resolve(to: .cancelled) {

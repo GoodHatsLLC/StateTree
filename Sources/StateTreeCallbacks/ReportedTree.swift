@@ -39,12 +39,12 @@ public final class ReportedTree<N: Node> {
     let (reported, lifetime) = try reportedFunc()
     self.lifetime = lifetime
     subject.emit(value: reported)
-    let asyncValue = Async.ThrowingValue<Void>()
+    let asyncValue = Async.Value<Void>()
     reported.onStop(subscriber: self) {
-      Task { await asyncValue.resolve(()) }
+      Task { await asyncValue.resolve() }
     }
-    return try await withTaskCancellationHandler {
-      try await asyncValue.value
+    return await withTaskCancellationHandler {
+      await asyncValue.value
     } onCancel: {
       lifetime.dispose()
     }

@@ -12,7 +12,7 @@ public protocol StreamBehaviorType<Input, Output, Failure>: BehaviorType
     handler: Handler,
     resolving: Behaviors.Resolution
   ) async
-    -> AnyDisposable
+    -> AutoDisposable
 }
 
 extension StreamBehaviorType {

@@ -31,7 +31,7 @@ final class SyncSingleTests: XCTestCase {
       .scoped(to: stage, tracker: tracker)
       .onSuccess { value in
         XCTAssertEqual(value, 123_321)
-        Task { await didSucceed.resolve(true) }
+        Task { await didSucceed.resolve(to: true) }
       } onCancel: {
         XCTFail()
       }

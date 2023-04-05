@@ -48,6 +48,10 @@ public struct BehaviorStage: BehaviorScoping, Disposable {
     stage.dispose()
   }
 
+  public var isDisposed: Bool {
+    stage.isDisposed
+  }
+
 }
 
 extension BehaviorScoping {

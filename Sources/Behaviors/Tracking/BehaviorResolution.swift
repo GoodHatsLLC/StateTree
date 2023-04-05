@@ -64,7 +64,7 @@ extension Behaviors {
     }
 
     func markStarted() async {
-      await started.resolve(())
+      await started.resolve()
       startedCallback?()
     }
 
@@ -72,8 +72,8 @@ extension Behaviors {
       to state: Resolved.State,
       act: @escaping () async -> Void = { }
     ) async {
-      await started.resolve(())
-      await resolution.resolve(.init(id: id, state: state), act: act)
+      await started.resolve()
+      await resolution.resolve(to: .init(id: id, state: state), action: act)
       finishedCallback?()
     }
 
@@ -81,7 +81,7 @@ extension Behaviors {
       _ filter: (_ value: Resolved.State?) -> Bool,
       run act: @escaping () async -> Void
     ) async {
-      await resolution.ifMatching({ filter($0?.state) }, run: act)
+      await resolution.ifMatching({ filter($0?.state) }, action: act)
     }
 
     // MARK: Private

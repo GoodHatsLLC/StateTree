@@ -55,6 +55,10 @@ struct ActivatedBehavior: Disposable, Hashable {
 
   let id: BehaviorID
 
+  var isDisposed: Bool {
+    disposable.isDisposed
+  }
+
   static func == (lhs: ActivatedBehavior, rhs: ActivatedBehavior) -> Bool {
     lhs.id == rhs.id
   }
@@ -69,5 +73,5 @@ struct ActivatedBehavior: Disposable, Hashable {
 
   // MARK: Private
 
-  private let disposable: AnyDisposable
+  private let disposable: AutoDisposable
 }

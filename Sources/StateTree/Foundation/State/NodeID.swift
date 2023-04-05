@@ -62,7 +62,7 @@ public struct NodeID: TreeState, LosslessStringConvertible {
   }
 
   #if DEBUG
-  public static func incrementForTesting() -> AnyDisposable {
+  public static func incrementForTesting() -> AutoDisposable {
     incrementingForTesting = 1
     return .init {
       incrementingForTesting = nil

@@ -5,7 +5,7 @@ import TreeActor
 
 public protocol SyncBehaviorType<Input, Output, Failure>: BehaviorType {
   var subscriber: Behaviors.SyncSubscriber<Input, Output, Failure> { get }
-  func start(input: Input, handler: Handler, resolving: Behaviors.Resolution) -> AnyDisposable
+  func start(input: Input, handler: Handler, resolving: Behaviors.Resolution) -> AutoDisposable
 }
 
 extension SyncBehaviorType {

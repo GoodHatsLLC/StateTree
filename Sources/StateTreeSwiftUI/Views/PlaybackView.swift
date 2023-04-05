@@ -227,7 +227,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
   @State var popoverFrame: StateFrame?
   @State var frameRange: ClosedRange<Double> = 0.0 ... 1.0
   @State var mode: PlaybackMode
-  @State var disposable: AnyDisposable?
+  @State var disposable: AutoDisposable?
   @State var control: ControlMode
 
   // MARK: Private

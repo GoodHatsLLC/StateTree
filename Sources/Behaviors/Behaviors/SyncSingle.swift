@@ -72,7 +72,7 @@ extension Behaviors.SyncSingle: SyncBehaviorType where Failure == Handler.Failur
     handler: Behaviors.SingleHandler<Synchronous, Output, Failure>,
     resolving resolution: Behaviors.Resolution
   )
-    -> AnyDisposable
+    -> AutoDisposable
   {
     let producer = subscriber.subscribe(input: input)
     do {
@@ -81,18 +81,18 @@ extension Behaviors.SyncSingle: SyncBehaviorType where Failure == Handler.Failur
       Task {
         await resolution.resolve(to: .finished) { }
       }
-      return AnyDisposable { }
+      return AutoDisposable { }
     } catch let error as Failure {
       handler.onResult(.failure(error))
       Task {
         await resolution.resolve(to: .failed) { }
       }
-      return AnyDisposable { }
+      return AutoDisposable { }
     } catch {
       Task {
         await resolution.resolve(to: .failed) { }
       }
-      return AnyDisposable { }
+      return AutoDisposable { }
     }
   }
 

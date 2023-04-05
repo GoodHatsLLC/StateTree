@@ -11,7 +11,7 @@ public struct TreeLifetime<N: Node>: Disposable {
 
   // MARK: Lifecycle
 
-  init(runtime: Runtime, root: NodeScope<N>, rootID: NodeID, disposable: AnyDisposable) {
+  init(runtime: Runtime, root: NodeScope<N>, rootID: NodeID, disposable: AutoDisposable) {
     self.runtime = runtime
     self.root = root
     self.rootID = rootID
@@ -38,7 +38,7 @@ public struct TreeLifetime<N: Node>: Disposable {
   @TreeActor public var rootNode: N { root.node }
 
   /// A stream of notifications updates emitted when nodes are updated.
-  @TreeActor public var updates: some Emitting<NodeChange> { runtime.updateEmitter }
+  @TreeActor public var updates: some Emitter<NodeChange> { runtime.updateEmitter }
 
   /// Metadata about the current ``Tree`` and ``TreeLifetime``.
   @TreeActor public var info: StateTreeInfo { runtime.info }
@@ -50,6 +50,10 @@ public struct TreeLifetime<N: Node>: Disposable {
         .behaviorTracker
         .behaviorResolutions
     }
+  }
+
+  public nonisolated var isDisposed: Bool {
+    disposable.isDisposed
   }
 
   /// Await inflight asynchronous `Behavior` subscriptions.
@@ -155,6 +159,6 @@ public struct TreeLifetime<N: Node>: Disposable {
 
   // MARK: Private
 
-  private let disposable: AnyDisposable
+  private let disposable: AutoDisposable
 
 }

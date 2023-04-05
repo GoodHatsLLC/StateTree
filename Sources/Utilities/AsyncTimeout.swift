@@ -12,12 +12,12 @@ extension Async {
     let signal = Async.Value<Result<T, Timeout>>()
     Task {
       let x = await action()
-      await signal.resolve(.success(x))
+      await signal.resolve(to: .success(x))
     }
     if let seconds {
       Task {
         try await Task.sleep(nanoseconds: UInt64(seconds * Double(NSEC_PER_SEC)))
-        await signal.resolve(.failure(Timeout()))
+        await signal.resolve(to: .failure(Timeout()))
       }
     }
     return await signal.value
@@ -32,15 +32,15 @@ extension Async {
     Task {
       do {
         let x = try await action()
-        await signal.resolve(.success(.success(x)))
+        await signal.resolve(to: .success(.success(x)))
       } catch {
-        await signal.resolve(.success(.failure(error)))
+        await signal.resolve(to: .success(.failure(error)))
       }
     }
     if let seconds {
       Task {
         try await Task.sleep(nanoseconds: UInt64(seconds * Double(NSEC_PER_SEC)))
-        await signal.resolve(.failure(Timeout()))
+        await signal.resolve(to: .failure(Timeout()))
       }
     }
     return await signal.value

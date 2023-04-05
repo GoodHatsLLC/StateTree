@@ -98,11 +98,11 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
-      "0.7.0" ..< "0.8.0"
+      "0.8.0" ..< "0.9.0"
     ),
     .package(
       url: "https://github.com/GoodHatsLLC/Emitter.git",
-      "0.3.0" ..< "0.4.0"
+      "0.4.0" ..< "0.5.0"
     ),
     .package(
       url: "https://github.com/apple/swift-collections.git",

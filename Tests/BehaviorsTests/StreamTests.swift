@@ -31,7 +31,7 @@ final class StreamTests: XCTestCase {
         received.append(value)
       } onFinish: {
         didFinish = true
-        Task { await asyncBlock.resolve(()) }
+        Task { await asyncBlock.resolve() }
       } onFailure: { _ in
         XCTFail()
       } onCancel: {
@@ -64,7 +64,7 @@ final class StreamTests: XCTestCase {
       } onFinish: {
         XCTFail()
       } onFailure: { error in
-        Task { await receivedError.resolve(error) }
+        Task { await receivedError.resolve(to: error) }
       } onCancel: {
         XCTFail()
       }
@@ -93,7 +93,7 @@ final class StreamTests: XCTestCase {
         receivedOutput.append(value)
         if receivedOutput.count == 3 {
           Task {
-            await asyncBlocks[0].resolve(())
+            await asyncBlocks[0].resolve()
           }
         }
       } onFinish: {
@@ -101,7 +101,7 @@ final class StreamTests: XCTestCase {
       } onFailure: { error in
         receivedError = error
         Task {
-          await asyncBlocks[1].resolve(())
+          await asyncBlocks[1].resolve()
         }
       } onCancel: {
         XCTFail()

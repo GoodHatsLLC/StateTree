@@ -9,7 +9,7 @@ public protocol AsyncBehaviorType<Input, Output, Failure>: BehaviorType {
     handler: Handler,
     resolving: Behaviors.Resolution
   ) async
-    -> AnyDisposable
+    -> AutoDisposable
 
   var subscriber: Behaviors.AsyncSubscriber<Input, Output, Failure> { get }
 }

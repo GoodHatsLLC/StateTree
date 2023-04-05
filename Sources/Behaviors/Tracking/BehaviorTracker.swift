@@ -1,4 +1,5 @@
-import Emitter
+import protocol Emitter.Emitter
+import class Emitter.PublishSubject
 import Foundation
 import TreeActor
 @_spi(Implementation) import Utilities
@@ -61,7 +62,7 @@ public final class BehaviorTracker {
     trackedBehaviors.withLock { $0 }.map { $0 }
   }
 
-  public var behaviorEventEmitter: some Emitting<BehaviorEvent> {
+  public var behaviorEventEmitter: some Emitter<BehaviorEvent> {
     behaviorEventSubject
       .onMainActor()
   }
