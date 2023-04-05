@@ -3,6 +3,14 @@ import Foundation
 import TreeActor
 @_spi(Implementation) import Utilities
 
+// MARK: - BehaviorEvent
+
+public enum BehaviorEvent {
+  case created(BehaviorID)
+  case started(BehaviorID)
+  case finished(BehaviorID)
+}
+
 // MARK: - BehaviorTracker
 
 public final class BehaviorTracker {
@@ -51,6 +59,11 @@ public final class BehaviorTracker {
 
   public var behaviors: [Behaviors.Resolution] {
     trackedBehaviors.withLock { $0 }.map { $0 }
+  }
+
+  public var behaviorEventEmitter: some Emitting<BehaviorEvent> {
+    behaviorEventSubject
+      .onMainActor()
   }
 
   public var behaviorResolutions: [Behaviors.Resolved] {
@@ -118,19 +131,25 @@ public final class BehaviorTracker {
   ) -> (started: @Sendable () -> Void, finished: @Sendable () -> Void) {
     trackedBehaviors
       .withLock { $0.insert(resolution) }
+    behaviorEventSubject.emit(value: .created(resolution.id))
 
     return (
-      started: { },
-      finished: {
-        if self.tracking == .untilComplete {
+      started: { [behaviorEventSubject] in
+        behaviorEventSubject.emit(value: .started(resolution.id))
+      },
+      finished: { [behaviorEventSubject, tracking] in
+        if tracking == .untilComplete {
           self.trackedBehaviors
             .withLock { $0.remove(resolution) }
+          behaviorEventSubject.emit(value: .finished(resolution.id))
         }
       }
     )
   }
 
   // MARK: Private
+
+  private let behaviorEventSubject = PublishSubject<BehaviorEvent>()
 
   private let behaviorInterceptors: [BehaviorID: BehaviorInterceptor]
   private var trackedBehaviors: Locked<Set<Behaviors.Resolution>> = .init([])
