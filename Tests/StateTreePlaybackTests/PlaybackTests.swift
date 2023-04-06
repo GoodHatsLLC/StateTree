@@ -1,3 +1,4 @@
+import Behavior
 import Disposable
 import StateTree
 import StateTreePlayback
@@ -20,7 +21,7 @@ final class PlaybackTests: XCTestCase {
   }
 
   @TreeActor
-  func test_startFrom() async throws {
+  func test_behaviorEventEmissions_areBalanced() async throws {
     let tree = try Tree.main
       .start(
         root: PrimeTest()
@@ -32,9 +33,39 @@ final class PlaybackTests: XCTestCase {
     let root = tree.rootNode
     root.setNumber(to: 3)
     try await tree.awaitBehaviors()
-    handle.dispose()
+    stage.reset()
     let frames = recorder.frames
+    handle.dispose()
     debugPrint(frames)
+
+    var created = Set<BehaviorID>()
+    var started = Set<BehaviorID>()
+    var finished = Set<BehaviorID>()
+
+    frames.forEach { frame in
+      switch frame.event {
+      case .behaviorCreated(let id):
+        if created.contains(id) {
+          XCTFail()
+        }
+        created.insert(id)
+      case .behaviorStarted(let id):
+        if started.contains(id) {
+          XCTFail()
+        }
+        started.insert(id)
+      case .behaviorFinished(let id):
+        if finished.contains(id) {
+          XCTFail()
+        }
+        finished.insert(id)
+      default:
+        break
+      }
+    }
+
+    XCTAssertEqual(created.count, started.count)
+    XCTAssertEqual(created.count, finished.count)
   }
 
 }
