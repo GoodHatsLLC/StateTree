@@ -48,7 +48,7 @@ public final class Recorder<Root: Node> {
   }
 
   @TreeActor
-  public func start() throws {
+  public func start() throws -> AutoDisposable {
     guard
       lifetime.runtime.info.isActive
     else {
@@ -60,17 +60,15 @@ public final class Recorder<Root: Node> {
       .map { $0.asTreeEvent() }
       .merge(lifetime.updates)
       .withPrefix(.treeStarted)
-      .subscribe { [weak self] event in
-        if let self {
-          frames
-            .append(
-              StateFrame(
-                record: lifetime.snapshot(),
-                event: event
-              )
+      .subscribe { [self] event in
+        frames
+          .append(
+            StateFrame(
+              record: lifetime.snapshot(),
+              event: event
             )
-        }
-      }.stage(on: stage)
+          )
+      }
   }
 
   @TreeActor

@@ -20,7 +20,9 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     let life = root.life()
     _life = .init(wrappedValue: life)
     let recorder = life.recorder()
-    try! recorder.start()
+    try! recorder
+      .start()
+      .stageByIdentity(token: "rec/play")
     _mode = .init(wrappedValue: .record(recorder))
     _scanReporter = .init(wrappedValue: .init(recorder.frameCount.erase()))
     _control = .init(wrappedValue: .record)
@@ -176,7 +178,9 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
           let keptFrames = player.stop()
           let recorder = life.recorder(frames: keptFrames)
           frameRange = 0.0 ... Double(max(1, keptFrames.count - 1))
-          try recorder.start()
+          try recorder
+            .start()
+            .stageByIdentity(token: "rec/play")
           mode = .record(recorder)
           scanReporter.emit(value: recorder.frameCount.erase())
         } catch {
@@ -185,7 +189,9 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
       case (_, .record):
         do {
           let recorder = life.recorder()
-          try recorder.start()
+          try recorder
+            .start()
+            .stageByIdentity(token: "rec/play")
           mode = .record(recorder)
           scanReporter.emit(value: recorder.frameCount.erase())
         } catch {

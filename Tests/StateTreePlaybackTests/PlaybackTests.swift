@@ -27,7 +27,9 @@ final class PlaybackTests: XCTestCase {
       )
     tree.stage(on: stage)
     let recorder = tree.recorder()
-    try recorder.start()
+    try recorder
+      .start()
+      .stage(on: stage)
   }
 
 }
