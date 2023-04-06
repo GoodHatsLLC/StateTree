@@ -72,7 +72,7 @@ final class SyncSingleTests: XCTestCase {
       "the success value should be available as the behavior is not cancelled"
     )
     try await tracker.awaitReady()
-    try await tracker.awaitFinished()
+    try await tracker.awaitBehaviors()
   }
 
   @TreeActor
@@ -108,7 +108,7 @@ final class SyncSingleTests: XCTestCase {
     XCTAssertEqual(resolved.id, .id("test_throwing_sync_success"))
     XCTAssertEqual(resolved.state, .finished)
     try await tracker.awaitReady()
-    try await tracker.awaitFinished()
+    try await tracker.awaitBehaviors()
   }
 
   @TreeActor
@@ -143,7 +143,7 @@ final class SyncSingleTests: XCTestCase {
     XCTAssertEqual(resolved.id, .id("test_throwing_sync_failure"))
     XCTAssertEqual(resolved.state, .failed)
     try await tracker.awaitReady()
-    try await tracker.awaitFinished()
+    try await tracker.awaitBehaviors()
   }
 
   @TreeActor
@@ -173,7 +173,7 @@ final class SyncSingleTests: XCTestCase {
       }
     XCTAssertEqual(received, replacement)
     try await tracker.awaitReady()
-    try await tracker.awaitFinished()
+    try await tracker.awaitBehaviors()
   }
 
   func test_inferredType_Throwing() async throws {

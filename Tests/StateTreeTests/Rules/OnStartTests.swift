@@ -21,7 +21,7 @@ final class OnStartTests: XCTestCase {
       .start(root: OnStartAsyncSequenceHost(sequence: AnyAsyncSequence<Int>([1, 2, 3, 4, 5, 6, 7])))
     tree.stage(on: stage)
     let node = tree.root.node
-    try await tree.awaitFinished()
+    try await tree.awaitBehaviors()
     XCTAssertEqual(node.vals.sorted(), [0, 1, 2, 3, 4, 5, 6, 7])
   }
 }

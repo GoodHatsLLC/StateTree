@@ -96,7 +96,7 @@ public final class BehaviorTracker {
     }
   }
 
-  public func awaitFinished(timeoutSeconds: Double? = nil) async throws {
+  public func awaitBehaviors(timeoutSeconds: Double? = nil) async throws {
     let behaviors = trackedBehaviors.withLock { $0 }
     if behaviors.isEmpty {
       runtimeWarning("there are no registered behaviors to await")
@@ -139,8 +139,8 @@ public final class BehaviorTracker {
         if tracking == .untilComplete {
           self.trackedBehaviors
             .withLock { $0.remove(resolution) }
-          behaviorEventSubject.emit(value: .finished(resolution.id))
         }
+        behaviorEventSubject.emit(value: .finished(resolution.id))
       }
     )
   }

@@ -81,7 +81,7 @@ final class AsyncSingleTests: XCTestCase {
     } onCancel: {
       didCancel = true
     }
-    try await tracker.awaitFinished()
+    try await tracker.awaitBehaviors()
     XCTAssert(didCancel)
     let didRun = await didRunTask.value
     XCTAssert(didRun)
@@ -177,7 +177,7 @@ final class AsyncSingleTests: XCTestCase {
           XCTFail()
         }
       }
-    try await tracker.awaitFinished()
+    try await tracker.awaitBehaviors()
     XCTAssertEqual(received, replacement)
   }
 

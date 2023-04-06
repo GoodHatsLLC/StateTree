@@ -31,7 +31,7 @@ final class OnReceiveTests: XCTestCase {
       )
     tree.stage(on: stage)
     let node = tree.root.node
-    try await tree.awaitFinished()
+    try await tree.awaitBehaviors()
     XCTAssertEqual(node.vals.sorted(), [0, 1, 2, 3, 4, 5, 6, 7])
   }
 
@@ -50,7 +50,7 @@ final class OnReceiveTests: XCTestCase {
     subject.finish()
     await Flush.tasks()
     subject.fail(TestError())
-    try await tree.awaitFinished()
+    try await tree.awaitBehaviors()
     XCTAssertEqual(node.vals.sorted(), [0, 1, 2, 3])
   }
 
@@ -69,7 +69,7 @@ final class OnReceiveTests: XCTestCase {
     subject.fail(TestError())
     await Flush.tasks()
     subject.finish()
-    try await tree.awaitFinished()
+    try await tree.awaitBehaviors()
     XCTAssertEqual(node.vals.sorted(), [-1, 11, 22, 33])
   }
 
@@ -89,7 +89,7 @@ final class OnReceiveTests: XCTestCase {
     subject.emit(value: 33)
     subject.fail(TestError())
     subject.finish()
-    try await tree.awaitFinished()
+    try await tree.awaitBehaviors()
     XCTAssertEqual(node.vals.sorted(), [11, 22])
   }
 }
@@ -114,7 +114,7 @@ extension OnReceiveTests {
     subject.send(completion: .finished)
     subject.send(8)
     subject.send(9)
-    try await tree.awaitFinished()
+    try await tree.awaitBehaviors()
     XCTAssertEqual(node.vals.sorted(), [0, 1, 2, 3, 4, 5, 6, 7])
   }
 }

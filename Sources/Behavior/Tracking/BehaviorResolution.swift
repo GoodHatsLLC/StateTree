@@ -73,8 +73,8 @@ extension Behaviors {
       act: @escaping () async -> Void = { }
     ) async {
       await started.resolve()
-      await resolution.resolve(to: .init(id: id, state: state), action: act)
       finishedCallback?()
+      await resolution.resolve(to: .init(id: id, state: state), action: act)
     }
 
     func ifMatching(

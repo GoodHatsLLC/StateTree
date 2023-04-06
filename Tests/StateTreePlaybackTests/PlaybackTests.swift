@@ -31,7 +31,7 @@ final class PlaybackTests: XCTestCase {
       .start()
     let root = tree.rootNode
     root.setNumber(to: 3)
-    try await tree.awaitFinished()
+    try await tree.awaitBehaviors()
     handle.dispose()
     let frames = recorder.frames
     debugPrint(frames)

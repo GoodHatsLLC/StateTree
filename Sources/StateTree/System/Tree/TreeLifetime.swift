@@ -75,8 +75,8 @@ public struct TreeLifetime<N: Node>: Disposable {
     try await runtime.behaviorTracker.awaitReady(timeoutSeconds: timeoutSeconds)
   }
 
-  public func awaitFinished(timeoutSeconds: Double? = nil) async throws {
-    try await runtime.behaviorTracker.awaitFinished(timeoutSeconds: timeoutSeconds)
+  public func awaitBehaviors(timeoutSeconds: Double? = nil) async throws {
+    try await runtime.behaviorTracker.awaitBehaviors(timeoutSeconds: timeoutSeconds)
   }
 
   /// Shut down the tree removing all nodes and ending all updates and behaviors.
