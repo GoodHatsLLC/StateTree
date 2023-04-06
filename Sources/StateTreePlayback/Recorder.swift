@@ -1,4 +1,4 @@
-import Behaviors
+import Behavior
 import Disposable
 import Emitter
 import Foundation
@@ -29,22 +29,32 @@ public final class Recorder<Root: Node> {
   ) {
     self.lifetime = lifetime
     self.frames = frames
-    frameCountSubject.value = frames.count
   }
 
   // MARK: Public
 
-  public var frameRange: ClosedRange<Int> { 0 ... (frames.count - 1) }
-  public var frameRangeDouble: ClosedRange<Double> { 0 ... Double(max(frames.count - 1, 1)) }
-
-  @TreeActor public var frame: Int {
-    frameCountSubject.value
+  @TreeActor public var frameRange: ClosedRange<Int> { 0 ... (frames.count - 1) }
+  @TreeActor public var frameRangeDouble: ClosedRange<Double> {
+    0 ... Double(max(frames.count - 1, 1))
   }
 
-  public var frameCount: some Emitter<Int> { frameCountSubject }
-
-  public var currentFrame: StateFrame? {
+  @TreeActor public var currentFrame: StateFrame? {
     frames.last
+  }
+
+  public var currentFrameEmitter: some Emitter<StateFrame> {
+    currentFrameSubject.compactMap { $0 }
+  }
+
+  public var frameCountEmitter: some Emitter<Int> {
+    frameCountSubject
+  }
+
+  @TreeActor public private(set) var frames: [StateFrame] {
+    didSet {
+      currentFrameSubject.emit(value: frames.last)
+      frameCountSubject.emit(value: frames.count)
+    }
   }
 
   @TreeActor
@@ -59,7 +69,6 @@ public final class Recorder<Root: Node> {
       .behaviorEvents
       .map { $0.asTreeEvent() }
       .merge(lifetime.updates)
-      .withPrefix(.treeStarted)
       .subscribe { [self] event in
         frames
           .append(
@@ -71,25 +80,12 @@ public final class Recorder<Root: Node> {
       }
   }
 
-  @TreeActor
-  public func stop() throws -> [StateFrame] {
-    stage.dispose()
-    return frames
-  }
-
   // MARK: Private
 
+  private let currentFrameSubject = ValueSubject<StateFrame?>(.none)
   private let frameCountSubject = ValueSubject<Int>(0)
-
   private let stage = DisposableStage()
-
   private let lifetime: TreeLifetime<Root>
-
-  private var frames: [StateFrame] {
-    didSet {
-      frameCountSubject.value = frames.count
-    }
-  }
 }
 
 // MARK: - RecorderRestartError

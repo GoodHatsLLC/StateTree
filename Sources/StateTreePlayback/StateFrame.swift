@@ -7,6 +7,7 @@ import StateTree
 ///
 /// `StateFrames` contain the `TreeStateRecord` state and metadata
 public struct StateFrame: TreeState, Identifiable {
+
   init(record: TreeStateRecord, event: TreeEvent) {
     self.id = .init()
     self.date = .init()

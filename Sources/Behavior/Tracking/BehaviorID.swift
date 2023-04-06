@@ -12,7 +12,9 @@ import Utilities
 ///
 /// > Warning: An auto-generated `BehaviorID` will be stable only as long as the code around
 /// it remains unchanged. Prefer custom identifiers when testing `Behavior` identity.
-public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStringConvertible {
+public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStringConvertible,
+  CustomDebugStringConvertible
+{
 
   // MARK: Lifecycle
 
@@ -48,7 +50,11 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
   // MARK: Public
 
   public var description: String {
-    ".id(\"\(value)\")\(debugInfo.map { " [\($0)]" } ?? "")"
+    "\(value)"
+  }
+
+  public var debugDescription: String {
+    "\(debugInfo.map { " [\($0)]" } ?? "")"
   }
 
   public static func auto(

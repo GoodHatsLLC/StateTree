@@ -4,7 +4,7 @@ import StateTree
 
 // MARK: - Player
 
-public final class Player<Root: Node>: Disposable {
+public final class Player<Root: Node> {
 
   // MARK: Lifecycle
 
@@ -13,9 +13,9 @@ public final class Player<Root: Node>: Disposable {
     else {
       throw NoFramesPlaybackError()
     }
-    self.finalFrame = frames.endIndex - 1
-    self.current = .init(finalFrame)
     self.lifetime = lifetime
+    self.finalFrameIndex = frames.endIndex - 1
+    self.currentFrameIndexSubject = .init(finalFrameIndex)
     self.frames = frames
   }
 
@@ -23,36 +23,36 @@ public final class Player<Root: Node>: Disposable {
 
   public let frames: [StateFrame]
 
-  public var currentFrameIndex: some Emitter<Int> { current }
+  public var currentFrameIndexEmitter: some Emitter<Int> { currentFrameIndexSubject }
 
-  public var currentFrame: StateFrame {
-    frames[current.value]
+  @TreeActor public var currentFrame: StateFrame {
+    frames[currentFrameIndex]
   }
 
   public var frameRange: ClosedRange<Int> { 0 ... (frames.count - 1) }
   public var frameRangeDouble: ClosedRange<Double> { 0 ... Double(max(frames.count - 1, 1)) }
 
-  @TreeActor public var frame: Int {
-    get { current.value }
+  @TreeActor public var currentFrameIndex: Int {
+    get { currentFrameIndexSubject.value }
     set {
       if frameRange.contains(newValue) {
-        current.value = newValue
+        currentFrameIndexSubject.value = newValue
       }
     }
   }
 
-  public var isDisposed: Bool {
-    stage.isDisposed
+  @TreeActor public var framesToCurrent: [StateFrame] {
+    Array(frames[0 ... currentFrameIndex])
   }
 
   @TreeActor
-  public func start() throws {
+  public func start() throws -> AutoDisposable {
     guard !frames.isEmpty
     else {
       throw NoFramesPlaybackError()
     }
 
-    current
+    return currentFrameIndexEmitter
       .filter { [frameRange] in frameRange.contains($0) }
       .map { [frames] num in
         frames[num]
@@ -68,35 +68,25 @@ public final class Player<Root: Node>: Disposable {
           assertionFailure(error.localizedDescription)
         }
       }
-      .stage(on: stage)
-  }
-
-  public func stop() -> [StateFrame] {
-    stage.dispose()
-    return Array(frames[0 ... current.value])
-  }
-
-  public func dispose() {
-    stage.dispose()
   }
 
   @TreeActor
   public func next() -> Int {
-    frame += 1
-    return frame
+    currentFrameIndex += 1
+    return currentFrameIndex
   }
 
   @TreeActor
   public func previous() -> Int {
-    frame -= 1
-    return frame
+    currentFrameIndex -= 1
+    return currentFrameIndex
   }
 
   // MARK: Private
 
   private let lifetime: TreeLifetime<Root>
-  private let finalFrame: Int
-  private let current: ValueSubject<Int>
+  private let finalFrameIndex: Int
+  private let currentFrameIndexSubject: ValueSubject<Int>
   private let stage = DisposableStage()
 }
 

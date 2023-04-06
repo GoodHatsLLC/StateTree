@@ -1,13 +1,14 @@
-import Behaviors
+import Behavior
 
 // MARK: - NodeChanges
 
 public enum TreeEvent: TreeState {
 
   case treeStarted
-  case started(NodeID)
-  case updated(NodeID)
-  case stopped(NodeID)
+  case treeStopped
+  case nodeStarted(NodeID)
+  case nodeUpdated(NodeID)
+  case nodeStopped(NodeID)
   case behaviorCreated(BehaviorID)
   case behaviorStarted(BehaviorID)
   case behaviorFinished(BehaviorID)
@@ -49,20 +50,20 @@ public enum TreeEvent: TreeState {
 
     func asTreeEvent(_ id: NodeID) -> TreeEvent {
       switch self {
-      case .start: return .started(id)
-      case .stop: return .stopped(id)
-      case .update: return .updated(id)
+      case .start: return .nodeStarted(id)
+      case .stop: return .nodeStopped(id)
+      case .update: return .nodeUpdated(id)
       }
     }
   }
 
   public var nodeID: NodeID? {
     switch self {
-    case .started(let nodeID):
+    case .nodeStarted(let nodeID):
       return nodeID
-    case .updated(let nodeID):
+    case .nodeUpdated(let nodeID):
       return nodeID
-    case .stopped(let nodeID):
+    case .nodeStopped(let nodeID):
       return nodeID
     default:
       return nil

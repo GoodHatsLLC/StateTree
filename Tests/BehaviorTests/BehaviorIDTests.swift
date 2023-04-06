@@ -1,4 +1,4 @@
-import Behaviors
+import Behavior
 import XCTest
 
 final class BehaviorIDTests: XCTestCase {
@@ -10,11 +10,11 @@ final class BehaviorIDTests: XCTestCase {
     let four: BehaviorID = .auto()
     let five: BehaviorID = .auto()
     let six: BehaviorID = .id("custom-name")
-    XCTAssertEqual(one, .id("ea29158a961227e7-auto"))
-    XCTAssertEqual(two, .id("05753d542c131b3f-auto"))
-    XCTAssertEqual(three, .id("83c4469198801925-auto"))
-    XCTAssertEqual(four, .id("f49bac42475760f9-auto"))
-    XCTAssertEqual(five, .id("9abbb59b6a4c28e9-auto"))
+    XCTAssertEqual(one, .id("282e55075e4bd4f6-auto"))
+    XCTAssertEqual(two, .id("86ad08848d6f91ee-auto"))
+    XCTAssertEqual(three, .id("cda8a581217057df-auto"))
+    XCTAssertEqual(four, .id("09de1f3d379dfe2d-auto"))
+    XCTAssertEqual(five, .id("d13e4f593f822bce-auto"))
     XCTAssertEqual(six, .id("custom-name"))
   }
 

@@ -22,9 +22,9 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     let recorder = life.recorder()
     try! recorder
       .start()
-      .stageByIdentity(token: "rec/play")
+      .stage(on: recorderStage)
     _mode = .init(wrappedValue: .record(recorder))
-    _scanReporter = .init(wrappedValue: .init(recorder.frameCount.erase()))
+    _scanReporter = .init(wrappedValue: .init(recorder.frameCountEmitter.erase()))
     _control = .init(wrappedValue: .record)
   }
 
@@ -158,42 +158,46 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
         else {
           return
         }
-        player.frame = Int(newValue)
+        player.currentFrameIndex = Int(newValue)
       }
     )
     .onChange(of: control) { _ in
       switch (mode, control) {
       case (.record(let recorder), .play):
         do {
-          let frames = try recorder.stop()
+          recorderStage.reset()
+          let frames = recorder.frames
           let player = try life.player(frames: frames)
           try player.start()
+            .stage(on: recorderStage)
           mode = .play(player)
-          scanReporter.emit(value: player.currentFrameIndex.erase())
+          scanReporter.emit(value: player.currentFrameIndexEmitter.erase())
         } catch {
           assertionFailure("❌ \(error.localizedDescription)")
         }
       case (.play(let player), .record):
         do {
-          let keptFrames = player.stop()
+          recorderStage.reset()
+          let keptFrames = player.frames
           let recorder = life.recorder(frames: keptFrames)
           frameRange = 0.0 ... Double(max(1, keptFrames.count - 1))
           try recorder
             .start()
-            .stageByIdentity(token: "rec/play")
+            .stage(on: recorderStage)
           mode = .record(recorder)
-          scanReporter.emit(value: recorder.frameCount.erase())
+          scanReporter.emit(value: recorder.frameCountEmitter.erase())
         } catch {
           assertionFailure("❌ \(error.localizedDescription)")
         }
       case (_, .record):
         do {
+          recorderStage.reset()
           let recorder = life.recorder()
           try recorder
             .start()
-            .stageByIdentity(token: "rec/play")
+            .stage(on: recorderStage)
           mode = .record(recorder)
-          scanReporter.emit(value: recorder.frameCount.erase())
+          scanReporter.emit(value: recorder.frameCountEmitter.erase())
         } catch {
           assertionFailure("❌ \(error.localizedDescription)")
         }
@@ -237,6 +241,8 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
   @State var control: ControlMode
 
   // MARK: Private
+
+  private let recorderStage = DisposableStage()
 
   @State private var scanLocation: Double = 1
   @State private var scanReporter: ValueSubject<AnyEmitter<Int>>

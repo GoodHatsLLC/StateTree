@@ -1,4 +1,4 @@
-@_spi(Implementation) import Behaviors
+@_spi(Implementation) import Behavior
 import Utilities
 
 // MARK: - ScopeField

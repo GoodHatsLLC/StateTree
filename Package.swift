@@ -126,7 +126,7 @@ let package = Package(
       swiftSettings: Build.globalSwiftSettings
     ),
     .target(
-      name: "Behaviors",
+      name: "Behavior",
       dependencies: [
         "TreeState",
         "Disposable",
@@ -139,7 +139,7 @@ let package = Package(
     .target(
       name: "StateTree",
       dependencies: [
-        "Behaviors",
+        "Behavior",
         "Disposable",
         "Emitter",
         "TreeState",
@@ -207,8 +207,8 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "BehaviorsTests",
-      dependencies: ["Behaviors"]
+      name: "BehaviorTests",
+      dependencies: ["Behavior"]
     ),
     .testTarget(
       name: "UtilitiesTests",

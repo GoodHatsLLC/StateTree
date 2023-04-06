@@ -3,7 +3,7 @@ import Emitter
 import TreeActor
 import Utilities
 import XCTest
-@testable import Behaviors
+@testable import Behavior
 
 // MARK: - AsyncSingleTests
 

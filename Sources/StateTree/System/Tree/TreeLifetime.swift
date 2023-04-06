@@ -1,4 +1,4 @@
-import Behaviors
+import Behavior
 import Disposable
 import Emitter
 import Foundation
@@ -79,7 +79,7 @@ public struct TreeLifetime<N: Node>: Disposable {
     try await runtime.behaviorTracker.awaitFinished(timeoutSeconds: timeoutSeconds)
   }
 
-  /// Shut down the tree removing all nodes and ending all behavior.
+  /// Shut down the tree removing all nodes and ending all updates and behaviors.
   public nonisolated func dispose() {
     disposable.dispose()
   }

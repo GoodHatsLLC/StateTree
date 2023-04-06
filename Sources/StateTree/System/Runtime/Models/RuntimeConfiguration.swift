@@ -1,4 +1,4 @@
-import Behaviors
+import Behavior
 
 // MARK: - RuntimeConfiguration
 

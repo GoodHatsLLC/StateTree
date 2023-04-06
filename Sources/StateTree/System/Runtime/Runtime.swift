@@ -1,4 +1,4 @@
-import Behaviors
+import Behavior
 import Emitter
 import Foundation
 import HeapModule
@@ -71,9 +71,10 @@ extension Runtime {
         on: .system
       )
     let scope = try initialized.connect()
+    emitUpdates(events: [.treeStarted])
     if let initialState {
-      let change = try apply(state: initialState)
-      emitUpdates(changes: change)
+      let changes = try apply(state: initialState)
+      emitUpdates(events: changes)
     } else {
       updateRoutedNodes(
         at: .system,
@@ -94,6 +95,7 @@ extension Runtime {
         )
       }
     }
+    emitUpdates(events: [.treeStopped])
   }
 }
 
@@ -276,10 +278,10 @@ extension Runtime {
       transactionCount -= 1
     }
     do {
-      let changes = try updateScopes(
+      let nodeUpdates = try updateScopes(
         lastValidState: validState
       )
-      emitUpdates(changes: changes)
+      emitUpdates(events: nodeUpdates)
     } catch {
       runtimeWarning(
         "An update failed and couldn't be reverted leaving the tree in an illegal state."
@@ -383,15 +385,15 @@ extension Runtime {
   }
 
   func set(state newState: TreeStateRecord) throws {
-    let changes = try apply(state: newState)
-    emitUpdates(changes: changes)
+    let events = try apply(state: newState)
+    emitUpdates(events: events)
   }
 
   // MARK: Private
 
-  private func emitUpdates(changes: [TreeEvent]) {
-    for change in changes {
-      updateSubject.emit(value: change)
+  private func emitUpdates(events: [TreeEvent]) {
+    for event in events {
+      updateSubject.emit(value: event)
     }
   }
 

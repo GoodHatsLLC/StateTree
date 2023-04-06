@@ -23,85 +23,75 @@ final class PlaybackTests: XCTestCase {
   func test_startFrom() async throws {
     let tree = try Tree.main
       .start(
-        root: RootNode()
+        root: PrimeTest()
       )
     tree.stage(on: stage)
     let recorder = tree.recorder()
-    try recorder
+    let handle = try recorder
       .start()
-      .stage(on: stage)
+    let root = tree.rootNode
+    root.setNumber(to: 3)
+    try await tree.awaitFinished()
+    handle.dispose()
+    let frames = recorder.frames
+    debugPrint(frames)
   }
 
 }
 
 extension PlaybackTests {
 
-  // MARK: - Square
-
-  struct SubSubNode: Node {
-    @Projection var value: Int
-    var rules: some Rules { .none }
-  }
-
-  struct SubNode: Node {
-
-    @Route(SubSubNode.self) var subSubRoute
-    @Value var subValue = 32
-    @Projection var value: Int
-
-    var rules: some Rules {
-      if subValue == 2 {
-        $subSubRoute.route {
-          SubSubNode(value: $value)
-        }
-      }
-    }
-  }
-
   // MARK: - RootNode
 
-  struct RootNode: Node {
+  struct Composite: Node {
 
-    @Value var routeIfNegative = 0
-    @Route(SubNode.self) var subRoute
+    @Projection var number: Int
 
     var rules: some Rules {
-      if routeIfNegative < 0 {
-        $subRoute.route {
-          SubNode(value: $routeIfNegative)
-        }
-      }
+      ()
     }
   }
 
   // MARK: - Square
 
-  struct Square: Node {
+  struct Prime: Node {
 
-    @Value var square: Int!
-    @Projection var value: Int
+    @Projection var number: Int
 
     var rules: some Rules {
-      OnChange(value) { value in
-        square = value * value
-      }
+      ()
     }
   }
 
   // MARK: - PrimeSquare
 
-  struct PrimeSquare: Node {
+  struct PrimeTest: Node {
 
-    @Value var potentialPrime = 0
-    @Route(Square.self) var primeSquared
+    // MARK: Internal
+
+    @Value var number = 0
+    @Route(Prime.self, Composite.self) var info
+    @Scope var scope
 
     var rules: some Rules {
-      if isPrime(potentialPrime) {
-        $primeSquared.route {
-          Square(value: $potentialPrime)
+      if isPrime(number) {
+        try $info.route {
+          Prime(number: $number)
+        }
+      } else {
+        try $info.route {
+          Composite(number: $number)
         }
       }
     }
+
+    func setNumber(to number: Int) {
+      $scope.run {
+        self.number = number
+      }.fireAndForget()
+    }
+
+    // MARK: Private
 
     private func isPrime(_ num: Int) -> Bool {
       guard num >= 2 else {

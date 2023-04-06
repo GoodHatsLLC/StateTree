@@ -1,4 +1,4 @@
-import Behaviors
+import Behavior
 import Disposable
 import Emitter
 import TreeActor

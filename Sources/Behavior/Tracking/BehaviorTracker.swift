@@ -125,8 +125,7 @@ public final class BehaviorTracker {
   }
 
   nonisolated func trackCreate(
-    resolution: Behaviors
-      .Resolution
+    resolution: Behaviors.Resolution
   ) -> (started: @Sendable () -> Void, finished: @Sendable () -> Void) {
     trackedBehaviors
       .withLock { $0.insert(resolution) }

@@ -3,7 +3,7 @@ import Emitter
 import TreeActor
 import Utilities
 import XCTest
-@_spi(Implementation) @testable import Behaviors
+@_spi(Implementation) @testable import Behavior
 
 // MARK: - SyncSingleTests
 

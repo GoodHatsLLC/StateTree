@@ -31,11 +31,11 @@ final class ObservableNode<N: Node>: ObservableObject {
       .updateEmitter
       .compactMap { [id = scope.nid] change in
         switch change {
-        case .started(let updatedID) where updatedID == id:
+        case .nodeStarted(let updatedID) where updatedID == id:
           return ChangeEvent.update
-        case .updated(let updatedID) where updatedID == id:
+        case .nodeUpdated(let updatedID) where updatedID == id:
           return ChangeEvent.update
-        case .stopped(let stoppedID) where stoppedID == id:
+        case .nodeStopped(let stoppedID) where stoppedID == id:
           return ChangeEvent.stop
         case _:
           return nil
