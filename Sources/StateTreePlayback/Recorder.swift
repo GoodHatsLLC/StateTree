@@ -54,34 +54,12 @@ public final class Recorder<Root: Node> {
     else {
       throw RecorderRestartError()
     }
-    if frames.isEmpty {
-      frames
-        .append(
-          StateFrame(
-            record: lifetime.snapshot(),
-            event: .treeStarted
-          )
-        )
-    }
-    lifetime
-      .updates
-      .subscribe { [weak self] event in
-        if let self {
-          frames
-            .append(
-              StateFrame(
-                record: lifetime.snapshot(),
-                event: event
-              )
-            )
-        }
-      }
-      .stage(on: stage)
-    lifetime
+    return lifetime
       .runtime
       .behaviorEvents
       .map { $0.asTreeEvent() }
-      .merge(lifetime.updates) // TODO: fix union API
+      .merge(lifetime.updates)
+      .withPrefix(.treeStarted)
       .subscribe { [weak self] event in
         if let self {
           frames
@@ -92,8 +70,7 @@ public final class Recorder<Root: Node> {
               )
             )
         }
-      }
-      .stage(on: stage)
+      }.stage(on: stage)
   }
 
   @TreeActor
