@@ -15,7 +15,7 @@ final class ListRouteTests: XCTestCase {
 
   @TreeActor
   func test_listRoute() async throws {
-    let lifetime = try Tree_REMOVE.main
+    let lifetime = Tree()
       .start(
         root: ListNode()
       )

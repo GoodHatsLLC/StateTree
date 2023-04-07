@@ -18,7 +18,7 @@ final class PlaybackTests: XCTestCase {
 
   @TreeActor
   func test_behaviorEventEmissions_areBalanced() async throws {
-    let tree = try Tree_REMOVE.main
+    let tree = Tree()
       .start(
         root: PrimeTest()
       )

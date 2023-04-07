@@ -47,7 +47,7 @@ final class SerializationTests: XCTestCase {
 
   @TreeActor
   func testEncoding() async throws {
-    let tree = try Tree_REMOVE.main
+    let tree = Tree()
       .start(
         root: PrimeSquare()
       )
@@ -86,7 +86,7 @@ final class SerializationTests: XCTestCase {
 
   @TreeActor
   func testAlternateEncoding() async throws {
-    let tree = try Tree_REMOVE.main
+    let tree = Tree()
       .start(
         root: PrimeSquare()
       )

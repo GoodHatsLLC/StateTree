@@ -15,7 +15,7 @@ final class ValueTests: XCTestCase {
 
   @TreeActor
   func test_value() async throws {
-    let tree = try Tree_REMOVE.main
+    let tree = Tree()
       .start(root: ValueTestHost())
     tree.stage(on: stage)
     let node = tree.rootNode

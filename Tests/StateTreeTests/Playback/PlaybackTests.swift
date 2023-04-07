@@ -20,7 +20,7 @@ final class PlaybackTests: XCTestCase {
 
   @TreeActor
   func test_startFrom() async throws {
-    let handle = try Tree_REMOVE.main
+    let handle = Tree()
       .start(
         root: RootNode()
       )
@@ -40,7 +40,7 @@ final class PlaybackTests: XCTestCase {
     XCTAssertNotNil(handle.rootNode.subRoute)
     handle.dispose()
 
-    let restartHandle = try Tree_REMOVE.main.start(
+    let restartHandle = Tree().start(
       root: RootNode(),
       from: laterState
     )
@@ -60,7 +60,7 @@ final class PlaybackTests: XCTestCase {
 
   @TreeActor
   func test_setState() async throws {
-    let handle = try Tree_REMOVE.main
+    let handle = Tree()
       .start(
         root: RootNode()
       )
@@ -99,7 +99,7 @@ final class PlaybackTests: XCTestCase {
 
   @TreeActor
   func test_setState_thrash() async throws {
-    let lifetime = try Tree_REMOVE.main
+    let lifetime = Tree()
       .start(
         root: PrimeSquare()
       )
@@ -127,7 +127,7 @@ final class PlaybackTests: XCTestCase {
     XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
     XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount ?? 0, 0)
 
-    let lifetime2 = try Tree_REMOVE.main
+    let lifetime2 = Tree()
       .start(
         root: PrimeSquare(),
         from: snap3

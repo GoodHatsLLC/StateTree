@@ -15,7 +15,7 @@ final class OnChangeTests: XCTestCase {
 
   @TreeActor
   func test_playground() async throws {
-    let tree = try Tree_REMOVE.main
+    let tree = Tree()
       .start(root: OnChangeNode())
     tree.stage(on: stage)
     let node = tree.root.node

@@ -17,20 +17,16 @@ final class OnReceiveTests: XCTestCase {
 
   @TreeActor
   func test_onReceive_finish_asyncSequence() async throws {
-    let tree = try Tree_REMOVE.main
-      .start(
-        root: OnReceiveAsyncSequenceHost<AnyAsyncSequence<Int>>(sequence: AnyAsyncSequence<Int>([
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-        ]))
+    let tree = Tree(
+      root: OnReceiveAsyncSequenceHost<AnyAsyncSequence<Int>>(
+        sequence: AnyAsyncSequence<Int>(
+          [ 1, 2, 3, 4, 5, 6, 7 ]
+        )
       )
-    tree.stage(on: stage)
-    let node = tree.root.node
+    )
+    await tree.run(on: stage)
+
+    let node = try tree.root.node
     try await tree.awaitBehaviors()
     XCTAssertEqual(node.vals.sorted(), [0, 1, 2, 3, 4, 5, 6, 7])
   }
@@ -38,10 +34,9 @@ final class OnReceiveTests: XCTestCase {
   @TreeActor
   func test_onReceive_finish() async throws {
     let subject = PublishSubject<Int>()
-    let tree = try Tree_REMOVE.main
-      .start(root: OnReceiveHost(emitter: subject.erase()))
-    tree.stage(on: stage)
-    let node = tree.root.node
+    let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
+    await tree.run(on: stage)
+    let node = try tree.root.node
     try await tree.awaitReady()
     XCTAssertEqual(node.vals, [])
     subject.emit(value: 1)
@@ -57,10 +52,9 @@ final class OnReceiveTests: XCTestCase {
   @TreeActor
   func test_onReceive_fail() async throws {
     let subject = PublishSubject<Int>()
-    let tree = try Tree_REMOVE.main
-      .start(root: OnReceiveHost(emitter: subject.erase()))
-    tree.stage(on: stage)
-    let node = tree.root.node
+    let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
+    await tree.run(on: stage)
+    let node = try tree.root.node
     try await tree.awaitReady()
     XCTAssertEqual(node.vals, [])
     subject.emit(value: 11)
@@ -76,10 +70,9 @@ final class OnReceiveTests: XCTestCase {
   @TreeActor
   func test_onReceive_cancel() async throws {
     let subject = PublishSubject<Int>()
-    let tree = try Tree_REMOVE.main
-      .start(root: OnReceiveHost(emitter: subject.erase()))
-    tree.stage(on: stage)
-    let node = tree.root.node
+    let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
+    await tree.run(on: stage)
+    let node = try tree.root.node
     try await tree.awaitReady()
     XCTAssertEqual(node.vals, [])
     subject.emit(value: 11)
@@ -99,10 +92,9 @@ extension OnReceiveTests {
   @TreeActor
   func test_onReceive_publisher() async throws {
     let subject = PassthroughSubject<Int, Never>()
-    let tree = try Tree_REMOVE.main
-      .start(root: OnReceiveCombineHost(publisher: subject))
-    tree.stage(on: stage)
-    let node = tree.root.node
+    let tree = Tree(root: OnReceiveCombineHost(publisher: subject))
+    await tree.run(on: stage)
+    let node = try tree.root.node
     try await tree.awaitReady()
     subject.send(1)
     subject.send(2)

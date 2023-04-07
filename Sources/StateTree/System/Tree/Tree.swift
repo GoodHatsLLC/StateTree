@@ -42,7 +42,7 @@ public final class Tree<N: Node> {
   private let dependencies: DependencyValues
   private let configuration: RuntimeConfiguration
 
-  public func start(from state: TreeStateRecord? = nil) async -> Result<TreeStateRecord, Error> {
+  public func run(from state: TreeStateRecord? = nil) async -> Result<TreeStateRecord, Error> {
     let lifetime = Async.Value<Result<TreeStateRecord, Error>>()
     Task(priority: .high) {
       await withTaskCancellationHandler {
@@ -80,6 +80,15 @@ public final class Tree<N: Node> {
       }
     }
     return await lifetime.value
+  }
+
+  public func awaitRunning() async {
+    let pub = runtimePublisher
+    let seq = pub.values
+    var runtime: Runtime?
+    while runtime == nil {
+      runtime = try? await seq.first(where: { await $0.isActive })
+    }
   }
 
   // MARK: Public
