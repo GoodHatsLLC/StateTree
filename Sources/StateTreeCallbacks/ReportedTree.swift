@@ -12,7 +12,7 @@ public final class ReportedTree<N: Node> {
 
   // MARK: Lifecycle
 
-  public init(tree: Tree = .main, root: N) {
+  public init(tree: Tree_REMOVE = .main, root: N) {
     self.reportedFunc = {
       let life = try tree.start(root: root)
       return (.init(projectedValue: .init(tree: life)), life)
@@ -52,9 +52,9 @@ public final class ReportedTree<N: Node> {
 
   // MARK: Private
 
-  private var lifetime: TreeLifetime<N>?
+  private var lifetime: Tree<N>?
   private let subject = ValueSubject<Reported<N>?>(nil)
-  private let reportedFunc: () throws -> (Reported<N>, TreeLifetime<N>)
+  private let reportedFunc: () throws -> (Reported<N>, Tree<N>)
 
 }
 

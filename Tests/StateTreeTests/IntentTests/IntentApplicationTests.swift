@@ -15,7 +15,7 @@ final class IntentApplicationTests: XCTestCase {
 
   @TreeActor
   func test_singleStep_intentApplication() async throws {
-    let life = try Tree.main
+    let life = try Tree_REMOVE.main
       .start(root: ValueSetNode())
     life.stage(on: stage)
 
@@ -38,7 +38,7 @@ final class IntentApplicationTests: XCTestCase {
 
   @TreeActor
   func test_decodedPayloadStep_intentApplication() async throws {
-    let life = try Tree.main
+    let life = try Tree_REMOVE.main
       .start(root: PrivateIntentNode())
     life.stage(on: stage)
 
@@ -69,7 +69,7 @@ final class IntentApplicationTests: XCTestCase {
 
   @TreeActor
   func test_multiStep_intentApplication() async throws {
-    let life = try Tree.main
+    let life = try Tree_REMOVE.main
       .start(root: RoutingIntentNode<ValueSetNode>())
     life.stage(on: stage)
 
@@ -94,7 +94,7 @@ final class IntentApplicationTests: XCTestCase {
 
   @TreeActor
   func test_nodeSkippingIntentApplication() async throws {
-    let life = try Tree.main
+    let life = try Tree_REMOVE.main
       .start(root: RoutingIntentNode<IntermediateNode<ValueSetNode>>())
     life.stage(on: stage)
 
@@ -124,7 +124,7 @@ final class IntentApplicationTests: XCTestCase {
 
   @TreeActor
   func test_singleNodeRepeatedStep_intentApplication() async throws {
-    let life = try Tree.main
+    let life = try Tree_REMOVE.main
       .start(root: RepeatStepNode())
     life.stage(on: stage)
 
@@ -150,7 +150,7 @@ final class IntentApplicationTests: XCTestCase {
 
   @TreeActor
   func test_pendingStep_intentApplication() async throws {
-    let life = try Tree.main
+    let life = try Tree_REMOVE.main
       .start(root: PendingNode<ValueSetNode>())
     life.stage(on: stage)
 
@@ -190,7 +190,7 @@ final class IntentApplicationTests: XCTestCase {
     try runTest(shouldInvalidate: true)
 
     func runTest(shouldInvalidate: Bool) throws {
-      let life = try Tree.main
+      let life = try Tree_REMOVE.main
         .start(root: InvalidatingNode<PendingNode<ValueSetNode>>())
       life.stage(on: stage)
 

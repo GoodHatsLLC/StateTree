@@ -8,7 +8,7 @@ public final class Player<Root: Node> {
 
   // MARK: Lifecycle
 
-  init(lifetime: TreeLifetime<Root>, frames: [StateFrame]) throws {
+  init(lifetime: Tree<Root>, frames: [StateFrame]) throws {
     guard !frames.isEmpty
     else {
       throw NoFramesPlaybackError()
@@ -84,7 +84,7 @@ public final class Player<Root: Node> {
 
   // MARK: Private
 
-  private let lifetime: TreeLifetime<Root>
+  private let lifetime: Tree<Root>
   private let finalFrameIndex: Int
   private let currentFrameIndexSubject: ValueSubject<Int>
   private let stage = DisposableStage()

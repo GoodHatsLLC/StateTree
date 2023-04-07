@@ -20,7 +20,7 @@ final class PlaybackTests: XCTestCase {
 
   @TreeActor
   func test_startFrom() async throws {
-    let handle = try Tree.main
+    let handle = try Tree_REMOVE.main
       .start(
         root: RootNode()
       )
@@ -40,7 +40,7 @@ final class PlaybackTests: XCTestCase {
     XCTAssertNotNil(handle.rootNode.subRoute)
     handle.dispose()
 
-    let restartHandle = try Tree.main.start(
+    let restartHandle = try Tree_REMOVE.main.start(
       root: RootNode(),
       from: laterState
     )
@@ -60,7 +60,7 @@ final class PlaybackTests: XCTestCase {
 
   @TreeActor
   func test_setState() async throws {
-    let handle = try Tree.main
+    let handle = try Tree_REMOVE.main
       .start(
         root: RootNode()
       )
@@ -71,18 +71,18 @@ final class PlaybackTests: XCTestCase {
     handle.rootNode.routeIfNegative = -2
     handle.rootNode.subRoute?.subValue = 2
     let laterState = handle.snapshot()
-    XCTAssert(Tree.main.info?.isConsistent == true)
+    XCTAssert(Tree_REMOVE.main.info?.isConsistent == true)
 
     handle.rootNode.routeIfNegative = -3
     let finalState = handle.snapshot()
 
     try handle.set(state: initialState)
-    XCTAssert(Tree.main.info?.isConsistent == true)
+    XCTAssert(Tree_REMOVE.main.info?.isConsistent == true)
     XCTAssertEqual(handle.rootNode.routeIfNegative, 0)
     XCTAssertNil(handle.rootNode.subRoute)
 
     try handle.set(state: laterState)
-    XCTAssert(Tree.main.info?.isConsistent == true)
+    XCTAssert(Tree_REMOVE.main.info?.isConsistent == true)
     XCTAssertEqual(handle.rootNode.routeIfNegative, -2)
     XCTAssertEqual(handle.rootNode.subRoute?.subValue, 2)
     XCTAssertEqual(handle.rootNode.subRoute?.subSubRoute?.value, -2)
@@ -99,35 +99,35 @@ final class PlaybackTests: XCTestCase {
 
   @TreeActor
   func test_setState_thrash() async throws {
-    let lifetime = try Tree.main
+    let lifetime = try Tree_REMOVE.main
       .start(
         root: PrimeSquare()
       )
     lifetime.stage(on: stage)
     XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
     let snap0 = lifetime.snapshot()
-    XCTAssertEqual(Tree.main.info?.nodeCount, 1)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 1)
 
     lifetime.rootNode.potentialPrime = 2
     XCTAssertEqual(lifetime.rootNode.primeSquared?.square, 4)
-    XCTAssertEqual(Tree.main.info?.nodeCount, 2)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 2)
     let snap1 = lifetime.snapshot()
 
     lifetime.rootNode.potentialPrime = 4
     XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
     let snap2 = lifetime.snapshot()
-    XCTAssertEqual(Tree.main.info?.nodeCount, 1)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 1)
 
     lifetime.rootNode.potentialPrime = 7
     XCTAssertEqual(lifetime.rootNode.primeSquared?.square, 49)
     let snap3 = lifetime.snapshot()
-    XCTAssertEqual(Tree.main.info?.nodeCount, 2)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 2)
 
     lifetime.dispose()
     XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(Tree.main.info?.nodeCount ?? 0, 0)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount ?? 0, 0)
 
-    let lifetime2 = try Tree.main
+    let lifetime2 = try Tree_REMOVE.main
       .start(
         root: PrimeSquare(),
         from: snap3
@@ -135,35 +135,35 @@ final class PlaybackTests: XCTestCase {
     lifetime2.stage(on: stage)
 
     XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, 49)
-    XCTAssertEqual(Tree.main.info?.nodeCount, 2)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 2)
 
     try lifetime2.set(state: snap0)
-    XCTAssert(Tree.main.info?.isConsistent == true)
+    XCTAssert(Tree_REMOVE.main.info?.isConsistent == true)
     XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(Tree.main.info?.nodeCount, 1)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 1)
 
     try lifetime2.set(state: snap1)
-    XCTAssert(Tree.main.info?.isConsistent == true)
+    XCTAssert(Tree_REMOVE.main.info?.isConsistent == true)
     XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, 4)
-    XCTAssertEqual(Tree.main.info?.nodeCount, 2)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 2)
 
     try lifetime2.set(state: snap0)
-    XCTAssert(Tree.main.info?.isConsistent == true)
+    XCTAssert(Tree_REMOVE.main.info?.isConsistent == true)
     XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(Tree.main.info?.nodeCount, 1)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 1)
 
     try lifetime2.set(state: snap3)
-    XCTAssert(Tree.main.info?.isConsistent == true)
+    XCTAssert(Tree_REMOVE.main.info?.isConsistent == true)
     XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, 49)
-    XCTAssertEqual(Tree.main.info?.nodeCount, 2)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 2)
 
     try lifetime2.set(state: snap2)
-    XCTAssert(Tree.main.info?.isConsistent == true)
+    XCTAssert(Tree_REMOVE.main.info?.isConsistent == true)
     XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(Tree.main.info?.nodeCount, 1)
+    XCTAssertEqual(Tree_REMOVE.main.info?.nodeCount, 1)
 
     lifetime2.dispose()
-    XCTAssertFalse(Tree.main.info?.isActive ?? false)
+    XCTAssertFalse(Tree_REMOVE.main.info?.isActive ?? false)
     XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, nil)
   }
 

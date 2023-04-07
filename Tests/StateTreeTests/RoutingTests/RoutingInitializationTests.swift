@@ -16,7 +16,7 @@ final class RoutingInitializationTests: XCTestCase {
 
   @TreeActor
   func test_structuralReinitQuirk() async throws {
-    let testTree = Tree.main
+    let testTree = Tree_REMOVE.main
 
     XCTAssertEqual(0, testTree.info?.height ?? 0)
 

@@ -16,7 +16,7 @@ final class StressTests: XCTestCase {
 
   @TreeActor
   func test_creationThrash() async throws {
-    let testTree = Tree.main
+    let testTree = Tree_REMOVE.main
 
     let desiredDepth = 800
     let repetitions = 4

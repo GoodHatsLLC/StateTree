@@ -15,7 +15,7 @@ final class SingleRouteTests: XCTestCase {
 
   @TreeActor
   func test_singleRoute_route() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: SingleRouteHost(route: true))
     tree.stage(on: stage)
     XCTAssertNotNil(tree.root)
@@ -28,7 +28,7 @@ final class SingleRouteTests: XCTestCase {
 
   @TreeActor
   func test_singleRoute_routeNone() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: SingleRouteHost(route: false))
     tree.stage(on: stage)
     XCTAssertNotNil(tree.root)
@@ -37,7 +37,7 @@ final class SingleRouteTests: XCTestCase {
 
   @TreeActor
   func test_singleRoute_reroute() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: SingleRouteHost(route: true))
     tree.stage(on: stage)
     XCTAssertNotNil(tree.root)

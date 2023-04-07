@@ -14,7 +14,7 @@ final class NodeContextAccess: XCTestCase {
   var context: TreeNode<Parent>!
 
   override func setUp() {
-    let life = try! Tree.main.start(
+    let life = try! Tree_REMOVE.main.start(
       root: Parent()
     )
     life.stage(on: stage)

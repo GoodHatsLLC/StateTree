@@ -2,7 +2,7 @@ import Emitter
 import Foundation
 import StateTree
 
-extension TreeLifetime {
+extension Tree {
 
   /// Create a ``Recorder`` able to record this tree's new frames, prefixing its records with any
   /// passed frames.

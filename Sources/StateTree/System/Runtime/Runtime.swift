@@ -13,24 +13,21 @@ public final class Runtime {
   // MARK: Lifecycle
 
   nonisolated init(
-    tree: Tree,
     dependencies: DependencyValues,
     configuration: RuntimeConfiguration
   ) {
-    self.tree = tree
     self.dependencies = dependencies
     self.configuration = configuration
   }
 
   // MARK: Public
 
-  public var updateEmitter: some Emitter<TreeEvent> {
+  nonisolated public var updateEmitter: some Emitter<TreeEvent> {
     updateSubject
   }
 
   // MARK: Internal
 
-  let tree: Tree
   let configuration: RuntimeConfiguration
 
   // MARK: Private
@@ -196,7 +193,7 @@ extension Runtime {
 
   // MARK: Public
 
-  public var info: StateTreeInfo {
+  nonisolated public var info: StateTreeInfo {
     StateTreeInfo(
       runtime: self,
       scopes: scopes

@@ -24,7 +24,7 @@ public final class Recorder<Root: Node> {
   // MARK: Lifecycle
 
   init(
-    lifetime: TreeLifetime<Root>,
+    lifetime: Tree<Root>,
     frames: [StateFrame] = []
   ) {
     self.lifetime = lifetime
@@ -85,7 +85,7 @@ public final class Recorder<Root: Node> {
   private let currentFrameSubject = ValueSubject<StateFrame?>(.none)
   private let frameCountSubject = ValueSubject<Int>(0)
   private let stage = DisposableStage()
-  private let lifetime: TreeLifetime<Root>
+  private let lifetime: Tree<Root>
 }
 
 // MARK: - RecorderRestartError

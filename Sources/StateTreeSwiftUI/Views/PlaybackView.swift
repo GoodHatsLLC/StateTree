@@ -231,7 +231,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
   }
 
   @TreeNode var root: Root
-  @State var life: TreeLifetime<Root>
+  @State var life: Tree<Root>
   @ViewBuilder var rootViewBuilder: (TreeNode<Root>) -> NodeView
 
   @State var popoverFrame: StateFrame?

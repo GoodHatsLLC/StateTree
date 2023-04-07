@@ -16,7 +16,7 @@ final class RetentionTests: XCTestCase {
 
   @TreeActor
   func test_retention() async throws {
-    let tree = Tree.main
+    let tree = Tree_REMOVE.main
     var scopes: [WeakRef<NodeScope<DeepNode>>] = []
     let count = 800
 

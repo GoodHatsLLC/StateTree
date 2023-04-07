@@ -16,7 +16,7 @@ final class InfoTests: XCTestCase {
 
   @TreeActor
   func test_isActive() async throws {
-    let testTree = Tree.main
+    let testTree = Tree_REMOVE.main
 
     XCTAssertFalse(testTree.info?.isActive == true)
 
@@ -32,7 +32,7 @@ final class InfoTests: XCTestCase {
 
   @TreeActor
   func test_count() async throws {
-    let testTree = Tree.main
+    let testTree = Tree_REMOVE.main
 
     XCTAssertEqual(0, testTree.info?.nodeCount ?? 0)
 

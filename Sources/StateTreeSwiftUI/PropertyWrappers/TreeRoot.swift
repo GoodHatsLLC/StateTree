@@ -10,7 +10,7 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
   // MARK: Lifecycle
 
   public init(
-    tree: Tree = Tree.main,
+    tree: Tree_REMOVE = Tree_REMOVE.main,
     wrappedValue: N
   ) {
     do {
@@ -43,7 +43,7 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
     self
   }
 
-  public func life() -> TreeLifetime<N> {
+  public func life() -> Tree<N> {
     observed.life
   }
 

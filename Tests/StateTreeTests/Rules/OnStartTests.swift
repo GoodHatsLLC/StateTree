@@ -17,7 +17,7 @@ final class OnStartTests: XCTestCase {
 
   @TreeActor
   func test_onStart_asyncSequence() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: OnStartAsyncSequenceHost(sequence: AnyAsyncSequence<Int>([1, 2, 3, 4, 5, 6, 7])))
     tree.stage(on: stage)
     let node = tree.root.node

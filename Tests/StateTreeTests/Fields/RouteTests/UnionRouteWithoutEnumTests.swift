@@ -8,7 +8,7 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
 
   @TreeActor
   func test_directNodeRoute_Union2() async throws {
-    let lifetime = try Tree.main
+    let lifetime = try Tree_REMOVE.main
       .start(
         root: Union2Node()
       )
@@ -23,7 +23,7 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
 
   @TreeActor
   func test_directNodeRoute_Union3() async throws {
-    let lifetime = try Tree.main
+    let lifetime = try Tree_REMOVE.main
       .start(
         root: Union3Node()
       )

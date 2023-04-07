@@ -16,11 +16,6 @@ public struct StateTreeInfo {
 
   // MARK: Public
 
-  /// The ``Tree`` that was starting to make the ``TreeLifetime``.
-  @TreeActor public var tree: Tree {
-    runtime.tree
-  }
-
   /// The ``NodeID`` of the tree's root ``Node`` if the tree is active.
   @TreeActor public var rootID: NodeID? {
     runtime.root?.nid

@@ -15,7 +15,7 @@ final class ProjectionTests: XCTestCase {
 
   @TreeActor
   func test_projection() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: ProjectionHost())
     tree.stage(on: stage)
     let node = tree.rootNode
@@ -28,7 +28,7 @@ final class ProjectionTests: XCTestCase {
 
   @TreeActor
   func test_projection_onChange() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: ReferencedHost(intVal: 5))
     tree.stage(on: stage)
     let node = tree.rootNode

@@ -15,7 +15,7 @@ final class IntentSnapshotTests: XCTestCase {
 
   @TreeActor
   func test_intentSnapshot_restoration() async throws {
-    let life = try Tree()
+    let life = try Tree_REMOVE()
       .start(root: PendingNode<ValueSetNode>())
 
     // The node's values start as false, preventing routing
@@ -52,7 +52,7 @@ final class IntentSnapshotTests: XCTestCase {
     XCTAssertNil(life.info.pendingIntent)
 
     // create a new tree from the saved state
-    let life2 = try Tree()
+    let life2 = try Tree_REMOVE()
       .start(root: PendingNode<ValueSetNode>(), from: snapshot)
     XCTAssert(life2.info.isConsistent)
 

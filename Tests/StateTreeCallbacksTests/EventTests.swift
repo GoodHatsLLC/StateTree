@@ -10,7 +10,7 @@ import XCTest
 final class EventTests: XCTestCase {
 
   func test_startStop() async throws {
-    let tree = ReportedTree(tree: Tree(), root: Parent())
+    let tree = ReportedTree(tree: Tree_REMOVE(), root: Parent())
     let task = Task {
       try await tree.start()
     }
@@ -26,7 +26,7 @@ final class EventTests: XCTestCase {
   }
 
   func test_update() async throws {
-    let tree = ReportedTree(tree: Tree(), root: Parent())
+    let tree = ReportedTree(tree: Tree_REMOVE(), root: Parent())
     let task = Task {
       try await tree.start()
     }
@@ -45,7 +45,7 @@ final class EventTests: XCTestCase {
   }
 
   func test_childUpdates() async throws {
-    let tree = ReportedTree(tree: Tree(), root: Parent())
+    let tree = ReportedTree(tree: Tree_REMOVE(), root: Parent())
     let task = Task {
       try await tree.start()
     }

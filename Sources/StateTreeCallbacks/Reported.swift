@@ -15,7 +15,7 @@ public struct Reported<N: Node>: NodeAccess {
     self.nodeID = reporter.scope.nid
   }
 
-  public init(tree: TreeLifetime<N>) {
+  public init(tree: Tree<N>) {
     let reporter = Reporter(root: tree)
     self.reporter = reporter
     self.nodeID = reporter.scope.nid

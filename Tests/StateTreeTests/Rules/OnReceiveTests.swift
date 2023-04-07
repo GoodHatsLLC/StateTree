@@ -17,7 +17,7 @@ final class OnReceiveTests: XCTestCase {
 
   @TreeActor
   func test_onReceive_finish_asyncSequence() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(
         root: OnReceiveAsyncSequenceHost<AnyAsyncSequence<Int>>(sequence: AnyAsyncSequence<Int>([
           1,
@@ -38,7 +38,7 @@ final class OnReceiveTests: XCTestCase {
   @TreeActor
   func test_onReceive_finish() async throws {
     let subject = PublishSubject<Int>()
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: OnReceiveHost(emitter: subject.erase()))
     tree.stage(on: stage)
     let node = tree.root.node
@@ -57,7 +57,7 @@ final class OnReceiveTests: XCTestCase {
   @TreeActor
   func test_onReceive_fail() async throws {
     let subject = PublishSubject<Int>()
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: OnReceiveHost(emitter: subject.erase()))
     tree.stage(on: stage)
     let node = tree.root.node
@@ -76,7 +76,7 @@ final class OnReceiveTests: XCTestCase {
   @TreeActor
   func test_onReceive_cancel() async throws {
     let subject = PublishSubject<Int>()
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: OnReceiveHost(emitter: subject.erase()))
     tree.stage(on: stage)
     let node = tree.root.node
@@ -99,7 +99,7 @@ extension OnReceiveTests {
   @TreeActor
   func test_onReceive_publisher() async throws {
     let subject = PassthroughSubject<Int, Never>()
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(root: OnReceiveCombineHost(publisher: subject))
     tree.stage(on: stage)
     let node = tree.root.node

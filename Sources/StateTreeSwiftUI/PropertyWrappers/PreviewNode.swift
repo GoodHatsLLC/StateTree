@@ -58,7 +58,7 @@ public struct PreviewLife<N: Node> {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    tree: Tree = Tree(),
+    tree: Tree_REMOVE = Tree_REMOVE(),
     record: TreeStateRecord? = nil,
     dependencies: DependencyValues = .defaults
   ) -> TreeNode<N> {

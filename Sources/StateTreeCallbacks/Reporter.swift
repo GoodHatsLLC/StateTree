@@ -9,7 +9,7 @@ final class Reporter<N: Node> {
 
   // MARK: Lifecycle
 
-  init(root: TreeLifetime<N>) {
+  init(root: Tree<N>) {
     self.scope = root.root
     self.id = root.rootID
     self.disposable = start()

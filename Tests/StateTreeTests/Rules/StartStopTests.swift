@@ -17,7 +17,7 @@ final class StartStopTests: XCTestCase {
   func test_startStop() async throws {
     var startCount = 0
     var stopCount = 0
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(
         root: StartStop(
           start: {
@@ -40,7 +40,7 @@ final class StartStopTests: XCTestCase {
   func test_subnode_startStop() async throws {
     var startCount = 0
     var stopCount = 0
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(
         root: StartStopHost(
           start: {

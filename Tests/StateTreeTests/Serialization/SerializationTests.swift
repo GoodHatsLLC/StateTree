@@ -20,7 +20,7 @@ final class SerializationTests: XCTestCase {
 
   @TreeActor
   func _test_dump_prime() async throws {
-    let life = try Tree()
+    let life = try Tree_REMOVE()
       .start(
         root: PrimeSquare()
       )
@@ -31,7 +31,7 @@ final class SerializationTests: XCTestCase {
 
   @TreeActor
   func _test_dump_nonprime() async throws {
-    let life = try Tree()
+    let life = try Tree_REMOVE()
       .start(
         root: PrimeSquare()
       )
@@ -47,7 +47,7 @@ final class SerializationTests: XCTestCase {
 
   @TreeActor
   func testEncoding() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(
         root: PrimeSquare()
       )
@@ -62,7 +62,7 @@ final class SerializationTests: XCTestCase {
   @TreeActor
   func testDecoding() async throws {
     let state = try TreeStateRecord(formattedJSON: primeStateString)
-    let tree1 = try Tree().start(
+    let tree1 = try Tree_REMOVE().start(
       root: PrimeSquare(),
       from: state
     )
@@ -70,7 +70,7 @@ final class SerializationTests: XCTestCase {
     let snap1 = tree1.snapshot()
     XCTAssertEqual(snap1.formattedJSON, primeStateString)
 
-    let tree2 = try Tree()
+    let tree2 = try Tree_REMOVE()
       .start(root: PrimeSquare())
     tree2.stage(on: stage)
     tree2.rootNode.potentialPrime = 7
@@ -86,7 +86,7 @@ final class SerializationTests: XCTestCase {
 
   @TreeActor
   func testAlternateEncoding() async throws {
-    let tree = try Tree.main
+    let tree = try Tree_REMOVE.main
       .start(
         root: PrimeSquare()
       )
@@ -105,7 +105,7 @@ final class SerializationTests: XCTestCase {
   @TreeActor
   func testAlternateState() async throws {
     let state = try TreeStateRecord(formattedJSON: nonPrimeStateString)
-    let life = try Tree().start(
+    let life = try Tree_REMOVE().start(
       root: PrimeSquare(),
       from: state
     )
