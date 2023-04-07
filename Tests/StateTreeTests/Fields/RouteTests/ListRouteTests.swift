@@ -15,36 +15,35 @@ final class ListRouteTests: XCTestCase {
 
   @TreeActor
   func test_listRoute() async throws {
-    let lifetime = Tree()
-      .start(
+    let tree = Tree(
         root: ListNode()
       )
-    lifetime.stage(on: stage)
-
-    XCTAssertNil(lifetime.rootNode.route)
+    await tree.run(on: stage)
+    let rootNode = try tree.rootNode
+    XCTAssertNil(rootNode.route)
 
     var sorted: [String] = []
     var nodes: [NodeA] = []
 
     func assertAfter(_ nums: [Int]) {
       sorted = nums.map { String($0) }
-      lifetime.rootNode.numbers = nums
-      nodes = lifetime.rootNode.route ?? []
+      rootNode.numbers = nums
+      nodes = rootNode.route ?? []
       XCTAssertEqual(nodes.map(\.idStr), sorted)
     }
 
     assertAfter(Array(0 ..< 100))
     assertAfter(Array(0 ..< 20))
     assertAfter(Array(5 ..< 15))
-    lifetime.rootNode.numbers = (Array(10 ..< 15) + Array(20 ..< 30))
-    nodes = try XCTUnwrap(lifetime.rootNode.route)
+    try tree.rootNode.numbers = (Array(10 ..< 15) + Array(20 ..< 30))
+    nodes = try XCTUnwrap(try tree.rootNode.route)
     XCTAssertEqual(
       nodes.map(\.idStr),
       ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "10", "11", "12", "13", "14"]
     )
     XCTAssertEqual(nodes.count, 15)
-    lifetime.rootNode.numbers! += Array(1000 ..< 2000)
-    XCTAssertEqual(lifetime.rootNode.numbers?.count, 1015)
+    try tree.rootNode.numbers! += Array(1000 ..< 2000)
+    XCTAssertEqual(try tree.rootNode.numbers?.count, 1015)
   }
 }
 

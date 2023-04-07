@@ -15,15 +15,14 @@ final class IntentSnapshotTests: XCTestCase {
 
   @TreeActor
   func test_intentSnapshot_restoration() async throws {
-    let life = try Tree_REMOVE()
-      .start(root: PendingNode<ValueSetNode>())
-
+    let tree = Tree(root: PendingNode<ValueSetNode>())
+    await tree.run(on: stage)
     // The node's values start as false, preventing routing
-    XCTAssertEqual(life.rootNode.shouldRoute, false)
-    XCTAssertEqual(life.rootNode.mayRoute, false)
-    XCTAssertNil(life.rootNode.child)
+    XCTAssertEqual(try tree.rootNode.shouldRoute, false)
+    XCTAssertEqual(try tree.rootNode.mayRoute, false)
+    XCTAssertNil(try tree.rootNode.child)
     // there is no active intent
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.info.pendingIntent)
 
     // make the intent
     let intent = try XCTUnwrap(
@@ -33,40 +32,40 @@ final class IntentSnapshotTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.signal(intent: intent)
 
     // intent has not been fully applied and is still pending
-    XCTAssertEqual(life.rootNode.shouldRoute, false)
-    XCTAssertNil(life.rootNode.child)
-    XCTAssertNotNil(life.info.pendingIntent)
+    XCTAssertEqual(try tree.rootNode.shouldRoute, false)
+    XCTAssertNil(try tree.rootNode.child)
+    XCTAssertNotNil(try tree.info.pendingIntent)
 
     // save the current state
-    let snapshot = life.snapshot()
+    let snapshot = try tree.snapshot()
     // we can poke into the implementation to verify intent exists
     XCTAssertNotNil(snapshot.activeIntent)
 
     // tear down the tree
-    life.dispose()
-    XCTAssertFalse(life.info.isActive)
-    XCTAssert(life.info.isConsistent)
-    XCTAssertNil(life.info.pendingIntent)
+    stage.reset()
+    XCTAssertFalse(try tree.info.isActive)
+    XCTAssert(try tree.info.isConsistent)
+    XCTAssertNil(try tree.info.pendingIntent)
 
     // create a new tree from the saved state
-    let life2 = try Tree_REMOVE()
-      .start(root: PendingNode<ValueSetNode>(), from: snapshot)
-    XCTAssert(life2.info.isConsistent)
+    let tree2 = Tree(root: PendingNode<ValueSetNode>(), from: snapshot)
+    await tree2.run(on: stage)
+    XCTAssert(try tree2.info.isConsistent)
 
     // unblock the pending intent
-    life2.rootNode.mayRoute = true
+    try tree2.rootNode.mayRoute = true
 
     // once the state changes, the intent applies
-    XCTAssertEqual(life2.rootNode.shouldRoute, true)
-    XCTAssertNotNil(life2.rootNode.child)
+    XCTAssertEqual(try tree2.rootNode.shouldRoute, true)
+    XCTAssertNotNil(try tree2.rootNode.child)
     // the snapshot's serialized intent steps apply
-    XCTAssertEqual(life2.rootNode.child?.value, 123)
+    XCTAssertEqual(try tree2.rootNode.child?.value, 123)
 
     // and the intent finishes
-    XCTAssertNil(life2.info.pendingIntent)
+    XCTAssertNil(try tree2.info.pendingIntent)
   }
 }
 

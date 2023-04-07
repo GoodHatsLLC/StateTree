@@ -16,7 +16,7 @@ final class StressTests: XCTestCase {
 
   @TreeActor
   func test_creationThrash() async throws {
-    let testTree = Tree_REMOVE.main
+    let testTree = Tree(root: DeepNode(depth: 1))
 
     let desiredDepth = 800
     let repetitions = 4
@@ -29,14 +29,12 @@ final class StressTests: XCTestCase {
       node.next.map { getDeepest(from: $0) } ?? node
     }
 
-    let lifetime = try testTree
-      .start(root: DeepNode(depth: 1))
-    lifetime.stage(on: stage)
-    XCTAssert(testTree.info?.isActive == true)
+    await testTree.run(on: stage)
+    XCTAssert(try testTree.info.isActive == true)
 
-    let initialSnapshot = lifetime.snapshot()
+    let initialSnapshot = try testTree.snapshot()
 
-    let node = lifetime.root.node
+    let node = try testTree.root.node
 
     node.depth = desiredDepth
     XCTAssertEqual(findDepth(from: node), desiredDepth)
@@ -52,14 +50,14 @@ final class StressTests: XCTestCase {
       XCTAssertEqual(findDepth(from: node), desiredDepth)
     }
 
-    let depthSnapshot = lifetime.snapshot()
+    let depthSnapshot = try testTree.snapshot()
     XCTAssertNotEqual(initialSnapshot, depthSnapshot)
 
     node.depth = 1
-    let finalSnapshot = lifetime.snapshot()
+    let finalSnapshot = try testTree.snapshot()
 
     XCTAssertEqual(initialSnapshot, finalSnapshot)
-    XCTAssert(testTree.info?.isActive == true)
+    XCTAssert(try testTree.info.isActive == true)
   }
 }
 

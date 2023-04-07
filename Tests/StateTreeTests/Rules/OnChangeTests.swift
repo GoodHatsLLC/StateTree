@@ -15,10 +15,9 @@ final class OnChangeTests: XCTestCase {
 
   @TreeActor
   func test_playground() async throws {
-    let tree = Tree()
-      .start(root: OnChangeNode())
-    tree.stage(on: stage)
-    let node = tree.root.node
+    let tree = Tree(root: OnChangeNode())
+    await tree.run(on: stage)
+    let node = try tree.root.node
 
     XCTAssertEqual(node.intVal, 0)
     XCTAssertEqual(node.derived, 0)

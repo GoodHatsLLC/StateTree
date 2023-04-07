@@ -28,12 +28,13 @@ public struct PreviewNode<N: Node> {
   public let wrappedValue: N
 
   public var projectedValue: TreeNode<N> {
-    PreviewLife(root: wrappedValue)
-      .node(
-        moduleFile: moduleFile,
-        line: line,
-        column: column
-      )
+    fatalError()
+//    PreviewLife(root: wrappedValue)
+//      .node(
+//        moduleFile: moduleFile,
+//        line: line,
+//        column: column
+//      )
   }
 
   // MARK: Private
@@ -58,19 +59,20 @@ public struct PreviewLife<N: Node> {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    tree: Tree_REMOVE = Tree_REMOVE(),
+    _ node: N,
     record: TreeStateRecord? = nil,
     dependencies: DependencyValues = .defaults
   ) -> TreeNode<N> {
-    let life = try! tree
-      .start(
-        root: root,
-        from: record,
-        dependencies: dependencies,
-        configuration: .init()
-      )
-    life.stageByUniqueCallSite(fileID: moduleFile, line: line, column: column)
-    return TreeNode(scope: life.root)
+    fatalError()
+//    let life = try! tree
+//      .start(
+//        root: root,
+//        from: record,
+//        dependencies: dependencies,
+//        configuration: .init()
+//      )
+//    life.stageByUniqueCallSite(fileID: moduleFile, line: line, column: column)
+//    return TreeNode(scope: life.root)
   }
 
   private let root: N

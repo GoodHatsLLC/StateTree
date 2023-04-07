@@ -10,29 +10,24 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
   // MARK: Lifecycle
 
   public init(
-    tree: Tree_REMOVE = Tree_REMOVE.main,
-    wrappedValue: N
+    tree: Tree<N>
   ) {
-    do {
-      let root = try ObservableRoot(tree: tree, root: wrappedValue)
+    let root = ObservableRoot(tree: tree)
       _observed = .init(wrappedValue: root)
-    } catch {
-      preconditionFailure(error.localizedDescription)
-    }
   }
 
   // MARK: Public
 
   @_spi(Implementation) public var scope: NodeScope<N> {
-    observed.life.root
+    try! observed.life.root
   }
 
   @_spi(Implementation) public var nid: NodeID {
-    observed.life.root.nid
+    try! observed.life.root.nid
   }
 
   public var wrappedValue: N {
-    observed.life.root.node
+    try! observed.life.root.node
   }
 
   public var root: TreeNode<N> {

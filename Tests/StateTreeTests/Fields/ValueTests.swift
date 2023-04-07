@@ -15,10 +15,9 @@ final class ValueTests: XCTestCase {
 
   @TreeActor
   func test_value() async throws {
-    let tree = Tree()
-      .start(root: ValueTestHost())
-    tree.stage(on: stage)
-    let node = tree.rootNode
+    let tree = Tree(root: ValueTestHost())
+    await tree.run(on: stage)
+    let node = try tree.rootNode
 
     XCTAssertNil(node.val)
     node.val = 1

@@ -17,8 +17,7 @@ final class StartStopTests: XCTestCase {
   func test_startStop() async throws {
     var startCount = 0
     var stopCount = 0
-    let tree = Tree()
-      .start(
+    let tree = Tree(
         root: StartStop(
           start: {
             startCount += 1
@@ -28,10 +27,11 @@ final class StartStopTests: XCTestCase {
           }
         )
       )
+    await tree.run(on: stage)
 
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 0)
-    tree.dispose()
+    stage.dispose()
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 1)
   }
@@ -40,8 +40,7 @@ final class StartStopTests: XCTestCase {
   func test_subnode_startStop() async throws {
     var startCount = 0
     var stopCount = 0
-    let tree = Tree()
-      .start(
+    let tree = Tree(
         root: StartStopHost(
           start: {
             startCount += 1
@@ -51,10 +50,11 @@ final class StartStopTests: XCTestCase {
           }
         )
       )
+    await tree.run(on: stage)
 
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 0)
-    tree.dispose()
+    stage.dispose()
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 1)
   }

@@ -12,8 +12,11 @@ public final class ObservableRoot<N: Node>: ObservableObject {
 
   // MARK: Lifecycle
 
-  init(tree: Tree_REMOVE = .main, root: N) throws {
-    self.life = try tree.start(root: root)
+  init(tree: Tree<N>) {
+    self.life = tree
+    Task {
+      await tree.run()
+    }
   }
 
   // MARK: Internal

@@ -24,10 +24,10 @@ public final class Recorder<Root: Node> {
   // MARK: Lifecycle
 
   init(
-    lifetime: Tree<Root>,
+    tree: Tree<Root>,
     frames: [StateFrame] = []
   ) {
-    self.lifetime = lifetime
+    self.tree = tree
     self.frames = frames
   }
 
@@ -59,21 +59,13 @@ public final class Recorder<Root: Node> {
 
   @TreeActor
   public func start() throws -> AutoDisposable {
-    guard
-      lifetime.runtime.info.isActive
-    else {
-      throw RecorderRestartError()
-    }
-    return lifetime
-      .runtime
-      .behaviorEvents
-      .map { $0.asTreeEvent() }
-      .merge(lifetime.updates)
+    return tree
+      .updates
       .subscribe { [self] event in
         frames
           .append(
             StateFrame(
-              record: lifetime.snapshot(),
+              record: try! tree.snapshot(),
               event: event
             )
           )
@@ -85,7 +77,7 @@ public final class Recorder<Root: Node> {
   private let currentFrameSubject = ValueSubject<StateFrame?>(.none)
   private let frameCountSubject = ValueSubject<Int>(0)
   private let stage = DisposableStage()
-  private let lifetime: Tree<Root>
+  private let tree: Tree<Root>
 }
 
 // MARK: - RecorderRestartError

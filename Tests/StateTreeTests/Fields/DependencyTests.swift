@@ -16,12 +16,12 @@ final class DependencyTests: XCTestCase {
 
   @TreeActor
   func test_dependencyInjection() async throws {
-    let tree = Tree()
-      .start(root: DependencyHost())
-    tree.stage(on: stage)
-    XCTAssertEqual(tree.rootNode.value, "Default Value")
-    XCTAssertEqual(tree.rootNode.hosted?.value, "Some Other Value")
-    XCTAssertEqual(tree.rootNode.hosted?.hosted?.value, "Another Other Value")
+    let tree = Tree(root: DependencyHost())
+    await tree.run(on: stage)
+    let node = try tree.rootNode
+    XCTAssertEqual(node.value, "Default Value")
+    XCTAssertEqual(node.hosted?.value, "Some Other Value")
+    XCTAssertEqual(node.hosted?.hosted?.value, "Another Other Value")
   }
 
 }

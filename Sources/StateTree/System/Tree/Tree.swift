@@ -42,6 +42,24 @@ public final class Tree<N: Node> {
   private let dependencies: DependencyValues
   private let configuration: RuntimeConfiguration
 
+  public func awaitStarted() async throws -> Self {
+    try await withThrowingTaskGroup(of: Self.self) { group in
+      group.addTask {
+        let tree = self
+        _ = try await tree.run().get()
+        throw TreeError.make.inactive
+      }
+      group.addTask {
+        let tree = self
+        await tree.awaitRunning()
+        return tree
+      }
+      guard let tree = try await group.first(where: { _ in true })
+      else { throw TreeError.make.inactive }
+      return tree
+    }
+  }
+
   public func run(from state: TreeStateRecord? = nil) async -> Result<TreeStateRecord, Error> {
     let lifetime = Async.Value<Result<TreeStateRecord, Error>>()
     Task(priority: .high) {

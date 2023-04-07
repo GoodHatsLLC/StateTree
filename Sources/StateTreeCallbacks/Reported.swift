@@ -16,9 +16,10 @@ public struct Reported<N: Node>: NodeAccess {
   }
 
   public init(tree: Tree<N>) {
-    let reporter = Reporter(root: tree)
-    self.reporter = reporter
-    self.nodeID = reporter.scope.nid
+    fatalError()
+//    let reporter = Reporter(root: tree)
+//    self.reporter = reporter
+//    self.nodeID = reporter.scope.nid
   }
 
   // MARK: Public

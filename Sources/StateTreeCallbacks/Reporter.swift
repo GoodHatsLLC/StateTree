@@ -9,12 +9,6 @@ final class Reporter<N: Node> {
 
   // MARK: Lifecycle
 
-  init(root: Tree<N>) {
-    self.scope = root.root
-    self.id = root.rootID
-    self.disposable = start()
-  }
-
   init(scope: NodeScope<N>) {
     self.scope = scope
     self.id = scope.nid

@@ -15,13 +15,12 @@ final class IntentApplicationTests: XCTestCase {
 
   @TreeActor
   func test_singleStep_intentApplication() async throws {
-    let life = Tree()
-      .start(root: ValueSetNode())
-    life.stage(on: stage)
+    let tree = Tree(root: ValueSetNode())
+    await tree.run(on: stage)
 
     // No value since intent has not triggered.
-    XCTAssertNil(life.rootNode.value)
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.rootNode.value)
+    XCTAssertNil(try tree.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -29,22 +28,21 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.signal(intent: intent)
     // intent has been applied
-    XCTAssertEqual(life.rootNode.value, 123)
+    XCTAssertEqual(try tree.rootNode.value, 123)
     // and the intent is finished
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.info.pendingIntent)
   }
 
   @TreeActor
   func test_decodedPayloadStep_intentApplication() async throws {
-    let life = Tree()
-      .start(root: PrivateIntentNode())
-    life.stage(on: stage)
+    let tree = Tree(root: PrivateIntentNode())
+    await tree.run(on: stage)
 
     // No value is present since the intent has not triggered.
-    XCTAssertNil(life.rootNode.payload)
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.rootNode.payload)
+    XCTAssertNil(try tree.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -60,22 +58,21 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.signal(intent: intent)
     // intent has been applied
-    XCTAssertEqual(life.rootNode.payload, "PAYLOAD")
+    XCTAssertEqual(try tree.rootNode.payload, "PAYLOAD")
     // and the intent is finished
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.info.pendingIntent)
   }
 
   @TreeActor
   func test_multiStep_intentApplication() async throws {
-    let life = Tree()
-      .start(root: RoutingIntentNode<ValueSetNode>())
-    life.stage(on: stage)
+    let tree = Tree(root: RoutingIntentNode<ValueSetNode>())
+    await tree.run(on: stage)
 
     // No routed node since intent has not triggered.
-    XCTAssertNil(life.rootNode.child)
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.rootNode.child)
+    XCTAssertNil(try tree.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -84,23 +81,22 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.signal(intent: intent)
     // intent has been applied
-    XCTAssertNotNil(life.rootNode.child)
-    XCTAssertEqual(life.rootNode.child?.value, 321)
+    XCTAssertNotNil(try tree.rootNode.child)
+    XCTAssertEqual(try tree.rootNode.child?.value, 321)
     // and the intent is finished
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.info.pendingIntent)
   }
 
   @TreeActor
   func test_nodeSkippingIntentApplication() async throws {
-    let life = Tree()
-      .start(root: RoutingIntentNode<IntermediateNode<ValueSetNode>>())
-    life.stage(on: stage)
+    let tree = Tree(root: RoutingIntentNode<IntermediateNode<ValueSetNode>>())
+    await tree.run(on: stage)
 
     // No routed node since intent has not triggered.
-    XCTAssertNil(life.rootNode.child)
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.rootNode.child)
+    XCTAssertNil(try tree.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -114,24 +110,23 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.signal(intent: intent)
     // intent has been applied
-    XCTAssertNotNil(life.rootNode.child)
-    XCTAssertEqual(life.rootNode.child?.child?.value, 321)
+    XCTAssertNotNil(try tree.rootNode.child)
+    XCTAssertEqual(try tree.rootNode.child?.child?.value, 321)
     // and the intent is finished
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.info.pendingIntent)
   }
 
   @TreeActor
   func test_singleNodeRepeatedStep_intentApplication() async throws {
-    let life = Tree()
-      .start(root: RepeatStepNode())
-    life.stage(on: stage)
+    let tree = Tree(root: RepeatStepNode())
+    await tree.run(on: stage)
 
     // No value since intent has not triggered.
-    XCTAssertNil(life.rootNode.value1)
-    XCTAssertNil(life.rootNode.value2)
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.rootNode.value1)
+    XCTAssertNil(try tree.rootNode.value2)
+    XCTAssertNil(try tree.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -140,26 +135,25 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.signal(intent: intent)
     // intent has been applied
-    XCTAssertEqual(life.rootNode.value1, "stepOne")
-    XCTAssertEqual(life.rootNode.value2, "stepTwo")
+    XCTAssertEqual(try tree.rootNode.value1, "stepOne")
+    XCTAssertEqual(try tree.rootNode.value2, "stepTwo")
     // and the intent is finished
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.info.pendingIntent)
   }
 
   @TreeActor
   func test_pendingStep_intentApplication() async throws {
-    let life = Tree()
-      .start(root: PendingNode<ValueSetNode>())
-    life.stage(on: stage)
+    let tree = Tree(root: PendingNode<ValueSetNode>())
+    await tree.run(on: stage)
 
     // The node's values start as false, preventing routing
-    XCTAssertEqual(life.rootNode.shouldRoute, false)
-    XCTAssertEqual(life.rootNode.mayRoute, false)
-    XCTAssertNil(life.rootNode.child)
+    XCTAssertEqual(try tree.rootNode.shouldRoute, false)
+    XCTAssertEqual(try tree.rootNode.mayRoute, false)
+    XCTAssertNil(try tree.rootNode.child)
     // there is no active intent
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertNil(try tree.info.pendingIntent)
 
     // make the intent
     let intent = try XCTUnwrap(
@@ -168,39 +162,38 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.signal(intent: intent)
 
     // intent has not been fully applied and is still active
-    XCTAssertEqual(life.rootNode.shouldRoute, false)
-    XCTAssertNil(life.rootNode.child)
-    XCTAssertNotNil(life.info.pendingIntent)
+    XCTAssertEqual(try tree.rootNode.shouldRoute, false)
+    XCTAssertNil(try tree.rootNode.child)
+    XCTAssertNotNil(try tree.info.pendingIntent)
 
-    life.rootNode.mayRoute = true
+    try tree.rootNode.mayRoute = true
 
     // once the state changes, the intent applies and finishes
-    XCTAssertEqual(life.rootNode.shouldRoute, true)
-    XCTAssertNotNil(life.rootNode.child)
-    XCTAssertNil(life.info.pendingIntent)
+    XCTAssertEqual(try tree.rootNode.shouldRoute, true)
+    XCTAssertNotNil(try tree.rootNode.child)
+    XCTAssertNil(try tree.info.pendingIntent)
   }
 
   @TreeActor
   func test_maybeInvalidatedIntent() async throws {
-    try runTest(shouldInvalidate: false)
+    try await runTest(shouldInvalidate: false)
     stage.reset()
-    try runTest(shouldInvalidate: true)
+    try await runTest(shouldInvalidate: true)
 
-    func runTest(shouldInvalidate: Bool) throws {
-      let life = Tree()
-        .start(root: InvalidatingNode<PendingNode<ValueSetNode>>())
-      life.stage(on: stage)
+    func runTest(shouldInvalidate: Bool) async throws {
+      let tree = Tree(root: InvalidatingNode<PendingNode<ValueSetNode>>())
+      await tree.run(on: stage)
 
       // The node's values start false preventing routing
-      XCTAssertEqual(life.rootNode.shouldRoute, false)
-      XCTAssertEqual(life.rootNode.validNext, .initial)
-      XCTAssertNil(life.rootNode.initialNext)
-      XCTAssertNil(life.rootNode.laterNext)
+      XCTAssertEqual(try tree.rootNode.shouldRoute, false)
+      XCTAssertEqual(try tree.rootNode.validNext, .initial)
+      XCTAssertNil(try tree.rootNode.initialNext)
+      XCTAssertNil(try tree.rootNode.laterNext)
       // there is no active intent
-      XCTAssertNil(life.info.pendingIntent)
+      XCTAssertNil(try tree.info.pendingIntent)
 
       // make the intent
       let intent = try XCTUnwrap(
@@ -211,51 +204,51 @@ final class IntentApplicationTests: XCTestCase {
         )
       )
       // signal the intent
-      life.signal(intent: intent)
+      try tree.signal(intent: intent)
 
       // the first intent applies triggering a route to 'initialNext'
-      XCTAssertEqual(life.rootNode.shouldRoute, true)
-      XCTAssertNotNil(life.rootNode.initialNext)
+      XCTAssertEqual(try tree.rootNode.shouldRoute, true)
+      XCTAssertNotNil(try tree.rootNode.initialNext)
       // (the other route to the same node type remains disabled due to the 'validNext' state)
-      XCTAssertEqual(life.rootNode.validNext, .initial)
-      XCTAssertNil(life.rootNode.laterNext)
+      XCTAssertEqual(try tree.rootNode.validNext, .initial)
+      XCTAssertNil(try tree.rootNode.laterNext)
       // but the unrelated 'mayRoute' state prevents routing
-      XCTAssertEqual(life.rootNode.initialNext?.mayRoute, false)
+      XCTAssertEqual(try tree.rootNode.initialNext?.mayRoute, false)
       // the second intent step can not yet apply
-      XCTAssertEqual(life.rootNode.initialNext?.shouldRoute, false)
+      XCTAssertEqual(try tree.rootNode.initialNext?.shouldRoute, false)
       // and so neither can the third
-      XCTAssertNil(life.rootNode.initialNext?.child?.value)
+      XCTAssertNil(try tree.rootNode.initialNext?.child?.value)
       // the intent remains active as its step is pending
-      XCTAssertNotNil(life.info.pendingIntent)
+      XCTAssertNotNil(try tree.info.pendingIntent)
 
       if shouldInvalidate {
-        let initialChildType = type(of: life.rootNode.initialNext)
+        let initialChildType = type(of: try tree.rootNode.initialNext)
 
         // 'mayRoute' keeps the second step pending, while root node's state changes
-        life.rootNode.validNext = .later
+        try tree.rootNode.validNext = .later
 
         // the root's initial child has deallocated and and a new identically typed child is routed
-        XCTAssertNil(life.rootNode.initialNext)
-        XCTAssertNotNil(life.rootNode.laterNext)
-        let laterChildType = type(of: life.rootNode.laterNext)
+        XCTAssertNil(try tree.rootNode.initialNext)
+        XCTAssertNotNil(try tree.rootNode.laterNext)
+        let laterChildType = type(of: try tree.rootNode.laterNext)
         XCTAssertEqual("\(initialChildType)", "\(laterChildType)")
 
         // but the intent has finished
-        XCTAssertNil(life.info.pendingIntent)
+        XCTAssertNil(try tree.info.pendingIntent)
         // and the second and third steps never execute on the new node
-        XCTAssertEqual(life.rootNode.laterNext?.shouldRoute, false)
+        XCTAssertEqual(try tree.rootNode.laterNext?.shouldRoute, false)
 
         // (even if the state blocking the previous node is changed in the new one)
-        life.rootNode.initialNext?.mayRoute = true
-        XCTAssertEqual(life.rootNode.laterNext?.shouldRoute, false)
+        try tree.rootNode.initialNext?.mayRoute = true
+        XCTAssertEqual(try tree.rootNode.laterNext?.shouldRoute, false)
 
       } else {
         // a change to the blocking mayRoute releases the second step from pending and allow
         // the third to execute and the intent to finish
-        life.rootNode.initialNext?.mayRoute = true
-        XCTAssertNotNil(life.rootNode.initialNext?.child)
-        XCTAssertEqual(life.rootNode.initialNext?.child?.value, 111)
-        XCTAssertNil(life.info.pendingIntent)
+        try tree.rootNode.initialNext?.mayRoute = true
+        XCTAssertNotNil(try tree.rootNode.initialNext?.child)
+        XCTAssertEqual(try tree.rootNode.initialNext?.child?.value, 111)
+        XCTAssertNil(try tree.info.pendingIntent)
       }
     }
   }

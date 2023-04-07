@@ -8,34 +8,32 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
 
   @TreeActor
   func test_directNodeRoute_Union2() async throws {
-    let lifetime = Tree()
-      .start(
+    let tree = Tree(
         root: Union2Node()
       )
-    XCTAssertNil(lifetime.rootNode.route)
-    lifetime.rootNode.select = "a"
-    XCTAssertNotNil(lifetime.rootNode.route?.a)
-    lifetime.rootNode.select = "b"
-    XCTAssertNotNil(lifetime.rootNode.route?.b)
-    lifetime.rootNode.select = "bad"
-    XCTAssertNil(lifetime.rootNode.route)
+    XCTAssertNil(try tree.rootNode.route)
+    try tree.rootNode.select = "a"
+    XCTAssertNotNil(try tree.rootNode.route?.a)
+    try tree.rootNode.select = "b"
+    XCTAssertNotNil(try tree.rootNode.route?.b)
+    try tree.rootNode.select = "bad"
+    XCTAssertNil(try tree.rootNode.route)
   }
 
   @TreeActor
   func test_directNodeRoute_Union3() async throws {
-    let lifetime = Tree()
-      .start(
+    let tree = Tree(
         root: Union3Node()
       )
-    XCTAssertNil(lifetime.rootNode.route)
-    lifetime.rootNode.select = "a"
-    XCTAssertNotNil(lifetime.rootNode.route?.a)
-    lifetime.rootNode.select = "b"
-    XCTAssertNotNil(lifetime.rootNode.route?.b)
-    lifetime.rootNode.select = "c"
-    XCTAssertNotNil(lifetime.rootNode.route?.c)
-    lifetime.rootNode.select = "bad"
-    XCTAssertNil(lifetime.rootNode.route)
+    XCTAssertNil(try tree.rootNode.route)
+    try tree.rootNode.select = "a"
+    XCTAssertNotNil(try tree.rootNode.route?.a)
+    try tree.rootNode.select = "b"
+    XCTAssertNotNil(try tree.rootNode.route?.b)
+    try tree.rootNode.select = "c"
+    XCTAssertNotNil(try tree.rootNode.route?.c)
+    try tree.rootNode.select = "bad"
+    XCTAssertNil(try tree.rootNode.route)
   }
 }
 

@@ -12,12 +12,11 @@ public final class ReportedTree<N: Node> {
 
   // MARK: Lifecycle
 
-  public init(tree: Tree_REMOVE = .main, root: N) {
-    self.reportedFunc = {
-      let life = try tree.start(root: root)
-      return (.init(projectedValue: .init(tree: life)), life)
-    }
+  public init(tree: Tree<N>) {
+    self.tree = tree
   }
+
+  private let tree: Tree<N>
 
   // MARK: Public
 
@@ -32,29 +31,25 @@ public final class ReportedTree<N: Node> {
   }
 
   public func start() async throws {
-    guard lifetime == nil
-    else {
-      throw TreeAlreadyStartedError()
+    let rep = try await withThrowingTaskGroup(of: Reported<N>.self) { group in
+      group.addTask {
+        let tree = self.tree
+        _ = try await tree.run().get()
+        return await Reported(tree: tree)
+      }
+      group.addTask {
+        let tree = self.tree
+        await tree.awaitRunning()
+        return await Reported(tree: tree)
+      }
+      return try await group.first { _ in true }
     }
-    let (reported, lifetime) = try reportedFunc()
-    self.lifetime = lifetime
-    subject.emit(value: reported)
-    let asyncValue = Async.Value<Void>()
-    reported.onStop(subscriber: self) {
-      Task { await asyncValue.resolve() }
-    }
-    return await withTaskCancellationHandler {
-      await asyncValue.value
-    } onCancel: {
-      lifetime.dispose()
-    }
+    subject.emit(value: rep)
   }
 
   // MARK: Private
 
-  private var lifetime: Tree<N>?
   private let subject = ValueSubject<Reported<N>?>(nil)
-  private let reportedFunc: () throws -> (Reported<N>, Tree<N>)
 
 }
 

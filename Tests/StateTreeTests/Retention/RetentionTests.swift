@@ -16,14 +16,15 @@ final class RetentionTests: XCTestCase {
 
   @TreeActor
   func test_retention() async throws {
-    let tree = Tree_REMOVE.main
     var scopes: [WeakRef<NodeScope<DeepNode>>] = []
     let count = 800
 
-    try ({
-      let lifetime = try tree
-        .start(root: DeepNode(depth: count))
-      let rootScope = (try? lifetime.runtime.getScope(for: lifetime.rootID))?
+    try await ({
+      let stage = DisposableStage()
+      let tree = Tree(root: DeepNode(depth: count))
+      await tree.run(on: stage)
+      let rootID = try tree.rootID
+      let rootScope = (try? tree.runtime.getScope(for: rootID))?
         .underlying as? NodeScope<DeepNode>
       var maybeScope: NodeScope<DeepNode>? = rootScope
       while let scope = maybeScope {
@@ -34,7 +35,7 @@ final class RetentionTests: XCTestCase {
 
       XCTAssertEqual(scopes.compactMap(\.ref).count, count)
 
-      lifetime.dispose()
+      stage.dispose()
     })()
     XCTAssertEqual(scopes.compactMap(\.ref).count, 0)
   }

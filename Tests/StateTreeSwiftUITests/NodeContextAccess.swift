@@ -11,14 +11,12 @@ import XCTest
 final class NodeContextAccess: XCTestCase {
 
   let stage = DisposableStage()
-  var context: TreeNode<Parent>!
+  var tree: Tree<Parent> = .init(root: Parent())
 
   override func setUp() {
-    let life = try! Tree_REMOVE.main.start(
+    self.tree = Tree(
       root: Parent()
     )
-    life.stage(on: stage)
-    context = TreeNode(scope: life.root)
   }
 
   override func tearDown() {
@@ -26,6 +24,7 @@ final class NodeContextAccess: XCTestCase {
   }
 
   func test_routeAccess() async throws {
+    let context = try await TreeNode(scope: tree.awaitStarted().root)
     XCTAssertEqual(55, context.$single?.v1)
     XCTAssertEqual(nil, context.$union2.a?.v1)
     XCTAssertEqual(55, context.$union2.b?.v1)
