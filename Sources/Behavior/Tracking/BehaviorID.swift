@@ -12,9 +12,7 @@ import Utilities
 ///
 /// > Warning: An auto-generated `BehaviorID` will be stable only as long as the code around
 /// it remains unchanged. Prefer custom identifiers when testing `Behavior` identity.
-public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStringConvertible,
-  CustomDebugStringConvertible
-{
+public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStringConvertible {
 
   // MARK: Lifecycle
 
@@ -53,10 +51,6 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
     "\(value)"
   }
 
-  public var debugDescription: String {
-    "\(debugInfo.map { " [\($0)]" } ?? "")"
-  }
-
   public static func auto(
     moduleFile: String = #file,
     line: Int = #line,
@@ -83,11 +77,11 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    _ id: String
+    _ id: StaticString
   )
     -> BehaviorID
   {
-    .init(value: id, debugInfo: "\(moduleFile):\(line):\(column)")
+    .init(value: "\(id)", debugInfo: "\(moduleFile):\(line):\(column)")
   }
 
   public static func == (lhs: BehaviorID, rhs: BehaviorID) -> Bool {
@@ -99,7 +93,6 @@ public struct BehaviorID: Sendable & Equatable & Hashable & Codable, CustomStrin
   }
 
   public func encode(to encoder: Encoder) throws {
-    // Note: encode dropping code location information in debug.
     var container = encoder.singleValueContainer()
     try container.encode(id)
   }

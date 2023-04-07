@@ -10,11 +10,7 @@ final class PlaybackTests: XCTestCase {
 
   let stage = DisposableStage()
 
-  override func setUp() {
-    NodeID
-      .incrementForTesting()
-      .stage(on: stage)
-  }
+  override func setUp() { }
 
   override func tearDown() {
     stage.reset()
@@ -33,39 +29,38 @@ final class PlaybackTests: XCTestCase {
     let root = tree.rootNode
     root.setNumber(to: 3)
     try await tree.awaitBehaviors()
+    root.setNumber(to: 0)
+    try await tree.awaitBehaviors()
     stage.reset()
     let frames = recorder.frames
     handle.dispose()
-    debugPrint(frames)
 
-    var created = Set<BehaviorID>()
-    var started = Set<BehaviorID>()
-    var finished = Set<BehaviorID>()
+    var created = [BehaviorID: Int]()
+    var started = [BehaviorID: Int]()
+    var finished = [BehaviorID: Int]()
 
     frames.forEach { frame in
       switch frame.event {
       case .behaviorCreated(let id):
-        if created.contains(id) {
-          XCTFail()
-        }
-        created.insert(id)
+        created[id, default: 0] += 1
       case .behaviorStarted(let id):
-        if started.contains(id) {
-          XCTFail()
-        }
-        started.insert(id)
+        started[id, default: 0] += 1
       case .behaviorFinished(let id):
-        if finished.contains(id) {
-          XCTFail()
-        }
-        finished.insert(id)
+        finished[id, default: 0] += 1
       default:
         break
       }
     }
 
-    XCTAssertEqual(created.count, started.count)
-    XCTAssertEqual(created.count, finished.count)
+    let all: [BehaviorID: Int] = [
+      .id("onchange"): 1,
+      .id("onstart"): 1,
+      .id("onstop"): 1,
+      .id("run"): 2,
+    ]
+    XCTAssertEqual(created, all)
+    XCTAssertEqual(started, all)
+    XCTAssertEqual(finished, all)
   }
 
 }
@@ -78,9 +73,7 @@ extension PlaybackTests {
 
     @Projection var number: Int
 
-    var rules: some Rules {
-      ()
-    }
+    var rules: some Rules { () }
   }
 
   // MARK: - Square
@@ -90,7 +83,15 @@ extension PlaybackTests {
     @Projection var number: Int
 
     var rules: some Rules {
-      ()
+      OnChange(number, .id("onchange")) { _ in
+        noop()
+      }
+      OnStart(.id("onstart")) {
+        noop()
+      }
+      OnStop(.id("onstop")) {
+        noop()
+      }
     }
   }
 
@@ -117,9 +118,9 @@ extension PlaybackTests {
     }
 
     func setNumber(to number: Int) {
-      $scope.run {
+      $scope.run(.id("run")) {
         self.number = number
-      }.fireAndForget()
+      }
     }
 
     // MARK: Private
@@ -142,5 +143,7 @@ extension PlaybackTests {
     }
 
   }
+
+  static func noop() { }
 
 }

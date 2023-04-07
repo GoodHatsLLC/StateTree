@@ -16,7 +16,7 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    id: BehaviorID? = nil,
+    _ id: BehaviorID? = nil,
     _ action: @TreeActor @escaping () -> Void
   ) where B == Behaviors.SyncSingle<Void, Void, Never> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
@@ -31,7 +31,7 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    id: BehaviorID? = nil,
+    _ id: BehaviorID? = nil,
     _ action: @TreeActor @escaping () async -> Void
   ) where B == Behaviors.AsyncSingle<Void, Void, Never> {
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
@@ -46,7 +46,7 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    id: BehaviorID? = nil,
+    _ id: BehaviorID? = nil,
     _ behaviorFunc: @escaping () async -> Seq,
     onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
@@ -70,7 +70,7 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
   @TreeActor
   public init(
     _: B.Input,
-    id: BehaviorID? = nil,
+    _ id: BehaviorID? = nil,
     run behavior: B
   ) {
     var behavior = behavior
@@ -85,7 +85,7 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
   @TreeActor
   public init(
     _ value: B.Input,
-    id: BehaviorID? = nil,
+    _ id: BehaviorID? = nil,
     run behavior: B,
     handler: B.Handler
   ) {

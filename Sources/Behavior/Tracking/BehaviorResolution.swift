@@ -64,22 +64,24 @@ extension Behaviors {
     }
 
     func markStarted() async {
-      await started.resolve()
-      startedCallback?()
+      await started.resolve {
+        startedCallback?()
+      }
     }
 
     func resolve(
       to state: Resolved.State,
       act: @escaping () async -> Void = { }
     ) async {
-      await started.resolve()
+      await started.resolve {
+        startedCallback?()
+      }
       await resolution.resolve(
-        to: .init(id: id, state: state),
-        action: {
-          finishedCallback?()
-          await act()
-        }
-      )
+        to: .init(id: id, state: state)
+      ) {
+        finishedCallback?()
+        await act()
+      }
     }
 
     func ifMatching(

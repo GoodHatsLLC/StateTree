@@ -4,6 +4,7 @@ import Utilities
 
 // MARK: - ScopedBehavior
 
+/// TODO: remove
 public struct ScopedBehavior<B: Behavior>: HandlerSurface {
 
   // MARK: Lifecycle

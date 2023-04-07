@@ -11,7 +11,7 @@ public struct OnReceive<Value: Sendable>: Rules {
     line: Int = #line,
     column: Int = #column,
     _ seq: Seq,
-    id: BehaviorID? = nil,
+    _ id: BehaviorID? = nil,
     onValue: @escaping @TreeActor (Value) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
     onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }
@@ -70,7 +70,7 @@ extension OnReceive {
     line: Int = #line,
     column: Int = #column,
     _ emitter: some Emitter<Value>,
-    id: BehaviorID? = nil,
+    _ id: BehaviorID? = nil,
     onValue: @escaping @TreeActor (Value) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
     onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }
@@ -104,7 +104,7 @@ extension OnReceive {
     line: Int = #line,
     column: Int = #column,
     _ publisher: some Publisher<Value, some Error>,
-    id: BehaviorID? = nil,
+    _ id: BehaviorID? = nil,
     onValue: @escaping @TreeActor (Value) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
     onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }

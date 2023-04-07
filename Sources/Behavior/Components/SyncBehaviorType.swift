@@ -8,6 +8,7 @@ public protocol SyncBehaviorType<Input, Output, Failure>: BehaviorType {
   func start(input: Input, handler: Handler, resolving: Behaviors.Resolution) -> AutoDisposable
 }
 
+/// TODO: remove
 extension SyncBehaviorType {
 
   @TreeActor

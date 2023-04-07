@@ -78,19 +78,19 @@ extension Behaviors.SyncSingle: SyncBehaviorType where Failure == Handler.Failur
     do {
       let out = try producer.resolve()
       handler.onResult(.success(out))
-      Task {
-        await resolution.resolve(to: .finished) { }
+      Task.detached {
+        await resolution.resolve(to: .finished)
       }
       return AutoDisposable { }
     } catch let error as Failure {
       handler.onResult(.failure(error))
-      Task {
-        await resolution.resolve(to: .failed) { }
+      Task.detached {
+        await resolution.resolve(to: .failed)
       }
       return AutoDisposable { }
     } catch {
-      Task {
-        await resolution.resolve(to: .failed) { }
+      Task.detached {
+        await resolution.resolve(to: .failed)
       }
       return AutoDisposable { }
     }

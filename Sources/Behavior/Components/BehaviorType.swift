@@ -21,12 +21,12 @@ extension Behavior {
 
   @discardableResult
   @TreeActor
-  public func run(tracker: BehaviorTracker, scope: some BehaviorScoping, input: Input) -> Behaviors
+  public func run(tracker: BehaviorTracker, scope: any BehaviorScoping, input: Input) -> Behaviors
     .Resolution
   {
     let (resolution, finalizer) = StartableBehavior(behavior: self, tracker: tracker)
       .start(tracker: tracker, input: input, scope: scope)
-    Task {
+    Task.detached {
       await finalizer?()
     }
     return resolution
@@ -36,7 +36,7 @@ extension Behavior {
   @TreeActor
   public func run(
     tracker: BehaviorTracker,
-    scope: some BehaviorScoping,
+    scope: any BehaviorScoping,
     input: Input,
     handler: Handler
   )
@@ -54,7 +54,7 @@ extension Behavior {
         tracker: tracker
       )
       .start(tracker: tracker, input: input, scope: scope)
-      Task {
+      Task.detached {
         await finalizer?()
       }
       return resolution
@@ -65,7 +65,7 @@ extension Behavior {
       }
       let (resolution, finalizer) = StartableBehavior(behavior: syncB, handler: h, tracker: tracker)
         .start(tracker: tracker, input: input, scope: scope)
-      Task {
+      Task.detached {
         await finalizer?()
       }
       return resolution
@@ -80,7 +80,7 @@ extension Behavior {
         tracker: tracker
       )
       .start(tracker: tracker, input: input, scope: scope)
-      Task {
+      Task.detached {
         await finalizer?()
       }
       return resolution

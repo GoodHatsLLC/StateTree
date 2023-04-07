@@ -13,12 +13,12 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
   // MARK: Lifecycle
 
   public init<Input>(
-    _ value: Input,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    id: BehaviorID? = nil,
-    _ action: @TreeActor @escaping (_ value: Input) -> Void
+    _ value: Input,
+    _ id: BehaviorID? = nil,
+    action: @TreeActor @escaping (_ value: Input) -> Void
   ) where B == Behaviors.SyncSingle<Input, Void, Never> {
     self.value = value
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
@@ -30,12 +30,12 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
   }
 
   public init<Input>(
-    _ value: Input,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    id: BehaviorID? = nil,
-    _ action: @TreeActor @escaping (_ value: Input) async -> Void
+    _ value: Input,
+    _ id: BehaviorID? = nil,
+    action: @TreeActor @escaping (_ value: Input) async -> Void
   ) where B == Behaviors.AsyncSingle<Input, Void, Never> {
     self.value = value
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
@@ -47,12 +47,12 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
   }
 
   public init<Input, Seq: AsyncSequence>(
-    _ value: Input,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    id: BehaviorID? = nil,
-    behavior behaviorFunc: @escaping (_ value: Input) async -> Seq,
+    _ value: Input,
+    _ id: BehaviorID? = nil,
+    run behaviorFunc: @escaping (_ value: Input) async -> Seq,
     onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
     onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }
@@ -75,8 +75,8 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
 
   @TreeActor
   public init(
+    _ id: BehaviorID? = nil,
     _ value: B.Input,
-    id: BehaviorID? = nil,
     run behavior: B
   ) {
     var behavior = behavior
@@ -91,8 +91,8 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
 
   @TreeActor
   public init(
+    _ id: BehaviorID? = nil,
     _ value: B.Input,
-    id: BehaviorID? = nil,
     run behavior: B,
     handler: B.Handler
   )

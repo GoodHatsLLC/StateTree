@@ -14,6 +14,7 @@ public protocol AsyncBehaviorType<Input, Output, Failure>: BehaviorType {
   var subscriber: Behaviors.AsyncSubscriber<Input, Output, Failure> { get }
 }
 
+/// TODO: remove
 extension AsyncBehaviorType {
 
   // MARK: Public

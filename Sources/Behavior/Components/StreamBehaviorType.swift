@@ -15,6 +15,7 @@ public protocol StreamBehaviorType<Input, Output, Failure>: BehaviorType
     -> AutoDisposable
 }
 
+/// TODO: remove
 extension StreamBehaviorType {
   func scoped(
     to scope: some BehaviorScoping,
