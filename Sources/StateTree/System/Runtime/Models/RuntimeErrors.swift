@@ -68,7 +68,3 @@ struct InvalidInitialStateError: Error { }
 // MARK: - StartedTreeError
 
 struct StartedTreeError: Error { }
-
-public struct InactiveTreeError: Error, CustomDebugStringConvertible {
-  public var debugDescription: String = "The Tree is not active."
-}

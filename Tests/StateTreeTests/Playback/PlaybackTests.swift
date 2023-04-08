@@ -39,18 +39,18 @@ final class PlaybackTests: XCTestCase {
     XCTAssertNotNil(try tree.rootNode.subRoute)
     stage.reset()
 
-    let restartHandle = Tree(
+    let restartTree = Tree(
       root: RootNode()
     )
-    await tree.run(from: laterState, on: stage)
+    await restartTree.run(from: laterState, on: stage)
 
-    let replayedState = try restartHandle.snapshot()
+    let replayedState = try restartTree.snapshot()
     // print("REPLAYED")
     // dump(replayedState)
-    XCTAssertEqual(try restartHandle.rootNode.routeIfNegative, -2)
-    XCTAssertNotNil(try restartHandle.rootNode.subRoute)
-    XCTAssertEqual(try restartHandle.rootNode.subRoute?.value, -2)
-    XCTAssertEqual(try restartHandle.rootNode.subRoute?.subValue, 123)
+    XCTAssertEqual(try restartTree.rootNode.routeIfNegative, -2)
+    XCTAssertNotNil(try restartTree.rootNode.subRoute)
+    XCTAssertEqual(try restartTree.rootNode.subRoute?.value, -2)
+    XCTAssertEqual(try restartTree.rootNode.subRoute?.subValue, 123)
     XCTAssertEqual(replayedState, laterState)
     XCTAssertNotEqual(replayedState, initialState)
     stage.reset()
@@ -120,6 +120,7 @@ final class PlaybackTests: XCTestCase {
     XCTAssertEqual(try lifetime.info.nodeCount, 2)
 
     stage.reset()
+    await lifetime.awaitStopped()
     XCTAssertEqual(try lifetime.rootNode.primeSquared?.square, nil)
     XCTAssertEqual(try lifetime.info.nodeCount, 0)
 

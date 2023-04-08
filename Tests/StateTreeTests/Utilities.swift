@@ -9,16 +9,18 @@ struct WeakRef<T: AnyObject> {
 
 extension Task {
   func stage(on stage: DisposableStage) {
-    Disposables.make {
-      self
-    }.stage(on: stage)
+    AutoDisposable {
+      self.cancel()
+    }
+    .stage(on: stage)
   }
 }
 
 extension Tree {
   func run(from: TreeStateRecord? = nil, on stage: DisposableStage) async {
     Task {
-      await self.run(from: from)
+      let x = await self.run(from: from)
+      print(x)
     }.stage(on: stage)
     await self.awaitRunning()
   }
