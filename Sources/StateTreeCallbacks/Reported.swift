@@ -15,7 +15,7 @@ public struct Reported<N: Node>: NodeAccess {
     self.nodeID = reporter.scope.nid
   }
 
-  public init(tree: Tree<N>) {
+  public init(tree _: Tree<N>) {
     fatalError()
 //    let reporter = Reporter(root: tree)
 //    self.reporter = reporter

@@ -20,7 +20,7 @@ final class OnReceiveTests: XCTestCase {
     let tree = Tree(
       root: OnReceiveAsyncSequenceHost<AnyAsyncSequence<Int>>(
         sequence: AnyAsyncSequence<Int>(
-          [ 1, 2, 3, 4, 5, 6, 7 ]
+          [1, 2, 3, 4, 5, 6, 7]
         )
       )
     )
@@ -33,7 +33,7 @@ final class OnReceiveTests: XCTestCase {
 
   @TreeActor
   func test_onReceive_finish() async throws {
-    let subject = PublishSubject<Int>()
+    let subject = PublishSubject<Int, Never>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
     await tree.run(on: stage)
     let node = try tree.root.node
@@ -51,7 +51,7 @@ final class OnReceiveTests: XCTestCase {
 
   @TreeActor
   func test_onReceive_fail() async throws {
-    let subject = PublishSubject<Int>()
+    let subject = PublishSubject<Int, Never>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
     await tree.run(on: stage)
     let node = try tree.root.node
@@ -69,7 +69,7 @@ final class OnReceiveTests: XCTestCase {
 
   @TreeActor
   func test_onReceive_cancel() async throws {
-    let subject = PublishSubject<Int>()
+    let subject = PublishSubject<Int, Never>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
     await tree.run(on: stage)
     let node = try tree.root.node
@@ -116,7 +116,7 @@ extension OnReceiveTests {
 
   struct OnReceiveHost: Node {
 
-    let emitter: AnyEmitter<Int>
+    let emitter: AnyEmitter<Int, Never>
     @Value var vals: [Int] = []
 
     var rules: some Rules {

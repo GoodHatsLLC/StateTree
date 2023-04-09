@@ -18,15 +18,15 @@ final class StartStopTests: XCTestCase {
     var startCount = 0
     var stopCount = 0
     let tree = Tree(
-        root: StartStop(
-          start: {
-            startCount += 1
-          },
-          stop: {
-            stopCount += 1
-          }
-        )
+      root: StartStop(
+        start: {
+          startCount += 1
+        },
+        stop: {
+          stopCount += 1
+        }
       )
+    )
     await tree.run(on: stage)
 
     XCTAssertEqual(startCount, 1)
@@ -41,15 +41,15 @@ final class StartStopTests: XCTestCase {
     var startCount = 0
     var stopCount = 0
     let tree = Tree(
-        root: StartStopHost(
-          start: {
-            startCount += 1
-          },
-          stop: {
-            stopCount += 1
-          }
-        )
+      root: StartStopHost(
+        start: {
+          startCount += 1
+        },
+        stop: {
+          stopCount += 1
+        }
       )
+    )
     await tree.run(on: stage)
 
     XCTAssertEqual(startCount, 1)

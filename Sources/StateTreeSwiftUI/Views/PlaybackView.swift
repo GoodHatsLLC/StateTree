@@ -245,7 +245,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
   private let recorderStage = DisposableStage()
 
   @State private var scanLocation: Double = 1
-  @State private var scanReporter: ValueSubject<AnyEmitter<Int>>
+  @State private var scanReporter: ValueSubject<AnyEmitter<Int>, Never, Never>
 
   private var player: Player<Root>? {
     switch mode {

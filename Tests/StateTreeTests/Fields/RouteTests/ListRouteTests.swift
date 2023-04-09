@@ -16,8 +16,8 @@ final class ListRouteTests: XCTestCase {
   @TreeActor
   func test_listRoute() async throws {
     let tree = Tree(
-        root: ListNode()
-      )
+      root: ListNode()
+    )
     await tree.run(on: stage)
     let rootNode = try tree.rootNode
     XCTAssertNil(rootNode.route)

@@ -5,6 +5,8 @@ import Foundation
 import TreeActor
 import Utilities
 
+// MARK: - TreeError
+
 public enum TreeError: Error, CustomDebugStringConvertible {
   public var debugDescription: String {
     switch self {
@@ -19,7 +21,7 @@ public enum TreeError: Error, CustomDebugStringConvertible {
   case wrapped(error: Error)
 }
 
-// MARK: - TreeLifetime
+// MARK: - Tree
 
 public final class Tree<N: Node> {
 
@@ -27,76 +29,13 @@ public final class Tree<N: Node> {
 
   public init(
     root inputRoot: N,
-    from initialState: TreeStateRecord? = nil,
+    from _: TreeStateRecord? = nil,
     dependencies: DependencyValues = .defaults,
     configuration: RuntimeConfiguration = .init()
   ) {
     self.inputRoot = inputRoot
     self.dependencies = dependencies
     self.configuration = configuration
-  }
-
-  private let inputRoot: N
-  private let dependencies: DependencyValues
-  private let configuration: RuntimeConfiguration
-
-  @TreeActor
-  @discardableResult
-  public func start() throws -> () async -> Result<TreeStateRecord, TreeError> {
-    if state.runtimeSubject.value != nil {
-      throw TreeError.alreadyStarted
-    }
-    let runtime = Runtime(
-      dependencies: dependencies,
-      configuration: configuration
-    )
-    state.runtimeSubject.emit(value: runtime)
-    do {
-      state.rootScope = try runtime.start(rootNode: inputRoot)
-    } catch {
-      stop()
-      throw TreeError.wrapped(error: error)
-    }
-
-    let async = Async.Value<Result<TreeStateRecord, TreeError>>()
-    state.stopResult = async
-    return {
-      await async.value
-    }
-  }
-
-  private var state: State = .init()
-
-  @TreeActor
-  public func stop() {
-
-    if let asyncResult = state.stopResult {
-      let result: Result<TreeStateRecord, TreeError>
-      if let snap = state.runtime?.snapshot() {
-        result = .success(snap)
-      } else {
-        result = .failure(.inactive)
-      }
-      Task.detached {
-        await asyncResult.resolve(to: result)
-      }
-    }
-    state.runtimeSubject.value?.stop()
-    state.runtimeSubject.emit(value: nil)
-    state.rootScope = nil
-    state.stopResult = nil
-  }
-
-  struct State {
-    var rootScope: NodeScope<N>?
-    var stopResult: Async.Value<Result<TreeStateRecord, TreeError>>?
-    let runtimeSubject = ValueSubject<Runtime?>(nil)
-    var runtimeEmitter: some Emitter<Runtime?> {
-      runtimeSubject
-    }
-    var runtime: Runtime? {
-      runtimeSubject.value
-    }
   }
 
   // MARK: Public
@@ -139,7 +78,7 @@ public final class Tree<N: Node> {
   }
 
   /// A stream of notifications updates emitted when nodes are updated.
-  @TreeActor public var updates: some Emitter<TreeEvent> {
+  @TreeActor public var updates: some Emitter<TreeEvent, Never> {
     runtimePublisher
       .flatMapLatest { $0.updateEmitter }
   }
@@ -160,8 +99,48 @@ public final class Tree<N: Node> {
     }
   }
 
-  private var runtimePublisher: some Emitter<Runtime> {
-    state.runtimeSubject.compactMap(transformer: { $0 })
+  @TreeActor
+  @discardableResult
+  public func start() throws -> () async -> Result<TreeStateRecord, TreeError> {
+    if state.runtimeSubject.value != nil {
+      throw TreeError.alreadyStarted
+    }
+    let runtime = Runtime(
+      dependencies: dependencies,
+      configuration: configuration
+    )
+    state.runtimeSubject.emit(value: runtime)
+    do {
+      state.rootScope = try runtime.start(rootNode: inputRoot)
+    } catch {
+      stop()
+      throw TreeError.wrapped(error: error)
+    }
+
+    let async = Async.Value<Result<TreeStateRecord, TreeError>>()
+    state.stopResult = async
+    return {
+      await async.value
+    }
+  }
+
+  @TreeActor
+  public func stop() {
+    if let asyncResult = state.stopResult {
+      let result: Result<TreeStateRecord, TreeError>
+      if let snap = state.runtime?.snapshot() {
+        result = .success(snap)
+      } else {
+        result = .failure(.inactive)
+      }
+      Task.detached {
+        await asyncResult.resolve(to: result)
+      }
+    }
+    state.runtimeSubject.value?.stop()
+    state.runtimeSubject.emit(value: nil)
+    state.rootScope = nil
+    state.stopResult = nil
   }
 
   /// Await inflight `Behavior` starts.
@@ -232,6 +211,33 @@ public final class Tree<N: Node> {
   @TreeActor
   public func signal(intent: Intent) throws {
     try runtime.signal(intent: intent)
+  }
+
+  // MARK: Internal
+
+  struct State {
+    var rootScope: NodeScope<N>?
+    var stopResult: Async.Value<Result<TreeStateRecord, TreeError>>?
+    let runtimeSubject = ValueSubject<Runtime?, Never>(nil)
+    var runtimeEmitter: some Emitter<Runtime?, Never> {
+      runtimeSubject
+    }
+
+    var runtime: Runtime? {
+      runtimeSubject.value
+    }
+  }
+
+  // MARK: Private
+
+  private let inputRoot: N
+  private let dependencies: DependencyValues
+  private let configuration: RuntimeConfiguration
+
+  private var state: State = .init()
+
+  private var runtimePublisher: some Emitter<Runtime, Never> {
+    state.runtimeSubject.compactMap(transformer: { $0 })
   }
 
 }

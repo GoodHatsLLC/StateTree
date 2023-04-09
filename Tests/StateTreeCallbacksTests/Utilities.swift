@@ -14,6 +14,6 @@ extension Tree {
     Task {
       await self.run()
     }.stage(on: stage)
-    await self.awaitRunning()
+    await awaitRunning()
   }
 }

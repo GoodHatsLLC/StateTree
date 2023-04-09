@@ -14,7 +14,7 @@ final class NodeContextAccess: XCTestCase {
   var tree: Tree<Parent> = .init(root: Parent())
 
   override func setUp() {
-    self.tree = Tree(
+    tree = Tree(
       root: Parent()
     )
   }

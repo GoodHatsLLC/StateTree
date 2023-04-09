@@ -42,11 +42,11 @@ public final class Recorder<Root: Node> {
     frames.last
   }
 
-  public var currentFrameEmitter: some Emitter<StateFrame> {
+  public var currentFrameEmitter: some Emitter<StateFrame, Never> {
     currentFrameSubject.compactMap { $0 }
   }
 
-  public var frameCountEmitter: some Emitter<Int> {
+  public var frameCountEmitter: some Emitter<Int, Never> {
     frameCountSubject
   }
 
@@ -74,8 +74,8 @@ public final class Recorder<Root: Node> {
 
   // MARK: Private
 
-  private let currentFrameSubject = ValueSubject<StateFrame?>(.none)
-  private let frameCountSubject = ValueSubject<Int>(0)
+  private let currentFrameSubject = ValueSubject<StateFrame?, Never>(.none)
+  private let frameCountSubject = ValueSubject<Int, Never>(0)
   private let stage = DisposableStage()
   private let tree: Tree<Root>
 }

@@ -16,8 +16,6 @@ public final class ReportedTree<N: Node> {
     self.tree = tree
   }
 
-  private let tree: Tree<N>
-
   // MARK: Public
 
   public var root: Reported<N> {
@@ -49,7 +47,9 @@ public final class ReportedTree<N: Node> {
 
   // MARK: Private
 
-  private let subject = ValueSubject<Reported<N>?>(nil)
+  private let tree: Tree<N>
+
+  private let subject = ValueSubject<Reported<N>?, Never>(nil)
 
 }
 

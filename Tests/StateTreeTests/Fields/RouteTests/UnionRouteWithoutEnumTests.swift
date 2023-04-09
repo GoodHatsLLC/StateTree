@@ -9,8 +9,8 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
   @TreeActor
   func test_directNodeRoute_Union2() async throws {
     let tree = Tree(
-        root: Union2Node()
-      )
+      root: Union2Node()
+    )
     XCTAssertNil(try tree.rootNode.route)
     try tree.rootNode.select = "a"
     XCTAssertNotNil(try tree.rootNode.route?.a)
@@ -23,8 +23,8 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
   @TreeActor
   func test_directNodeRoute_Union3() async throws {
     let tree = Tree(
-        root: Union3Node()
-      )
+      root: Union3Node()
+    )
     XCTAssertNil(try tree.rootNode.route)
     try tree.rootNode.select = "a"
     XCTAssertNotNil(try tree.rootNode.route?.a)

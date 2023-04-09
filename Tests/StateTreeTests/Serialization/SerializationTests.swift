@@ -42,8 +42,8 @@ final class SerializationTests: XCTestCase {
   @TreeActor
   func testEncoding() async throws {
     let tree = Tree(
-        root: PrimeSquare()
-      )
+      root: PrimeSquare()
+    )
     await tree.run(on: stage)
     try tree.rootNode.potentialPrime = 7
     let snapshot = try tree.snapshot()
@@ -67,7 +67,10 @@ final class SerializationTests: XCTestCase {
     XCTAssertEqual(snap2.formattedJSON, primeStateString)
 
     XCTAssertEqual(try tree1.rootID, try tree2.rootID)
-    XCTAssertEqual(try tree1.rootNode.commentaries?[0].note, try tree2.rootNode.commentaries?[0].note)
+    XCTAssertEqual(
+      try tree1.rootNode.commentaries?[0].note,
+      try tree2.rootNode.commentaries?[0].note
+    )
     XCTAssertEqual(try tree1.rootNode.primeSquared?.value, try tree2.rootNode.primeSquared?.value)
     XCTAssertEqual(try tree1.rootNode.primeSquared?.square, try tree2.rootNode.primeSquared?.square)
     XCTAssertEqual(snap1, snap2)
@@ -76,8 +79,8 @@ final class SerializationTests: XCTestCase {
   @TreeActor
   func testAlternateEncoding() async throws {
     let tree = Tree(
-        root: PrimeSquare()
-      )
+      root: PrimeSquare()
+    )
     await tree.run(on: stage)
     let someIntent = Intent(
       PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),

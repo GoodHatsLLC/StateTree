@@ -61,7 +61,7 @@ public final class BehaviorTracker {
     trackedBehaviors.withLock { $0 }.map { $0 }
   }
 
-  public var behaviorEventEmitter: some Emitter<BehaviorEvent> {
+  public var behaviorEventEmitter: some Emitter<BehaviorEvent, Never> {
     behaviorEventSubject
   }
 
@@ -147,7 +147,7 @@ public final class BehaviorTracker {
 
   // MARK: Private
 
-  private let behaviorEventSubject = PublishSubject<BehaviorEvent>()
+  private let behaviorEventSubject = PublishSubject<BehaviorEvent, Never>()
 
   private let behaviorInterceptors: [BehaviorID: BehaviorInterceptor]
   private var trackedBehaviors: Locked<Set<Behaviors.Resolution>> = .init([])

@@ -23,7 +23,7 @@ public final class Player<Root: Node> {
 
   public let frames: [StateFrame]
 
-  public var currentFrameIndexEmitter: some Emitter<Int> { currentFrameIndexSubject }
+  public var currentFrameIndexEmitter: some Emitter<Int, Never> { currentFrameIndexSubject }
 
   @TreeActor public var currentFrame: StateFrame {
     frames[currentFrameIndex]
@@ -86,7 +86,7 @@ public final class Player<Root: Node> {
 
   private let lifetime: Tree<Root>
   private let finalFrameIndex: Int
-  private let currentFrameIndexSubject: ValueSubject<Int>
+  private let currentFrameIndexSubject: ValueSubject<Int, Never>
   private let stage = DisposableStage()
 }
 

@@ -69,7 +69,7 @@ extension OnReceive {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    _ emitter: some Emitter<Value>,
+    _ emitter: some Emitter<Value, Never>,
     _ id: BehaviorID? = nil,
     onValue: @escaping @TreeActor (Value) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },

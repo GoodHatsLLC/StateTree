@@ -21,8 +21,8 @@ final class PlaybackTests: XCTestCase {
   @TreeActor
   func test_startFrom() async throws {
     let tree = Tree(
-        root: RootNode()
-      )
+      root: RootNode()
+    )
     await tree.run(on: stage)
     XCTAssertNil(try tree.rootNode.subRoute)
     let initialState = try tree.snapshot()
@@ -59,8 +59,8 @@ final class PlaybackTests: XCTestCase {
   @TreeActor
   func test_setState() async throws {
     let tree = Tree(
-        root: RootNode()
-      )
+      root: RootNode()
+    )
     await tree.run(on: stage)
 
     let initialState = try tree.snapshot()
@@ -97,8 +97,8 @@ final class PlaybackTests: XCTestCase {
   @TreeActor
   func test_setState_thrash() async throws {
     let lifetime = Tree(
-        root: PrimeSquare()
-      )
+      root: PrimeSquare()
+    )
     await lifetime.run(on: stage)
     XCTAssertEqual(try lifetime.rootNode.primeSquared?.square, nil)
     let snap0 = try lifetime.snapshot()
@@ -125,8 +125,8 @@ final class PlaybackTests: XCTestCase {
     XCTAssertEqual(try lifetime.info.nodeCount, 0)
 
     let lifetime2 = Tree(
-        root: PrimeSquare()
-      )
+      root: PrimeSquare()
+    )
     await lifetime2.run(from: snap3, on: stage)
 
     XCTAssertEqual(try lifetime2.rootNode.primeSquared?.square, 49)

@@ -56,12 +56,12 @@ public struct PreviewLife<N: Node> {
   }
 
   public func node(
-    moduleFile: String = #file,
-    line: Int = #line,
-    column: Int = #column,
-    _ node: N,
-    record: TreeStateRecord? = nil,
-    dependencies: DependencyValues = .defaults
+    moduleFile _: String = #file,
+    line _: Int = #line,
+    column _: Int = #column,
+    _: N,
+    record _: TreeStateRecord? = nil,
+    dependencies _: DependencyValues = .defaults
   ) -> TreeNode<N> {
     fatalError()
 //    let life = try! tree

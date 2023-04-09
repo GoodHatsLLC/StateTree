@@ -13,7 +13,7 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
     tree: Tree<N>
   ) {
     let root = ObservableRoot(tree: tree)
-      _observed = .init(wrappedValue: root)
+    _observed = .init(wrappedValue: root)
   }
 
   // MARK: Public

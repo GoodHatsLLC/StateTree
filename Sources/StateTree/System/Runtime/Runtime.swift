@@ -22,7 +22,7 @@ public final class Runtime {
 
   // MARK: Public
 
-  nonisolated public var updateEmitter: some Emitter<TreeEvent> {
+  public nonisolated var updateEmitter: some Emitter<TreeEvent, Never> {
     updateSubject
   }
 
@@ -35,8 +35,8 @@ public final class Runtime {
   private let state: StateStorage = .init()
   private let scopes: ScopeStorage = .init()
   private let dependencies: DependencyValues
-  private let didStabilizeSubject = PublishSubject<Void>()
-  private let updateSubject = PublishSubject<TreeEvent>()
+  private let didStabilizeSubject = PublishSubject<Void, Never>()
+  private let updateSubject = PublishSubject<TreeEvent, Never>()
   private var transactionCount: Int = 0
   private var updates: TreeChanges = .none
   private var changeManager: (any ChangeManager)?
@@ -101,13 +101,13 @@ extension Runtime {
 
   // MARK: Public
 
-  public var behaviorEvents: some Emitter<BehaviorEvent> {
+  public var behaviorEvents: some Emitter<BehaviorEvent, Never> {
     configuration.behaviorTracker.behaviorEventEmitter
   }
 
   // MARK: Internal
 
-  var didStabilizeEmitter: some Emitter<Void> {
+  var didStabilizeEmitter: some Emitter<Void, Never> {
     didStabilizeSubject
   }
 
@@ -193,7 +193,7 @@ extension Runtime {
 
   // MARK: Public
 
-  nonisolated public var info: StateTreeInfo {
+  public nonisolated var info: StateTreeInfo {
     StateTreeInfo(
       runtime: self,
       scopes: scopes

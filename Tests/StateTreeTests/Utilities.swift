@@ -22,6 +22,6 @@ extension Tree {
       let x = await self.run(from: from)
       print(x)
     }.stage(on: stage)
-    await self.awaitRunning()
+    await awaitRunning()
   }
 }
