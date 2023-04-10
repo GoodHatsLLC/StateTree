@@ -61,13 +61,13 @@ public final class BehaviorTracker {
     trackedBehaviors.withLock { $0 }.map { $0 }
   }
 
-  public var behaviorEventEmitter: some Emitter<BehaviorEvent, Never> {
+  public var behaviorEvents: some Emitter<BehaviorEvent, Never> {
     behaviorEventSubject
   }
 
-  public var behaviorResolutions: [Behaviors.Resolved] {
+  public var behaviorResolutions: [Behaviors.Result] {
     get async {
-      var resolutions: [Behaviors.Resolved] = []
+      var resolutions: [Behaviors.Result] = []
       let behaviors = trackedBehaviors.withLock { $0 }
       for behavior in behaviors {
         let resolution = await behavior.value
@@ -101,17 +101,12 @@ public final class BehaviorTracker {
     if behaviors.isEmpty {
       runtimeWarning("there are no registered behaviors to await")
     }
-    let action = {
-      for behavior in behaviors {
-        _ = await behavior.value
-      }
-    }
     if let timeoutSeconds {
       try await Async.timeout(seconds: timeoutSeconds) {
-        await action()
+        _ = await self.behaviorResolutions
       }.get()
     } else {
-      await action()
+      _ = await behaviorResolutions
     }
   }
 
@@ -157,7 +152,7 @@ public final class BehaviorTracker {
 extension BehaviorTracker {
 
   public nonisolated func behaviorResolutions(timeoutSeconds: Double? = nil) async throws
-    -> [Behaviors.Resolved]
+    -> [Behaviors.Result]
   {
     guard let timeoutSeconds
     else {

@@ -120,7 +120,7 @@ extension Behaviors {
     Failure: Error
   >: SingleHandlerType {
     public init(
-      onResult: @escaping @TreeActor (_ result: Result<Output, Failure>) -> Void,
+      onResult: @escaping @TreeActor (_ result: Swift.Result<Output, Failure>) -> Void,
       onCancel: @escaping @TreeActor () -> Void
     ) {
       self.onResult = onResult
@@ -139,7 +139,7 @@ extension Behaviors {
 
     // MARK: Internal
 
-    let onResult: @TreeActor (_ result: Result<Output, Failure>) -> Void
+    let onResult: @TreeActor (_ result: Swift.Result<Output, Failure>) -> Void
     let onCancel: @TreeActor () -> Void
 
   }

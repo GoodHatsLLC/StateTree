@@ -221,7 +221,7 @@ public struct StartableBehavior<Input> {
 
   public typealias Starter = (
     resolution: Behaviors.Resolution,
-    finalizer: (() async -> Behaviors.Resolved)?
+    finalizer: (() async -> Behaviors.Result)?
   )
 
   public nonisolated func start(

@@ -8,7 +8,12 @@ import Utilities
 
 @TreeActor
 @_spi(Implementation)
-public final class Runtime {
+public final class Runtime: Equatable {
+  
+  public nonisolated static func == (lhs: Runtime, rhs: Runtime) -> Bool {
+    lhs === rhs
+  }
+
 
   // MARK: Lifecycle
 
@@ -101,8 +106,8 @@ extension Runtime {
 
   // MARK: Public
 
-  public var behaviorEvents: some Emitter<BehaviorEvent, Never> {
-    configuration.behaviorTracker.behaviorEventEmitter
+  nonisolated public var behaviorEvents: some Emitter<BehaviorEvent, Never> {
+    configuration.behaviorTracker.behaviorEvents
   }
 
   // MARK: Internal
@@ -167,7 +172,7 @@ extension Runtime {
       || changeManager != nil
   }
 
-  var behaviorTracker: BehaviorTracker {
+  nonisolated var behaviorTracker: BehaviorTracker {
     configuration.behaviorTracker
   }
 
@@ -329,6 +334,7 @@ extension Runtime {
     }
   }
 
+  @TreeActor
   func getRecord(_ nodeID: NodeID) -> NodeRecord? {
     state.getRecord(nodeID)
   }

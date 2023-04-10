@@ -1,12 +1,14 @@
 import Behavior
 import Disposable
+import Foundation
 import Utilities
 
 // MARK: - NodeScope
 
-@TreeActor
 @_spi(Implementation)
-public final class NodeScope<N: Node> {
+public final class NodeScope<N: Node>: Equatable {
+
+  private let instanceUUID = UUID()
 
   // MARK: Lifecycle
 
@@ -29,7 +31,7 @@ public final class NodeScope<N: Node> {
 
   // MARK: Public
 
-  public var node: N
+  public let node: N
   public let nid: NodeID
   public let cuid: CUID?
   public let depth: Int
@@ -61,7 +63,7 @@ public final class NodeScope<N: Node> {
 
 extension NodeScope: Hashable {
   public nonisolated static func == (lhs: NodeScope<N>, rhs: NodeScope<N>) -> Bool {
-    lhs.nid == rhs.nid
+    lhs.instanceUUID == rhs.instanceUUID
   }
 
   public nonisolated func hash(into hasher: inout Hasher) {
@@ -78,6 +80,7 @@ extension NodeScope: ScopeType {
   public var isActive: Bool { activeRules != nil }
   public var childScopes: [AnyScope] { runtime.childScopes(of: nid) }
 
+  @TreeActor
   public func own(_ disposable: some Disposable) {
     if isActive {
       stage.stage(disposable)
@@ -86,14 +89,16 @@ extension NodeScope: ScopeType {
     }
   }
 
+  @TreeActor
   public func canOwn() -> Bool {
     isActive
   }
 
-  public func erase() -> AnyScope {
+  nonisolated public func erase() -> AnyScope {
     AnyScope(scope: self)
   }
 
+  @TreeActor
   public func stop() throws {
     assert(activeRules != nil)
     activeRules = nil
@@ -103,17 +108,20 @@ extension NodeScope: ScopeType {
 
   // MARK: Private
 
+  @TreeActor
   private func stopSubtree() throws {
     assert(activeRules != nil)
     try activeRules?.removeRule(with: context)
   }
 
+  @TreeActor
   private func start() throws {
     assert(activeRules == nil)
     activeRules = node.rules
     try activeRules?.applyRule(with: context)
   }
 
+  @TreeActor
   private func rebuild() throws {
     if activeRules == nil {
       try start()
@@ -122,10 +130,12 @@ extension NodeScope: ScopeType {
     }
   }
 
+  @TreeActor
   private func disconnect() {
     runtime.disconnect(scopeID: nid)
   }
 
+  @TreeActor
   private func update() throws {
     assert(activeRules != nil)
     try activeRules?.updateRule(
@@ -134,6 +144,7 @@ extension NodeScope: ScopeType {
     )
   }
 
+  @TreeActor
   private func didUpdate() {
     assert(activeRules != nil)
     _ = activeRules?.act(
@@ -142,6 +153,7 @@ extension NodeScope: ScopeType {
     )
   }
 
+  @TreeActor
   private func willStop() {
     assert(activeRules != nil)
     _ = activeRules?.act(
@@ -150,6 +162,7 @@ extension NodeScope: ScopeType {
     )
   }
 
+  @TreeActor
   private func didStart() {
     assert(activeRules != nil)
     _ = activeRules?.act(
@@ -158,6 +171,7 @@ extension NodeScope: ScopeType {
     )
   }
 
+  @TreeActor
   private func handleIntents() {
     guard
       let intent = runtime.activeIntent,
@@ -196,22 +210,27 @@ extension NodeScope {
 
   // MARK: Public
 
+  @TreeActor
   public var requiresReadying: Bool {
     state.requiresReadying
   }
 
+  @TreeActor
   public var requiresFinishing: Bool {
     state.requiresFinishing
   }
 
+  @TreeActor
   public var isStable: Bool {
     state.isStable
   }
 
+  @TreeActor
   public var ancestors: [NodeID] {
     runtime.ancestors(of: nid) ?? []
   }
 
+  @TreeActor
   public func applyIntent(_ intent: Intent) -> StepResolutionInternal {
     let resolutions = activeRules?
       .act(for: .handleIntent(intent), with: context)
@@ -226,6 +245,7 @@ extension NodeScope {
     return first
   }
 
+  @TreeActor
   public func stepTowardsReady() throws -> Bool {
     if let act = state.forward(scope: self) {
       return try act()
@@ -235,6 +255,7 @@ extension NodeScope {
     }
   }
 
+  @TreeActor
   public func stepTowardsFinished() throws -> Bool {
     if let act = state.finalize(scope: self) {
       return try act()
@@ -244,6 +265,7 @@ extension NodeScope {
     }
   }
 
+  @TreeActor
   public func markDirty(
     pending requirement: ExternalRequirement
   ) {
@@ -464,6 +486,7 @@ extension NodeScope {
 
 extension NodeScope {
 
+  @TreeActor
   public var record: NodeRecord {
     runtime
       .getRecord(nid) ?? initialRecord

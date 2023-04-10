@@ -11,14 +11,14 @@ extension Behaviors {
     init(
       id: BehaviorID,
       tracker: BehaviorTracker,
-      value: Resolved? = nil
+      value: Result? = nil
     ) {
       self.id = id
-      let res: Async.Value<Resolved>
+      let res: Async.Value<Result>
       let started: Async.Value<Void>
       let isFinished: Bool
       if let value {
-        (res, started) = (Async.Value<Resolved>(value: value), Async.Value<Void>(value: ()))
+        (res, started) = (Async.Value<Result>(value: value), Async.Value<Void>(value: ()))
         isFinished = true
       } else {
         (res, started) = (.init(), .init())
@@ -39,7 +39,7 @@ extension Behaviors {
 
     public let id: BehaviorID
 
-    public var value: Resolved {
+    public var value: Result {
       get async {
         await resolution.value
       }
@@ -70,7 +70,7 @@ extension Behaviors {
     }
 
     func resolve(
-      to state: Resolved.State,
+      to state: Result.State,
       act: @escaping () async -> Void = { }
     ) async {
       await started.resolve {
@@ -85,7 +85,7 @@ extension Behaviors {
     }
 
     func ifMatching(
-      _ filter: (_ value: Resolved.State?) -> Bool,
+      _ filter: (_ value: Result.State?) -> Bool,
       run act: @escaping () async -> Void
     ) async {
       await resolution.ifMatching({ filter($0?.state) }, action: act)
@@ -96,11 +96,11 @@ extension Behaviors {
     private var startedCallback: (@Sendable () -> Void)?
     private var finishedCallback: (@Sendable () -> Void)?
 
-    private let resolution: Async.Value<Resolved>
+    private let resolution: Async.Value<Result>
     private let started: Async.Value<Void>
   }
 
-  public struct Resolved: Sendable, Hashable {
+  public struct Result: Sendable, Hashable {
 
     public let id: BehaviorID
     public let state: State
