@@ -2,8 +2,9 @@ import Behavior
 
 // MARK: - TreeEvent
 
-public enum TreeEvent: TreeState {
+public enum TreeEvent: TreeState, CustomStringConvertible {
 
+  case recordingStarted
   case treeStarted
   case treeStopped
   case nodeStarted(NodeID)
@@ -54,6 +55,57 @@ public enum TreeEvent: TreeState {
       case .stop: return .nodeStopped(id)
       case .update: return .nodeUpdated(id)
       }
+    }
+  }
+
+  public enum EventCategory {
+    case metadata
+    case update
+  }
+
+  public var category: EventCategory {
+    switch self {
+    case .recordingStarted:
+      return .update
+    case .treeStarted:
+      return .update
+    case .treeStopped:
+      return .update
+    case .nodeStarted:
+      return .update
+    case .nodeUpdated:
+      return .update
+    case .nodeStopped:
+      return .update
+    case .behaviorCreated:
+      return .metadata
+    case .behaviorStarted:
+      return .metadata
+    case .behaviorFinished:
+      return .metadata
+    }
+  }
+
+  public var description: String {
+    switch self {
+    case .recordingStarted:
+      return "started recording"
+    case .treeStarted:
+      return "started tree"
+    case .treeStopped:
+      return "stopped tree"
+    case .nodeStarted(let id):
+      return "started node id: \(id)"
+    case .nodeUpdated(let id):
+      return "updated node id: \(id)"
+    case .nodeStopped(let id):
+      return "stopped node id: \(id)"
+    case .behaviorCreated(let id):
+      return "created behavior id: \(id)"
+    case .behaviorStarted(let id):
+      return "started behavior id: \(id)"
+    case .behaviorFinished(let id):
+      return "finished behavior id: \(id)"
     }
   }
 

@@ -12,7 +12,7 @@ extension Tree {
 
   /// Create a ``Player`` able to re-play the given frames.
   public func player(frames: [StateFrame]) throws -> Player<N> {
-    try Player(lifetime: self, frames: frames)
+    try Player(tree: self, frames: frames)
   }
 
 }

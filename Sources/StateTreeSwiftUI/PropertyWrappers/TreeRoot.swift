@@ -10,8 +10,9 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
   // MARK: Lifecycle
 
   public init(
-    tree: Tree<N>
+    wrappedValue: N
   ) {
+    let tree = Tree(root: wrappedValue, from: nil, dependencies: .defaults, configuration: .init())
     let root = ObservableRoot(tree: tree)
     _observed = .init(wrappedValue: root)
   }
@@ -19,15 +20,15 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
   // MARK: Public
 
   @_spi(Implementation) public var scope: NodeScope<N> {
-    try! observed.life.assume.root
+    try! observed.tree.assume.root
   }
 
   @_spi(Implementation) public var nid: NodeID {
-    try! observed.life.assume.root.nid
+    try! observed.tree.assume.root.nid
   }
 
   public var wrappedValue: N {
-    try! observed.life.assume.root.node
+    try! observed.tree.assume.root.node
   }
 
   public var root: TreeNode<N> {
@@ -38,16 +39,16 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
     self
   }
 
-  public func life() -> Tree<N> {
-    observed.life
+  public func tree() -> Tree<N> {
+    observed.tree
   }
 
   public func player(frames: [StateFrame]) throws -> Player<N> {
-    try observed.life.player(frames: frames)
+    try observed.tree.player(frames: frames)
   }
 
   public func recorder(frames: [StateFrame] = []) -> Recorder<N> {
-    observed.life.recorder(frames: frames)
+    observed.tree.recorder(frames: frames)
   }
 
   // MARK: Internal

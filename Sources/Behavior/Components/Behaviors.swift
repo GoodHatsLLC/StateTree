@@ -89,4 +89,23 @@ extension Behaviors {
       public typealias Throwing = (_ input: Input) async throws -> Output
     }
   }
+
+  public enum Run<Output> {
+
+    public enum StreamFunc {
+      public typealias Concrete<Seq: AsyncSequence> = () async -> Seq
+        where Seq.Element == Output
+      public typealias Erased = () async -> AnyAsyncSequence<Output>
+    }
+
+    public enum SyncFunc {
+      public typealias NonThrowing = @TreeActor () -> Output
+      public typealias Throwing = @TreeActor () throws -> Output
+    }
+
+    public enum AsyncFunc {
+      public typealias NonThrowing = () async -> Output
+      public typealias Throwing = () async throws -> Output
+    }
+  }
 }

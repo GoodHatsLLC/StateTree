@@ -13,12 +13,11 @@ public final class ObservableRoot<N: Node>: ObservableObject {
   // MARK: Lifecycle
 
   init(tree: Tree<N>) {
-    self.life = tree
-    try! tree.start()
+    self.tree = tree
   }
 
   // MARK: Internal
 
-  let life: Tree<N>
+  let tree: Tree<N>
 
 }

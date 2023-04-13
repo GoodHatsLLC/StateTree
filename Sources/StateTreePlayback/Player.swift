@@ -8,15 +8,19 @@ public final class Player<Root: Node> {
 
   // MARK: Lifecycle
 
-  init(lifetime: Tree<Root>, frames: [StateFrame]) throws {
-    guard !frames.isEmpty
+  public init(tree: Tree<Root>, frames: [StateFrame]) throws {
+    guard
+      !frames.isEmpty,
+      let initialFrame = frames.first,
+      initialFrame.state != nil
     else {
       throw NoFramesPlaybackError()
     }
-    self.lifetime = lifetime
+    self.tree = tree
     self.finalFrameIndex = frames.endIndex - 1
     self.currentFrameIndexSubject = .init(finalFrameIndex)
     self.frames = frames
+    self.initialState = initialFrame
   }
 
   // MARK: Public
@@ -45,31 +49,63 @@ public final class Player<Root: Node> {
     Array(frames[0 ... currentFrameIndex])
   }
 
+  @TreeActor  public var currentStateRecord: StateFrame {
+    for i in (0 ..< framesToCurrent.count).reversed() {
+      let frame = frames[i]
+      if let state = frame.state {
+        return .init(data: .update(currentFrame.event, state))
+      }
+    }
+    return initialState
+  }
+
+  @discardableResult
   @TreeActor
-  public func start() throws -> AutoDisposable {
+  public func start() throws -> PlayHandle {
+    guard activeHandle == nil
+    else {
+      throw PlayerAlreadyActiveError()
+    }
     guard !frames.isEmpty
     else {
       throw NoFramesPlaybackError()
     }
 
-    return currentFrameIndexEmitter
+    let disposable = currentFrameIndexEmitter
       .filter { [frameRange] in frameRange.contains($0) }
       .map { [frames] num in
         frames[num]
       }
-      .subscribe { [weak self] frame in
+      .subscribe { [weak self] _ in
         guard let self
         else {
           return
         }
         do {
-          try lifetime.active { active in
-            try active.restore(state: frame.state)
+          try tree.active { active in
+            try active.restore(state: self.currentStateRecord.state!)
           }
         } catch {
           assertionFailure(error.localizedDescription)
         }
       }
+    let handle = PlayHandle {
+      disposable.dispose()
+      self.activeHandle = nil
+      return self.framesToCurrent
+    }
+    activeHandle = handle
+    return handle
+  }
+
+  @discardableResult
+  @TreeActor
+  public func stop() throws -> [StateFrame] {
+    guard let activeHandle
+    else {
+      throw PlayerInactiveError()
+    }
+    return activeHandle.stop()
   }
 
   @TreeActor
@@ -86,12 +122,22 @@ public final class Player<Root: Node> {
 
   // MARK: Private
 
-  private let lifetime: Tree<Root>
+  private let initialState: StateFrame
+
+  private let tree: Tree<Root>
   private let finalFrameIndex: Int
   private let currentFrameIndexSubject: ValueSubject<Int, Never>
-  private let stage = DisposableStage()
+  private var activeHandle: PlayHandle?
 }
 
 // MARK: - NoFramesPlaybackError
 
 struct NoFramesPlaybackError: Error { }
+
+// MARK: - PlayerInactiveError
+
+struct PlayerInactiveError: Error { }
+
+// MARK: - PlayerAlreadyActiveError
+
+struct PlayerAlreadyActiveError: Error { }

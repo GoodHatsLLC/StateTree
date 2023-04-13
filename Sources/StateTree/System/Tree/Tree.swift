@@ -5,37 +5,6 @@ import Foundation
 import TreeActor
 import Utilities
 
-// MARK: - Handle
-
-public struct Handle<N: Node> {
-  public struct StopHandle {
-    let autoDisposable: AutoDisposable
-  }
-
-  let asyncValue: Async.Value<Result<TreeStateRecord, TreeError>>
-  let stopFunc: () throws -> Result<TreeStateRecord, TreeError>
-  public func onFinish() async -> Result<TreeStateRecord, TreeError> {
-    await asyncValue.value
-  }
-
-  public func stop() throws -> Result<TreeStateRecord, TreeError> { try stopFunc() }
-  public func autostop() -> StopHandle { .init(autoDisposable: AutoDisposable { _ = try? stop() }) }
-  @_spi(Implementation) public let root: NodeScope<N>
-}
-
-// MARK: - Handle.StopHandle + Disposable
-
-extension Handle.StopHandle: Disposable {
-  public var isDisposed: Bool {
-    autoDisposable.isDisposed
-  }
-
-  public func dispose() {
-    autoDisposable.dispose()
-  }
-
-}
-
 // MARK: - Tree
 
 public final class Tree<N: Node> {
@@ -270,7 +239,7 @@ public final class Tree<N: Node> {
   /// - Throws: A ``TreeError`` if the tree can't be started.
   @TreeActor
   @discardableResult
-  public func start(from state: TreeStateRecord? = nil) throws -> Handle<N> {
+  public func start(from state: TreeStateRecord? = nil) throws -> TreeHandle<N> {
     let currentState = sessionSubject.value.state
     switch currentState {
     case .inactive: break
@@ -291,7 +260,7 @@ public final class Tree<N: Node> {
       let async = Async.Value<Result<TreeStateRecord, TreeError>>()
       sessionSubject.value.state = .started(runtime: runtime, root: rootScope, result: async)
       onceSessionSubject.value = (runtime: runtime, root: rootScope, result: async)
-      return Handle(
+      return TreeHandle(
         asyncValue: async,
         stopFunc: { try self.stop() },
         root: rootScope

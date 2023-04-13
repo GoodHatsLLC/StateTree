@@ -72,9 +72,9 @@ extension Scope {
 
   /// Run a `Behavior`.
   @TreeActor
-  public func run<B: Behavior>(
-    _ behavior: B,
+  public func behavior<B: Behavior>(
     _ id: BehaviorID? = nil,
+    _ behavior: B,
     input: B.Input,
     handler: B.Handler? = nil
   ) {
@@ -98,123 +98,135 @@ extension Scope {
     }
   }
 
-  /// Run a sequence-output `Behavior`.
   @TreeActor
-  public func run<B: Behavior>(
-    _ behavior: B,
+  public func action<Output>(
     _ id: BehaviorID? = nil,
-    input: B.Input,
-    onValue: @escaping @TreeActor (_ value: B.Output) -> Void,
-    onFinish: @escaping @TreeActor () -> Void,
-    onFailure: @escaping @TreeActor (_ failure: Error) -> Void
-  ) where B.Handler == Behaviors.StreamHandler<Asynchronous, B.Output, Error> {
-    var behavior = behavior
-    if let id {
-      behavior.setID(to: id)
-    }
-    behavior.run(
-      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
-      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      input: input,
-      handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
-    )
-  }
-
-  /// Run an asynchronous throwing single-output `Behavior`.
-  @TreeActor
-  public func run<B: Behavior>(
-    _ behavior: B,
-    _ id: BehaviorID? = nil,
-    input: B.Input,
-    onResult: @escaping @TreeActor (_ result: Result<B.Output, Error>) -> Void
-  ) where B.Handler == Behaviors.SingleHandler<Asynchronous, B.Output, Error> {
-    var behavior = behavior
-    if let id {
-      behavior.setID(to: id)
-    }
-    behavior.run(
-      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
-      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      input: input,
-      handler: .init(onResult: onResult, onCancel: { })
-    )
-  }
-
-  /// Run an asynchronous non-failing single-output `Behavior`.
-  @TreeActor
-  public func run<B: Behavior>(
-    _ behavior: B,
-    _ id: BehaviorID? = nil,
-    input: B.Input,
-    onSuccess: @escaping @TreeActor (_ value: B.Output) -> Void
-  ) where B.Handler == Behaviors.SingleHandler<Asynchronous, B.Output, Never> {
-    var behavior = behavior
-    if let id {
-      behavior.setID(to: id)
-    }
-    behavior.run(
-      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
-      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      input: input,
-      handler: .init(onSuccess: onSuccess, onCancel: { })
-    )
-  }
-
-  /// Run a synchronous throwing single-output `Behavior`.
-  @TreeActor
-  public func run<B: Behavior>(
-    _ behavior: B,
-    _ id: BehaviorID? = nil,
-    input: B.Input,
-    onResult: @escaping @TreeActor (_ result: Result<B.Output, Error>) -> Void
-  ) where B.Handler == Behaviors.SingleHandler<Synchronous, B.Output, Error> {
-    var behavior = behavior
-    if let id {
-      behavior.setID(to: id)
-    }
-    behavior.run(
-      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
-      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      input: input,
-      handler: .init(onResult: onResult, onCancel: { })
-    )
-  }
-
-  /// Run a synchronous non-failing single-output `Behavior`.
-  @TreeActor
-  public func run<B: Behavior>(
-    _ behavior: B,
-    _ id: BehaviorID? = nil,
-    input: B.Input,
-    onSuccess: @escaping @TreeActor (_ value: B.Output) -> Void
-  ) where B.Handler == Behaviors.SingleHandler<Synchronous, B.Output, Never> {
-    var behavior = behavior
-    if let id {
-      behavior.setID(to: id)
-    }
-    behavior.run(
-      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
-      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      input: input,
-      handler: .init(onSuccess: onSuccess, onCancel: { })
-    )
-  }
-
-  /// Create and run a `SyncSingle<Void, Void, Never>` `Behavior`.
-  ///
-  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
-  /// swapped out in tests.
-  /// - Parameter subscribe: the action which runs any of the Behavior's side effects.
-  @TreeActor
-  public func run(
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    _ id: BehaviorID? = nil,
-    subscribe: @escaping Behaviors.Make<Void, Void>.SyncFunc.NonThrowing
+    action: @escaping Behaviors.Run<Output>.AsyncFunc.Throwing,
+    success: @escaping (_ value: Output) -> Void,
+    failure: @escaping (_ error: Error) -> Void
   ) {
-    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
-    let behavior = Behaviors.make(id, input: Void.self, subscribe: subscribe)
+    let id = id ?? BehaviorID.meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: "scope-run"
+    )
+    let behavior = Behaviors.make(id, input: Void.self, subscribe: action)
+    behavior.run(
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
+      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
+      input: (),
+      handler: .init(
+        onResult: { result in
+          switch result {
+          case .success(let value): success(value)
+          case .failure(let error): failure(error)
+          }
+        },
+        onCancel: { }
+      )
+    )
+  }
+
+  @TreeActor
+  public func action<Output>(
+    _ id: BehaviorID? = nil,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    action: @escaping Behaviors.Run<Output>.AsyncFunc.NonThrowing,
+    success: @escaping @TreeActor (_ value: Output) -> Void
+  ) {
+    let id = id ?? BehaviorID.meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: "scope-run"
+    )
+    let behavior = Behaviors.make(id, input: Void.self, subscribe: action)
+    behavior.run(
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
+      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
+      input: (),
+      handler: .init(onSuccess: success, onCancel: { })
+    )
+  }
+
+  @TreeActor
+  public func action<Output>(
+    _ id: BehaviorID? = nil,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    action: @escaping Behaviors.Run<Output>.SyncFunc.Throwing,
+    success: @escaping (_ value: Output) -> Void,
+    failure: @escaping (_ error: Error) -> Void
+  ) {
+    let id = id ?? BehaviorID.meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: "scope-run"
+    )
+    let behavior = Behaviors.make(id, input: Void.self, subscribe: action)
+    behavior.run(
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
+      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
+      input: (),
+      handler: .init(
+        onResult: { result in
+          switch result {
+          case .success(let value): success(value)
+          case .failure(let error): failure(error)
+          }
+        },
+        onCancel: { }
+      )
+    )
+  }
+
+  @TreeActor
+  public func action<Output>(
+    _ id: BehaviorID? = nil,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    action: @escaping Behaviors.Run<Output>.SyncFunc.NonThrowing,
+    success: @escaping @TreeActor (_ value: Output) -> Void
+  ) {
+    let id = id ?? BehaviorID.meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: "scope-run"
+    )
+    let behavior = Behaviors.make(id, input: Void.self, subscribe: action)
+    behavior.run(
+      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
+      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
+      input: (),
+      handler: .init(onSuccess: success, onCancel: { })
+    )
+  }
+
+  @TreeActor
+  public func run(
+    _ id: BehaviorID? = nil,
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    action: @escaping Behaviors.Run<Void>.AsyncFunc.Throwing
+  ) {
+    let id = id ?? BehaviorID.meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: "scope-run"
+    )
+    let behavior = Behaviors.make(id, input: Void.self, subscribe: action)
     behavior.run(
       tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
       scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
@@ -222,25 +234,4 @@ extension Scope {
     )
   }
 
-  /// Create and run a `AsyncSingle<Void, Void, Never>` `Behavior`.
-  ///
-  /// - Parameter id: the ``BehaviorID`` representing the created Behavior — with which it can be
-  /// swapped out in tests.
-  /// - Parameter subscribe: the action which runs any of the Behavior's side effects.
-  @TreeActor
-  public func run(
-    moduleFile: String = #file,
-    line: Int = #line,
-    column: Int = #column,
-    _ id: BehaviorID? = nil,
-    subscribe: @escaping Behaviors.Make<Void, Void>.AsyncFunc.NonThrowing
-  ) {
-    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "run")
-    let behavior = Behaviors.make(id, input: Void.self, subscribe: subscribe)
-    behavior.run(
-      tracker: inner.treeScope?.runtime.behaviorTracker ?? .init(),
-      scope: inner.treeScope?.scope ?? Behaviors.Scope.invalid,
-      input: ()
-    )
-  }
 }

@@ -23,12 +23,13 @@ public final class Recorder<Root: Node> {
 
   // MARK: Lifecycle
 
-  init(
+  public init(
     tree: Tree<Root>,
     frames: [StateFrame] = []
   ) {
     self.tree = tree
     self.frames = frames
+    self.frameCountSubject = ValueSubject<Int, Never>(frames.count)
   }
 
   // MARK: Public
@@ -57,33 +58,76 @@ public final class Recorder<Root: Node> {
     }
   }
 
+  @discardableResult
   @TreeActor
-  public func start() throws -> AutoDisposable {
-    tree
+  public func start() throws -> RecordHandle {
+    guard activeHandle == nil
+    else {
+      throw RecorderAlreadyActiveError()
+    }
+    let prefix = frames.isEmpty ? [TreeEvent.recordingStarted] : []
+    let disposable = tree
       .events
       .treeEventEmitter
-      .subscribe { event in
-        do {
-          let record = try self.tree.assume.snapshot()
-          self.frames
-            .append(
-              StateFrame(
-                record: record,
-                event: event
+      .withPrefix(prefix)
+      .subscribeMain { event in
+        switch event.category {
+        case .metadata:
+          self.frames.append(
+            .init(
+              data: .meta(event)
+            )
+          )
+        case .update:
+          do {
+            self.frames.append(
+              .init(
+                data: .update(
+                  event,
+                  try self.tree.assume.snapshot()
+                )
               )
             )
-        } catch { }
+          } catch {
+            assertionFailure(error.localizedDescription)
+          }
+        }
       }
+    let handle = RecordHandle(stopFunc: {
+      disposable.dispose()
+      self.activeHandle = nil
+      return self.frames
+    })
+    activeHandle = handle
+    return handle
+  }
+
+  @discardableResult
+  @TreeActor
+  public func stop() throws -> [StateFrame] {
+    if let activeHandle {
+      return activeHandle.stop()
+    } else {
+      throw RecorderInactiveError()
+    }
   }
 
   // MARK: Private
 
   private let currentFrameSubject = ValueSubject<StateFrame?, Never>(.none)
-  private let frameCountSubject = ValueSubject<Int, Never>(0)
-  private let stage = DisposableStage()
+  private let frameCountSubject: ValueSubject<Int, Never>
   private let tree: Tree<Root>
+  private var activeHandle: RecordHandle?
 }
 
 // MARK: - RecorderRestartError
 
 struct RecorderRestartError: Error { }
+
+// MARK: - RecorderInactiveError
+
+struct RecorderInactiveError: Error { }
+
+// MARK: - RecorderAlreadyActiveError
+
+struct RecorderAlreadyActiveError: Error { }

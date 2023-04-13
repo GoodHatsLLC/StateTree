@@ -23,28 +23,21 @@ public struct UnauthenticatedModel: Node {
     password: String
   ) {
     isLoading = true
+
     $scope
-      .run {
+      .action {
         try await authClient
           .auth(
             playerX: playerX,
             playerO: playerO,
             password: password
           )
-      }
-      .onResult { result in
-        $scope.transaction {
-          do {
-            let auth = try result.get()
-            shouldHint = false
-            authentication = auth
-            isLoading = false
-          } catch {
-            shouldHint = true
-            isLoading = false
-          }
-        }
-      } onCancel: {
+      } success: { auth in
+        shouldHint = false
+        authentication = auth
+        isLoading = false
+      } failure: { _ in
+        shouldHint = true
         isLoading = false
       }
   }

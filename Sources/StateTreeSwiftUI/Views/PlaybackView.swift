@@ -16,13 +16,13 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     @ViewBuilder rootViewBuilder: @escaping (_ node: TreeNode<Root>) -> NodeView
   ) {
     self.rootViewBuilder = rootViewBuilder
-    _root = TreeNode(scope: root.scope)
-    let life = root.life()
-    _life = .init(wrappedValue: life)
-    let recorder = life.recorder()
+    let tree = root.tree()
+    _tree = .init(wrappedValue: tree)
+    let recorder = Recorder(tree: tree)
     try! recorder
       .start()
-      .stage(on: recorderStage)
+    try! tree.start()
+    _root = TreeNode(scope: root.scope)
     _mode = .init(wrappedValue: .record(recorder))
     _scanReporter = .init(wrappedValue: .init(recorder.frameCountEmitter.erase()))
     _control = .init(wrappedValue: .record)
@@ -33,117 +33,153 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
   public var body: some View {
     VStack {
       Spacer()
-      rootViewBuilder($root)
-        .allowsHitTesting(control == .record)
+      ZStack {
+        rootViewBuilder($root)
+          .allowsHitTesting(control == .record)
+        Color.clear
+          .contentShape(Rectangle())
+          .allowsHitTesting(control == .play)
+          .onTapGesture {
+            withAnimation(.default) {
+              suppressedTapCount += 1
+            }
+          }
+      }
       Spacer()
-      HStack {
-        HStack(spacing: 1.su) {
-          Button {
-            control = .record
-          } label: {
-            Text("⏺️")
-              .font(.title)
-              .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                  .foregroundColor(.red)
-                  .blendMode(.color)
-                  .padding(2)
-                  .opacity(control == .record ? 1 : 0.6)
-              )
+      VStack {
+        HStack {
+          HStack(spacing: 1.su) {
+            Button {
+              control = .record
+            } label: {
+              Text("⏺️")
+                .font(.title)
+                .overlay(
+                  RoundedRectangle(cornerRadius: 4)
+                    .foregroundColor(.pink)
+                    .opacity(control == .record ? 1.0 : 0.5)
+                    .blendMode(.color)
+                    .padding(2)
+                )
+            }
+            .buttonStyle(.borderless)
+            .disabled(control == .record)
+            Button {
+              control = .play
+            } label: {
+              Text("▶️")
+                .font(.title)
+                .overlay(
+                  RoundedRectangle(cornerRadius: 4)
+                    .foregroundColor(.green)
+                    .blendMode(.color)
+                    .opacity(control == .play ? 1.0 : 0.3)
+                    .padding(2)
+                )
+            }
+            .buttonStyle(.borderless)
+            .disabled(control == .play)
           }
-          .buttonStyle(.borderless)
-          .disabled(control == .record)
-          Button {
-            control = .play
-          } label: {
-            Text("▶️")
-              .font(.title)
-              .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                  .foregroundColor(.green)
-                  .blendMode(.color)
-                  .padding(2)
-                  .opacity(control == .play ? 1 : 0.3)
-              )
-          }
-          .buttonStyle(.borderless)
-          .disabled(control == .play)
-        }
 
-        let transition = AnyTransition.slide
-        Slider(
-          value: $scanLocation,
-          in: frameRange,
-          step: 1
-        )
-        .transition(transition)
-        .animation(.default.speed(0.5), value: frameRange)
-        .frame(maxWidth: .infinity)
-        .disabled(control != .play)
-        HStack(spacing: 1.su) {
-          Button {
-            guard let player
-            else {
-              return
-            }
-            scanLocation = Double(player.previous())
-          } label: {
-            Text("⏪")
-              .font(.title)
-              .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                  .foregroundColor(control == .play ? .blue : .gray)
-                  .blendMode(.color)
-                  .padding(2)
-              )
-          }
-          .buttonStyle(.borderless)
+          let transition = AnyTransition.slide
+          Slider(
+            value: $scanLocation,
+            in: frameRange,
+            step: 1
+          )
+          .transition(transition)
+          .animation(.default.speed(0.5), value: frameRange)
+          .frame(maxWidth: .infinity)
           .disabled(control != .play)
-          Button {
-            guard let player
-            else {
-              return
+          HStack(spacing: 1.su) {
+            Button {
+              guard let player
+              else {
+                return
+              }
+              scanLocation = Double(player.previous())
+            } label: {
+              Text("⏪")
+                .font(.title)
+                .overlay(
+                  RoundedRectangle(cornerRadius: 4)
+                    .foregroundColor(control == .play ? .blue : .gray)
+                    .blendMode(.color)
+                    .padding(2)
+                )
+                .opacity(control == .play ? 1 : 0.7)
             }
-            scanLocation = Double(player.next())
-          } label: {
-            Text("⏩")
-              .font(.title)
-              .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                  .foregroundColor(control == .play ? .blue : .gray)
-                  .blendMode(.color)
-                  .padding(2)
-              )
-          }
-          .buttonStyle(.borderless)
-          .disabled(control != .play)
-          Button {
-            popoverFrame = recorder?.currentFrame ?? player?.currentFrame
-          } label: {
-            Text("🔍")
-              .font(.title)
-          }
-          .buttonStyle(.borderless)
-          .padding(.leading)
-          .popover(item: $popoverFrame) { frame in
-            TextEditor(text: .constant(frame.state.formattedJSON))
+            .buttonStyle(.borderless)
+            .disabled(control != .play)
+            Button {
+              guard let player
+              else {
+                return
+              }
+              scanLocation = Double(player.next())
+            } label: {
+              Text("⏩")
+                .font(.title)
+                .overlay(
+                  RoundedRectangle(cornerRadius: 4)
+                    .foregroundColor(control == .play ? .blue : .gray)
+                    .blendMode(.color)
+                    .padding(2)
+                )
+                .opacity(control == .play ? 1 : 0.7)
+            }
+            .buttonStyle(.borderless)
+            .disabled(control != .play)
+            Button {
+              popoverFrame = displayedFrame
+            } label: {
+              Text("🕵️")
+                .font(.title)
+                .overlay(
+                  Text("🕵️")
+                    .font(.title)
+                    .blendMode(.colorBurn)
+                    .padding(2)
+                    .opacity(control == .record ? 0.2 : 0)
+                )
+                .opacity(control == .play ? 1 : 0.7)
+            }
+            .disabled(control != .play)
+            .buttonStyle(.borderless)
+            .popover(item: $popoverFrame) { frame in
+              TextEditor(text: .constant(
+                frame.state?
+                  .formattedJSON ?? "Error: No record available."
+              ))
               .frame(idealWidth: 600, maxWidth: .infinity)
               .font(.footnote.monospaced())
+            }
           }
         }
+        .padding()
+        .background(.background)
+        .cornerRadius(2.su)
+        .shadow(color: .black.opacity(0.1), radius: 0.5.su)
+        .padding([.leading, .trailing])
+        HStack {
+          Spacer()
+          Text(displayedFrame?.event.description ?? "No event information available.")
+            .lineLimit(1)
+            .font(.footnote)
+          Spacer()
+        }
+        .padding([.bottom])
+        .opacity(displayedFrame?.event.description == nil ? 0 : 1.0)
       }
-      .padding()
-      .background(.background)
-      .cornerRadius(2.su)
-      .shadow(color: .black.opacity(0.1), radius: 0.5.su)
-      .padding()
+      .modifier(Shake(animatableData: CGFloat(suppressedTapCount)))
     }
     .background(.thickMaterial)
     .onReceive(
       scanReporter
-        .flatMapLatest(producer: { $0 })
+        .flatMapLatest { $0
+          .replaceFailures(with: 0)
+        }
         .asCombinePublisher()
-        .replaceError(with: -1)
     ) { loc in
       switch mode {
       case .record(let recorder): frameRange = recorder.frameRangeDouble
@@ -165,11 +201,9 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
       switch (mode, control) {
       case (.record(let recorder), .play):
         do {
-          recorderStage.reset()
           let frames = recorder.frames
-          let player = try life.player(frames: frames)
+          let player = try Player(tree: tree, frames: frames)
           try player.start()
-            .stage(on: recorderStage)
           mode = .play(player)
           scanReporter.emit(value: player.currentFrameIndexEmitter.erase())
         } catch {
@@ -177,13 +211,12 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
         }
       case (.play(let player), .record):
         do {
-          recorderStage.reset()
           let keptFrames = player.frames
-          let recorder = life.recorder(frames: keptFrames)
+          try player.stop()
+          let recorder = tree.recorder(frames: keptFrames)
           frameRange = 0.0 ... Double(max(1, keptFrames.count - 1))
           try recorder
             .start()
-            .stage(on: recorderStage)
           mode = .record(recorder)
           scanReporter.emit(value: recorder.frameCountEmitter.erase())
         } catch {
@@ -191,11 +224,9 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
         }
       case (_, .record):
         do {
-          recorderStage.reset()
-          let recorder = life.recorder()
+          let recorder = Recorder(tree: tree)
           try recorder
             .start()
-            .stage(on: recorderStage)
           mode = .record(recorder)
           scanReporter.emit(value: recorder.frameCountEmitter.erase())
         } catch {
@@ -230,8 +261,10 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     }
   }
 
+  @State var suppressedTapCount = 0
+
   @TreeNode var root: Root
-  @State var life: Tree<Root>
+  @State var tree: Tree<Root>
   @ViewBuilder var rootViewBuilder: (TreeNode<Root>) -> NodeView
 
   @State var popoverFrame: StateFrame?
@@ -240,9 +273,11 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
   @State var disposable: AutoDisposable?
   @State var control: ControlMode
 
-  // MARK: Private
+  var displayedFrame: StateFrame? {
+    player?.currentStateRecord
+  }
 
-  private let recorderStage = DisposableStage()
+  // MARK: Private
 
   @State private var scanLocation: Double = 1
   @State private var scanReporter: ValueSubject<AnyEmitter<Int, Never>, Never>
@@ -261,4 +296,20 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     }
   }
 
+}
+
+// MARK: - Shake
+
+struct Shake: GeometryEffect {
+  var amount: CGFloat = 1.su
+  var shakesPerUnit = 3
+  var animatableData: CGFloat
+
+  func effectValue(size _: CGSize) -> ProjectionTransform {
+    ProjectionTransform(CGAffineTransform(
+      translationX:
+      amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)),
+      y: 0
+    ))
+  }
 }
