@@ -18,6 +18,7 @@ final class EventTests: XCTestCase {
       rootDidStopCount += 1
     }
     XCTAssertEqual(rootDidStopCount, 0)
+    try tree.stop()
     XCTAssertEqual(rootDidStopCount, 1)
   }
 

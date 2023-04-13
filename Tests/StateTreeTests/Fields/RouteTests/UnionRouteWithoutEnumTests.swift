@@ -11,6 +11,7 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
     let tree = Tree(
       root: Union2Node()
     )
+    try tree.start()
     XCTAssertNil(try tree.assume.rootNode.route)
     try tree.assume.rootNode.select = "a"
     XCTAssertNotNil(try tree.assume.rootNode.route?.a)
@@ -18,6 +19,7 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
     XCTAssertNotNil(try tree.assume.rootNode.route?.b)
     try tree.assume.rootNode.select = "bad"
     XCTAssertNil(try tree.assume.rootNode.route)
+    try tree.stop()
   }
 
   @TreeActor
@@ -25,6 +27,7 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
     let tree = Tree(
       root: Union3Node()
     )
+    try tree.start()
     XCTAssertNil(try tree.assume.rootNode.route)
     try tree.assume.rootNode.select = "a"
     XCTAssertNotNil(try tree.assume.rootNode.route?.a)
@@ -34,6 +37,7 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
     XCTAssertNotNil(try tree.assume.rootNode.route?.c)
     try tree.assume.rootNode.select = "bad"
     XCTAssertNil(try tree.assume.rootNode.route)
+    try tree.stop()
   }
 }
 

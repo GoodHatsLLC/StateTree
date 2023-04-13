@@ -203,7 +203,7 @@ public final class Tree<N: Node> {
     ///
     /// > Note: This method is used as part of `StateTreePlayback` time travel debugging.
     @TreeActor
-    public func set(state: TreeStateRecord) throws {
+    public func restore(state: TreeStateRecord) throws {
       try runtime.set(state: state)
     }
 

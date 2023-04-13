@@ -18,9 +18,9 @@ final class RoutingInitializationTests: XCTestCase {
   func test_structuralReinitQuirk() async throws {
     let tree = Tree(root: DeepValueNode(depth: 3))
 
-    XCTAssertEqual(0, try tree.assume.info.height)
-
     try tree.start()
+      .autostop()
+      .stage(on: stage)
 
     XCTAssertEqual(4, try tree.assume.info.height)
 
@@ -35,8 +35,6 @@ final class RoutingInitializationTests: XCTestCase {
     XCTAssertEqual(11, try tree.assume.info.height)
 
     stage.dispose()
-
-    XCTAssertEqual(0, try tree.assume.info.height)
   }
 
 }

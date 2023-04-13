@@ -17,6 +17,9 @@ final class NodeContextAccess: XCTestCase {
     tree = Tree(
       root: Parent()
     )
+    try! tree.start()
+      .autostop()
+      .stage(on: stage)
   }
 
   override func tearDown() {

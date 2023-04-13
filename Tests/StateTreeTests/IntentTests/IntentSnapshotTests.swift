@@ -52,7 +52,7 @@ final class IntentSnapshotTests: XCTestCase {
 
     // create a new tree from the saved state
     let tree2 = Tree(root: PendingNode<ValueSetNode>(), from: snapshot)
-    try tree2.start()
+    try tree2.start(from: snapshot)
       .autostop()
       .stage(on: stage)
 

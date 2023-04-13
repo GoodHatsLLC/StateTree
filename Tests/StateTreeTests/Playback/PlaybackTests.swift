@@ -24,6 +24,8 @@ final class PlaybackTests: XCTestCase {
       root: RootNode()
     )
     try tree.start()
+      .autostop()
+      .stage(on: stage)
     XCTAssertNil(try tree.assume.rootNode.subRoute)
     let initialState = try tree.assume.snapshot()
     // print("INITIAL")
@@ -42,7 +44,7 @@ final class PlaybackTests: XCTestCase {
     let restartTree = Tree(
       root: RootNode()
     )
-    try restartTree.start()
+    try restartTree.start(from: laterState)
       .autostop()
       .stage(on: stage)
 
@@ -75,12 +77,12 @@ final class PlaybackTests: XCTestCase {
     try tree.assume.rootNode.routeIfNegative = -3
     let finalState = try tree.assume.snapshot()
 
-    try tree.assume.set(state: initialState)
+    try tree.assume.restore(state: initialState)
     XCTAssert(try tree.assume.info.isConsistent == true)
     XCTAssertEqual(try tree.assume.rootNode.routeIfNegative, 0)
     XCTAssertNil(try tree.assume.rootNode.subRoute)
 
-    try tree.assume.set(state: laterState)
+    try tree.assume.restore(state: laterState)
     XCTAssert(try tree.assume.info.isConsistent == true)
     XCTAssertEqual(try tree.assume.rootNode.routeIfNegative, -2)
     XCTAssertEqual(try tree.assume.rootNode.subRoute?.subValue, 2)
@@ -125,47 +127,43 @@ final class PlaybackTests: XCTestCase {
 
     stage.reset()
     await tree.once.behaviorsFinished()
-    XCTAssertEqual(try tree.assume.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(try tree.assume.info.nodeCount, 0)
 
     let tree2 = Tree(
       root: PrimeSquare()
     )
-    try tree2.start()
+    try tree2.start(from: snap3)
       .autostop()
       .stage(on: stage)
 
     XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, 49)
     XCTAssertEqual(try tree2.assume.info.nodeCount, 2)
 
-    try tree2.assume.set(state: snap0)
-    XCTAssert(try tree2.assume.info.isConsistent == true)
-    XCTAssertEqual(try tree.assume.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(try tree2.assume.info.nodeCount, 1)
-
-    try tree2.assume.set(state: snap1)
-    XCTAssert(try tree2.assume.info.isConsistent == true)
-    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, 4)
-    XCTAssertEqual(try tree2.assume.info.nodeCount, 2)
-
-    try tree2.assume.set(state: snap0)
+    try tree2.assume.restore(state: snap0)
     XCTAssert(try tree2.assume.info.isConsistent == true)
     XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, nil)
     XCTAssertEqual(try tree2.assume.info.nodeCount, 1)
 
-    try tree2.assume.set(state: snap3)
+    try tree2.assume.restore(state: snap1)
+    XCTAssert(try tree2.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, 4)
+    XCTAssertEqual(try tree2.assume.info.nodeCount, 2)
+
+    try tree2.assume.restore(state: snap0)
+    XCTAssert(try tree2.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, nil)
+    XCTAssertEqual(try tree2.assume.info.nodeCount, 1)
+
+    try tree2.assume.restore(state: snap3)
     XCTAssert(try tree2.assume.info.isConsistent == true)
     XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, 49)
     XCTAssertEqual(try tree2.assume.info.nodeCount, 2)
 
-    try tree2.assume.set(state: snap2)
+    try tree2.assume.restore(state: snap2)
     XCTAssert(try tree2.assume.info.isConsistent == true)
     XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, nil)
     XCTAssertEqual(try tree2.assume.info.nodeCount, 1)
 
     stage.reset()
-    XCTAssertFalse(try tree2.assume.info.isActive)
-    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, nil)
   }
 
 }

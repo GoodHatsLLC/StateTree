@@ -64,7 +64,7 @@ public final class Player<Root: Node> {
         }
         do {
           try lifetime.active { active in
-            try active.set(state: frame.state)
+            try active.restore(state: frame.state)
           }
         } catch {
           assertionFailure(error.localizedDescription)

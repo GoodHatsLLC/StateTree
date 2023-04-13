@@ -31,7 +31,7 @@ final class StartStopTests: XCTestCase {
 
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 0)
-    stage.dispose()
+    try tree.stop()
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 1)
   }
@@ -54,7 +54,7 @@ final class StartStopTests: XCTestCase {
 
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 0)
-    stage.dispose()
+    try tree.stop()
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 1)
   }
