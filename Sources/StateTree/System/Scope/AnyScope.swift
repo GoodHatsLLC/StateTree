@@ -10,7 +10,7 @@ public struct AnyScope: Hashable {
 
   // MARK: Lifecycle
 
-  nonisolated init<N: Node>(scope: some ScopeType<N>) {
+  nonisolated init(scope: some ScopeType<some Node>) {
     self.nid = scope.nid
     self.depth = scope.depth
     self.underlying = scope

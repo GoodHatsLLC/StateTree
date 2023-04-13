@@ -9,11 +9,6 @@ import Utilities
 @TreeActor
 @_spi(Implementation)
 public final class Runtime: Equatable {
-  
-  public nonisolated static func == (lhs: Runtime, rhs: Runtime) -> Bool {
-    lhs === rhs
-  }
-
 
   // MARK: Lifecycle
 
@@ -29,6 +24,10 @@ public final class Runtime: Equatable {
 
   public nonisolated var updateEmitter: some Emitter<TreeEvent, Never> {
     updateSubject
+  }
+
+  public nonisolated static func == (lhs: Runtime, rhs: Runtime) -> Bool {
+    lhs === rhs
   }
 
   // MARK: Internal
@@ -106,7 +105,7 @@ extension Runtime {
 
   // MARK: Public
 
-  nonisolated public var behaviorEvents: some Emitter<BehaviorEvent, Never> {
+  public nonisolated var behaviorEvents: some Emitter<BehaviorEvent, Never> {
     configuration.behaviorTracker.behaviorEvents
   }
 

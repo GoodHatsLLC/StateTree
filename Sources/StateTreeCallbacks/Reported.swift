@@ -15,7 +15,8 @@ public struct Reported<N: Node>: NodeAccess {
     self.nodeID = reporter.scope.nid
   }
 
-  @_spi(Implementation) public init(_ tree: NodeScope<N>) {
+  @_spi(Implementation)
+  public init(_ tree: NodeScope<N>) {
     let reporter = Reporter(scope: tree)
     self.reporter = reporter
     self.nodeID = reporter.scope.nid

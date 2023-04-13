@@ -4,9 +4,6 @@ extension Async {
 
   /// A value `T` which will eventually be resolved for access.
   public actor Value<T: Sendable>: Equatable {
-    public static func == (lhs: Async.Value<T>, rhs: Async.Value<T>) -> Bool {
-      lhs === rhs
-    }
 
     // MARK: Lifecycle
 
@@ -40,6 +37,10 @@ extension Async {
           }
         }
       }
+    }
+
+    public static func == (lhs: Async.Value<T>, rhs: Async.Value<T>) -> Bool {
+      lhs === rhs
     }
 
     /// Resolve to the passed `T` instance, unless already resolved.

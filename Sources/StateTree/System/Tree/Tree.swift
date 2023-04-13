@@ -5,29 +5,34 @@ import Foundation
 import TreeActor
 import Utilities
 
+// MARK: - Handle
+
 public struct Handle<N: Node> {
   public struct StopHandle {
     let autoDisposable: AutoDisposable
   }
+
   let asyncValue: Async.Value<Result<TreeStateRecord, TreeError>>
   let stopFunc: () throws -> Result<TreeStateRecord, TreeError>
   public func onFinish() async -> Result<TreeStateRecord, TreeError> {
     await asyncValue.value
   }
+
   public func stop() throws -> Result<TreeStateRecord, TreeError> { try stopFunc() }
-  public func autostop() -> StopHandle { .init(autoDisposable: AutoDisposable { _ = try? self.stop() }) }
+  public func autostop() -> StopHandle { .init(autoDisposable: AutoDisposable { _ = try? stop() }) }
   @_spi(Implementation) public let root: NodeScope<N>
 }
 
-extension Handle.StopHandle: Disposable {
-  public func dispose() {
-    autoDisposable.dispose()
-  }
+// MARK: - Handle.StopHandle + Disposable
 
+extension Handle.StopHandle: Disposable {
   public var isDisposed: Bool {
     autoDisposable.isDisposed
   }
 
+  public func dispose() {
+    autoDisposable.dispose()
+  }
 
 }
 
@@ -54,11 +59,225 @@ public final class Tree<N: Node> {
 
   // MARK: Public
 
+  public struct Events {
+    let sessionSubject: ValueSubject<Session, Never>
+
+    @_spi(Implementation) public var runtime: some Emitter<Runtime, Never> {
+      sessionSubject
+        .compactMap { session in
+          switch session.state {
+          case .created(let runtime): return runtime
+          case .started(let runtime, _, _): return runtime
+          default: return nil
+          }
+        }
+    }
+
+    /// A stream of notifications behavior events.
+    @_spi(Implementation) public var behaviorEventEmitter: some Emitter<BehaviorEvent, Never> {
+      runtime
+        .flatMapLatest { runtime in
+          runtime.behaviorTracker.behaviorEvents
+        }
+    }
+
+    /// A stream of notifications updates emitted when nodes are updated.
+    @_spi(Implementation) public var treeEventEmitter: some Emitter<TreeEvent, Never> {
+      runtime
+        .flatMapLatest { runtime in
+          runtime.updateEmitter
+        }
+    }
+  }
+
+  public struct Once {
+
+    // MARK: Public
+
+    /// The internal StateTree `Runtime` responsible for managing ``Node`` and ``TreeStateRecord``
+    /// updates.
+    @_spi(Implementation) public var runtime: Runtime {
+      get async {
+        while true {
+          if let session = await sessionSubject.firstValue {
+            if case .started(let runtime, _, _) = session.state {
+              return runtime
+            } else if case .created(let runtime) = session.state {
+              return runtime
+            }
+          }
+        }
+      }
+    }
+
+    @_spi(Implementation) public var root: NodeScope<N> {
+      get async {
+        while true {
+          if
+            let session = await sessionSubject.firstValue,
+            case .started(_, let root, _) = session.state
+          {
+            return root
+          }
+        }
+      }
+    }
+
+    @_spi(Implementation) public var result: Result<TreeStateRecord, TreeError> {
+      get async {
+        while true {
+          if
+            let session = await sessionSubject.firstValue,
+            case .ended(let result) = session.state
+          {
+            return result
+          }
+        }
+      }
+    }
+
+    /// Await inflight `Behavior` starts.
+    ///
+    /// `Behavior`s are created synchronously but often started asynchronously.
+    /// Before starting behaviors can not read from a data source. In testing when
+    /// mocking the data source it can be useful to wait for this ready state before
+    /// simulating its side effects or providing its data.
+    @discardableResult
+    public func behaviorsStarted() async -> [BehaviorID] {
+      let behaviors = await runtime.behaviorTracker.behaviors
+      var startedBehaviorIDs: [BehaviorID] = []
+      for behavior in behaviors {
+        await behavior.awaitReady()
+        startedBehaviorIDs.append(behavior.id)
+      }
+      return startedBehaviorIDs
+    }
+
+    /// Await the `Result` states of all `Behaviors` registered on the tree.
+    ///
+    /// `Behavior`s often act asynchronously. This testing method allows
+    /// waiting for their completion before verifying their effects.
+    ///
+    /// > Important: This method will not return until all behaviors tracked *at its call time* have
+    /// resolved.
+    @discardableResult
+    public func behaviorsFinished() async -> [Behaviors.Result] {
+      let behaviors = await runtime.behaviorTracker.behaviors
+      var resolutions: [Behaviors.Result] = []
+      for behavior in behaviors {
+        let resolution = await behavior.value
+        resolutions.append(resolution)
+      }
+      return resolutions
+    }
+
+    // MARK: Internal
+
+    let sessionSubject: ValueSubject<Session, Never>
+
+  }
+
+  public struct Active {
+
+    // MARK: Lifecycle
+
+    init(sessionSubject: ValueSubject<Session, Never>) throws {
+      switch sessionSubject.value.state {
+      case .started(runtime: let runtime, root: let root, result: _):
+        self.runtime = runtime
+        self.root = root
+      default: throw TreeError(.inactive)
+      }
+    }
+
+    // MARK: Public
+
+    /// The runtime management system.
+    @_spi(Implementation) public let runtime: Runtime
+
+    /// The internal StateTree ``NodeScope`` backing the root ``Node``.
+    @_spi(Implementation) public let root: NodeScope<N>
+
+    /// The id of the root ``Node`` in the state tree.
+    public var rootID: NodeID {
+      root.nid
+    }
+
+    /// The root ``Node`` in the state tree.
+    public var rootNode: N {
+      root.node
+    }
+
+    /// Metadata about the current ``Tree`` and ``TreeLifetime``.
+    public var info: StateTreeInfo {
+      runtime.info
+    }
+
+    /// Update the tree's nodes to represent a new state.
+    ///
+    /// - Updates will often invalidate existing nodes.
+    /// - Updates occur synchronously,
+    ///
+    /// > Note: This method is used as part of `StateTreePlayback` time travel debugging.
+    @TreeActor
+    public func set(state: TreeStateRecord) throws {
+      try runtime.set(state: state)
+    }
+
+    /// Save the current state of the tree.
+    /// The created snapshot can be used to reset the tree to the saved state with ``set(state:)``.
+    ///
+    /// > Note: This method is used as part of `StateTreePlayback` time travel debugging.
+    @TreeActor
+    public func snapshot() throws -> TreeStateRecord {
+      runtime.snapshot()
+    }
+
+    /// Begin evaluating an ``Intent`` allowing each ``IntentStep`` to be processed in turn.
+    ///
+    /// - Intents are comprised of ``IntentStep``s which are evaluated from first to last.
+    /// - Intents are evaluated, and their state changes enacted, synchronously when possible.
+    /// - Intent steps are read via the ``OnIntent`` rule.
+    /// - Steps will match a ``Node``'s ``OnIntent`` rule if:
+    ///     1. The node is a descendent of the last matched node for the current intent.
+    ///     2. No other node closer to the last matched node has already matched.
+    ///     3. The rule accepts a type with a matching ``IntentStep/name`` field
+    ///     4. The step's payload can be encoded to create an instance of the type.
+    ///     5. The rule returns an ``IntentStepResolution/resolution(_:)``
+    ///     (not an ``IntentStepResolution/pending``) payload.
+    ///
+    /// > Note: Only one intent can be active in the tree at once. Signalling an intent will cancel
+    /// any previous unfinished one.
+    @TreeActor
+    public func signal(intent: Intent) throws {
+      try runtime.signal(intent: intent)
+    }
+
+  }
+
+  /// Await eventual session states via this property.
+  public var once: Once {
+    Once(sessionSubject: sessionSubject)
+  }
+
+  /// Access session events as they happen via this property.
+  public var events: Events {
+    Events(sessionSubject: sessionSubject)
+  }
+
+  /// Make state changing calls on the active tree via this property.
+  public var assume: Active {
+    get throws {
+      try Active(sessionSubject: sessionSubject)
+    }
+  }
+
   /// Start the tree.
   ///
   /// - Parameters:
   ///   - state: An optional previously recorded state to start the tree from.
-  /// - Returns: An async closure which can be executed to return the eventual end result of tree execution.
+  /// - Returns: An async closure which can be executed to return the eventual end result of tree
+  /// execution.
   /// - Throws: A ``TreeError`` if the tree can't be started.
   @TreeActor
   @discardableResult
@@ -126,23 +345,6 @@ public final class Tree<N: Node> {
     return result
   }
 
-  /// Await eventual session states via this property.
-  public var once: Once {
-    Once(sessionSubject: sessionSubject)
-  }
-
-  /// Access session events as they happen via this property.
-  public var events: Events {
-    Events(sessionSubject: sessionSubject)
-  }
-
-  /// Make state changing calls on the active tree via this property.
-  public var assume: Active {
-    get throws {
-      try Active(sessionSubject: sessionSubject)
-    }
-  }
-
   public func active<T>(_ access: (_ active: Active) throws -> T) rethrows -> T? {
     let active: Active
     do {
@@ -157,201 +359,23 @@ public final class Tree<N: Node> {
     }
   }
 
-  public struct Events {
-    let sessionSubject: ValueSubject<Session, Never>
-
-    @_spi(Implementation) public var runtime: some Emitter<Runtime, Never> {
-      sessionSubject
-        .compactMap { session in
-          switch session.state {
-          case .created(let runtime): return runtime
-          case .started(let runtime, _, _): return runtime
-          default: return nil
-          }
-        }
-
-    }
-
-    /// A stream of notifications behavior events.
-    @_spi(Implementation) public var behaviorEventEmitter: some Emitter<BehaviorEvent, Never> {
-      runtime
-        .flatMapLatest { runtime in
-          runtime.behaviorTracker.behaviorEvents
-        }
-    }
-
-    /// A stream of notifications updates emitted when nodes are updated.
-    @_spi(Implementation) public var treeEventEmitter: some Emitter<TreeEvent, Never> {
-      runtime
-        .flatMapLatest { runtime in
-          runtime.updateEmitter
-        }
-    }
-  }
-
-  public struct Once {
-
-    let sessionSubject: ValueSubject<Session, Never>
-
-    /// Await inflight `Behavior` starts.
-    ///
-    /// `Behavior`s are created synchronously but often started asynchronously.
-    /// Before starting behaviors can not read from a data source. In testing when
-    /// mocking the data source it can be useful to wait for this ready state before
-    /// simulating its side effects or providing its data.
-    @discardableResult
-    public func behaviorsStarted() async -> [BehaviorID] {
-      let behaviors = await runtime.behaviorTracker.behaviors
-      var startedBehaviorIDs: [BehaviorID] = []
-      for behavior in behaviors {
-        await behavior.awaitReady()
-        startedBehaviorIDs.append(behavior.id)
-      }
-      return startedBehaviorIDs
-    }
-
-    /// Await the `Result` states of all `Behaviors` registered on the tree.
-    ///
-    /// `Behavior`s often act asynchronously. This testing method allows
-    /// waiting for their completion before verifying their effects.
-    ///
-    /// > Important: This method will not return until all behaviors tracked *at its call time* have
-    /// resolved.
-    @discardableResult
-    public func behaviorsFinished() async -> [Behaviors.Result] {
-      let behaviors = await runtime.behaviorTracker.behaviors
-      var resolutions: [Behaviors.Result] = []
-      for behavior in behaviors {
-        let resolution = await behavior.value
-        resolutions.append(resolution)
-      }
-      return resolutions
-    }
-
-    /// The internal StateTree `Runtime` responsible for managing ``Node`` and ``TreeStateRecord``
-    /// updates.
-    @_spi(Implementation) public var runtime: Runtime {
-      get async {
-        while true {
-          if let session = await sessionSubject.firstValue {
-            if case .started(let runtime, _, _) = session.state {
-              return runtime
-            } else if case .created(let runtime) = session.state {
-              return runtime
-            }
-          }
-        }
-      }
-    }
-
-    @_spi(Implementation) public var root: NodeScope<N> {
-      get async {
-        while true {
-          if let session = await sessionSubject.firstValue,
-             case .started(_, let root, _) = session.state {
-            return root
-          }
-        }
-      }
-    }
-    @_spi(Implementation) public var result: Result<TreeStateRecord, TreeError> {
-      get async {
-        while true {
-          if let session = await sessionSubject.firstValue,
-             case .ended(let result) = session.state {
-            return result
-          }
-        }
-      }
-    }
-  }
-
-  public struct Active {
-
-    init(sessionSubject: ValueSubject<Session, Never>) throws {
-      switch sessionSubject.value.state {
-      case .started(runtime: let runtime, root: let root, result: _):
-        self.runtime = runtime
-        self.root = root
-      default: throw TreeError(.inactive)
-      }
-    }
-    /// The runtime management system.
-    @_spi(Implementation) public let runtime: Runtime
-
-    /// The internal StateTree ``NodeScope`` backing the root ``Node``.
-    @_spi(Implementation) public let root: NodeScope<N>
-
-
-
-    /// The id of the root ``Node`` in the state tree.
-    public var rootID: NodeID {
-      root.nid
-    }
-
-    /// The root ``Node`` in the state tree.
-    public var rootNode: N {
-      root.node
-    }
-
-    /// Metadata about the current ``Tree`` and ``TreeLifetime``.
-    public var info: StateTreeInfo {
-      runtime.info
-    }
-
-    /// Update the tree's nodes to represent a new state.
-    ///
-    /// - Updates will often invalidate existing nodes.
-    /// - Updates occur synchronously,
-    ///
-    /// > Note: This method is used as part of `StateTreePlayback` time travel debugging.
-    @TreeActor
-    public func set(state: TreeStateRecord) throws {
-      try runtime.set(state: state)
-    }
-
-    /// Save the current state of the tree.
-    /// The created snapshot can be used to reset the tree to the saved state with ``set(state:)``.
-    ///
-    /// > Note: This method is used as part of `StateTreePlayback` time travel debugging.
-    @TreeActor
-    public func snapshot() throws -> TreeStateRecord {
-      runtime.snapshot()
-    }
-
-
-    /// Begin evaluating an ``Intent`` allowing each ``IntentStep`` to be processed in turn.
-    ///
-    /// - Intents are comprised of ``IntentStep``s which are evaluated from first to last.
-    /// - Intents are evaluated, and their state changes enacted, synchronously when possible.
-    /// - Intent steps are read via the ``OnIntent`` rule.
-    /// - Steps will match a ``Node``'s ``OnIntent`` rule if:
-    ///     1. The node is a descendent of the last matched node for the current intent.
-    ///     2. No other node closer to the last matched node has already matched.
-    ///     3. The rule accepts a type with a matching ``IntentStep/name`` field
-    ///     4. The step's payload can be encoded to create an instance of the type.
-    ///     5. The rule returns an ``IntentStepResolution/resolution(_:)``
-    ///     (not an ``IntentStepResolution/pending``) payload.
-    ///
-    /// > Note: Only one intent can be active in the tree at once. Signalling an intent will cancel
-    /// any previous unfinished one.
-    @TreeActor
-    public func signal(intent: Intent) throws {
-      try runtime.signal(intent: intent)
-    }
-
-  }
+  // MARK: Internal
 
   struct Session: Equatable {
     let id = UUID()
     static var inactive: Session {
       .init(state: .inactive)
     }
+
     var state: State
     enum State: Equatable {
       case inactive
       case created(runtime: Runtime)
-      case started(runtime: Runtime, root: NodeScope<N>, result: Async.Value<Result<TreeStateRecord, TreeError>>)
+      case started(
+        runtime: Runtime,
+        root: NodeScope<N>,
+        result: Async.Value<Result<TreeStateRecord, TreeError>>
+      )
       case ended(result: Result<TreeStateRecord, TreeError>)
     }
   }

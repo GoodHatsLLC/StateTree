@@ -8,8 +8,6 @@ import Utilities
 @_spi(Implementation)
 public final class NodeScope<N: Node>: Equatable {
 
-  private let instanceUUID = UUID()
-
   // MARK: Lifecycle
 
   init(
@@ -43,6 +41,8 @@ public final class NodeScope<N: Node>: Equatable {
   @_spi(Implementation) public var runtime: Runtime
 
   // MARK: Private
+
+  private let instanceUUID = UUID()
 
   private let stage = DisposableStage()
   private var activeRules: N.NodeRules?
@@ -94,7 +94,7 @@ extension NodeScope: ScopeType {
     isActive
   }
 
-  nonisolated public func erase() -> AnyScope {
+  public nonisolated func erase() -> AnyScope {
     AnyScope(scope: self)
   }
 
@@ -210,23 +210,19 @@ extension NodeScope {
 
   // MARK: Public
 
-  @TreeActor
-  public var requiresReadying: Bool {
+  @TreeActor  public var requiresReadying: Bool {
     state.requiresReadying
   }
 
-  @TreeActor
-  public var requiresFinishing: Bool {
+  @TreeActor  public var requiresFinishing: Bool {
     state.requiresFinishing
   }
 
-  @TreeActor
-  public var isStable: Bool {
+  @TreeActor  public var isStable: Bool {
     state.isStable
   }
 
-  @TreeActor
-  public var ancestors: [NodeID] {
+  @TreeActor  public var ancestors: [NodeID] {
     runtime.ancestors(of: nid) ?? []
   }
 
@@ -486,8 +482,7 @@ extension NodeScope {
 
 extension NodeScope {
 
-  @TreeActor
-  public var record: NodeRecord {
+  @TreeActor  public var record: NodeRecord {
     runtime
       .getRecord(nid) ?? initialRecord
   }

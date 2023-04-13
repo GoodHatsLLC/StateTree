@@ -79,8 +79,14 @@ final class SerializationTests: XCTestCase {
       try tree1.assume.rootNode.commentaries?[0].note,
       try tree2.assume.rootNode.commentaries?[0].note
     )
-    XCTAssertEqual(try tree1.assume.rootNode.primeSquared?.value, try tree2.assume.rootNode.primeSquared?.value)
-    XCTAssertEqual(try tree1.assume.rootNode.primeSquared?.square, try tree2.assume.rootNode.primeSquared?.square)
+    XCTAssertEqual(
+      try tree1.assume.rootNode.primeSquared?.value,
+      try tree2.assume.rootNode.primeSquared?.value
+    )
+    XCTAssertEqual(
+      try tree1.assume.rootNode.primeSquared?.square,
+      try tree2.assume.rootNode.primeSquared?.square
+    )
     XCTAssertEqual(snap1, snap2)
   }
 

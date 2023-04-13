@@ -74,7 +74,6 @@ final class EventTests: XCTestCase {
     root.v1 = 3
 
     XCTAssertEqual(emitCount, count * 2)
-
   }
 }
 

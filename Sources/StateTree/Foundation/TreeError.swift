@@ -1,5 +1,7 @@
 typealias EquatableError = Equatable & Error
 
+// MARK: - TreeLifecycleError
+
 enum TreeLifecycleError: Equatable, CustomStringConvertible {
   case alreadyStarted
   case inactive
@@ -12,15 +14,14 @@ enum TreeLifecycleError: Equatable, CustomStringConvertible {
   }
 }
 
+// MARK: - TreeErrorType
+
 enum TreeErrorType: Error, CustomStringConvertible, Equatable {
 
-  static func == (lhs: TreeErrorType, rhs: TreeErrorType) -> Bool {
-    switch (lhs, rhs) {
-    case (.known(error: let lhs), .known(error: let rhs)): return lhs == rhs
-    case (.equatable(error: let lhs), .equatable(error: let rhs)): return errEquals(lhs: lhs, rhs: rhs)
-    default: return false
-    }
-  }
+  case known(error: TreeLifecycleError)
+  case equatable(error: any EquatableError)
+
+  // MARK: Internal
 
   var description: String {
     switch self {
@@ -33,36 +34,50 @@ enum TreeErrorType: Error, CustomStringConvertible, Equatable {
     description
   }
 
-  private static func errEquals<LHS: EquatableError, RHS: EquatableError>(lhs: LHS, rhs: RHS) -> Bool {
-    if let rhs = rhs as? LHS {
-      return rhs == lhs
-    } else {
-      return false
+  static func == (lhs: TreeErrorType, rhs: TreeErrorType) -> Bool {
+    switch (lhs, rhs) {
+    case (.known(error: let lhs), .known(error: let rhs)): return lhs == rhs
+    case (.equatable(error: let lhs), .equatable(error: let rhs)): return Hoisted
+      .equals(lhs: lhs, rhs: rhs)
+    default: return false
     }
   }
 
-  case known(error: TreeLifecycleError)
-  case equatable(error: any EquatableError)
+  // MARK: Private
+
+  private enum Hoisted {
+    static func equals<LHS: EquatableError>(lhs: LHS, rhs: some EquatableError) -> Bool {
+      if let rhs = rhs as? LHS {
+        return rhs == lhs
+      } else {
+        return false
+      }
+    }
+  }
+
 }
+
+// MARK: - TreeError
 
 public struct TreeError: Error, CustomStringConvertible, Equatable {
   public var description: String {
     wrapped.description
   }
-  public var errorDescription: String  {
+
+  public var errorDescription: String {
     description
   }
 
   init(_ error: TreeLifecycleError) {
-    wrapped = .known(error: error)
+    self.wrapped = .known(error: error)
   }
 
   public init(_ error: some Error) {
     if let error = error as? TreeLifecycleError {
-      wrapped = .known(error: error)
+      self.wrapped = .known(error: error)
     } else {
       let error = error as (any EquatableError)
-      wrapped = .equatable(error: error)
+      self.wrapped = .equatable(error: error)
     }
   }
 
