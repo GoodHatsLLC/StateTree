@@ -33,7 +33,7 @@ final class OnReceiveTests: XCTestCase {
 
   @TreeActor
   func test_onReceive_finish() async throws {
-    let subject = PublishSubject<Int, Never>()
+    let subject = PublishSubject<Int, Error>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
     try tree.start()
     let node = try tree.assume.rootNode
@@ -50,9 +50,11 @@ final class OnReceiveTests: XCTestCase {
 
   @TreeActor
   func test_onReceive_fail() async throws {
-    let subject = PublishSubject<Int, Never>()
+    let subject = PublishSubject<Int, Error>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
     try tree.start()
+      .autostop()
+      .stage(on: stage)
     let node = try tree.assume.rootNode
     await tree.once.behaviorsStarted()
     XCTAssertEqual(node.vals, [])
@@ -60,16 +62,18 @@ final class OnReceiveTests: XCTestCase {
     subject.emit(value: 22)
     subject.emit(value: 33)
     await Flush.tasks()
-    subject.finish()
+    subject.fail(TestError())
     await tree.once.behaviorsFinished()
     XCTAssertEqual(node.vals.sorted(), [-1, 11, 22, 33])
   }
 
   @TreeActor
   func test_onReceive_cancel() async throws {
-    let subject = PublishSubject<Int, Never>()
+    let subject = PublishSubject<Int, Error>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
     try tree.start()
+      .autostop()
+      .stage(on: stage)
     let node = try tree.assume.rootNode
     await tree.once.behaviorsStarted()
     XCTAssertEqual(node.vals, [])
@@ -88,8 +92,8 @@ final class OnReceiveTests: XCTestCase {
 extension OnReceiveTests {
   @TreeActor
   func test_onReceive_publisher() async throws {
-    let subject = PassthroughSubject<Int, Never>()
-    let tree = Tree(root: OnReceiveCombineHost(publisher: subject))
+    let subject = PassthroughSubject<Int, Error>()
+    let tree = Tree(root: OnReceiveCombineHost(publisher: subject.eraseToAnyPublisher()))
     try tree.start()
     let node = try tree.assume.rootNode
     await tree.once.behaviorsStarted()
@@ -113,7 +117,7 @@ extension OnReceiveTests {
 
   struct OnReceiveHost: Node {
 
-    let emitter: AnyEmitter<Int, Never>
+    let emitter: AnyEmitter<Int, Error>
     @Value var vals: [Int] = []
 
     var rules: some Rules {
@@ -151,9 +155,9 @@ extension OnReceiveTests {
 import Combine
 extension OnReceiveTests {
 
-  struct OnReceiveCombineHost<P: Publisher>: Node where P.Output == Int {
+  struct OnReceiveCombineHost: Node {
 
-    let publisher: P
+    let publisher: AnyPublisher<Int, Error>
     @Value var vals: [Int] = []
 
     var rules: some Rules {

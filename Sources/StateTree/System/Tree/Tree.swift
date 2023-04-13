@@ -60,7 +60,8 @@ public final class Tree<N: Node> {
   // MARK: Public
 
   public struct Events {
-    let sessionSubject: ValueSubject<Session, Never>
+
+    // MARK: Public
 
     @_spi(Implementation) public var runtime: some Emitter<Runtime, Never> {
       sessionSubject
@@ -82,12 +83,27 @@ public final class Tree<N: Node> {
     }
 
     /// A stream of notifications updates emitted when nodes are updated.
-    @_spi(Implementation) public var treeEventEmitter: some Emitter<TreeEvent, Never> {
+    @_spi(Implementation) public var nodeEventEmitter: some Emitter<TreeEvent, Never> {
       runtime
         .flatMapLatest { runtime in
           runtime.updateEmitter
         }
     }
+
+    /// A stream of notifications updates emitted when nodes are updated.
+    @_spi(Implementation) public var treeEventEmitter: some Emitter<TreeEvent, Never> {
+      runtime
+        .flatMapLatest { runtime in
+          runtime.updateEmitter.merge(
+            runtime.behaviorEvents.map { $0.asTreeEvent() }
+          )
+        }
+    }
+
+    // MARK: Internal
+
+    let sessionSubject: ValueSubject<Session, Never>
+
   }
 
   public struct Once {

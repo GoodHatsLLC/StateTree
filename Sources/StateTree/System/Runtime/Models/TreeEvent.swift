@@ -1,6 +1,6 @@
 import Behavior
 
-// MARK: - NodeChanges
+// MARK: - TreeEvent
 
 public enum TreeEvent: TreeState {
 
@@ -78,6 +78,19 @@ public enum TreeEvent: TreeState {
       return id
     default:
       return nil
+    }
+  }
+}
+
+extension BehaviorEvent {
+  func asTreeEvent() -> TreeEvent {
+    switch self {
+    case .created(let behaviorID):
+      return .behaviorCreated(behaviorID)
+    case .started(let behaviorID):
+      return .behaviorStarted(behaviorID)
+    case .finished(let behaviorID):
+      return .behaviorFinished(behaviorID)
     }
   }
 }

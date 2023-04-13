@@ -29,7 +29,7 @@ public final class NodeScope<N: Node>: Equatable {
 
   // MARK: Public
 
-  public let node: N
+  public var node: N
   public let nid: NodeID
   public let cuid: CUID?
   public let depth: Int
@@ -210,19 +210,19 @@ extension NodeScope {
 
   // MARK: Public
 
-  @TreeActor  public var requiresReadying: Bool {
+  @TreeActor public var requiresReadying: Bool {
     state.requiresReadying
   }
 
-  @TreeActor  public var requiresFinishing: Bool {
+  @TreeActor public var requiresFinishing: Bool {
     state.requiresFinishing
   }
 
-  @TreeActor  public var isStable: Bool {
+  @TreeActor public var isStable: Bool {
     state.isStable
   }
 
-  @TreeActor  public var ancestors: [NodeID] {
+  @TreeActor public var ancestors: [NodeID] {
     runtime.ancestors(of: nid) ?? []
   }
 
@@ -482,7 +482,7 @@ extension NodeScope {
 
 extension NodeScope {
 
-  @TreeActor  public var record: NodeRecord {
+  @TreeActor public var record: NodeRecord {
     runtime
       .getRecord(nid) ?? initialRecord
   }

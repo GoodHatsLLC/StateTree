@@ -48,15 +48,14 @@ final class IntentSnapshotTests: XCTestCase {
 
     // tear down the tree
     stage.reset()
-    XCTAssertFalse(try tree.assume.info.isActive)
-    XCTAssert(try tree.assume.info.isConsistent)
-    XCTAssertNil(try tree.assume.info.pendingIntent)
+    XCTAssertThrowsError(try tree.assume.info.isActive)
 
     // create a new tree from the saved state
     let tree2 = Tree(root: PendingNode<ValueSetNode>(), from: snapshot)
     try tree2.start()
       .autostop()
       .stage(on: stage)
+
     XCTAssert(try tree2.assume.info.isConsistent)
 
     // unblock the pending intent

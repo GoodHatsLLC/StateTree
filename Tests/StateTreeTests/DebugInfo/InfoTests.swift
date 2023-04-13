@@ -17,14 +17,15 @@ final class InfoTests: XCTestCase {
   @TreeActor
   func test_isActive() async throws {
     let tree = Tree(root: DeepNode(height: 1))
-    XCTAssertFalse(try tree.assume.info.isActive == true)
     try tree.start()
+      .autostop()
+      .stage(on: stage)
 
     XCTAssert(try tree.assume.info.isActive == true)
 
     stage.dispose()
 
-    XCTAssertFalse(try tree.assume.info.isActive == true)
+    XCTAssertThrowsError(try tree.assume.info.isActive == true)
   }
 
   @TreeActor
@@ -32,6 +33,8 @@ final class InfoTests: XCTestCase {
     let testTree = Tree(root: DeepNode(height: 7))
 
     try testTree.start()
+      .autostop()
+      .stage(on: stage)
 
     XCTAssertEqual(7, try testTree.assume.info.height)
     XCTAssertEqual(7, try testTree.assume.info.nodeCount)
@@ -89,8 +92,8 @@ final class InfoTests: XCTestCase {
     XCTAssertEqual(2, try testTree.assume.info.nodeCount)
 
     stage.dispose()
-    XCTAssertEqual(0, try testTree.assume.info.height)
-    XCTAssertEqual(0, try testTree.assume.info.nodeCount)
+    XCTAssertThrowsError(try testTree.assume.info.height)
+    XCTAssertThrowsError(try testTree.assume.info.nodeCount)
   }
 
 }

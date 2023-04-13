@@ -76,7 +76,6 @@ extension UnionRouter: RouterType {
       self = new
       try applyRule(with: context)
     } else {
-      assertionFailure()
       let existingManagedFieldsRecord = currentScope.record
       let replacementNode = try new.initialize(
         union: newUnion,
@@ -84,7 +83,7 @@ extension UnionRouter: RouterType {
         context: context,
         withKnownRecord: existingManagedFieldsRecord
       )
-//      currentScope.node = replacementNode.node
+      currentScope.node = replacementNode.node
     }
   }
 

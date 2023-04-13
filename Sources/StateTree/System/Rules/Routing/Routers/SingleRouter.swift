@@ -86,14 +86,13 @@ extension SingleRouter: SingleRouterType {
       self = new
       try applyRule(with: context)
     } else {
-      assertionFailure()
       let existingManagedFieldsRecord = currentScope.record
       let replacementNode = try new.initialize(
         capture: newCapture,
         context: context,
         record: existingManagedFieldsRecord
       )
-//      currentScope.node = replacementNode.node
+      currentScope.node = replacementNode.node
     }
   }
 

@@ -64,12 +64,13 @@ public struct OnReceive<Value: Sendable>: Rules {
 #if canImport(Emitter)
 import Emitter
 extension OnReceive {
+
   @_spi(Implementation)
   public init(
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    _ emitter: some Emitter<Value, Never>,
+    _ emitter: some Emitter<Value, Error>,
     _ id: BehaviorID? = nil,
     onValue: @escaping @TreeActor (Value) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
