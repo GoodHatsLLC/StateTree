@@ -14,7 +14,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   /// The model representing our StateTree
   ///
   /// This Tree manages all of our models
-  let tree = ReportedTree(root: CountersList())
+  let tree = ReportedTree(tree: Tree(root: CountersList()))
 
   func scene(
     _ scene: UIScene, willConnectTo _: UISceneSession, options _: UIScene.ConnectionOptions
@@ -25,13 +25,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     let mainWindow = UIWindow(windowScene: scene)
     window = mainWindow
 
-    Task {
-      try await tree.start()
-    }
-    Task {
-      let root = try await tree.root
-      mainWindow.rootViewController = RootViewController(model: root)
-    }
+    let root = try! tree.root
+    mainWindow.rootViewController = RootViewController(model: root)
 
     window?.makeKeyAndVisible()
   }
