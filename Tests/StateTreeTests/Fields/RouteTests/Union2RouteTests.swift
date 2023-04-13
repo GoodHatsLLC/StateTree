@@ -16,8 +16,8 @@ final class Union2RouteTests: XCTestCase {
   @TreeActor
   func test_Union2Route_A() async throws {
     let tree = Tree(root: NestedUnion2RouteHost(routeTo: .a))
-    await tree.run(on: stage)
-    let root = try tree.root
+    try tree.start()
+    let root = try tree.assume.root
     XCTAssertNil(root.node.hosted?.b)
     let routed = try XCTUnwrap(root.node.hosted?.a)
     XCTAssertEqual(
@@ -29,8 +29,8 @@ final class Union2RouteTests: XCTestCase {
   @TreeActor
   func test_Union2Route_B() async throws {
     let tree = Tree(root: NestedUnion2RouteHost(routeTo: .b))
-    await tree.run(on: stage)
-    let root = try tree.root
+    try tree.start()
+    let root = try tree.assume.root
     XCTAssertNil(root.node.hosted?.a)
     let routed = try XCTUnwrap(root.node.hosted?.b)
     XCTAssertEqual(
@@ -42,16 +42,16 @@ final class Union2RouteTests: XCTestCase {
   @TreeActor
   func test_Union2Route_none() async throws {
     let tree = Tree(root: NestedUnion2RouteHost(routeTo: nil))
-    await tree.run(on: stage)
-    let root = try tree.root
+    try tree.start()
+    let root = try tree.assume.root
     XCTAssertNil(root.node.hosted)
   }
 
   @TreeActor
   func test_Union2Route_reroute() async throws {
     let tree = Tree(root: NestedUnion2RouteHost(routeTo: .a))
-    await tree.run(on: stage)
-    let root = try tree.root
+    try tree.start()
+    let root = try tree.assume.root
     XCTAssertNil(root.node.hosted?.b)
     let routed = try XCTUnwrap(root.node.hosted?.a)
     XCTAssertEqual(

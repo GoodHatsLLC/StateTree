@@ -21,15 +21,15 @@ final class PlaybackTests: XCTestCase {
     let tree = Tree(
       root: PrimeTest()
     )
-    await tree.run(on: stage)
+    try tree.start()
     let recorder = tree.recorder()
     let handle = try recorder
       .start()
-    let root = try tree.rootNode
+    let root = try tree.assume.rootNode
     root.setNumber(to: 3)
-    try await tree.awaitBehaviors()
+    await tree.once.behaviorsFinished()
     root.setNumber(to: 0)
-    try await tree.awaitBehaviors()
+    await tree.once.behaviorsFinished()
     stage.reset()
     let frames = recorder.frames
     handle.dispose()

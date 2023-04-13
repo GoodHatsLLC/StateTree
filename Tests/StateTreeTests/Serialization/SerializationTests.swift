@@ -20,23 +20,27 @@ final class SerializationTests: XCTestCase {
 
   @TreeActor
   func _test_dump_prime() async throws {
-    let life = Tree(root: PrimeSquare())
-    await life.run(on: stage)
-    try life.rootNode.potentialPrime = 7
-    print(try life.snapshot().formattedJSON)
+    let tree = Tree(root: PrimeSquare())
+    try tree.start()
+      .autostop()
+      .stage(on: stage)
+    try tree.assume.rootNode.potentialPrime = 7
+    print(try tree.assume.snapshot().formattedJSON)
   }
 
   @TreeActor
   func _test_dump_nonprime() async throws {
-    let life = Tree(root: PrimeSquare())
-    await life.run(on: stage)
-    try life.rootNode.potentialPrime = 8
+    let tree = Tree(root: PrimeSquare())
+    try tree.start()
+      .autostop()
+      .stage(on: stage)
+    try tree.assume.rootNode.potentialPrime = 8
     let someIntent = Intent(
       PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
       Step(name: "invalid-pending-step", fields: ["field": "abc"])
     )
-    try life.signal(intent: XCTUnwrap(someIntent))
-    print(try life.snapshot().formattedJSON)
+    try tree.assume.signal(intent: XCTUnwrap(someIntent))
+    print(try tree.assume.snapshot().formattedJSON)
   }
 
   @TreeActor
@@ -44,35 +48,39 @@ final class SerializationTests: XCTestCase {
     let tree = Tree(
       root: PrimeSquare()
     )
-    await tree.run(on: stage)
-    try tree.rootNode.potentialPrime = 7
-    let snapshot = try tree.snapshot()
+    try tree.start()
+    try tree.assume.rootNode.potentialPrime = 7
+    let snapshot = try tree.assume.snapshot()
     let string = snapshot.formattedJSON
     XCTAssertEqual(string, primeStateString)
-    XCTAssert(try tree.rootNode.commentaries?[0].note != nil)
+    XCTAssert(try tree.assume.rootNode.commentaries?[0].note != nil)
   }
 
   @TreeActor
   func testDecoding() async throws {
     let tree1 = Tree(root: PrimeSquare())
     let state = try TreeStateRecord(formattedJSON: primeStateString)
-    await tree1.run(from: state, on: stage)
-    let snap1 = try tree1.snapshot()
+    try tree1.start(from: state)
+      .autostop()
+      .stage(on: stage)
+    let snap1 = try tree1.assume.snapshot()
     XCTAssertEqual(snap1.formattedJSON, primeStateString)
 
     let tree2 = Tree(root: PrimeSquare())
-    await tree2.run(on: stage)
-    try tree2.rootNode.potentialPrime = 7
-    let snap2 = try tree2.snapshot()
+    try tree2.start()
+      .autostop()
+      .stage(on: stage)
+    try tree2.assume.rootNode.potentialPrime = 7
+    let snap2 = try tree2.assume.snapshot()
     XCTAssertEqual(snap2.formattedJSON, primeStateString)
 
-    XCTAssertEqual(try tree1.rootID, try tree2.rootID)
+    XCTAssertEqual(try tree1.assume.rootID, try tree2.assume.rootID)
     XCTAssertEqual(
-      try tree1.rootNode.commentaries?[0].note,
-      try tree2.rootNode.commentaries?[0].note
+      try tree1.assume.rootNode.commentaries?[0].note,
+      try tree2.assume.rootNode.commentaries?[0].note
     )
-    XCTAssertEqual(try tree1.rootNode.primeSquared?.value, try tree2.rootNode.primeSquared?.value)
-    XCTAssertEqual(try tree1.rootNode.primeSquared?.square, try tree2.rootNode.primeSquared?.square)
+    XCTAssertEqual(try tree1.assume.rootNode.primeSquared?.value, try tree2.assume.rootNode.primeSquared?.value)
+    XCTAssertEqual(try tree1.assume.rootNode.primeSquared?.square, try tree2.assume.rootNode.primeSquared?.square)
     XCTAssertEqual(snap1, snap2)
   }
 
@@ -81,14 +89,14 @@ final class SerializationTests: XCTestCase {
     let tree = Tree(
       root: PrimeSquare()
     )
-    await tree.run(on: stage)
+    try tree.start()
     let someIntent = Intent(
       PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
       Step(name: "invalid-pending-step", fields: ["field": "abc"])
     )
-    try tree.signal(intent: XCTUnwrap(someIntent))
-    try tree.rootNode.potentialPrime = 8
-    let snapshot = try tree.snapshot()
+    try tree.assume.signal(intent: XCTUnwrap(someIntent))
+    try tree.assume.rootNode.potentialPrime = 8
+    let snapshot = try tree.assume.snapshot()
     let string = snapshot.formattedJSON
     XCTAssertEqual(string, nonPrimeStateString)
   }
@@ -96,11 +104,13 @@ final class SerializationTests: XCTestCase {
   @TreeActor
   func testAlternateState() async throws {
     let state = try TreeStateRecord(formattedJSON: nonPrimeStateString)
-    let life = Tree(
+    let tree = Tree(
       root: PrimeSquare()
     )
-    await life.run(from: state, on: stage)
-    let snap = try life.snapshot()
+    try tree.start(from: state)
+      .autostop()
+      .stage(on: stage)
+    let snap = try tree.assume.snapshot()
     XCTAssertEqual(snap.formattedJSON, nonPrimeStateString)
   }
 }

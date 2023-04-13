@@ -76,7 +76,7 @@ final class StreamTests: XCTestCase {
   }
 
   func test_eventual_failure() async throws {
-    let subject = PublishSubject<Int, Never>()
+    let subject = PublishSubject<Int, TestError>()
     var receivedError: Error?
     var receivedOutput: [Int] = []
     let asyncBlocks: [Async.Value<Void>] = [.init(), .init()]

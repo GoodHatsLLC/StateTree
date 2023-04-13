@@ -76,7 +76,7 @@ extension NodeAccess {
       // update calls use node.rules.
       var node = scope.node
       node[keyPath: dynamicMember] = newValue
-      scope.node = node
+//      scope.node = node
     }
   }
 

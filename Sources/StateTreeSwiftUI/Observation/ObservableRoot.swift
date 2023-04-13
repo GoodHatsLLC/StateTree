@@ -14,9 +14,7 @@ public final class ObservableRoot<N: Node>: ObservableObject {
 
   init(tree: Tree<N>) {
     self.life = tree
-    Task {
-      await tree.run()
-    }
+    try! tree.start()
   }
 
   // MARK: Internal

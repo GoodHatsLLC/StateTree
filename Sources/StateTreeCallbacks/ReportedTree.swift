@@ -19,30 +19,9 @@ public final class ReportedTree<N: Node> {
   // MARK: Public
 
   public var root: Reported<N> {
-    get async throws {
-      let values = subject.compactMap { $0 }.values
-      for try await value in values {
-        return value
-      }
-      throw TreeLifetimeCancelledError()
+    get throws {
+      try Reported(tree.assume.root)
     }
-  }
-
-  public func start() async throws {
-    let rep = try await withThrowingTaskGroup(of: Reported<N>.self) { group in
-      group.addTask {
-        let tree = self.tree
-        _ = try await tree.run().get()
-        return await Reported(tree: tree)
-      }
-      group.addTask {
-        let tree = self.tree
-        await tree.awaitRunning()
-        return await Reported(tree: tree)
-      }
-      return try await group.first { _ in true }
-    }
-    subject.emit(value: rep)
   }
 
   // MARK: Private

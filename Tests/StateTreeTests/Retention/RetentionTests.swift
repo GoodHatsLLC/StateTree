@@ -19,13 +19,13 @@ final class RetentionTests: XCTestCase {
     var scopes: [WeakRef<NodeScope<DeepNode>>] = []
     let count = 800
 
-    try await ({
+    try ({
       let stage = DisposableStage()
       let tree = Tree(root: DeepNode(depth: count))
-      await tree.run(on: stage)
-      let rootID = try tree.rootID
-      let rootScope = (try? tree.runtime.getScope(for: rootID))?
-        .underlying as? NodeScope<DeepNode>
+      let handle = try tree.start()
+      handle.autostop()
+        .stage(on: stage)
+      let rootScope = try tree.assume.root
       var maybeScope: NodeScope<DeepNode>? = rootScope
       while let scope = maybeScope {
         scopes.append(.init(ref: scope))

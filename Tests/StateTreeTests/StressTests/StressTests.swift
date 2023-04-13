@@ -29,12 +29,14 @@ final class StressTests: XCTestCase {
       node.next.map { getDeepest(from: $0) } ?? node
     }
 
-    await testTree.run(on: stage)
-    XCTAssert(try testTree.info.isActive == true)
+    try testTree.start()
+      .autostop()
+      .stage(on: stage)
+    XCTAssert(try testTree.assume.info.isActive == true)
 
-    let initialSnapshot = try testTree.snapshot()
+    let initialSnapshot = try testTree.assume.snapshot()
 
-    let node = try testTree.root.node
+    let node = try testTree.assume.root.node
 
     node.depth = desiredDepth
     XCTAssertEqual(findDepth(from: node), desiredDepth)
@@ -50,14 +52,14 @@ final class StressTests: XCTestCase {
       XCTAssertEqual(findDepth(from: node), desiredDepth)
     }
 
-    let depthSnapshot = try testTree.snapshot()
+    let depthSnapshot = try testTree.assume.snapshot()
     XCTAssertNotEqual(initialSnapshot, depthSnapshot)
 
     node.depth = 1
-    let finalSnapshot = try testTree.snapshot()
+    let finalSnapshot = try testTree.assume.snapshot()
 
     XCTAssertEqual(initialSnapshot, finalSnapshot)
-    XCTAssert(try testTree.info.isActive == true)
+    XCTAssert(try testTree.assume.info.isActive == true)
   }
 }
 

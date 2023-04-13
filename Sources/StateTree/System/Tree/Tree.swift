@@ -5,6 +5,32 @@ import Foundation
 import TreeActor
 import Utilities
 
+public struct Handle<N: Node> {
+  public struct StopHandle {
+    let autoDisposable: AutoDisposable
+  }
+  let asyncValue: Async.Value<Result<TreeStateRecord, TreeError>>
+  let stopFunc: () throws -> Result<TreeStateRecord, TreeError>
+  public func onFinish() async -> Result<TreeStateRecord, TreeError> {
+    await asyncValue.value
+  }
+  public func stop() throws -> Result<TreeStateRecord, TreeError> { try stopFunc() }
+  public func autostop() -> StopHandle { .init(autoDisposable: AutoDisposable { _ = try? self.stop() }) }
+  @_spi(Implementation) public let root: NodeScope<N>
+}
+
+extension Handle.StopHandle: Disposable {
+  public func dispose() {
+    autoDisposable.dispose()
+  }
+
+  public var isDisposed: Bool {
+    autoDisposable.isDisposed
+  }
+
+
+}
+
 // MARK: - Tree
 
 public final class Tree<N: Node> {
@@ -36,7 +62,7 @@ public final class Tree<N: Node> {
   /// - Throws: A ``TreeError`` if the tree can't be started.
   @TreeActor
   @discardableResult
-  public func start(from state: TreeStateRecord? = nil) throws -> () async -> Result<TreeStateRecord, TreeError> {
+  public func start(from state: TreeStateRecord? = nil) throws -> Handle<N> {
     let currentState = sessionSubject.value.state
     switch currentState {
     case .inactive: break
@@ -56,7 +82,11 @@ public final class Tree<N: Node> {
       )
       let async = Async.Value<Result<TreeStateRecord, TreeError>>()
       sessionSubject.value.state = .started(runtime: runtime, root: rootScope, result: async)
-      return { await async.value }
+      return Handle(
+        asyncValue: async,
+        stopFunc: { try self.stop() },
+        root: rootScope
+      )
     } catch {
       let error = TreeError(error)
       sessionSubject.value.state = .ended(result: .failure(error))
@@ -70,7 +100,7 @@ public final class Tree<N: Node> {
   /// - Throws: A ``TreeError`` if the tree is not in a stoppable state. (i.e. If it is not active.)
   @TreeActor
   @discardableResult
-  public func stop() throws -> TreeStateRecord {
+  public func stop() throws -> Result<TreeStateRecord, TreeError> {
     let currentState = sessionSubject.value.state
     let runtime: Runtime
     let asyncResult: Async.Value<Result<TreeStateRecord, TreeError>>?
@@ -93,7 +123,7 @@ public final class Tree<N: Node> {
       }
     }
     sessionSubject.value.state = .ended(result: result)
-    return snapshot
+    return result
   }
 
   /// Await eventual session states via this property.
@@ -107,8 +137,24 @@ public final class Tree<N: Node> {
   }
 
   /// Make state changing calls on the active tree via this property.
-  public var active: Active {
-    Active(sessionSubject: sessionSubject)
+  public var assume: Active {
+    get throws {
+      try Active(sessionSubject: sessionSubject)
+    }
+  }
+
+  public func active<T>(_ access: (_ active: Active) throws -> T) rethrows -> T? {
+    let active: Active
+    do {
+      active = try assume
+    } catch {
+      return nil
+    }
+    do {
+      return try access(active)
+    } catch {
+      return nil
+    }
   }
 
   public struct Events {
@@ -221,49 +267,36 @@ public final class Tree<N: Node> {
   }
 
   public struct Active {
-    let sessionSubject: ValueSubject<Session, Never>
 
-    @_spi(Implementation) public var runtime: Runtime {
-      get throws {
-        let session = sessionSubject.value.state
-        switch session {
-        case .created(runtime: let runtime): return runtime
-        case .started(runtime: let runtime, root: _, result: _): return runtime
-        default: throw TreeError(.inactive)
-        }
+    init(sessionSubject: ValueSubject<Session, Never>) throws {
+      switch sessionSubject.value.state {
+      case .started(runtime: let runtime, root: let root, result: _):
+        self.runtime = runtime
+        self.root = root
+      default: throw TreeError(.inactive)
       }
     }
+    /// The runtime management system.
+    @_spi(Implementation) public let runtime: Runtime
 
     /// The internal StateTree ``NodeScope`` backing the root ``Node``.
-    @_spi(Implementation) public var root: NodeScope<N> {
-      get throws {
-        let session = sessionSubject.value.state
-        switch session {
-        case .started(runtime: _, root: let root, result: _): return root
-        default: throw TreeError(.inactive)
-        }
-      }
-    }
+    @_spi(Implementation) public let root: NodeScope<N>
+
+
 
     /// The id of the root ``Node`` in the state tree.
     public var rootID: NodeID {
-      get throws {
-        try root.nid
-      }
+      root.nid
     }
 
     /// The root ``Node`` in the state tree.
     public var rootNode: N {
-      get throws {
-        try root.node
-      }
+      root.node
     }
 
     /// Metadata about the current ``Tree`` and ``TreeLifetime``.
     public var info: StateTreeInfo {
-      get throws {
-        try runtime.info
-      }
+      runtime.info
     }
 
     /// Update the tree's nodes to represent a new state.
@@ -283,7 +316,7 @@ public final class Tree<N: Node> {
     /// > Note: This method is used as part of `StateTreePlayback` time travel debugging.
     @TreeActor
     public func snapshot() throws -> TreeStateRecord {
-      try runtime.snapshot()
+      runtime.snapshot()
     }
 
 

@@ -60,15 +60,18 @@ public final class Recorder<Root: Node> {
   @TreeActor
   public func start() throws -> AutoDisposable {
     return tree
-      .updates
+      .events
+      .treeEventEmitter
       .subscribe { [self] event in
-        frames
-          .append(
-            StateFrame(
-              record: try! tree.snapshot(),
-              event: event
+        tree.active { active in
+          frames
+            .append(
+              StateFrame(
+                record: try! active.snapshot(),
+                event: event
+              )
             )
-          )
+        }
       }
   }
 

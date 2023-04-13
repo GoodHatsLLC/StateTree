@@ -27,7 +27,7 @@ final class StartStopTests: XCTestCase {
         }
       )
     )
-    await tree.run(on: stage)
+    try tree.start()
 
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 0)
@@ -50,7 +50,7 @@ final class StartStopTests: XCTestCase {
         }
       )
     )
-    await tree.run(on: stage)
+    try tree.start()
 
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 0)

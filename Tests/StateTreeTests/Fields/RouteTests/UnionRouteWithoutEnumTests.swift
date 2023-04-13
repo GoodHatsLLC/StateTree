@@ -11,13 +11,13 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
     let tree = Tree(
       root: Union2Node()
     )
-    XCTAssertNil(try tree.rootNode.route)
-    try tree.rootNode.select = "a"
-    XCTAssertNotNil(try tree.rootNode.route?.a)
-    try tree.rootNode.select = "b"
-    XCTAssertNotNil(try tree.rootNode.route?.b)
-    try tree.rootNode.select = "bad"
-    XCTAssertNil(try tree.rootNode.route)
+    XCTAssertNil(try tree.assume.rootNode.route)
+    try tree.assume.rootNode.select = "a"
+    XCTAssertNotNil(try tree.assume.rootNode.route?.a)
+    try tree.assume.rootNode.select = "b"
+    XCTAssertNotNil(try tree.assume.rootNode.route?.b)
+    try tree.assume.rootNode.select = "bad"
+    XCTAssertNil(try tree.assume.rootNode.route)
   }
 
   @TreeActor
@@ -25,15 +25,15 @@ final class UnionRouteWithoutEnumTests: XCTestCase {
     let tree = Tree(
       root: Union3Node()
     )
-    XCTAssertNil(try tree.rootNode.route)
-    try tree.rootNode.select = "a"
-    XCTAssertNotNil(try tree.rootNode.route?.a)
-    try tree.rootNode.select = "b"
-    XCTAssertNotNil(try tree.rootNode.route?.b)
-    try tree.rootNode.select = "c"
-    XCTAssertNotNil(try tree.rootNode.route?.c)
-    try tree.rootNode.select = "bad"
-    XCTAssertNil(try tree.rootNode.route)
+    XCTAssertNil(try tree.assume.rootNode.route)
+    try tree.assume.rootNode.select = "a"
+    XCTAssertNotNil(try tree.assume.rootNode.route?.a)
+    try tree.assume.rootNode.select = "b"
+    XCTAssertNotNil(try tree.assume.rootNode.route?.b)
+    try tree.assume.rootNode.select = "c"
+    XCTAssertNotNil(try tree.assume.rootNode.route?.c)
+    try tree.assume.rootNode.select = "bad"
+    XCTAssertNil(try tree.assume.rootNode.route)
   }
 }
 

@@ -17,8 +17,8 @@ final class DependencyTests: XCTestCase {
   @TreeActor
   func test_dependencyInjection() async throws {
     let tree = Tree(root: DependencyHost())
-    await tree.run(on: stage)
-    let node = try tree.rootNode
+    _ = try tree.start()
+    let node = try tree.assume.rootNode
     XCTAssertEqual(node.value, "Default Value")
     XCTAssertEqual(node.hosted?.value, "Some Other Value")
     XCTAssertEqual(node.hosted?.hosted?.value, "Another Other Value")

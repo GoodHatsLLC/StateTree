@@ -16,8 +16,8 @@ final class ProjectionTests: XCTestCase {
   @TreeActor
   func test_projection() async throws {
     let tree = Tree(root: ProjectionHost())
-    await tree.run(on: stage)
-    let node = try tree.rootNode
+    try tree.start()
+    let node = try tree.assume.rootNode
     XCTAssertNil(node.route)
     node.val = 3
     let subnode = try XCTUnwrap(node.route?.c)
@@ -28,8 +28,8 @@ final class ProjectionTests: XCTestCase {
   @TreeActor
   func test_projection_onChange() async throws {
     let tree = Tree(root: ReferencedHost(intVal: 5))
-    await tree.run(on: stage)
-    let node = try tree.rootNode
+    try tree.start()
+    let node = try tree.assume.rootNode
 
     XCTAssertEqual(node.intVal, 5)
     XCTAssertEqual(node.displayed?.intVal, 5)

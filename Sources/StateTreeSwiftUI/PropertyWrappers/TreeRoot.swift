@@ -19,15 +19,15 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
   // MARK: Public
 
   @_spi(Implementation) public var scope: NodeScope<N> {
-    try! observed.life.root
+    try! observed.life.assume.root
   }
 
   @_spi(Implementation) public var nid: NodeID {
-    try! observed.life.root.nid
+    try! observed.life.assume.root.nid
   }
 
   public var wrappedValue: N {
-    try! observed.life.root.node
+    try! observed.life.assume.root.node
   }
 
   public var root: TreeNode<N> {

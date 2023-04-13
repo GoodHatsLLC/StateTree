@@ -10,27 +10,21 @@ import XCTest
 final class EventTests: XCTestCase {
 
   func test_startStop() async throws {
-    let tree = ReportedTree(tree: Tree(root: Parent()))
-    let task = Task {
-      try await tree.start()
-    }
-    @Reported(projectedValue: try await tree.root) var root
+    let tree = Tree(root: Parent())
+    let handle = try tree.start()
+    @Reported(handle.root) var root
     var rootDidStopCount = 0
     $root.onStop(subscriber: self) {
       rootDidStopCount += 1
     }
     XCTAssertEqual(rootDidStopCount, 0)
-    task.cancel()
-    try await task.value
     XCTAssertEqual(rootDidStopCount, 1)
   }
 
   func test_update() async throws {
-    let tree = ReportedTree(tree: Tree(root: Parent()))
-    let task = Task {
-      try await tree.start()
-    }
-    @Reported(projectedValue: try await tree.root) var root
+    let tree = Tree(root: Parent())
+    let handle = try tree.start()
+    @Reported(handle.root) var root
     var rootFireCount = 0
     $root.onChange(subscriber: self) {
       rootFireCount += 1
@@ -40,16 +34,12 @@ final class EventTests: XCTestCase {
     XCTAssertEqual(rootFireCount, 1)
     root.v1 = 3
     XCTAssertEqual(rootFireCount, 2)
-    task.cancel()
-    try await task.value
   }
 
   func test_childUpdates() async throws {
-    let tree = ReportedTree(tree: Tree(root: Parent()))
-    let task = Task {
-      try await tree.start()
-    }
-    @Reported(projectedValue: try await tree.root) var root
+    let tree = Tree(root: Parent())
+    let handle = try tree.start()
+    @Reported(handle.root) var root
 
     var emitCount = 0
 
@@ -85,8 +75,6 @@ final class EventTests: XCTestCase {
 
     XCTAssertEqual(emitCount, count * 2)
 
-    task.cancel()
-    try await task.value
   }
 }
 

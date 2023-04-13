@@ -24,7 +24,8 @@ final class NodeContextAccess: XCTestCase {
   }
 
   func test_routeAccess() async throws {
-    let context = try await TreeNode(scope: tree.awaitStarted().root)
+    await tree.once.behaviorsStarted()
+    let context = try TreeNode(scope: tree.assume.root)
     XCTAssertEqual(55, context.$single?.v1)
     XCTAssertEqual(nil, context.$union2.a?.v1)
     XCTAssertEqual(55, context.$union2.b?.v1)

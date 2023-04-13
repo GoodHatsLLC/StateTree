@@ -24,10 +24,10 @@ final class OnReceiveTests: XCTestCase {
         )
       )
     )
-    await tree.run(on: stage)
+    try tree.start()
 
-    let node = try tree.root.node
-    try await tree.awaitBehaviors()
+    let node = try tree.assume.rootNode
+    await tree.once.behaviorsFinished()
     XCTAssertEqual(node.vals.sorted(), [0, 1, 2, 3, 4, 5, 6, 7])
   }
 
@@ -35,17 +35,16 @@ final class OnReceiveTests: XCTestCase {
   func test_onReceive_finish() async throws {
     let subject = PublishSubject<Int, Never>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
-    await tree.run(on: stage)
-    let node = try tree.root.node
-    try await tree.awaitReady()
+    try tree.start()
+    let node = try tree.assume.rootNode
+    await tree.once.behaviorsStarted()
     XCTAssertEqual(node.vals, [])
     subject.emit(value: 1)
     subject.emit(value: 2)
     subject.emit(value: 3)
     subject.finish()
     await Flush.tasks()
-    subject.fail(TestError())
-    try await tree.awaitBehaviors()
+    await tree.once.behaviorsFinished()
     XCTAssertEqual(node.vals.sorted(), [0, 1, 2, 3])
   }
 
@@ -53,17 +52,16 @@ final class OnReceiveTests: XCTestCase {
   func test_onReceive_fail() async throws {
     let subject = PublishSubject<Int, Never>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
-    await tree.run(on: stage)
-    let node = try tree.root.node
-    try await tree.awaitReady()
+    try tree.start()
+    let node = try tree.assume.rootNode
+    await tree.once.behaviorsStarted()
     XCTAssertEqual(node.vals, [])
     subject.emit(value: 11)
     subject.emit(value: 22)
     subject.emit(value: 33)
-    subject.fail(TestError())
     await Flush.tasks()
     subject.finish()
-    try await tree.awaitBehaviors()
+    await tree.once.behaviorsFinished()
     XCTAssertEqual(node.vals.sorted(), [-1, 11, 22, 33])
   }
 
@@ -71,18 +69,17 @@ final class OnReceiveTests: XCTestCase {
   func test_onReceive_cancel() async throws {
     let subject = PublishSubject<Int, Never>()
     let tree = Tree(root: OnReceiveHost(emitter: subject.erase()))
-    await tree.run(on: stage)
-    let node = try tree.root.node
-    try await tree.awaitReady()
+    try tree.start()
+    let node = try tree.assume.rootNode
+    await tree.once.behaviorsStarted()
     XCTAssertEqual(node.vals, [])
     subject.emit(value: 11)
     subject.emit(value: 22)
     await Flush.tasks()
     stage.dispose()
     subject.emit(value: 33)
-    subject.fail(TestError())
     subject.finish()
-    try await tree.awaitBehaviors()
+    await tree.once.behaviorsFinished()
     XCTAssertEqual(node.vals.sorted(), [11, 22])
   }
 }
@@ -93,9 +90,9 @@ extension OnReceiveTests {
   func test_onReceive_publisher() async throws {
     let subject = PassthroughSubject<Int, Never>()
     let tree = Tree(root: OnReceiveCombineHost(publisher: subject))
-    await tree.run(on: stage)
-    let node = try tree.root.node
-    try await tree.awaitReady()
+    try tree.start()
+    let node = try tree.assume.rootNode
+    await tree.once.behaviorsStarted()
     subject.send(1)
     subject.send(2)
     subject.send(3)
@@ -106,7 +103,7 @@ extension OnReceiveTests {
     subject.send(completion: .finished)
     subject.send(8)
     subject.send(9)
-    try await tree.awaitBehaviors()
+    await tree.once.behaviorsFinished()
     XCTAssertEqual(node.vals.sorted(), [0, 1, 2, 3, 4, 5, 6, 7])
   }
 }

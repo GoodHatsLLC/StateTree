@@ -18,25 +18,25 @@ final class RoutingInitializationTests: XCTestCase {
   func test_structuralReinitQuirk() async throws {
     let tree = Tree(root: DeepValueNode(depth: 3))
 
-    XCTAssertEqual(0, try tree.info.height)
+    XCTAssertEqual(0, try tree.assume.info.height)
 
-    await tree.run(on: stage)
+    try tree.start()
 
-    XCTAssertEqual(4, try tree.info.height)
+    XCTAssertEqual(4, try tree.assume.info.height)
 
-    try tree.rootNode.depth = 0
-    XCTAssertEqual(1, try tree.info.height)
+    try tree.assume.rootNode.depth = 0
+    XCTAssertEqual(1, try tree.assume.info.height)
 
-    try tree.rootNode.depth = 10
-    XCTAssertEqual(11, try tree.info.height)
+    try tree.assume.rootNode.depth = 10
+    XCTAssertEqual(11, try tree.assume.info.height)
 
     // We fail to reinit because structural identity matches
-    try tree.rootNode.depth = 15
-    XCTAssertEqual(11, try tree.info.height)
+    try tree.assume.rootNode.depth = 15
+    XCTAssertEqual(11, try tree.assume.info.height)
 
     stage.dispose()
 
-    XCTAssertEqual(0, try tree.info.height)
+    XCTAssertEqual(0, try tree.assume.info.height)
   }
 
 }

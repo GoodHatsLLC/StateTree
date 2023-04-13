@@ -17,80 +17,80 @@ final class InfoTests: XCTestCase {
   @TreeActor
   func test_isActive() async throws {
     let tree = Tree(root: DeepNode(height: 1))
-    XCTAssertFalse(try tree.info.isActive == true)
-    await tree.run(on: stage)
+    XCTAssertFalse(try tree.assume.info.isActive == true)
+    try tree.start()
 
-    XCTAssert(try tree.info.isActive == true)
+    XCTAssert(try tree.assume.info.isActive == true)
 
     stage.dispose()
 
-    XCTAssertFalse(try tree.info.isActive == true)
+    XCTAssertFalse(try tree.assume.info.isActive == true)
   }
 
   @TreeActor
   func test_count() async throws {
     let testTree = Tree(root: DeepNode(height: 7))
 
-    await testTree.run(on: stage)
+    try testTree.start()
 
-    XCTAssertEqual(7, try testTree.info.height)
-    XCTAssertEqual(7, try testTree.info.nodeCount)
+    XCTAssertEqual(7, try testTree.assume.info.height)
+    XCTAssertEqual(7, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 3
-    XCTAssertEqual(3, try testTree.info.height)
-    XCTAssertEqual(3, try testTree.info.nodeCount)
+    try testTree.assume.rootNode.height = 3
+    XCTAssertEqual(3, try testTree.assume.info.height)
+    XCTAssertEqual(3, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 2
-    XCTAssertEqual(2, try testTree.info.height)
-    XCTAssertEqual(2, try testTree.info.nodeCount)
+    try testTree.assume.rootNode.height = 2
+    XCTAssertEqual(2, try testTree.assume.info.height)
+    XCTAssertEqual(2, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 10
+    try testTree.assume.rootNode.height = 10
 
-    XCTAssertEqual(10, try testTree.info.height)
-    XCTAssertEqual(10, try testTree.info.nodeCount)
+    XCTAssertEqual(10, try testTree.assume.info.height)
+    XCTAssertEqual(10, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 4
-    XCTAssertEqual(4, try testTree.info.height)
-    XCTAssertEqual(4, try testTree.info.nodeCount)
+    try testTree.assume.rootNode.height = 4
+    XCTAssertEqual(4, try testTree.assume.info.height)
+    XCTAssertEqual(4, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 1
-    XCTAssertEqual(1, try testTree.info.height)
-    XCTAssertEqual(1, try testTree.info.nodeCount)
+    try testTree.assume.rootNode.height = 1
+    XCTAssertEqual(1, try testTree.assume.info.height)
+    XCTAssertEqual(1, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 21
+    try testTree.assume.rootNode.height = 21
 
-    XCTAssertEqual(21, try testTree.info.height)
+    XCTAssertEqual(21, try testTree.assume.info.height)
     // height above 10 triggers the 10-long side chain
-    XCTAssertEqual(31, try testTree.info.nodeCount)
+    XCTAssertEqual(31, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 10
+    try testTree.assume.rootNode.height = 10
 
-    XCTAssertEqual(10, try testTree.info.height)
-    XCTAssertEqual(10, try testTree.info.nodeCount)
+    XCTAssertEqual(10, try testTree.assume.info.height)
+    XCTAssertEqual(10, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 25
+    try testTree.assume.rootNode.height = 25
 
-    XCTAssertEqual(25, try testTree.info.height)
+    XCTAssertEqual(25, try testTree.assume.info.height)
     // height above 10 triggers the 10-long side chain
-    XCTAssertEqual(35, try testTree.info.nodeCount)
+    XCTAssertEqual(35, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 22
+    try testTree.assume.rootNode.height = 22
 
-    XCTAssertEqual(22, try testTree.info.height)
-    XCTAssertEqual(32, try testTree.info.nodeCount)
+    XCTAssertEqual(22, try testTree.assume.info.height)
+    XCTAssertEqual(32, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 7
+    try testTree.assume.rootNode.height = 7
 
-    XCTAssertEqual(7, try testTree.info.height)
-    XCTAssertEqual(7, try testTree.info.nodeCount)
+    XCTAssertEqual(7, try testTree.assume.info.height)
+    XCTAssertEqual(7, try testTree.assume.info.nodeCount)
 
-    try testTree.rootNode.height = 2
-    XCTAssertEqual(2, try testTree.info.height)
-    XCTAssertEqual(2, try testTree.info.nodeCount)
+    try testTree.assume.rootNode.height = 2
+    XCTAssertEqual(2, try testTree.assume.info.height)
+    XCTAssertEqual(2, try testTree.assume.info.nodeCount)
 
     stage.dispose()
-    XCTAssertEqual(0, try testTree.info.height)
-    XCTAssertEqual(0, try testTree.info.nodeCount)
+    XCTAssertEqual(0, try testTree.assume.info.height)
+    XCTAssertEqual(0, try testTree.assume.info.nodeCount)
   }
 
 }

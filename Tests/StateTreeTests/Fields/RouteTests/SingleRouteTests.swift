@@ -16,9 +16,9 @@ final class SingleRouteTests: XCTestCase {
   @TreeActor
   func test_singleRoute_route() async throws {
     let tree = Tree(root: SingleRouteHost(route: true))
-    await tree.run(on: stage)
-    XCTAssertNotNil(try tree.root)
-    let routed = try XCTUnwrap(try tree.rootNode.hosted)
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: AModel.self)
@@ -28,24 +28,24 @@ final class SingleRouteTests: XCTestCase {
   @TreeActor
   func test_singleRoute_routeNone() async throws {
     let tree = Tree(root: SingleRouteHost(route: false))
-    await tree.run(on: stage)
-    XCTAssertNotNil(try tree.root)
-    XCTAssertNil(try tree.rootNode.hosted)
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted)
   }
 
   @TreeActor
   func test_singleRoute_reroute() async throws {
     let tree = Tree(root: SingleRouteHost(route: true))
-    await tree.run(on: stage)
-    XCTAssertNotNil(try tree.root)
-    let routed = try XCTUnwrap(try tree.rootNode.hosted)
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: AModel.self)
     )
-    try tree.rootNode.route = false
-    XCTAssertNotNil(try tree.root)
-    XCTAssertNil(try tree.rootNode.hosted)
+    try tree.assume.rootNode.route = false
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted)
   }
 }
 

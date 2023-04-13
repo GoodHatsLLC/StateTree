@@ -18,8 +18,8 @@ final class ListRouteTests: XCTestCase {
     let tree = Tree(
       root: ListNode()
     )
-    await tree.run(on: stage)
-    let rootNode = try tree.rootNode
+    try tree.start()
+    let rootNode = try tree.assume.rootNode
     XCTAssertNil(rootNode.route)
 
     var sorted: [String] = []
@@ -35,15 +35,15 @@ final class ListRouteTests: XCTestCase {
     assertAfter(Array(0 ..< 100))
     assertAfter(Array(0 ..< 20))
     assertAfter(Array(5 ..< 15))
-    try tree.rootNode.numbers = (Array(10 ..< 15) + Array(20 ..< 30))
-    nodes = try XCTUnwrap(try tree.rootNode.route)
+    try tree.assume.rootNode.numbers = (Array(10 ..< 15) + Array(20 ..< 30))
+    nodes = try XCTUnwrap(try tree.assume.rootNode.route)
     XCTAssertEqual(
       nodes.map(\.idStr),
       ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "10", "11", "12", "13", "14"]
     )
     XCTAssertEqual(nodes.count, 15)
-    try tree.rootNode.numbers! += Array(1000 ..< 2000)
-    XCTAssertEqual(try tree.rootNode.numbers?.count, 1015)
+    try tree.assume.rootNode.numbers! += Array(1000 ..< 2000)
+    XCTAssertEqual(try tree.assume.rootNode.numbers?.count, 1015)
   }
 }
 

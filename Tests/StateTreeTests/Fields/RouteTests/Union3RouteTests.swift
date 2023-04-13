@@ -16,11 +16,11 @@ final class Union3RouteTests: XCTestCase {
   @TreeActor
   func test_Union3Route_A() async throws {
     let tree = Tree(root: NestedUnion3RouteHost(routeTo: .a))
-    await tree.run(on: stage)
-    XCTAssertNotNil(try tree.root)
-    XCTAssertNil(try tree.rootNode.hosted?.b)
-    XCTAssertNil(try tree.rootNode.hosted?.c)
-    let routed = try XCTUnwrap(try tree.rootNode.hosted?.a)
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted?.a)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: AModel.self)
@@ -30,11 +30,11 @@ final class Union3RouteTests: XCTestCase {
   @TreeActor
   func test_Union3Route_B() async throws {
     let tree = Tree(root: NestedUnion3RouteHost(routeTo: .b))
-    await tree.run(on: stage)
-    XCTAssertNotNil(try tree.root)
-    XCTAssertNil(try tree.rootNode.hosted?.a)
-    XCTAssertNil(try tree.rootNode.hosted?.c)
-    let routed = try XCTUnwrap(try tree.rootNode.hosted?.b)
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted?.b)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: BModel.self)
@@ -44,11 +44,11 @@ final class Union3RouteTests: XCTestCase {
   @TreeActor
   func test_Union3Route_C() async throws {
     let tree = Tree(root: NestedUnion3RouteHost(routeTo: .c))
-    await tree.run(on: stage)
-    XCTAssertNotNil(try tree.root)
-    XCTAssertNil(try tree.rootNode.hosted?.a)
-    XCTAssertNil(try tree.rootNode.hosted?.b)
-    let routed = try XCTUnwrap(try tree.rootNode.hosted?.c)
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted?.c)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: CModel.self)
@@ -58,42 +58,42 @@ final class Union3RouteTests: XCTestCase {
   @TreeActor
   func test_Union3Route_none() async throws {
     let tree = Tree(root: NestedUnion3RouteHost(routeTo: nil))
-    await tree.run(on: stage)
-    XCTAssertNotNil(try tree.root)
-    XCTAssertNil(try tree.rootNode.hosted?.a)
-    XCTAssertNil(try tree.rootNode.hosted?.b)
-    XCTAssertNil(try tree.rootNode.hosted?.c)
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
   }
 
   @TreeActor
   func test_Union3Route_reroute() async throws {
     let tree = Tree(root: NestedUnion3RouteHost(routeTo: .a))
-    await tree.run(on: stage)
-    XCTAssertNotNil(try tree.root)
-    XCTAssertNil(try tree.rootNode.hosted?.b)
-    XCTAssertNil(try tree.rootNode.hosted?.c)
-    let routed = try XCTUnwrap(try tree.rootNode.hosted?.a)
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted?.a)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: AModel.self)
     )
 
-    try tree.rootNode.routeTo = .b
-    XCTAssertNil(try tree.rootNode.hosted?.a)
-    XCTAssertNil(try tree.rootNode.hosted?.c)
-    let routed2 = try XCTUnwrap(try tree.rootNode.hosted?.b)
+    try tree.assume.rootNode.routeTo = .b
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
+    let routed2 = try XCTUnwrap(try tree.assume.rootNode.hosted?.b)
     XCTAssertEqual(
       String(describing: type(of: routed2)),
       String(describing: BModel.self)
     )
 
-    try tree.rootNode.routeTo = nil
-    XCTAssertNil(try tree.rootNode.hosted)
+    try tree.assume.rootNode.routeTo = nil
+    XCTAssertNil(try tree.assume.rootNode.hosted)
 
-    try tree.rootNode.routeTo = .c
-    XCTAssertNil(try tree.rootNode.hosted?.a)
-    XCTAssertNil(try tree.rootNode.hosted?.b)
-    let routed3 = try XCTUnwrap(try tree.rootNode.hosted?.c)
+    try tree.assume.rootNode.routeTo = .c
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    let routed3 = try XCTUnwrap(try tree.assume.rootNode.hosted?.c)
     XCTAssertEqual(
       String(describing: type(of: routed3)),
       String(describing: CModel.self)
