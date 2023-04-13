@@ -112,45 +112,8 @@ public final class Tree<N: Node> {
 
     /// The internal StateTree `Runtime` responsible for managing ``Node`` and ``TreeStateRecord``
     /// updates.
-    @_spi(Implementation) public var runtime: Runtime {
-      get async {
-        while true {
-          if let session = await sessionSubject.firstValue {
-            if case .started(let runtime, _, _) = session.state {
-              return runtime
-            } else if case .created(let runtime) = session.state {
-              return runtime
-            }
-          }
-        }
-      }
-    }
-
-    @_spi(Implementation) public var root: NodeScope<N> {
-      get async {
-        while true {
-          if
-            let session = await sessionSubject.firstValue,
-            case .started(_, let root, _) = session.state
-          {
-            return root
-          }
-        }
-      }
-    }
-
-    @_spi(Implementation) public var result: Result<TreeStateRecord, TreeError> {
-      get async {
-        while true {
-          if
-            let session = await sessionSubject.firstValue,
-            case .ended(let result) = session.state
-          {
-            return result
-          }
-        }
-      }
-    }
+    @_spi(Implementation) public var runtime: Runtime
+    @_spi(Implementation) public let root: NodeScope<N>
 
     /// Await inflight `Behavior` starts.
     ///
@@ -160,7 +123,7 @@ public final class Tree<N: Node> {
     /// simulating its side effects or providing its data.
     @discardableResult
     public func behaviorsStarted() async -> [BehaviorID] {
-      let behaviors = await runtime.behaviorTracker.behaviors
+      let behaviors = runtime.behaviorTracker.behaviors
       var startedBehaviorIDs: [BehaviorID] = []
       for behavior in behaviors {
         await behavior.awaitReady()
@@ -178,7 +141,7 @@ public final class Tree<N: Node> {
     /// resolved.
     @discardableResult
     public func behaviorsFinished() async -> [Behaviors.Result] {
-      let behaviors = await runtime.behaviorTracker.behaviors
+      let behaviors = runtime.behaviorTracker.behaviors
       var resolutions: [Behaviors.Result] = []
       for behavior in behaviors {
         let resolution = await behavior.value
@@ -187,9 +150,13 @@ public final class Tree<N: Node> {
       return resolutions
     }
 
+    public func result() async -> Result<TreeStateRecord, TreeError> {
+      await result.value
+    }
+
     // MARK: Internal
 
-    let sessionSubject: ValueSubject<Session, Never>
+    let result: Async.Value<Result<TreeStateRecord, TreeError>>
 
   }
 
@@ -273,7 +240,13 @@ public final class Tree<N: Node> {
 
   /// Await eventual session states via this property.
   public var once: Once {
-    Once(sessionSubject: sessionSubject)
+    get async {
+      while true {
+        if let vals = await onceSessionSubject.compact().firstValue {
+          return Once(runtime: vals.runtime, root: vals.root, result: vals.result)
+        }
+      }
+    }
   }
 
   /// Access session events as they happen via this property.
@@ -317,6 +290,7 @@ public final class Tree<N: Node> {
       )
       let async = Async.Value<Result<TreeStateRecord, TreeError>>()
       sessionSubject.value.state = .started(runtime: runtime, root: rootScope, result: async)
+      onceSessionSubject.value = (runtime: runtime, root: rootScope, result: async)
       return Handle(
         asyncValue: async,
         stopFunc: { try self.stop() },
@@ -403,5 +377,10 @@ public final class Tree<N: Node> {
   private let configuration: RuntimeConfiguration
 
   private let sessionSubject = ValueSubject<Session, Never>(.inactive)
+  private let onceSessionSubject = ValueSubject<(
+    runtime: Runtime,
+    root: NodeScope<N>,
+    result: Async.Value<Result<TreeStateRecord, TreeError>>
+  )?, Never>(nil)
 
 }
