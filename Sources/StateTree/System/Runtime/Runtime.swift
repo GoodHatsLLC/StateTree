@@ -2,6 +2,7 @@ import Behavior
 import Emitter
 import Foundation
 import HeapModule
+import Intents
 import Utilities
 
 // MARK: - Runtime
@@ -175,7 +176,7 @@ extension Runtime {
     configuration.behaviorTracker
   }
 
-  var activeIntent: ActiveIntent? {
+  var activeIntent: ActiveIntent<NodeID>? {
     state.activeIntent
   }
 

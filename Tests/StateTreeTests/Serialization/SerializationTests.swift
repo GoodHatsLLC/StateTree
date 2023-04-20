@@ -1,4 +1,5 @@
 import Disposable
+import Intents
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
@@ -37,7 +38,7 @@ final class SerializationTests: XCTestCase {
     try tree.assume.rootNode.potentialPrime = 8
     let someIntent = Intent(
       PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
-      Step(name: "invalid-pending-step", fields: ["field": "abc"])
+      try Step(name: "invalid-pending-step", fields: ["field": "abc"])
     )
     try tree.assume.signal(intent: XCTUnwrap(someIntent))
     print(try tree.assume.snapshot().formattedJSON)
@@ -98,7 +99,7 @@ final class SerializationTests: XCTestCase {
     try tree.start()
     let someIntent = Intent(
       PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
-      Step(name: "invalid-pending-step", fields: ["field": "abc"])
+      try Step(name: "invalid-pending-step", fields: ["field": "abc"])
     )
     try tree.assume.signal(intent: XCTUnwrap(someIntent))
     try tree.assume.rootNode.potentialPrime = 8
@@ -202,7 +203,7 @@ extension SerializationTests {
       }
       OnIntent(SomeIntentStep.self) { _ in
         // keep the intent pending to keep it present in the state.
-        .pending
+        .pend
       }
     }
 
@@ -398,8 +399,8 @@ extension SerializationTests {
             }
           ]
         },
-        "lastNodeID" : "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳",
-        "usedNodeIDs" : [
+        "lastStepID" : "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳",
+        "usedStepIDs" : [
           "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳"
         ]
       },

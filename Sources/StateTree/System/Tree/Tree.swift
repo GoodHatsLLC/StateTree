@@ -2,6 +2,7 @@ import Behavior
 import Disposable
 import Emitter
 import Foundation
+import Intents
 import TreeActor
 import Utilities
 

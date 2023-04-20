@@ -1,4 +1,5 @@
 import Disposable
+import Intents
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
@@ -103,7 +104,7 @@ extension IntentSnapshotTests {
 
     var rules: some Rules {
       OnIntent(ValueSetStep.self) { step in
-        .resolution {
+        .act {
           value = step.value
         }
       }
@@ -122,8 +123,8 @@ extension IntentSnapshotTests {
       }
       OnIntent(PendingNodeStep.self) { step in
         mayRoute
-          ? .resolution { shouldRoute = step.shouldRoute }
-          : .pending
+          ? .act { shouldRoute = step.shouldRoute }
+          : .pend
       }
     }
   }

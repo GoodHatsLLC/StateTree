@@ -23,10 +23,3 @@ public struct FieldDecoder: Hashable, Codable, Sendable {
     return try decoder.decode(T.self, from: data)
   }
 }
-
-// MARK: - MemberwiseError
-
-public enum MemberwiseError: Error {
-  case nonDictFieldUncodableField(Any)
-  case uncodableField(Error)
-}

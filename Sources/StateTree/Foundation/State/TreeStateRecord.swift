@@ -1,4 +1,5 @@
 import Foundation
+import Intents
 import OrderedCollections
 import TreeState
 
@@ -14,7 +15,7 @@ public struct TreeStateRecord: TreeState {
   /// Deserialize state into its usable runtime representation.
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: Keys.self)
-    self.activeIntent = try container.decode(ActiveIntent?.self, forKey: .activeIntent)
+    self.activeIntent = try container.decode(ActiveIntent<NodeID>?.self, forKey: .activeIntent)
     let nodes = try container.decode([NodeRecord].self, forKey: .nodes)
     self.nodes = nodes.reduce(into: OrderedDictionary<NodeID, NodeRecord>()) { acc, curr in
       acc[curr.id] = curr
@@ -82,7 +83,7 @@ public struct TreeStateRecord: TreeState {
 
   var root: NodeID?
   var nodes: OrderedDictionary<NodeID, NodeRecord> = [:]
-  var activeIntent: ActiveIntent?
+  var activeIntent: ActiveIntent<NodeID>?
 
   var nodeIDs: [NodeID] { nodes.keys.elements }
 }

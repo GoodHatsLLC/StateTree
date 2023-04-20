@@ -1,5 +1,6 @@
 import Behavior
 import Disposable
+import Intents
 import TreeActor
 
 // MARK: - ExternalRequirement
@@ -30,7 +31,7 @@ public protocol ScopeType<N>: BehaviorScoping, Hashable {
   var record: NodeRecord { get }
   var dependencies: DependencyValues { get }
   var valueFieldDependencies: Set<FieldID> { get }
-  func applyIntent(_ intent: Intent) -> StepResolutionInternal
+  func applyIntent(_ intent: Intent) -> IntentStepResolution
   func markDirty(pending: ExternalRequirement)
   func stepTowardsReady() throws -> Bool
   func stepTowardsFinished() throws -> Bool

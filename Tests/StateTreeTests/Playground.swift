@@ -1,4 +1,5 @@
 import Disposable
+import Intents
 import XCTest
 @_spi(Implementation) @testable import StateTree
 

@@ -1,5 +1,7 @@
 import Behavior
+import Intents
 import TreeActor
+
 // MARK: - StateTreeInfo
 
 public struct StateTreeInfo {

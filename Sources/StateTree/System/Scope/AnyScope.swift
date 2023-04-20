@@ -1,6 +1,7 @@
 import Behavior
 import Disposable
 import Emitter
+import Intents
 
 // MARK: - AnyScope
 
@@ -58,7 +59,7 @@ extension AnyScope: BehaviorScoping {
 
   public var valueFieldDependencies: Set<FieldID> { underlying.valueFieldDependencies }
 
-  public func applyIntent(_ intent: Intent) -> StepResolutionInternal { underlying
+  public func applyIntent(_ intent: Intent) -> IntentStepResolution { underlying
     .applyIntent(intent)
   }
 

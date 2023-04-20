@@ -1,3 +1,4 @@
+import Intents
 import TreeState
 
 // MARK: - StateStorage
@@ -24,7 +25,7 @@ extension StateStorage {
     state.nodeIDs
   }
 
-  var activeIntent: ActiveIntent? {
+  var activeIntent: ActiveIntent<NodeID>? {
     state.activeIntent
   }
 

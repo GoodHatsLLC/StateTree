@@ -1,6 +1,8 @@
 import Behavior
 import Disposable
 import Foundation
+import Intents
+
 // MARK: - NeverScope
 
 struct NeverScope: ScopeType {
@@ -106,7 +108,7 @@ struct NeverScope: ScopeType {
     return false
   }
 
-  func applyIntent(_: Intent) -> StepResolutionInternal {
+  func applyIntent(_: Intent) -> IntentStepResolution {
     assertionFailure("NeverScope should never be invoked")
     return .inapplicable
   }

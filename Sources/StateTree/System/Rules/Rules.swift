@@ -1,4 +1,5 @@
 import Behavior
+import Intents
 
 // MARK: - RuleContext
 
@@ -22,12 +23,12 @@ public enum RuleLifecycle {
 
 public struct LifecycleResult {
   init(
-    intentResolutions: [StepResolutionInternal] = []
+    intentResolutions: [IntentStepResolution] = []
   ) {
     self.intentResolutions = intentResolutions
   }
 
-  let intentResolutions: [StepResolutionInternal]
+  let intentResolutions: [IntentStepResolution]
 
   public static func + (lhs: LifecycleResult, rhs: LifecycleResult) -> LifecycleResult {
     LifecycleResult(

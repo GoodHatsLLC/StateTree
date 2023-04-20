@@ -73,7 +73,7 @@ let package = Package(
   name: "StateTree",
   platforms: [
     .macOS("12.3"),
-    .iOS(.v15),
+    .iOS("15"),
   ],
   products: [
     .library(
@@ -146,6 +146,7 @@ let package = Package(
         "Behavior",
         "Disposable",
         "Emitter",
+        "Intents",
         "TreeState",
         "TreeActor",
         "Utilities",

@@ -1,3 +1,4 @@
+import Intents
 import TreeState
 
 // MARK: properties
@@ -74,7 +75,7 @@ extension TreeStateRecord {
   mutating func invalidateIntentIfUsingNodeID(_ nodeID: NodeID) {
     if
       let activeIntent,
-      activeIntent.usedNodeIDs.contains(nodeID)
+      activeIntent.usedStepIDs.contains(nodeID)
     {
       self.activeIntent = nil
     }

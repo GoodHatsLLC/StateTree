@@ -1,7 +1,11 @@
 import Foundation
 
-@_spi(Implementation)
 public struct IntentStepResolver: Hashable {
+  public init(id: UUID, action: @escaping (Step) -> IntentStepResolution) {
+    self.id = id
+    self.action = action
+  }
+
   public static func == (lhs: IntentStepResolver, rhs: IntentStepResolver) -> Bool {
     lhs.id == rhs.id
   }
@@ -10,18 +14,10 @@ public struct IntentStepResolver: Hashable {
     hasher.combine(id)
   }
 
-  init(
-    id: UUID,
-    action: @escaping (_ step: Step) -> StepResolutionInternal
-  ) {
-    self.id = id
-    self.action = action
-  }
+  public let id: UUID
+  private let action: (_ step: Step) -> IntentStepResolution
 
-  let id: UUID
-  private let action: (_ step: Step) -> StepResolutionInternal
-
-  func apply(step: Step) -> StepResolutionInternal {
+  public func apply(step: Step) -> IntentStepResolution {
     action(step)
   }
 }

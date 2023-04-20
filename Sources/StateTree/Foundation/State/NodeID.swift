@@ -1,5 +1,6 @@
 import Disposable
 import Foundation
+import Intents
 import TreeState
 
 // MARK: - NodeID
@@ -7,7 +8,7 @@ import TreeState
 /// The runtime identifier  representing a ``Node``.
 ///
 /// String serialised `NodeIDs` are formatted as `<UUID>:<CUID>`
-public struct NodeID: TreeState, LosslessStringConvertible {
+public struct NodeID: TreeState, LosslessStringConvertible, StepID {
 
   // MARK: Lifecycle
 

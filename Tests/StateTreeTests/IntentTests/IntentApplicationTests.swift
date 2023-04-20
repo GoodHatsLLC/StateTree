@@ -1,4 +1,5 @@
 import Disposable
+import Intents
 import StateTree
 import XCTest
 
@@ -312,7 +313,7 @@ extension IntentApplicationTests {
 
     var rules: some Rules {
       OnIntent(ValueSetStep.self) { step in
-        .resolution {
+        .act {
           value = step.value
         }
       }
@@ -323,7 +324,7 @@ extension IntentApplicationTests {
     @Value var payload: String?
     var rules: some Rules {
       OnIntent(PrivateStep.self) { step in
-        .resolution {
+        .act {
           payload = step.payload
         }
       }
@@ -336,12 +337,12 @@ extension IntentApplicationTests {
     @Value var value2: String?
     var rules: some Rules {
       OnIntent(RepeatStep1.self) { step in
-        .resolution {
+        .act {
           value1 = step.value
         }
       }
       OnIntent(RepeatStep2.self) { step in
-        .resolution {
+        .act {
           value2 = step.value
         }
       }
@@ -356,7 +357,7 @@ extension IntentApplicationTests {
         $child.route(to: Next())
       }
       OnIntent(RouteTriggerStep.self) { step in
-        .resolution {
+        .act {
           shouldRoute = step.shouldRoute
         }
       }
@@ -382,8 +383,8 @@ extension IntentApplicationTests {
       }
       OnIntent(PendingNodeStep.self) { step in
         mayRoute
-          ? .resolution { shouldRoute = step.shouldRoute }
-          : .pending
+          ? .act { shouldRoute = step.shouldRoute }
+          : .pend
       }
     }
   }
@@ -407,7 +408,7 @@ extension IntentApplicationTests {
         }
       }
       OnIntent(MaybeInvalidatedStep.self) { step in
-        .resolution {
+        .act {
           shouldRoute = step.shouldRoute
         }
       }

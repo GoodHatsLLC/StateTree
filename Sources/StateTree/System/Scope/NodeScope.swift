@@ -1,6 +1,7 @@
 import Behavior
 import Disposable
 import Foundation
+import Intents
 import Utilities
 
 // MARK: - NodeScope
@@ -175,7 +176,7 @@ extension NodeScope: ScopeType {
   private func handleIntents() {
     guard
       let intent = runtime.activeIntent,
-      nid == intent.lastNodeID || ancestors.contains(intent.lastNodeID)
+      nid == intent.lastStepID || ancestors.contains(intent.lastStepID)
     else {
       return
     }
@@ -227,7 +228,7 @@ extension NodeScope {
   }
 
   @TreeActor
-  public func applyIntent(_ intent: Intent) -> StepResolutionInternal {
+  public func applyIntent(_ intent: Intent) -> IntentStepResolution {
     let resolutions = activeRules?
       .act(for: .handleIntent(intent), with: context)
       .intentResolutions ?? []

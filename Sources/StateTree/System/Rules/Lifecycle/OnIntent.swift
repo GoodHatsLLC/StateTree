@@ -1,4 +1,5 @@
 import Foundation
+import Intents
 
 // MARK: - OnIntent
 
@@ -9,7 +10,7 @@ public struct OnIntent: Rules {
 
   public init<Step: IntentStep>(
     _: Step.Type,
-    _ stepAction: @TreeActor @escaping (_ step: Step) -> IntentStepResolution
+    _ stepAction: @TreeActor @escaping (_ step: Step) -> IntentAction
   ) {
     self.resolver = IntentStepResolver(id: UUID()) { step in
       if let step = try? step.decode(as: Step.self) {
