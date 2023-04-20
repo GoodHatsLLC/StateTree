@@ -66,6 +66,7 @@ public final class Recorder<Root: Node> {
       throw RecorderAlreadyActiveError()
     }
     let prefix = frames.isEmpty ? [TreeEvent.recordingStarted] : []
+    let runtime = try tree.assume.runtime
     let disposable = tree
       .events
       .treeEventEmitter
@@ -79,18 +80,14 @@ public final class Recorder<Root: Node> {
             )
           )
         case .update:
-          do {
-            self.frames.append(
-              .init(
-                data: .update(
-                  event,
-                  try self.tree.assume.snapshot()
-                )
+          self.frames.append(
+            .init(
+              data: .update(
+                event,
+                runtime.snapshot()
               )
             )
-          } catch {
-            assertionFailure(error.localizedDescription)
-          }
+          )
         }
       }
     let handle = RecordHandle(stopFunc: {

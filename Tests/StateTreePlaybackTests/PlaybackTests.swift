@@ -2,6 +2,7 @@ import Behavior
 import Disposable
 import StateTree
 import StateTreePlayback
+import Utilities
 import XCTest
 
 // MARK: - PlaybackTests
@@ -22,11 +23,10 @@ final class PlaybackTests: XCTestCase {
       root: PrimeTest()
     )
     try tree.start()
-      .autostop()
-      .stage(on: stage)
-    let recorder = tree.recorder()
+    let recorder = Recorder(tree: tree)
     try recorder
       .start()
+      .autostop()
       .stage(on: stage)
 
     let root = try tree.assume.rootNode
@@ -34,6 +34,8 @@ final class PlaybackTests: XCTestCase {
     await tree.once.behaviorsFinished()
     root.setNumber(to: 0)
     await tree.once.behaviorsFinished()
+    try tree.stop()
+    _ = await tree.once.result()
     let frames = recorder.frames
 
     stage.reset()
@@ -55,12 +57,13 @@ final class PlaybackTests: XCTestCase {
       }
     }
 
-    let all: [BehaviorID: Int] = [
-      .id("onchange"): 1,
+    let all = [
+      BehaviorID.id("onchange"): 1,
       .id("onstart"): 1,
       .id("onstop"): 1,
       .id("run"): 2,
     ]
+
     XCTAssertEqual(created, all)
     XCTAssertEqual(started, all)
     XCTAssertEqual(finished, all)

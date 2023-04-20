@@ -242,6 +242,12 @@ extension Runtime {
 // MARK: Internal
 extension Runtime {
 
+  // MARK: Public
+
+  public func snapshot() -> TreeStateRecord {
+    state.snapshot()
+  }
+
   // MARK: Internal
 
   func signal(intent: Intent) throws {
@@ -259,10 +265,6 @@ extension Runtime {
   func contains(_ scopeID: NodeID) -> Bool {
     assert(isConsistent)
     return scopes.contains(scopeID)
-  }
-
-  func snapshot() -> TreeStateRecord {
-    state.snapshot()
   }
 
   func transaction<T>(_ action: () throws -> T) rethrows -> T {

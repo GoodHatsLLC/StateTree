@@ -24,7 +24,7 @@
       "location" : "https://github.com/apple/swift-collections.git",
       "state" : {
         "branch" : "release/1.1",
-        "revision" : "8c7b8536ea0d21faeeb05229aa7537e9e2636794"
+        "revision" : "84f51c2b9982f26f3dc4458c2ae55bf7109ec6b9"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-docc-plugin",
       "state" : {
-        "revision" : "10bc670db657d11bdd561e07de30a9041311b2b1",
-        "version" : "1.1.0"
+        "revision" : "9b1258905c21fc1b97bf03d1b4ca12c4ec4e5fda",
+        "version" : "1.2.0"
       }
     },
     {

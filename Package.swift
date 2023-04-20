@@ -72,7 +72,7 @@ extension Package {
 let package = Package(
   name: "StateTree",
   platforms: [
-    .macOS(.v12),
+    .macOS("12.3"),
     .iOS(.v15),
   ],
   products: [
@@ -114,6 +114,10 @@ let package = Package(
     ),
   ],
   targets: [
+    .target(
+      name: "Intents",
+      swiftSettings: Build.globalSwiftSettings
+    ),
     .target(
       name: "TreeActor",
       swiftSettings: Build.globalSwiftSettings
@@ -209,6 +213,10 @@ let package = Package(
     .testTarget(
       name: "BehaviorTests",
       dependencies: ["Behavior"]
+    ),
+    .testTarget(
+      name: "IntentsTests",
+      dependencies: ["Intents"]
     ),
     .testTarget(
       name: "UtilitiesTests",

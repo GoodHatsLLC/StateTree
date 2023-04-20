@@ -230,6 +230,15 @@ public final class Tree<N: Node> {
     }
   }
 
+  public var isActive: Bool {
+    switch sessionSubject.value.state {
+    case .started:
+      return true
+    default:
+      return false
+    }
+  }
+
   /// Start the tree.
   ///
   /// - Parameters:
