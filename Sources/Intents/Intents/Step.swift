@@ -15,18 +15,16 @@ public struct Step: Hashable, Codable, Sendable {
     self.underlying = FieldDecoder(value: step)
   }
 
-  public init(name: String, fields: [String: Any]) {
+  public init(name: String, fields: [String: Any]) throws {
     self.name = name
-    self.underlying = FieldDecoder(fields: fields)
+    self.underlying = try FieldDecoder(fields: fields)
   }
 
   // MARK: Public
 
   public let name: String
 
-  // MARK: Internal
-
-  func decode<Step: IntentStep>(as type: Step.Type) throws -> Step {
+  public func decode<Step: IntentStep>(as type: Step.Type) throws -> Step {
     guard type.name == name
     else {
       throw IntentStepDecodingError.unmatchedName

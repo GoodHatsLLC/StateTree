@@ -60,7 +60,7 @@ extension TreeStateRecord {
   }
 
   mutating func recordIntentNodeDependency(_ nodeID: NodeID) {
-    activeIntent?.recordNodeDependency(nodeID)
+    activeIntent?.recordStepDependency(nodeID)
   }
 
   mutating func register(intent: Intent) throws {

@@ -10,7 +10,7 @@ struct ActiveIntent: TreeState {
   private(set) var intent: Intent
   private(set) var usedNodeIDs: Set<NodeID> = []
 
-  mutating func recordNodeDependency(_ nodeID: NodeID) {
+  mutating func recordStepDependency(_ nodeID: NodeID) {
     lastNodeID = nodeID
     usedNodeIDs.insert(nodeID)
   }

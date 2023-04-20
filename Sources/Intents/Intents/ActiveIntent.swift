@@ -8,7 +8,7 @@ struct ActiveIntent<ID: StepID>: Sendable, Hashable, Codable {
   private(set) var intent: Intent
   private(set) var usedStepIDs: Set<ID> = []
 
-  mutating func recordNodeDependency(_ stepID: ID) {
+  mutating func recordStepDependency(_ stepID: ID) {
     lastStepID = stepID
     usedStepIDs.insert(stepID)
   }
