@@ -8,59 +8,54 @@ final class IntentURLEncodingTests: XCTestCase {
   func test_encoding() throws {
     let step1 = TestStep1(field1: "one", field2: "two", field3: "three")
     let step2 = TestStep2(field1: "|", field2: "/", field3: "abc")
-    let step3 = TestStep3(field1: "aaa", field2: "bbb", field3: "ccc", ffour: 123)
+    let step3 = TestStep3(field1: "aaa", field2: "bbb", field3: ":", ffour: 123)
     let intent = try Intent(
       step1,
       step2,
       step3
     )
 
-    let encodedString = try intent.urlEncode()
+    // steps/aaa1/field1=one&field2=two&field3=three/aaa2/field1=%7C&field2=%2F&field3=abc/aaa3/field2=bbb&field1=aaa&field3=:&ffour=123
+    let payload = try intent.urlEncode()
+    let encodedString = try XCTUnwrap(payload.split(separator: "/", maxSplits: 1).last)
     let stepStrings = encodedString.split(separator: "/")
-    XCTAssertEqual(stepStrings.count, 3)
+    XCTAssertEqual(stepStrings.count, 6)
 
-    let step1Strings = stepStrings[0].split(separator: "&")
-    XCTAssertEqual(step1Strings.count, 4)
+    XCTAssertEqual(stepStrings[0], "aaa1")
+    XCTAssertEqual(stepStrings[2], "aaa2")
+    XCTAssertEqual(stepStrings[4], "aaa3")
+
     XCTAssertEqual(
-      Set(step1Strings),
-      Set([
-        "name=aaa1",
-        "payload[field3]=three",
-        "payload[field2]=two",
-        "payload[field1]=one",
-      ])
+      stepStrings[1].split(separator: "&").sorted().map { String($0) },
+      [
+        "field1=one",
+        "field2=two",
+        "field3=three",
+      ]
     )
-
-    let step2Strings = stepStrings[1].split(separator: "&")
-    XCTAssertEqual(step2Strings.count, 4)
     XCTAssertEqual(
-      Set(step2Strings),
-      Set([
-        "payload[field3]=abc",
-        "payload[field2]=%2F",
-        "payload[field1]=%7C",
-        "name=aaa2",
-      ])
+      stepStrings[3].split(separator: "&").sorted().map { String($0) },
+      [
+        "field1=%7C",
+        "field2=%2F",
+        "field3=abc",
+      ]
     )
-
-    let step3Strings = stepStrings[2].split(separator: "&")
-    XCTAssertEqual(step3Strings.count, 5)
     XCTAssertEqual(
-      Set(step3Strings),
-      Set([
-        "name=aaa3",
-        "payload[ffour]=123",
-        "payload[field3]=ccc",
-        "payload[field2]=bbb",
-        "payload[field1]=aaa",
-      ])
+      stepStrings[5].split(separator: "&").sorted().map { String($0) },
+      [
+        "ffour=123",
+        "field1=aaa",
+        "field2=bbb",
+        "field3=:",
+      ]
     )
   }
 
   func test_decoding() throws {
     let step1 = TestStep1(field1: "one", field2: "two", field3: "three")
     let step2 = TestStep2(field1: "|", field2: "/", field3: "abc")
-    let step3 = TestStep3(field1: "aaa", field2: "bbb", field3: "ccc", ffour: 123)
+    let step3 = TestStep3(field1: "aaa", field2: "bbb", field3: ":", ffour: 123)
     let intent = try Intent(
       step1,
       step2,
@@ -83,7 +78,7 @@ final class IntentURLEncodingTests: XCTestCase {
   func testPrerequisite_step_encodingDecoding() throws {
     let step1 = TestStep1(field1: "one", field2: "two", field3: "three")
     let step2 = TestStep2(field1: "|", field2: "/", field3: "abc")
-    let step3 = TestStep3(field1: "aaa", field2: "bbb", field3: "ccc", ffour: 123)
+    let step3 = TestStep3(field1: "aaa", field2: "bbb", field3: ":", ffour: 123)
     let step11 = try Step(step1)
     let enc11 = try URLEncodedFormEncoder().encode(step11)
     let dec11 = try URLEncodedFormDecoder().decode(Step.self, from: enc11)

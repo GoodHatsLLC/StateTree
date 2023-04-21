@@ -9,9 +9,22 @@ public protocol StepConvertible {
 
 // MARK: - Step
 
-public struct Step: Hashable, Codable, Sendable, StepConvertible {
+public struct Step: Hashable, Codable, Sendable, StepConvertible, URLCodable {
 
   // MARK: Lifecycle
+
+  public init(urlEncoded: String) throws {
+    let components = urlEncoded.split(separator: "/")
+    guard
+      components.count == 2,
+      let name = components[0].removingPercentEncoding
+    else {
+      throw URLEncoding.EncodingError()
+    }
+    let payloadComponent = String(components[1])
+    self.name = name
+    self.payload = try Self.decoder.decode(AnyCodable.self, from: payloadComponent)
+  }
 
   public init(_ step: some StepConvertible) throws {
     self.name = step.getName()
@@ -33,6 +46,17 @@ public struct Step: Hashable, Codable, Sendable, StepConvertible {
 
   public let name: String
 
+  public func urlEncode() throws -> String {
+    guard
+      let name = name
+        .addingPercentEncoding(withAllowedCharacters: URLEncoding.allowedCharacters)
+    else {
+      throw URLEncoding.EncodingError()
+    }
+    let payload = try Self.encoder.encode(payload)
+    return "\(name)/\(payload)"
+  }
+
   public func decode<Step: IntentStepPayload>(as type: Step.Type) throws -> Step {
     guard type.name == name
     else {
@@ -51,6 +75,9 @@ public struct Step: Hashable, Codable, Sendable, StepConvertible {
   }
 
   // MARK: Private
+
+  private static let encoder = URLEncodedFormEncoder()
+  private static let decoder = URLEncodedFormDecoder()
 
   private let payload: AnyCodable
 

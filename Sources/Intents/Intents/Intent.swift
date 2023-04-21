@@ -14,10 +14,33 @@ public struct Intent: Hashable, Codable, Sendable, URLCodable {
   public init(urlEncoded: String) throws {
     // NOTE: the "/" character is percentage encoded by URLEncodedFormSerializer
     // and so can be used as a separator.
-    let steps = try urlEncoded
+    let payload = urlEncoded.split(separator: "/", maxSplits: 1)
+    guard
+      payload.count == 2,
+      payload[0] == "steps"
+    else {
+      throw URLEncoding.EncodingError()
+    }
+    let stepsPayload = payload[1]
       .split(separator: "/")
+      .map { String($0) }
+    guard stepsPayload.count % 2 == 0
+    else {
+      throw URLEncoding.EncodingError()
+    }
+    let joinedSteps = stepsPayload.enumerated()
+      .reduce(into: [String]()) { partialResult, el in
+        let val = el.element
+        let isName = el.offset % 2 == 0
+        if isName {
+          partialResult.append(val)
+        } else {
+          partialResult[partialResult.count - 1] += "/\(val)"
+        }
+      }
+    let steps = try joinedSteps
       .map { encodedStep in
-        try Self.decoder.decode(Step.self, from: String(encodedStep))
+        try Step(urlEncoded: encodedStep)
       }
     self.steps = steps
   }
@@ -51,11 +74,9 @@ public struct Intent: Hashable, Codable, Sendable, URLCodable {
   }
 
   public func urlEncode() throws -> String {
-    // NOTE: the "/" character is percentage encoded by URLEncodedFormSerializer
-    // and so can be used as a separator.
-    try steps.map { step in
-      try Self.encoder.encode(step)
-    }.joined(separator: "/")
+    (try ["steps"] + steps.map { step in
+      try step.urlEncode()
+    }).joined(separator: "/")
   }
 
   // MARK: Private

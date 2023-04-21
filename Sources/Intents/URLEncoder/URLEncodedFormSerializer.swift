@@ -74,7 +74,7 @@ extension String {
   func urlEncoded(codingPath: [CodingKey] = []) throws -> String {
     guard
       let result = self.addingPercentEncoding(
-        withAllowedCharacters: _allowedCharacters
+        withAllowedCharacters: URLEncoding.allowedCharacters
       )
     else {
       throw EncodingError.invalidValue(self, EncodingError.Context(
@@ -86,11 +86,17 @@ extension String {
   }
 }
 
-/// Characters allowed in form-urlencoded data.
-private var _allowedCharacters: CharacterSet = {
-  var allowed = CharacterSet.urlQueryAllowed
-  // these symbols are reserved for url-encoded form
-  // NOTE: "/" character added for intents use.
-  allowed.remove(charactersIn: "?&=[];+/")
-  return allowed
-}()
+// MARK: - URLEncoding
+
+enum URLEncoding {
+  /// Characters allowed in form-urlencoded data.
+  static let allowedCharacters: CharacterSet = {
+    var allowed = CharacterSet.urlQueryAllowed
+    // these symbols are reserved for url-encoded form
+    // NOTE: "/" character added for intents use.
+    allowed.remove(charactersIn: "?&=[];+/")
+    return allowed
+  }()
+
+  struct EncodingError: Error { }
+}
