@@ -1,41 +1,68 @@
+// MARK: - URLCodable
 
-public struct Intent: Hashable, Codable, Sendable {
+public protocol URLCodable {
+  func urlEncode() throws -> String
+  init(urlEncoded: String) throws
+}
+
+// MARK: - Intent
+
+public struct Intent: Hashable, Codable, Sendable, URLCodable {
 
   // MARK: Lifecycle
 
-  public init?(_ steps: any StepType...) {
-    guard !steps.isEmpty
-    else {
-      return nil
-    }
-    var steps = steps.reversed().map { $0.asStep() }
-    let last = steps.removeLast()
-    self.head = last
-    self.tailSteps = Array(steps)
+  public init(urlEncoded: String) throws {
+    // NOTE: the "/" character is percentage encoded by URLEncodedFormSerializer
+    // and so can be used as a separator.
+    let steps = try urlEncoded
+      .split(separator: "/")
+      .map { encodedStep in
+        try Self.decoder.decode(Step.self, from: String(encodedStep))
+      }
+    self.steps = steps
   }
 
-  private init? (
-    steps: [Step]
+  public init(_ steps: any StepConvertible...) throws {
+    self.steps = try steps.map { try Step($0) }
+  }
+
+  private init?(
+    steps: some Collection<Step>
   ) {
     guard !steps.isEmpty
     else {
       return nil
     }
-    var steps = steps
-    self.head = steps.removeLast()
-    self.tailSteps = steps
+    self.steps = Array(steps)
   }
 
   // MARK: Public
 
-  public let head: Step
+  public static var invalid: Intent {
+    .init(steps: [Step.invalid])!
+  }
+
+  public var head: Step {
+    steps.first!
+  }
 
   public var tail: Intent? {
-    Intent(steps: tailSteps)
+    Intent(steps: steps.dropFirst())
+  }
+
+  public func urlEncode() throws -> String {
+    // NOTE: the "/" character is percentage encoded by URLEncodedFormSerializer
+    // and so can be used as a separator.
+    try steps.map { step in
+      try Self.encoder.encode(step)
+    }.joined(separator: "/")
   }
 
   // MARK: Private
 
-  private let tailSteps: [Step]
+  private static let encoder = URLEncodedFormEncoder()
+  private static let decoder = URLEncodedFormDecoder()
+
+  private let steps: [Step]
 
 }

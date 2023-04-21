@@ -1,24 +1,30 @@
-public struct ActiveIntent<ID: StepID>: Sendable, Hashable, Codable {
+public struct ActiveIntent<ID: Sendable & Hashable & Codable>: Sendable, Hashable, Codable {
   public init(intent: Intent, from stepID: ID) {
-    self.lastStepID = stepID
-    self.intent = intent
+    self.lastConsumerID = stepID
+    self.intentPayload = intent
   }
 
-  public private(set) var lastStepID: ID
-  public private(set) var intent: Intent
-  public private(set) var usedStepIDs: Set<ID> = []
-
-  public mutating func recordStepDependency(_ stepID: ID) {
-    lastStepID = stepID
-    usedStepIDs.insert(stepID)
+  public private(set) var lastConsumerID: ID
+  private var intentPayload: Intent?
+  public var intent: Intent {
+    intentPayload ?? Intent.invalid
   }
 
-  public mutating func popStepReturningPendingState() -> Bool {
-    if let intent = intent.tail {
-      self.intent = intent
-      return true
-    } else {
-      return false
-    }
+  public private(set) var consumerIDs: Set<ID> = []
+
+  public var isValid: Bool {
+    intentPayload != nil
   }
+
+  public mutating func recordConsumer(_ consumerID: ID) {
+    lastConsumerID = consumerID
+    consumerIDs.insert(consumerID)
+  }
+
+  @discardableResult
+  public mutating func popStep() -> (step: Step?, remainsValid: Bool) {
+    defer { self.intentPayload = intentPayload?.tail }
+    return (step: intentPayload?.head, remainsValid: intentPayload?.tail != nil)
+  }
+
 }

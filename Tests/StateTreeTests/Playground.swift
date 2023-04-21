@@ -19,7 +19,7 @@ final class Playground: XCTestCase {
 
 extension Playground {
 
-  struct MyIntent: IntentStep, Equatable {
+  struct MyIntent: IntentStepPayload, Equatable {
     static let name = "myintent"
     let payload: String
   }

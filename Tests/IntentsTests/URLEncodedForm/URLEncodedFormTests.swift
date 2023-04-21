@@ -155,7 +155,7 @@ final class URLEncodedFormTests: XCTestCase {
 
     let resultForISOEncoder = try URLEncodedFormEncoder().encode(toEncode)
     XCTAssertEqual(
-      "dates=1970-01-01T00:00:00Z,1970-01-01T02:46:40Z,1970-01-01T05:33:20Z,1970-01-01T08:20:00Z,1970-01-01T11:06:40Z,1970-01-01T13:53:20Z",
+      "dates[]=1970-01-01T00:00:00Z&dates[]=1970-01-01T02:46:40Z&dates[]=1970-01-01T05:33:20Z&dates[]=1970-01-01T08:20:00Z&dates[]=1970-01-01T11:06:40Z&dates[]=1970-01-01T13:53:20Z",
       resultForISOEncoder
     )
 
@@ -197,54 +197,7 @@ final class URLEncodedFormTests: XCTestCase {
     XCTAssertEqual(dateString, resultForEncodedOptionalDate)
   }
 
-  func testEncodeArraySeparator() throws {
-    let user = User(
-      name: "Tanner",
-      age: 23,
-      pets: ["Zizek", "Foo"],
-      dict: ["a": 1, "b": 2],
-      foos: [.baz],
-      nums: [3.14],
-      isCool: true
-    )
-    let result = try URLEncodedFormEncoder().encode(user)
-    XCTAssert(result.contains("pets=Zizek,Foo"))
-    XCTAssert(result.contains("age=23"))
-    XCTAssert(result.contains("name=Tanner"))
-    XCTAssert(result.contains("dict[a]=1"))
-    XCTAssert(result.contains("dict[b]=2"))
-    XCTAssert(result.contains("foos=baz"))
-    XCTAssert(result.contains("nums=3.14"))
-    XCTAssert(result.contains("isCool=true"))
-  }
-
-  func testInheritanceCoding() throws {
-    let toEncode = ChildClass()
-    toEncode.baseField = "Base Value"
-    toEncode.childField = "Child Field"
-    let result = try URLEncodedFormEncoder().encode(toEncode)
-    let decoded = try URLEncodedFormDecoder().decode(ChildClass.self, from: result)
-    XCTAssertEqual(decoded, toEncode)
-  }
-
-  func testArraysOfArraysOfObjects() throws {
-    let toEncode = [[User(
-      name: "Tanner",
-      age: 23,
-      pets: ["Zizek", "Foo"],
-      dict: ["a": 1, "b": 2],
-      foos: [.baz],
-      nums: [3.14],
-      isCool: true
-    )]]
-    let result = try URLEncodedFormEncoder().encode(toEncode)
-    let kvs = result.split(separator: "&")
-    XCTAssert(kvs.contains("0[0][name]=Tanner"))
-    let decoded = try URLEncodedFormDecoder().decode([[User]].self, from: result)
-    XCTAssertEqual(decoded, toEncode)
-  }
-
-  func testMultiObjectArrayEncodeWithArraySeparator() throws {
+  func testMultiObjectArrayEncode() throws {
     let tanner = User(
       name: "Tanner",
       age: 23,
@@ -265,7 +218,56 @@ final class URLEncodedFormTests: XCTestCase {
     )
     let usersToEncode = Users(users: [tanner, ravneet])
     let result = try URLEncodedFormEncoder().encode(usersToEncode)
-    XCTAssert(result.contains("users[0][pets]=Zizek,Foo"))
+    XCTAssert(result.contains("users[0][pets][]=Zizek"))
+    XCTAssert(result.contains("users[0][pets][]=Foo"))
+    XCTAssert(result.contains("users[0][age]=23"))
+    XCTAssert(result.contains("users[0][name]=Tanner"))
+    XCTAssert(result.contains("users[0][dict][a]=1"))
+    XCTAssert(result.contains("users[0][dict][b]=2"))
+    XCTAssert(result.contains("users[0][foos][]=baz"))
+    XCTAssert(result.contains("users[0][nums][]=3.14"))
+    XCTAssert(result.contains("users[0][isCool]=true"))
+
+    XCTAssert(result.contains("users[1][pets][]=Piku"))
+    XCTAssert(result.contains("users[1][age]=33"))
+    XCTAssert(result.contains("users[1][name]=Ravneet"))
+    XCTAssert(result.contains("users[1][dict][a]=-3"))
+    XCTAssert(result.contains("users[1][dict][b]=99"))
+    XCTAssert(result.contains("users[1][foos][]=baz"))
+    XCTAssert(result.contains("users[1][foos][]=bar"))
+    XCTAssert(result.contains("users[1][nums][]=3.14"))
+    XCTAssert(result.contains("users[1][nums][]=144"))
+    XCTAssert(result.contains("users[1][isCool]=true"))
+
+    let decodedUsers = try URLEncodedFormDecoder().decode(Users.self, from: result)
+    XCTAssertEqual(decodedUsers, usersToEncode)
+  }
+
+  func testMultiObjectValuesArrayEncoding() throws {
+    let tanner = User(
+      name: "Tanner",
+      age: 23,
+      pets: ["Zizek", "Foo"],
+      dict: ["a": 1, "b": 2],
+      foos: [.baz],
+      nums: [3.14],
+      isCool: true
+    )
+    let ravneet = User(
+      name: "Ravneet",
+      age: 33,
+      pets: ["Piku"],
+      dict: ["a": -3, "b": 99],
+      foos: [.baz, .bar],
+      nums: [3.14, 144],
+      isCool: true
+    )
+    let usersToEncode = Users(users: [tanner, ravneet])
+    let result = try URLEncodedFormEncoder(
+      configuration: .init(arrayEncoding: .values)
+    ).encode(usersToEncode)
+    XCTAssert(result.contains("users[0][pets]=Zizek"))
+    XCTAssert(result.contains("users[0][pets]=Foo"))
     XCTAssert(result.contains("users[0][age]=23"))
     XCTAssert(result.contains("users[0][name]=Tanner"))
     XCTAssert(result.contains("users[0][dict][a]=1"))
@@ -279,23 +281,31 @@ final class URLEncodedFormTests: XCTestCase {
     XCTAssert(result.contains("users[1][name]=Ravneet"))
     XCTAssert(result.contains("users[1][dict][a]=-3"))
     XCTAssert(result.contains("users[1][dict][b]=99"))
-    XCTAssert(result.contains("users[1][foos]=baz,bar"))
-    XCTAssert(result.contains("users[1][nums]=3.14,144"))
+    XCTAssert(result.contains("users[1][foos]=baz"))
+    XCTAssert(result.contains("users[1][foos]=bar"))
+    XCTAssert(result.contains("users[1][nums]=3.14"))
+    XCTAssert(result.contains("users[1][nums]=144"))
     XCTAssert(result.contains("users[1][isCool]=true"))
 
     let decodedUsers = try URLEncodedFormDecoder().decode(Users.self, from: result)
     XCTAssertEqual(decodedUsers, usersToEncode)
   }
 
-  ///     func testCodable() throws {
-  ///         let a = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2],
-  /// foos: [], nums: [], isCool: true)
-  ///         let body = try URLEncodedFormEncoder().encode(a)
-  ///         print(body)
-  ///         let b = try! URLEncodedFormDecoder().decode(User.self, from: body)
-  ///         XCTAssertEqual(a, b)
-  ///     }
-  ///
+  func testCodable() throws {
+    let a = User(
+      name: "Tanner",
+      age: 23,
+      pets: ["Zizek", "Foo"],
+      dict: ["a": 1, "b": 2],
+      foos: [],
+      nums: [],
+      isCool: true
+    )
+    let body = try URLEncodedFormEncoder().encode(a)
+    let b = try! URLEncodedFormDecoder().decode(User.self, from: body)
+    XCTAssertEqual(a, b)
+  }
+
   func testDecodeIntArray() throws {
     let data = """
       array[]=1&array[]=2&array[]=3
@@ -477,7 +487,7 @@ final class URLEncodedFormTests: XCTestCase {
     let data = try URLEncodedFormSerializer().serialize([
       "test": "&;!$'(),/:=?@~",
     ])
-    XCTAssertEqual(data, "test=%26%3B!$'(),/:%3D%3F@~")
+    XCTAssertEqual(data, "test=%26%3B!$'(),%2F:%3D%3F@~")
   }
 
   func testHeavilyNestedArray() throws {

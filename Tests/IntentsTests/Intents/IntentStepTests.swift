@@ -55,12 +55,12 @@ final class IntentStepTests: XCTestCase {
 
 extension IntentStepTests {
 
-  struct FlatIntent: IntentStep, Equatable {
+  struct FlatIntent: IntentStepPayload, Equatable {
     static let name = "myintent"
     let payload: String
   }
 
-  struct NestedIntent: IntentStep, Equatable {
+  struct NestedIntent: IntentStepPayload, Equatable {
 
     static let name = "typenesting"
 

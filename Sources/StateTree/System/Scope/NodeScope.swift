@@ -176,7 +176,7 @@ extension NodeScope: ScopeType {
   private func handleIntents() {
     guard
       let intent = runtime.activeIntent,
-      nid == intent.lastStepID || ancestors.contains(intent.lastStepID)
+      nid == intent.lastConsumerID || ancestors.contains(intent.lastConsumerID)
     else {
       return
     }

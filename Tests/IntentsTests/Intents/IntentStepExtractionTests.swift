@@ -5,10 +5,6 @@ import XCTest
 
 final class IntentStepExtractionTests: XCTestCase {
 
-  func test_nil_emptyIntent() throws {
-    XCTAssertNil(Intent())
-  }
-
   func test_intentStepExtraction() throws {
     var intent = try XCTUnwrap(
       Intent(
@@ -59,22 +55,22 @@ final class IntentStepExtractionTests: XCTestCase {
 
 extension IntentStepExtractionTests {
 
-  struct Step1: IntentStep, Equatable {
+  struct Step1: IntentStepPayload, Equatable {
     static let name = "step1"
     let fstr: String
   }
 
-  struct Step2: IntentStep, Equatable {
+  struct Step2: IntentStepPayload, Equatable {
     static let name = "step2"
     let fint: Int
   }
 
-  struct Step3: IntentStep, Equatable {
+  struct Step3: IntentStepPayload, Equatable {
     static let name = "step3"
     let fbool: Bool
   }
 
-  struct Step4: IntentStep, Equatable {
+  struct Step4: IntentStepPayload, Equatable {
     static let name = "step4"
     let fopt: Bool?
   }

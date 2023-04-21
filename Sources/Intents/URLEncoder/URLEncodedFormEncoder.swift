@@ -4,9 +4,6 @@ import Foundation
 
 /// Encodes `Encodable` instances to `application/x-www-form-urlencoded` data.
 ///
-/// Source: https://github.com/vapor/vapor/tree/f4b00a5350238fe896d865d96d64f12fcbbeda95/Sources/Vapor/URLEncodedForm
-/// License: https://github.com/vapor/vapor/blob/main/LICENSE
-///
 ///     print(user) /// User
 ///     let data = try URLEncodedFormEncoder().encode(user)
 ///     print(data) /// Data
@@ -21,7 +18,7 @@ import Foundation
 /// information about
 /// url-encoded forms.
 /// NOTE: This implementation of the encoder does not support encoding booleans to "flags".
-public struct URLEncodedFormEncoder {
+struct URLEncodedFormEncoder {
 
   // MARK: Lifecycle
 
@@ -32,11 +29,14 @@ public struct URLEncodedFormEncoder {
   /// - Parameters:
   ///  - configuration: Defines how encoding is done; see ``URLEncodedFormEncoder/Configuration``
   /// for more information
-  public init() { }
+  init(configuration: Configuration = .init()) {
+    self.configuration = configuration
+  }
 
-  // MARK: Public
+  // MARK: Internal
 
-  public struct Configuration {
+  /// Used to capture URLForm Coding Configuration used for encoding.
+  struct Configuration {
 
     // MARK: Lifecycle
 
@@ -45,8 +45,8 @@ public struct URLEncodedFormEncoder {
     ///  - parameters:
     ///     - arrayEncoding: Specified array encoding. Defaults to `.bracket`.
     ///     - dateFormat: Format to encode date format too. Defaults to `secondsSince1970`
-    public init(
-      arrayEncoding: ArrayEncoding = .separator(","),
+    init(
+      arrayEncoding: ArrayEncoding = .bracket,
       dateEncodingStrategy: DateEncodingStrategy = .iso8601,
       userInfo: [CodingUserInfoKey: Any] = [:]
     ) {
@@ -55,10 +55,10 @@ public struct URLEncodedFormEncoder {
       self.userInfo = userInfo
     }
 
-    // MARK: Public
+    // MARK: Internal
 
     /// Supported array encodings.
-    public enum ArrayEncoding {
+    enum ArrayEncoding {
       /// Arrays are serialized as separate values with bracket suffixed keys.
       /// For example, `foo = [1,2,3]` would be serialized as `foo[]=1&foo[]=2&foo[]=3`.
       case bracket
@@ -71,7 +71,7 @@ public struct URLEncodedFormEncoder {
     }
 
     /// Supported date formats
-    public enum DateEncodingStrategy {
+    enum DateEncodingStrategy {
       /// Seconds since 1 January 1970 00:00:00 UTC (Unix Timestamp)
       case secondsSince1970
       /// ISO 8601 formatted date
@@ -81,9 +81,9 @@ public struct URLEncodedFormEncoder {
     }
 
     /// Specified array encoding.
-    public var arrayEncoding: ArrayEncoding = .separator(",")
-    public var dateEncodingStrategy: DateEncodingStrategy = .iso8601
-    public var userInfo: [CodingUserInfoKey: Any] = [:]
+    var arrayEncoding: ArrayEncoding
+    var dateEncodingStrategy: DateEncodingStrategy
+    var userInfo: [CodingUserInfoKey: Any]
 
   }
 
@@ -98,7 +98,7 @@ public struct URLEncodedFormEncoder {
   ///   - userInfo: Overrides the default coder user info.
   /// - Returns: Encoded ``String``
   /// - Throws: Any error that may occur while attempting to encode the specified type.
-  public func encode(
+  func encode(
     _ encodable: some Encodable,
     userInfo: [CodingUserInfoKey: Any] = [:]
   ) throws
@@ -117,15 +117,11 @@ public struct URLEncodedFormEncoder {
 
   // MARK: Private
 
-  // Used to capture URLForm Coding Configuration used for encoding.
-
-  private let configuration: Configuration = .init()
+  private let configuration: Configuration
 
 }
 
 // MARK: - _Container
-
-// // MARK: Private
 
 private protocol _Container {
   func getData() throws -> URLEncodedFormData
@@ -133,51 +129,39 @@ private protocol _Container {
 
 // MARK: - _Encoder
 
-public class _Encoder: Encoder, _Container {
+private class _Encoder: Encoder, _Container {
 
   // MARK: Lifecycle
 
-  init(
-    codingPath: [CodingKey] = [],
-    configuration: URLEncodedFormEncoder.Configuration = .init()
-  ) {
+  init(codingPath: [CodingKey], configuration: URLEncodedFormEncoder.Configuration) {
     self.codingPath = codingPath
     self.configuration = configuration
   }
 
-  // MARK: Public
+  // MARK: Internal
 
-  public var codingPath: [CodingKey]
+  var codingPath: [CodingKey]
 
-  public var userInfo: [CodingUserInfoKey: Any] { configuration.userInfo }
+  var userInfo: [CodingUserInfoKey: Any] { configuration.userInfo }
 
-  public func container<Key>(keyedBy _: Key.Type) -> KeyedEncodingContainer<Key>
-    where Key: CodingKey
-  {
+  func getData() throws -> URLEncodedFormData { try container?.getData() ?? [] }
+
+  func container<Key>(keyedBy _: Key.Type) -> KeyedEncodingContainer<Key> where Key: CodingKey {
     let container = KeyedContainer<Key>(codingPath: codingPath, configuration: configuration)
     self.container = container
     return .init(container)
   }
 
-  public func unkeyedContainer() -> UnkeyedEncodingContainer {
+  func unkeyedContainer() -> UnkeyedEncodingContainer {
     let container = UnkeyedContainer(codingPath: codingPath, configuration: configuration)
     self.container = container
     return container
   }
 
-  public func singleValueContainer() -> SingleValueEncodingContainer {
+  func singleValueContainer() -> SingleValueEncodingContainer {
     let container = SingleValueContainer(codingPath: codingPath, configuration: configuration)
     self.container = container
     return container
-  }
-
-  // MARK: Internal
-
-  func getData() throws -> URLEncodedFormData { try container?.getData() ?? [] }
-
-  func serialize() throws -> String {
-    let serializer = URLEncodedFormSerializer()
-    return try serializer.serialize(getData())
   }
 
   // MARK: Private
@@ -220,7 +204,7 @@ public class _Encoder: Encoder, _Container {
       if let date = value as? Date {
         internalData.children[key.stringValue] = try configuration
           .encodeDate(date, codingPath: codingPath, forKey: key)
-      } else if let convertible = value as? (any URLQueryFragmentConvertible) {
+      } else if let convertible = value as? any URLQueryFragmentConvertible {
         internalData
           .children[key.stringValue] =
           URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
@@ -342,7 +326,7 @@ public class _Encoder: Encoder, _Container {
              .values:
           internalData.values.append(contentsOf: encodedDate.values)
         }
-      } else if let convertible = value as? (any URLQueryFragmentConvertible) {
+      } else if let convertible = value as? any URLQueryFragmentConvertible {
         let value = convertible.urlQueryFragmentValue
         switch configuration.arrayEncoding {
         case .bracket:
@@ -439,6 +423,7 @@ public class _Encoder: Encoder, _Container {
 
     /// See `SingleValueEncodingContainer`
     var codingPath: [CodingKey]
+
     /// The data being encoded
     var data: URLEncodedFormData = []
 
@@ -453,7 +438,7 @@ public class _Encoder: Encoder, _Container {
     func encode(_ value: some Encodable) throws {
       if let date = value as? Date {
         data = try configuration.encodeDate(date, codingPath: codingPath, forKey: nil)
-      } else if let convertible = value as? (any URLQueryFragmentConvertible) {
+      } else if let convertible = value as? any URLQueryFragmentConvertible {
         data.values.append(convertible.urlQueryFragmentValue)
       } else {
         let encoder = _Encoder(codingPath: codingPath, configuration: configuration)

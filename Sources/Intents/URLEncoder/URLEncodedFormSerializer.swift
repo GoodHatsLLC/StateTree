@@ -90,6 +90,7 @@ extension String {
 private var _allowedCharacters: CharacterSet = {
   var allowed = CharacterSet.urlQueryAllowed
   // these symbols are reserved for url-encoded form
-  allowed.remove(charactersIn: "?&=[];+")
+  // NOTE: "/" character added for intents use.
+  allowed.remove(charactersIn: "?&=[];+/")
   return allowed
 }()

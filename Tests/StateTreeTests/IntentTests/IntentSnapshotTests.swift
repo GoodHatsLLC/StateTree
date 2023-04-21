@@ -83,12 +83,12 @@ private protocol DefaultInitNode: Node {
 /// Intent definitions
 extension IntentSnapshotTests {
 
-  fileprivate struct ValueSetStep: IntentStep {
+  fileprivate struct ValueSetStep: IntentStepPayload {
     static let name = "value-set-step"
     let value: Int
   }
 
-  fileprivate struct PendingNodeStep: IntentStep {
+  fileprivate struct PendingNodeStep: IntentStepPayload {
     static let name = "pending-step"
     let shouldRoute: Bool
   }

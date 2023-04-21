@@ -26,22 +26,26 @@ final class SerializationTests: XCTestCase {
       .autostop()
       .stage(on: stage)
     try tree.assume.rootNode.potentialPrime = 7
+    print("<prime>")
     print(try tree.assume.snapshot().formattedJSON)
+    print("</prime>")
   }
 
   @TreeActor
-  func _test_dump_nonprime() async throws {
+  func _test_dump_composite() async throws {
     let tree = Tree(root: PrimeSquare())
     try tree.start()
       .autostop()
       .stage(on: stage)
     try tree.assume.rootNode.potentialPrime = 8
-    let someIntent = Intent(
+    let someIntent = try Intent(
       PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
       try Step(name: "invalid-pending-step", fields: ["field": "abc"])
     )
     try tree.assume.signal(intent: XCTUnwrap(someIntent))
+    print("<composite>")
     print(try tree.assume.snapshot().formattedJSON)
+    print("</composite>")
   }
 
   @TreeActor
@@ -97,7 +101,7 @@ final class SerializationTests: XCTestCase {
       root: PrimeSquare()
     )
     try tree.start()
-    let someIntent = Intent(
+    let someIntent = try Intent(
       PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
       try Step(name: "invalid-pending-step", fields: ["field": "abc"])
     )
@@ -105,12 +109,12 @@ final class SerializationTests: XCTestCase {
     try tree.assume.rootNode.potentialPrime = 8
     let snapshot = try tree.assume.snapshot()
     let string = snapshot.formattedJSON
-    XCTAssertEqual(string, nonPrimeStateString)
+    XCTAssertEqual(string, compositeStateString)
   }
 
   @TreeActor
   func testAlternateState() async throws {
-    let state = try TreeStateRecord(formattedJSON: nonPrimeStateString)
+    let state = try TreeStateRecord(formattedJSON: compositeStateString)
     let tree = Tree(
       root: PrimeSquare()
     )
@@ -118,7 +122,7 @@ final class SerializationTests: XCTestCase {
       .autostop()
       .stage(on: stage)
     let snap = try tree.assume.snapshot()
-    XCTAssertEqual(snap.formattedJSON, nonPrimeStateString)
+    XCTAssertEqual(snap.formattedJSON, compositeStateString)
   }
 }
 
@@ -166,7 +170,7 @@ extension SerializationTests {
 
     // MARK: Internal
 
-    struct SomeIntentStep: IntentStep {
+    struct SomeIntentStep: IntentStepPayload {
       static let name = "some-intent"
       let someField: Int
       let someOtherField: String
@@ -374,35 +378,31 @@ extension SerializationTests {
     """
   }
 
-  var nonPrimeStateString: String {
+  var compositeStateString: String {
     """
     {
       "activeIntent" : {
-        "intent" : {
-          "head" : {
-            "name" : "some-intent",
-            "underlying" : {
-              "fields" : {
+        "consumerIDs" : [
+          "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳"
+        ],
+        "intentPayload" : {
+          "steps" : [
+            {
+              "name" : "some-intent",
+              "payload" : {
                 "someField" : 123,
                 "someOtherField" : "321"
               }
-            }
-          },
-          "tailSteps" : [
+            },
             {
               "name" : "invalid-pending-step",
-              "underlying" : {
-                "fields" : {
-                  "field" : "abc"
-                }
+              "payload" : {
+                "field" : "abc"
               }
             }
           ]
         },
-        "lastStepID" : "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳",
-        "usedStepIDs" : [
-          "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳"
-        ]
+        "lastConsumerID" : "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳"
       },
       "nodes" : [
         {

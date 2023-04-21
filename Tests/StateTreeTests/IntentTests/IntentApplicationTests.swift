@@ -266,37 +266,37 @@ private protocol DefaultInitNode: Node {
 /// Intent definitions
 extension IntentApplicationTests {
 
-  fileprivate struct RepeatStep1: IntentStep {
+  fileprivate struct RepeatStep1: IntentStepPayload {
     static let name = "repeat-1"
     let value: String
   }
 
-  fileprivate struct RepeatStep2: IntentStep {
+  fileprivate struct RepeatStep2: IntentStepPayload {
     static let name = "repeat-2"
     let value: String
   }
 
-  fileprivate struct ValueSetStep: IntentStep {
+  fileprivate struct ValueSetStep: IntentStepPayload {
     static let name = "value-set-step"
     let value: Int
   }
 
-  fileprivate struct RouteTriggerStep: IntentStep {
+  fileprivate struct RouteTriggerStep: IntentStepPayload {
     static let name = "route-trigger-step"
     let shouldRoute: Bool
   }
 
-  fileprivate struct PendingNodeStep: IntentStep {
+  fileprivate struct PendingNodeStep: IntentStepPayload {
     static let name = "pending-step"
     let shouldRoute: Bool
   }
 
-  fileprivate struct MaybeInvalidatedStep: IntentStep {
+  fileprivate struct MaybeInvalidatedStep: IntentStepPayload {
     static let name = "maybe-invalid"
     let shouldRoute: Bool
   }
 
-  fileprivate struct PrivateStep: IntentStep {
+  fileprivate struct PrivateStep: IntentStepPayload {
     private init(payload _: String) { fatalError() }
     static let name = "private-step"
     let payload: String

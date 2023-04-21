@@ -4,9 +4,6 @@ import Foundation
 
 /// Decodes instances of `Decodable` types from `application/x-www-form-urlencoded` `Data`.
 ///
-/// Source: https://github.com/vapor/vapor/tree/f4b00a5350238fe896d865d96d64f12fcbbeda95/Sources/Vapor/URLEncodedForm
-/// License: https://github.com/vapor/vapor/blob/main/LICENSE
-///
 ///     print(data) // "name=Vapor&age=3"
 ///     let user = try URLEncodedFormDecoder().decode(User.self, from: data)
 ///     print(user) // User
@@ -20,7 +17,7 @@ import Foundation
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more
 /// information about
 /// url-encoded forms.
-public struct URLEncodedFormDecoder {
+struct URLEncodedFormDecoder {
 
   // MARK: Lifecycle
 
@@ -33,19 +30,49 @@ public struct URLEncodedFormDecoder {
   /// - parameters:
   ///     - configuration: Defines how decoding is done see `URLEncodedFormCodingConfig` for more
   /// information
-  public init(
+  init(
     configuration: Configuration = .init()
   ) {
     self.parser = URLEncodedFormParser()
     self.configuration = configuration
   }
 
-  // MARK: Public
+  // MARK: Internal
 
   /// Used to capture URLForm Coding Configuration used for decoding
-  public struct Configuration {
+  struct Configuration {
+
+    // MARK: Lifecycle
+
+    /// Creates a new `URLEncodedFormCodingConfiguration`.
+    /// - parameters:
+    ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
+    ///                  where object with variable `flag1` and `flag2` would decode to `true`
+    ///                  or `false` depending on if the value was present or not. If this flag is
+    /// set to
+    ///                  true, it will always resolve for an optional `Bool`.
+    ///     - arraySeparators: Uses these characters to decode arrays. If set to `,`, `arr=v1,v2`
+    /// would
+    ///                        populate a key named `arr` of type `Array` to be decoded as `["v1",
+    /// "v2"]`
+    ///     - dateDecodingStrategy: Date format used to decode a date. Date formats are tried in the
+    /// order provided
+    init(
+      boolFlags: Bool = true,
+      arraySeparators: [Character] = [",", "|"],
+      dateDecodingStrategy: DateDecodingStrategy = .iso8601,
+      userInfo: [CodingUserInfoKey: Any] = [:]
+    ) {
+      self.boolFlags = boolFlags
+      self.arraySeparators = arraySeparators
+      self.dateDecodingStrategy = dateDecodingStrategy
+      self.userInfo = userInfo
+    }
+
+    // MARK: Internal
+
     /// Supported date formats
-    public enum DateDecodingStrategy {
+    enum DateDecodingStrategy {
       /// Seconds since 1 January 1970 00:00:00 UTC (Unix Timestamp)
       case secondsSince1970
       /// ISO 8601 formatted date
@@ -54,26 +81,11 @@ public struct URLEncodedFormDecoder {
       case custom((Decoder) throws -> Date)
     }
 
-    let boolFlags: Bool = true
-    let arraySeparators: [Character] = [","]
-    let dateDecodingStrategy: DateDecodingStrategy = .iso8601
-    let userInfo: [CodingUserInfoKey: Any] = [:]
+    let boolFlags: Bool
+    let arraySeparators: [Character]
+    let dateDecodingStrategy: DateDecodingStrategy
+    let userInfo: [CodingUserInfoKey: Any]
 
-    public init() { }
-  }
-
-  /// Decodes the URL's query string to the type provided
-  ///
-  ///     let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
-  ///
-  /// - Parameters:
-  ///   - decodable: Type to decode to
-  ///   - url: ``URL`` to read the query string from
-  ///   - userInfo: Overrides the default coder user info
-  public func decode<D>(_: D.Type, from url: URL, userInfo: [CodingUserInfoKey: Any]) throws -> D
-    where D: Decodable
-  {
-    try decode(D.self, from: url.query ?? "", userInfo: userInfo)
   }
 
   /// Decodes an instance of the supplied ``Decodable`` type from a ``String``.
@@ -88,15 +100,28 @@ public struct URLEncodedFormDecoder {
   ///   - userInfo: Overrides the default coder user info
   /// - returns: An instance of the `Decodable` type (``D``).
   /// - throws: Any error that may occur while attempting to decode the specified type.
-  public func decode<D>(
+  func decode<D>(
     _: D.Type,
     from string: String,
-    userInfo _: [CodingUserInfoKey: Any] = [:]
+    userInfo: [CodingUserInfoKey: Any] = [:]
   ) throws
     -> D where D: Decodable
   {
     let parsedData = try parser.parse(string)
-    let configuration = configuration
+    let configuration: URLEncodedFormDecoder.Configuration
+    if
+      !userInfo
+        .isEmpty
+    { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
+      configuration = .init(
+        boolFlags: self.configuration.boolFlags,
+        arraySeparators: self.configuration.arraySeparators,
+        dateDecodingStrategy: self.configuration.dateDecodingStrategy,
+        userInfo: self.configuration.userInfo.merging(userInfo) { $1 }
+      )
+    } else {
+      configuration = self.configuration
+    }
     let decoder = _Decoder(data: parsedData, codingPath: [], configuration: configuration)
     return try D(from: decoder)
   }
@@ -112,7 +137,7 @@ public struct URLEncodedFormDecoder {
 
 // MARK: - _Decoder
 
-/// Private `Decoder`. See `URLEncodedFormDecoder` for public decoder.
+/// Private `Decoder`. See `URLEncodedFormDecoder` for decoder.
 private struct _Decoder: Decoder {
 
   // MARK: Lifecycle
@@ -172,7 +197,7 @@ private struct _Decoder: Decoder {
       // If we are trying to decode a required array, we might not have decoded a child, but we
       // should still try to decode an empty array
       let child = data.children[key.stringValue] ?? []
-      if let convertible = T.self as? (any URLQueryFragmentConvertible.Type) {
+      if let convertible = T.self as? any URLQueryFragmentConvertible.Type {
         guard let value = child.values.last else {
           if configuration.boolFlags {
             // If no values found see if we are decoding a boolean
@@ -348,7 +373,7 @@ private struct _Decoder: Decoder {
           ) as! T
         }
 
-        if let convertible = T.self as? (any URLQueryFragmentConvertible.Type) {
+        if let convertible = T.self as? any URLQueryFragmentConvertible.Type {
           if let result = convertible.init(urlQueryFragmentValue: value) {
             return result as! T
           } else {
@@ -420,7 +445,7 @@ private struct _Decoder: Decoder {
     var configuration: URLEncodedFormDecoder.Configuration
 
     func decodeNil() -> Bool {
-      data.values.isEmpty
+      data.values.isEmpty && data.children.isEmpty
     }
 
     func decode<T>(_: T.Type) throws -> T where T: Decodable {
@@ -432,7 +457,7 @@ private struct _Decoder: Decoder {
           forKey: nil
         ) as! T
       }
-      if let convertible = T.self as? (any URLQueryFragmentConvertible.Type) {
+      if let convertible = T.self as? any URLQueryFragmentConvertible.Type {
         guard let value = data.values.last else {
           throw DecodingError.valueNotFound(T.self, at: codingPath)
         }

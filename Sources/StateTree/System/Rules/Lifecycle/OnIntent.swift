@@ -8,7 +8,7 @@ public struct OnIntent: Rules {
 
   // MARK: Lifecycle
 
-  public init<Step: IntentStep>(
+  public init<Step: IntentStepPayload>(
     _: Step.Type,
     _ stepAction: @TreeActor @escaping (_ step: Step) -> IntentAction
   ) {

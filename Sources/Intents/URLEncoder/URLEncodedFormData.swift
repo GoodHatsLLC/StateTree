@@ -18,6 +18,15 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
 
   // MARK: Internal
 
+  var isEmpty: Bool {
+    switch self {
+    case .urlEncoded(let string):
+      return string == ""
+    case .urlDecoded(let string):
+      return string == ""
+    }
+  }
+
   /// Do comparison and hashing using the decoded version as there are multiple ways something can
   /// be encoded.
   /// Certain characters that are not typically encoded could have been encoded making string

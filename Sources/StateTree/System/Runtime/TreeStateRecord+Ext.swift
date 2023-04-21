@@ -52,16 +52,19 @@ extension TreeStateRecord {
 
   mutating func popIntentStep() {
     if var activeIntent {
-      if activeIntent.popStepReturningPendingState() {
+      let (_, isValid) = activeIntent.popStep()
+      if isValid {
+        assert(activeIntent.isValid)
         self.activeIntent = activeIntent
       } else {
+        assert(!activeIntent.isValid)
         self.activeIntent = nil
       }
     }
   }
 
   mutating func recordIntentNodeDependency(_ nodeID: NodeID) {
-    activeIntent?.recordStepDependency(nodeID)
+    activeIntent?.recordConsumer(nodeID)
   }
 
   mutating func register(intent: Intent) throws {
@@ -75,7 +78,7 @@ extension TreeStateRecord {
   mutating func invalidateIntentIfUsingNodeID(_ nodeID: NodeID) {
     if
       let activeIntent,
-      activeIntent.usedStepIDs.contains(nodeID)
+      activeIntent.consumerIDs.contains(nodeID)
     {
       self.activeIntent = nil
     }
