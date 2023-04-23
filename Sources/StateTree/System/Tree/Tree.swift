@@ -8,7 +8,7 @@ import Utilities
 
 // MARK: - Tree
 
-public final class Tree<N: Node> {
+public final class Tree<N: Node>: Identifiable {
 
   // MARK: Lifecycle
 
@@ -65,7 +65,7 @@ public final class Tree<N: Node> {
       runtime
         .flatMapLatest { runtime in
           runtime.updateEmitter.merge(
-            runtime.behaviorEvents.map { $0.asTreeEvent() }
+            runtime.behaviorEvents.map { TreeEvent.behavior(event: $0) }
           )
         }
     }
@@ -208,6 +208,8 @@ public final class Tree<N: Node> {
 
   }
 
+  public let id = UUID()
+
   /// Await eventual session states via this property.
   public var once: Once {
     get async {
@@ -258,6 +260,7 @@ public final class Tree<N: Node> {
     case .created: throw TreeError(.alreadyStarted)
     }
     let runtime = Runtime(
+      treeID: id,
       dependencies: dependencies,
       configuration: configuration
     )

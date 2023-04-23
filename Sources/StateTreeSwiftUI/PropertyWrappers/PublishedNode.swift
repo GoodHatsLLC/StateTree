@@ -58,17 +58,17 @@ public final class PublishedNode<N: Node> {
           .projectedValue
           .runtime
           .updateEmitter
+          .compactMap(\.maybeNode)
           .compactMap { [nodeID = storage.projectedValue.nid] change in
             switch change {
-            case .nodeUpdated(let updatedID) where updatedID == nodeID:
+            case .update(let updatedID, _) where updatedID == nodeID:
               return ChangeEvent.update
-            case .nodeStopped(let stoppedID) where stoppedID == nodeID:
+            case .stop(let stoppedID, _) where stoppedID == nodeID:
               return ChangeEvent.stop
-            case _:
-              return nil
+            default: return nil
             }
           }
-          .subscribe { change in
+          .subscribe { (change: ChangeEvent) in
             switch change {
             case .update:
               objectWillChangePublisher.send()

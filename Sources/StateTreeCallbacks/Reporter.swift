@@ -42,6 +42,7 @@ final class Reporter<N: Node> {
     scope
       .runtime
       .updateEmitter
+      .compactMap(\.maybeNode)
       .subscribe { value in
         if Task.isCancelled {
           for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
@@ -51,15 +52,15 @@ final class Reporter<N: Node> {
           return
         }
         switch value {
-        case .nodeStopped(let id) where self.id == id:
+        case .stop(let id, _) where self.id == id:
           for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
             sub()
           }
           self.onStopSubscribers = [:]
           self.onChangeSubscribers = [:]
           self.disposable?.dispose()
-        case .nodeUpdated(let id) where self.id == id,
-             .nodeStarted(let id) where self.id == id:
+        case .update(let id, _) where self.id == id,
+             .start(let id, _) where self.id == id:
           for sub in self.onChangeSubscribers.values.flatMap({ $0 }) {
             sub()
           }

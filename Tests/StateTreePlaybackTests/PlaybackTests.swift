@@ -45,12 +45,12 @@ final class PlaybackTests: XCTestCase {
     var finished = [BehaviorID: Int]()
 
     frames.forEach { frame in
-      switch frame.event {
-      case .behaviorCreated(let id):
+      switch frame.event.maybeBehavior {
+      case .created(let id):
         created[id, default: 0] += 1
-      case .behaviorStarted(let id):
+      case .started(let id):
         started[id, default: 0] += 1
-      case .behaviorFinished(let id):
+      case .finished(let id):
         finished[id, default: 0] += 1
       default:
         break

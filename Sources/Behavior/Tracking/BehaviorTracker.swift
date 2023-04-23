@@ -1,11 +1,34 @@
 import Emitter
 import Foundation
 import TreeActor
+import TreeState
 @_spi(Implementation) import Utilities
 
 // MARK: - BehaviorEvent
 
-public enum BehaviorEvent: Hashable {
+public enum BehaviorEvent: TreeState, CustomStringConvertible {
+  public var description: String {
+    switch self {
+    case .created(let behaviorID):
+      return "created behavior (id: \(behaviorID)"
+    case .started(let behaviorID):
+      return "started behavior (id: \(behaviorID)"
+    case .finished(let behaviorID):
+      return "finished behavior (id: \(behaviorID)"
+    }
+  }
+
+  public var behaviorID: BehaviorID {
+    switch self {
+    case .created(let behaviorID):
+      return behaviorID
+    case .started(let behaviorID):
+      return behaviorID
+    case .finished(let behaviorID):
+      return behaviorID
+    }
+  }
+
   case created(BehaviorID)
   case started(BehaviorID)
   case finished(BehaviorID)

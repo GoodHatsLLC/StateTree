@@ -4,22 +4,31 @@ import Emitter
 import Foundation
 @_spi(Implementation) import StateTree
 
-extension BehaviorEvent {
-  func asTreeEvent() -> TreeEvent {
-    switch self {
-    case .created(let id):
-      return .behaviorCreated(id)
-    case .started(let id):
-      return .behaviorStarted(id)
-    case .finished(let id):
-      return .behaviorFinished(id)
-    }
+// MARK: - TreeRecorder
+
+public protocol TreeRecorder: Identifiable, Hashable {
+  var id: UUID { get }
+  @TreeActor var frames: [StateFrame] { get }
+  @discardableResult @TreeActor
+  func start() throws -> RecordHandle
+  @discardableResult @TreeActor
+  func stop() throws -> [StateFrame]
+  func erase() -> AnyRecorder
+}
+
+extension TreeRecorder {
+  public static func == (lhs: Self, rhs: Self) -> Bool {
+    lhs.id == rhs.id
+  }
+
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
   }
 }
 
 // MARK: - Recorder
 
-public final class Recorder<Root: Node> {
+public final class Recorder<Root: Node>: TreeRecorder {
 
   // MARK: Lifecycle
 
@@ -33,6 +42,8 @@ public final class Recorder<Root: Node> {
   }
 
   // MARK: Public
+
+  public let id = UUID()
 
   @TreeActor public var frameRange: ClosedRange<Int> { 0 ... (frames.count - 1) }
   @TreeActor public var frameRangeDouble: ClosedRange<Double> {
@@ -65,26 +76,30 @@ public final class Recorder<Root: Node> {
     else {
       throw RecorderAlreadyActiveError()
     }
-    let prefix = frames.isEmpty ? [TreeEvent.recordingStarted] : []
     let runtime = try tree.assume.runtime
     let disposable = tree
       .events
       .treeEventEmitter
-      .withPrefix(prefix)
+      .withPrefix(TreeEvent.recording(event: .started(recorderID: id)))
+      .withSuffix(TreeEvent.recording(event: .stopped(recorderID: id)))
       .subscribeMain { event in
-        switch event.category {
-        case .metadata:
-          self.frames.append(
-            .init(
-              data: .meta(event)
-            )
-          )
-        case .update:
+        switch event {
+        case .node,
+             .tree:
           self.frames.append(
             .init(
               data: .update(
                 event,
                 runtime.snapshot()
+              )
+            )
+          )
+        case .behavior,
+             .recording:
+          self.frames.append(
+            .init(
+              data: .meta(
+                event
               )
             )
           )
@@ -109,12 +124,48 @@ public final class Recorder<Root: Node> {
     }
   }
 
+  public func erase() -> AnyRecorder {
+    AnyRecorder(self)
+  }
+
   // MARK: Private
 
   private let currentFrameSubject = ValueSubject<StateFrame?, Never>(.none)
   private let frameCountSubject: ValueSubject<Int, Never>
   private let tree: Tree<Root>
   private var activeHandle: RecordHandle?
+}
+
+// MARK: - AnyRecorder
+
+public struct AnyRecorder: TreeRecorder {
+  public var frames: [StateFrame] {
+    underlying.frames
+  }
+
+  init(_ recorder: some TreeRecorder) {
+    self.id = recorder.id
+    self.underlying = recorder
+  }
+
+  @discardableResult
+  @TreeActor
+  public func start() throws -> RecordHandle {
+    try underlying.start()
+  }
+
+  @discardableResult
+  @TreeActor
+  public func stop() throws -> [StateFrame] {
+    try underlying.stop()
+  }
+
+  public func erase() -> AnyRecorder {
+    self
+  }
+
+  public let id: UUID
+  private let underlying: any TreeRecorder
 }
 
 // MARK: - RecorderRestartError

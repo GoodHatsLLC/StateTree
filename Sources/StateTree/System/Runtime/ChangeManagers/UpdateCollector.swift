@@ -1,7 +1,7 @@
 // MARK: - UpdateCollector
 
 struct UpdateCollector {
-  var updates: [NodeID: TreeEvent.MetaData] = [:]
+  var updates: [NodeID: NodeEvent] = [:]
 }
 
 extension UpdateCollector {
@@ -11,7 +11,7 @@ extension UpdateCollector {
         lhs.value.depthOrder < rhs.value.depthOrder
       }
       .map { pair in
-        pair.value.asTreeEvent(pair.key)
+        TreeEvent.node(event: pair.value)
       }
   }
 

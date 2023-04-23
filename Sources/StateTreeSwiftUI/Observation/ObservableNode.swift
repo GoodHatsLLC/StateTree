@@ -29,13 +29,14 @@ final class ObservableNode<N: Node>: ObservableObject {
     disposable = disposable ?? scope
       .runtime
       .updateEmitter
+      .compactMap(\.maybeNode)
       .compactMap { [id = scope.nid] change in
         switch change {
-        case .nodeStarted(let updatedID) where updatedID == id:
+        case .start(let updatedID, _) where updatedID == id:
           return ChangeEvent.update
-        case .nodeUpdated(let updatedID) where updatedID == id:
+        case .update(let updatedID, _) where updatedID == id:
           return ChangeEvent.update
-        case .nodeStopped(let stoppedID) where stoppedID == id:
+        case .stop(let stoppedID, _) where stoppedID == id:
           return ChangeEvent.stop
         case _:
           return nil

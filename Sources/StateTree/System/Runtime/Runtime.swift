@@ -14,14 +14,18 @@ public final class Runtime: Equatable {
   // MARK: Lifecycle
 
   nonisolated init(
+    treeID: UUID,
     dependencies: DependencyValues,
     configuration: RuntimeConfiguration
   ) {
+    self.treeID = treeID
     self.dependencies = dependencies
     self.configuration = configuration
   }
 
   // MARK: Public
+
+  public let treeID: UUID
 
   public nonisolated var updateEmitter: some Emitter<TreeEvent, Never> {
     updateSubject
@@ -73,7 +77,7 @@ extension Runtime {
         on: .system
       )
     let scope = try initialized.connect()
-    emitUpdates(events: [.treeStarted])
+    emitUpdates(events: [.tree(event: .started(treeID: treeID))])
     if let initialState {
       let changes = try apply(state: initialState)
       emitUpdates(events: changes)
@@ -97,7 +101,7 @@ extension Runtime {
         )
       }
     }
-    emitUpdates(events: [.treeStopped])
+    emitUpdates(events: [.tree(event: .stopped(treeID: treeID))])
   }
 }
 

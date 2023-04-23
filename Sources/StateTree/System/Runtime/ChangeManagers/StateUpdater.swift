@@ -40,27 +40,12 @@ final class StateUpdater: ChangeManager {
 
     isFlushing = true
     defer { isFlushing = false }
-    do {
-      return try updateScopes()
-    } catch let error as CycleError {
-      runtimeWarning("A circular dependency between Nodes was found")
-      let applier = StateApplier(state: state, scopes: scopes)
-      self.revertApplier = applier
-      defer { revertApplier = nil }
-      userError.handle(error: error)
-      return try applier.apply(state: lastValidState)
-    } catch {
-      throw error
-    }
+    return try updateScopes()
   }
 
   func flush(dependentChanges changes: TreeChanges) {
     assert(isFlushing)
-    if let revertApplier {
-      revertApplier.flush(dependentChanges: changes)
-    } else {
-      stagedChanges.put(changes)
-    }
+    stagedChanges.put(changes)
   }
 
   // MARK: Private
@@ -70,7 +55,6 @@ final class StateUpdater: ChangeManager {
   private let state: StateStorage
   private let scopes: ScopeStorage
 
-  private var revertApplier: StateApplier?
   private var stagedChanges: TreeChanges = .none
   private var changeEventsInFlushCycle: [StateChangeMetadata] = []
 
