@@ -44,29 +44,11 @@ public final class Tree<N: Node>: Identifiable {
         }
     }
 
-    /// A stream of notifications behavior events.
-    @_spi(Implementation) public var behaviorEventEmitter: some Emitter<BehaviorEvent, Never> {
-      runtime
-        .flatMapLatest { runtime in
-          runtime.behaviorTracker.behaviorEvents
-        }
-    }
-
     /// A stream of notifications updates emitted when nodes are updated.
-    @_spi(Implementation) public var nodeEventEmitter: some Emitter<TreeEvent, Never> {
+    @_spi(Implementation) public var treeEventEmitter: some Emitter<[TreeEvent], Never> {
       runtime
         .flatMapLatest { runtime in
           runtime.updateEmitter
-        }
-    }
-
-    /// A stream of notifications updates emitted when nodes are updated.
-    @_spi(Implementation) public var treeEventEmitter: some Emitter<TreeEvent, Never> {
-      runtime
-        .flatMapLatest { runtime in
-          runtime.updateEmitter.merge(
-            runtime.behaviorEvents.map { TreeEvent.behavior(event: $0) }
-          )
         }
     }
 

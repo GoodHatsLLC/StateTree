@@ -56,25 +56,12 @@ public final class PublishedNode<N: Node> {
 
         storage.disposable = storage
           .projectedValue
-          .runtime
-          .updateEmitter
-          .compactMap(\.maybeNode)
-          .compactMap { [nodeID = storage.projectedValue.nid] change in
-            switch change {
-            case .update(let updatedID, _) where updatedID == nodeID:
-              return ChangeEvent.update
-            case .stop(let stoppedID, _) where stoppedID == nodeID:
-              return ChangeEvent.stop
-            default: return nil
-            }
-          }
-          .subscribe { (change: ChangeEvent) in
-            switch change {
-            case .update:
-              objectWillChangePublisher.send()
-            case .stop:
-              storage.disposable?.dispose()
-            }
+          .scope
+          .didUpdateEmitter
+          .subscribe {
+            objectWillChangePublisher.send()
+          } finished: {
+            storage.disposable?.dispose()
           }
       }
       return storage.projectedValue.node

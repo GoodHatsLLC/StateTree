@@ -80,29 +80,32 @@ public final class Recorder<Root: Node>: TreeRecorder {
     let disposable = tree
       .events
       .treeEventEmitter
-      .withPrefix(TreeEvent.recording(event: .started(recorderID: id)))
-      .withSuffix(TreeEvent.recording(event: .stopped(recorderID: id)))
-      .subscribeMain { event in
-        switch event {
-        case .node,
-             .tree:
-          self.frames.append(
-            .init(
-              data: .update(
-                event,
-                runtime.snapshot()
+      .withPrefix([TreeEvent.recording(event: .started(recorderID: id))])
+      .withSuffix([TreeEvent.recording(event: .stopped(recorderID: id))])
+      .subscribeMain { events in
+        var hasUpdateEvent = false
+        for event in events {
+          switch event {
+          case .node,
+               .tree where hasUpdateEvent == false:
+            hasUpdateEvent = true
+            self.frames.append(
+              .init(
+                data: .update(
+                  event,
+                  runtime.snapshot()
+                )
               )
             )
-          )
-        case .behavior,
-             .recording:
-          self.frames.append(
-            .init(
-              data: .meta(
-                event
+          default:
+            self.frames.append(
+              .init(
+                data: .meta(
+                  event
+                )
               )
             )
-          )
+          }
         }
       }
     let handle = RecordHandle(stopFunc: {

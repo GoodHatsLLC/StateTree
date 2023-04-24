@@ -26,7 +26,7 @@ final class StateApplier: ChangeManager {
   /// This method is used when:
   /// - reverting state changes triggering circular updates
   /// - applying time-travel-debugging `StateFrames`
-  func apply(state newState: TreeStateRecord) throws -> [TreeEvent] {
+  func apply(state newState: TreeStateRecord) throws -> [NodeEvent] {
     guard newState.isValidInitialState
     else {
       throw InvalidInitialStateError()
@@ -83,7 +83,7 @@ final class StateApplier: ChangeManager {
   private let scopes: ScopeStorage
   private var stagedChanges: TreeChanges = .none
 
-  private func flush() throws -> [TreeEvent] {
+  private func flush() throws -> [NodeEvent] {
     guard !isFlushing
     else {
       assertionFailure("flush should never be called when another flush is in progress")

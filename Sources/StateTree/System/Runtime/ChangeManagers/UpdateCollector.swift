@@ -5,14 +5,12 @@ struct UpdateCollector {
 }
 
 extension UpdateCollector {
-  func collectChanges() -> [TreeEvent] {
+  func collectChanges() -> [NodeEvent] {
     updates
       .sorted { lhs, rhs in
         lhs.value.depthOrder < rhs.value.depthOrder
       }
-      .map { pair in
-        TreeEvent.node(event: pair.value)
-      }
+      .map(\.value)
   }
 
   mutating func updated(id: NodeID, depth: Int) {

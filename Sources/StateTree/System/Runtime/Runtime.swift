@@ -27,8 +27,9 @@ public final class Runtime: Equatable {
 
   public let treeID: UUID
 
-  public nonisolated var updateEmitter: some Emitter<TreeEvent, Never> {
+  public nonisolated var updateEmitter: some Emitter<[TreeEvent], Never> {
     updateSubject
+      .merge(behaviorTracker.behaviorEvents.map { [.behavior(event: $0)] })
   }
 
   public nonisolated static func == (lhs: Runtime, rhs: Runtime) -> Bool {
@@ -45,7 +46,7 @@ public final class Runtime: Equatable {
   private let scopes: ScopeStorage = .init()
   private let dependencies: DependencyValues
   private let didStabilizeSubject = PublishSubject<Void, Never>()
-  private let updateSubject = PublishSubject<TreeEvent, Never>()
+  private let updateSubject = PublishSubject<[TreeEvent], Never>()
   private var transactionCount: Int = 0
   private var updates: TreeChanges = .none
   private var changeManager: (any ChangeManager)?
@@ -401,9 +402,45 @@ extension Runtime {
   // MARK: Private
 
   private func emitUpdates(events: [TreeEvent]) {
+    assert(
+      events
+        .compactMap(\.maybeNode)
+        .map(\.depthOrder)
+        .reduce((isSorted: true, lastDepth: Int.min)) { partialResult, depth in
+          return (partialResult.isSorted && depth >= partialResult.lastDepth, depth)
+        }
+        .isSorted,
+      "node events in an update batch should be sorted by ascending depth"
+    )
+
+    // First emit just node events through nodes
+    //
+    // This allows ui layer consumers to subscribe to only
+    // the node they're representing, without having to filter -
+    // and so avoids an n^2 growth in work required to tell the
+    // ui layer about a node update.
+
     for event in events {
-      updateSubject.emit(value: event)
+      if let nodeEvent = event.maybeNode {
+        switch nodeEvent {
+        case .start(let id, _):
+          let scope = scopes.getScope(for: id)
+          assert(scope?.isActive == true)
+          scope?.sendUpdateEvent()
+        case .update(let id, _):
+          let scope = scopes.getScope(for: id)
+          assert(scope?.isActive == true)
+          scope?.sendUpdateEvent()
+        case .stop(let id, _):
+          // The node has already been removed, and its parent
+          // has been notified to update.
+          assert(scopes.getScope(for: id)?.isActive == false || scopes.getScope(for: id) == nil)
+        }
+      }
     }
+
+    // Then emit the update batch to the tree level information stream.
+    updateSubject.emit(value: events)
   }
 
 }
@@ -433,7 +470,7 @@ extension Runtime {
     )
     changeManager = updater
     defer { changeManager = nil }
-    return try updater.flush()
+    return try updater.flush().map { .node(event: $0) }
   }
 
   private func apply(
@@ -459,9 +496,10 @@ extension Runtime {
       transactionCount -= 1
       changeManager = nil
     }
-    return try applier.apply(
+    let nodeEvents = try applier.apply(
       state: newState
     )
+    return nodeEvents.map { .node(event: $0) }
   }
 
 }

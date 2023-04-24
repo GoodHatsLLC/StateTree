@@ -1,5 +1,6 @@
 import Behavior
 import Disposable
+import Emitter
 import Intents
 import TreeActor
 
@@ -31,6 +32,8 @@ public protocol ScopeType<N>: BehaviorScoping, Hashable {
   var record: NodeRecord { get }
   var dependencies: DependencyValues { get }
   var valueFieldDependencies: Set<FieldID> { get }
+  var didUpdateEmitter: AnyEmitter<Void, Never> { get }
+  func sendUpdateEvent()
   func applyIntent(_ intent: Intent) -> IntentStepResolution
   func markDirty(pending: ExternalRequirement)
   func stepTowardsReady() throws -> Bool

@@ -1,5 +1,6 @@
 import Behavior
 import Disposable
+import Emitter
 import Foundation
 import Intents
 import Utilities
@@ -48,6 +49,7 @@ public final class NodeScope<N: Node>: Equatable {
   private let stage = DisposableStage()
   private var activeRules: N.NodeRules?
   private var state: ScopeLifecycle = .shouldStart
+  private let didUpdateSubject = PublishSubject<Void, Never>()
 
   private var context: RuleContext {
     .init(
@@ -78,6 +80,7 @@ extension NodeScope: ScopeType {
 
   // MARK: Public
 
+  public var didUpdateEmitter: AnyEmitter<Void, Never> { didUpdateSubject.erase() }
   public var isActive: Bool { activeRules != nil }
   public var childScopes: [AnyScope] { runtime.childScopes(of: nid) }
 
@@ -269,6 +272,16 @@ extension NodeScope {
     state.mark(requirement: requirement)
   }
 
+  public func sendUpdateEvent() {
+    didUpdateSubject.emit(value: ())
+  }
+
+  // MARK: Internal
+
+  func sendFinishEvent() {
+    didUpdateSubject.finish()
+  }
+
   // MARK: Private
 
   @TreeActor
@@ -375,6 +388,7 @@ extension NodeScope {
         self = .finished
         return {
           try scope.stop()
+          scope.sendFinishEvent()
           return true
         }
       default: return nil

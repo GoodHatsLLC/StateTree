@@ -27,29 +27,12 @@ final class ObservableNode<N: Node>: ObservableObject {
 
   func startIfNeeded() {
     disposable = disposable ?? scope
-      .runtime
-      .updateEmitter
-      .compactMap(\.maybeNode)
-      .compactMap { [id = scope.nid] change in
-        switch change {
-        case .start(let updatedID, _) where updatedID == id:
-          return ChangeEvent.update
-        case .update(let updatedID, _) where updatedID == id:
-          return ChangeEvent.update
-        case .stop(let stoppedID, _) where stoppedID == id:
-          return ChangeEvent.stop
-        case _:
-          return nil
-        }
-      }
-      .subscribe { [weak self] change in
-        switch change {
-        case .update:
-          self?.objectWillChange.send()
-        case .stop:
-          self?.disposable?.dispose()
-          self?.disposable = nil
-        }
+      .didUpdateEmitter
+      .subscribe { [weak self] in
+        self?.objectWillChange.send()
+      } finished: { [weak self] in
+        self?.disposable?.dispose()
+        self?.disposable = nil
       }
   }
 

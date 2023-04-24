@@ -31,7 +31,7 @@ final class StateUpdater: ChangeManager {
   ///
   /// > Important: The changes in `StateStorage` must be described in the `changes`
   /// parameter to be flushed.
-  func flush() throws -> [TreeEvent] {
+  func flush() throws -> [NodeEvent] {
     guard !isFlushing
     else {
       assertionFailure("flush should never be called when another flush is in progress")
@@ -58,7 +58,7 @@ final class StateUpdater: ChangeManager {
   private var stagedChanges: TreeChanges = .none
   private var changeEventsInFlushCycle: [StateChangeMetadata] = []
 
-  private func updateScopes() throws -> [TreeEvent] {
+  private func updateScopes() throws -> [NodeEvent] {
     var updateCollector = UpdateCollector()
     // Create a priority queue to hold the scopes that require updates.
     //

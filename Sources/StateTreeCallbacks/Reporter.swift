@@ -40,10 +40,8 @@ final class Reporter<N: Node> {
 
   func start() -> AutoDisposable {
     scope
-      .runtime
-      .updateEmitter
-      .compactMap(\.maybeNode)
-      .subscribe { value in
+      .didUpdateEmitter
+      .subscribe {
         if Task.isCancelled {
           for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
             sub()
@@ -51,22 +49,16 @@ final class Reporter<N: Node> {
           self.disposable?.dispose()
           return
         }
-        switch value {
-        case .stop(let id, _) where self.id == id:
-          for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
-            sub()
-          }
-          self.onStopSubscribers = [:]
-          self.onChangeSubscribers = [:]
-          self.disposable?.dispose()
-        case .update(let id, _) where self.id == id,
-             .start(let id, _) where self.id == id:
-          for sub in self.onChangeSubscribers.values.flatMap({ $0 }) {
-            sub()
-          }
-        case _:
-          break
+        for sub in self.onChangeSubscribers.values.flatMap({ $0 }) {
+          sub()
         }
+      } finished: {
+        for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
+          sub()
+        }
+        self.onStopSubscribers = [:]
+        self.onChangeSubscribers = [:]
+        self.disposable?.dispose()
       }
   }
 

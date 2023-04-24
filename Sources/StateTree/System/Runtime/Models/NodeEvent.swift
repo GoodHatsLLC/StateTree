@@ -27,9 +27,7 @@ public enum NodeEvent: TreeState, CustomStringConvertible {
     }
   }
 
-  // MARK: Internal
-
-  var depthOrder: Int {
+  public var depthOrder: Int {
     switch self {
     case .start(id: _, depth: .none):
       return Int.min
@@ -43,6 +41,8 @@ public enum NodeEvent: TreeState, CustomStringConvertible {
       return depth
     }
   }
+
+  // MARK: Internal
 
   func addingDepthIfNeeded(_ depth: Int) -> NodeEvent {
     switch self {

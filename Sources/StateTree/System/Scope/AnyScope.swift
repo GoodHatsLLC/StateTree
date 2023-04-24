@@ -95,4 +95,8 @@ extension AnyScope: BehaviorScoping {
     underlying.markDirty(pending: requirement)
   }
 
+  func sendUpdateEvent() {
+    underlying.sendUpdateEvent()
+  }
+
 }

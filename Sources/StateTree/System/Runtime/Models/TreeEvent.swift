@@ -11,6 +11,26 @@ public enum TreeEvent: TreeState, CustomStringConvertible {
 
   // MARK: Public
 
+  public enum EventType {
+    case recording
+    case tree
+    case node
+    case behavior
+  }
+
+  public var type: EventType {
+    switch self {
+    case .recording:
+      return .recording
+    case .tree:
+      return .tree
+    case .node:
+      return .node
+    case .behavior:
+      return .behavior
+    }
+  }
+
   public var maybeRecording: RecordingEvent? {
     if case .recording(event: let event) = self {
       return event

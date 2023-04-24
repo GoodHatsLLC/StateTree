@@ -1,5 +1,6 @@
 import Behavior
 import Disposable
+import Emitter
 import Foundation
 import Intents
 
@@ -16,6 +17,8 @@ struct NeverScope: ScopeType {
 
   // MARK: Internal
 
+  typealias N = NeverNode
+
   struct NeverNode: Node {
     nonisolated init() {
       assertionFailure("NeverNode should never be invoked")
@@ -27,8 +30,11 @@ struct NeverScope: ScopeType {
     }
   }
 
-  typealias N = NeverNode
   struct NeverScopeError: Error { }
+
+  var didUpdateEmitter: AnyEmitter<Void, Never> {
+    Emitters.never.erase()
+  }
 
   var nid: NodeID {
     assertionFailure("NeverScope should never be invoked")
@@ -106,6 +112,10 @@ struct NeverScope: ScopeType {
   static func == (_: NeverScope, _: NeverScope) -> Bool {
     assertionFailure("NeverScope should never be invoked")
     return false
+  }
+
+  func sendUpdateEvent() {
+    assertionFailure("NeverScope should never be invoked")
   }
 
   func applyIntent(_: Intent) -> IntentStepResolution {
