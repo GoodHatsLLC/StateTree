@@ -26,7 +26,9 @@ final class StateApplier: ChangeManager {
   /// This method is used when:
   /// - reverting state changes triggering circular updates
   /// - applying time-travel-debugging `StateFrames`
-  func apply(state newState: TreeStateRecord) throws -> [NodeEvent] {
+  func apply(state newState: TreeStateRecord) throws
+    -> (events: [NodeEvent], stats: UpdateStats)
+  {
     guard newState.isValidInitialState
     else {
       throw InvalidInitialStateError()
@@ -83,7 +85,7 @@ final class StateApplier: ChangeManager {
   private let scopes: ScopeStorage
   private var stagedChanges: TreeChanges = .none
 
-  private func flush() throws -> [NodeEvent] {
+  private func flush() throws -> (events: [NodeEvent], stats: UpdateStats) {
     guard !isFlushing
     else {
       assertionFailure("flush should never be called when another flush is in progress")
@@ -91,6 +93,9 @@ final class StateApplier: ChangeManager {
     }
     isFlushing = true
     defer { isFlushing = false }
+
+    var updateCollector = UpdateCollector()
+    let timer = updateCollector.stats.startedTimer()
 
     // Create a priority queue to hold the scopes that require updates.
     //
@@ -116,8 +121,6 @@ final class StateApplier: ChangeManager {
       prioritizeBy: \.depth,
       uniqueBy: \.nid
     )
-
-    var updateCollector = UpdateCollector()
 
     // Handle changes made as part of a full tree state application.
     //
@@ -257,6 +260,7 @@ final class StateApplier: ChangeManager {
       }
       try handle(changes: stagedChanges.take())
     }
+    updateCollector.stats.recordTimeElapsed(from: timer)
     // Return the list of updated nodes to fire notifications
     // to the UI layer for.
     return updateCollector.collectChanges()

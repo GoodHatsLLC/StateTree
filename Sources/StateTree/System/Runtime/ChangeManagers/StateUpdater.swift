@@ -13,13 +13,11 @@ final class StateUpdater: ChangeManager {
     changes: TreeChanges,
     state: StateStorage,
     scopes: ScopeStorage,
-    lastValidState: TreeStateRecord,
     userError: RuntimeConfiguration.ErrorHandler
   ) {
     self.state = state
     self.scopes = scopes
     self.stagedChanges = changes
-    self.lastValidState = lastValidState
     self.userError = userError
   }
 
@@ -31,7 +29,7 @@ final class StateUpdater: ChangeManager {
   ///
   /// > Important: The changes in `StateStorage` must be described in the `changes`
   /// parameter to be flushed.
-  func flush() throws -> [NodeEvent] {
+  func flush() throws -> (events: [NodeEvent], stats: UpdateStats) {
     guard !isFlushing
     else {
       assertionFailure("flush should never be called when another flush is in progress")
@@ -50,16 +48,16 @@ final class StateUpdater: ChangeManager {
 
   // MARK: Private
 
-  private let lastValidState: TreeStateRecord
   private let userError: RuntimeConfiguration.ErrorHandler
   private let state: StateStorage
   private let scopes: ScopeStorage
 
   private var stagedChanges: TreeChanges = .none
-  private var changeEventsInFlushCycle: [StateChangeMetadata] = []
 
-  private func updateScopes() throws -> [NodeEvent] {
+  private func updateScopes() throws -> (events: [NodeEvent], stats: UpdateStats) {
     var updateCollector = UpdateCollector()
+    let timer = updateCollector.stats.startedTimer()
+
     // Create a priority queue to hold the scopes that require updates.
     //
     // The queue is ordered based on the scopes's depth within the tree,
@@ -226,6 +224,8 @@ final class StateUpdater: ChangeManager {
       // Add changes caused by this iteration to the queue.
       try addChangesToQueue(stagedChanges.take())
     }
+
+    updateCollector.stats.recordTimeElapsed(from: timer)
 
     // Return the list of updated nodes to fire notifications
     // to the UI layer for.

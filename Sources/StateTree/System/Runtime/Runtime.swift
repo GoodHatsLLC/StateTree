@@ -51,10 +51,18 @@ public final class Runtime: Equatable {
   private var updates: TreeChanges = .none
   private var changeManager: (any ChangeManager)?
   private var nodeCache: [NodeID: any Node] = [:]
+  private var updateStats = UpdateStats()
 }
 
 // MARK: Lifecycle
 extension Runtime {
+
+  func flushUpdateStats() -> UpdateStats {
+    let copy = updateStats
+    updateStats = .init()
+    return copy
+  }
+
   func start<N: Node>(
     rootNode: N,
     initialState: TreeStateRecord? = nil
@@ -274,7 +282,6 @@ extension Runtime {
   }
 
   func transaction<T>(_ action: () throws -> T) rethrows -> T {
-    let validState = state.snapshot()
     assert(transactionCount >= 0)
     transactionCount += 1
     let value = try action()
@@ -287,9 +294,7 @@ extension Runtime {
       transactionCount -= 1
     }
     do {
-      let nodeUpdates = try updateScopes(
-        lastValidState: validState
-      )
+      let nodeUpdates = try updateScopes()
       emitUpdates(events: nodeUpdates)
     } catch {
       runtimeWarning(
@@ -457,7 +462,6 @@ extension Runtime {
   }
 
   private func updateScopes(
-    lastValidState: TreeStateRecord
   ) throws
     -> [TreeEvent]
   {
@@ -465,12 +469,13 @@ extension Runtime {
       changes: updates.take(),
       state: state,
       scopes: scopes,
-      lastValidState: lastValidState,
       userError: configuration.userError
     )
     changeManager = updater
     defer { changeManager = nil }
-    return try updater.flush().map { .node(event: $0) }
+    let updateInfo = try updater.flush()
+    updateStats = updateStats.merged(with: updateInfo.stats)
+    return updateInfo.events.map { .node(event: $0) }
   }
 
   private func apply(
@@ -496,10 +501,11 @@ extension Runtime {
       transactionCount -= 1
       changeManager = nil
     }
-    let nodeEvents = try applier.apply(
+    let updateInfo = try applier.apply(
       state: newState
     )
-    return nodeEvents.map { .node(event: $0) }
+    updateStats = updateStats.merged(with: updateInfo.stats)
+    return updateInfo.events.map { .node(event: $0) }
   }
 
 }

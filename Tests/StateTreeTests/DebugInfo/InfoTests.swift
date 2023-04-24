@@ -29,6 +29,57 @@ final class InfoTests: XCTestCase {
   }
 
   @TreeActor
+  func test_flushUpdateStats() async throws {
+    let tree = Tree(root: DeepNode(height: 1))
+    try tree.start()
+      .autostop()
+      .stage(on: stage)
+
+    let stats = try tree.assume.info.flushUpdateStats()
+    XCTAssertEqual(stats.counts.uniqueTouchedNodes, 1)
+    XCTAssertEqual(stats.counts.nodeStarts, 1)
+    XCTAssertEqual(stats.counts.nodeUpdates, 1)
+    XCTAssertEqual(stats.counts.allNodeEvents, 2)
+    XCTAssertGreaterThan(stats.durations.nodeUpdates, 0)
+
+    let reflush = try tree.assume.info.flushUpdateStats()
+    XCTAssertEqual(reflush.counts.uniqueTouchedNodes, 0)
+    XCTAssertEqual(reflush.counts.allNodeEvents, 0)
+    XCTAssertEqual(reflush.durations.nodeUpdates, 0)
+
+    try tree.assume.rootNode.height = 3
+
+    let postUpdate = try tree.assume.info.flushUpdateStats()
+    XCTAssertEqual(postUpdate.counts.uniqueTouchedNodes, 3)
+    XCTAssertEqual(postUpdate.counts.allNodeEvents, 5)
+    XCTAssertGreaterThan(postUpdate.durations.nodeUpdates, 0)
+
+    try tree.assume.rootNode.height = 22
+
+    let postUpdate2 = try tree.assume.info.flushUpdateStats()
+    XCTAssertEqual(postUpdate2.counts.uniqueTouchedNodes, 32)
+    XCTAssertEqual(postUpdate2.counts.allNodeEvents, 61)
+    XCTAssertGreaterThan(postUpdate2.durations.nodeUpdates, 0)
+
+    try tree.assume.rootNode.height = 22
+
+    let postUpdateDupe = try tree.assume.info.flushUpdateStats()
+    XCTAssertEqual(postUpdateDupe.counts.uniqueTouchedNodes, 0)
+    XCTAssertEqual(postUpdateDupe.counts.allNodeEvents, 0)
+    let postUpdateDupeTime = postUpdateDupe.durations.nodeUpdates
+    XCTAssertGreaterThan(postUpdateDupeTime, 0)
+
+    try tree.assume.rootNode.height = 1
+
+    let postUpdateStops = try tree.assume.info.flushUpdateStats()
+    XCTAssertEqual(postUpdateStops.counts.allNodeEvents, 32)
+    XCTAssertEqual(postUpdateStops.counts.nodeStarts, 0)
+    XCTAssertEqual(postUpdateStops.counts.nodeUpdates, 1)
+    XCTAssertEqual(postUpdateStops.counts.nodeStops, 31)
+    XCTAssertGreaterThan(postUpdateStops.durations.nodeUpdates, 0)
+  }
+
+  @TreeActor
   func test_count() async throws {
     let testTree = Tree(root: DeepNode(height: 7))
 

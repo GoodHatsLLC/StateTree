@@ -1,19 +1,24 @@
+import TreeState
+
 // MARK: - UpdateCollector
 
 struct UpdateCollector {
   var updates: [NodeID: NodeEvent] = [:]
+  var stats = UpdateStats()
 }
 
 extension UpdateCollector {
-  func collectChanges() -> [NodeEvent] {
-    updates
+  func collectChanges() -> (events: [NodeEvent], stats: UpdateStats) {
+    let events = updates
       .sorted { lhs, rhs in
         lhs.value.depthOrder < rhs.value.depthOrder
       }
       .map(\.value)
+    return (events: events, stats: stats)
   }
 
   mutating func updated(id: NodeID, depth: Int) {
+    stats.nodeMap[id, default: .init(nodeID: id)].updates += 1
     // don't overwrite 'start' or 'stop' events as these are
     // more informative to clients.
     // however, if they lack depth info, add it.
@@ -21,10 +26,12 @@ extension UpdateCollector {
   }
 
   mutating func started(id: NodeID, depth: Int?) {
+    stats.nodeMap[id, default: .init(nodeID: id)].starts += 1
     updates[id] = .start(id: id, depth: depth)
   }
 
   mutating func stopped(id: NodeID, depth: Int?) {
+    stats.nodeMap[id, default: .init(nodeID: id)].stops += 1
     switch updates[id] {
     case .none:
       updates[id] = .stop(id: id, depth: depth)

@@ -83,6 +83,13 @@ public struct StateTreeInfo {
     return isConsistent
   }
 
+  /// Statistics about updates which have happened since tree start, or since the last call to this
+  /// method.
+  @TreeActor
+  public func flushUpdateStats() -> UpdateStats {
+    runtime.flushUpdateStats()
+  }
+
   // MARK: Internal
 
   let runtime: Runtime
