@@ -81,12 +81,12 @@ public final class Recorder<Root: Node>: TreeRecorder {
       .events
       .treeEventEmitter
       .withPrefix([TreeEvent.recording(event: .started(recorderID: id))])
-      .withSuffix([TreeEvent.recording(event: .stopped(recorderID: id))])
       .subscribeMain { events in
         var hasUpdateEvent = false
         for event in events {
           switch event {
           case .node,
+               .recording,
                .tree where hasUpdateEvent == false:
             hasUpdateEvent = true
             self.frames.append(
@@ -121,7 +121,12 @@ public final class Recorder<Root: Node>: TreeRecorder {
   @TreeActor
   public func stop() throws -> [StateFrame] {
     if let activeHandle {
-      return activeHandle.stop()
+      return activeHandle.stop() + [.init(
+        data: .update(
+          TreeEvent.recording(event: .stopped(recorderID: id)),
+          try tree.assume.snapshot()
+        )
+      )]
     } else {
       throw RecorderInactiveError()
     }

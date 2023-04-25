@@ -6,6 +6,7 @@ import SwiftUI
 
 // MARK: - PlaybackView
 
+/// TODO: make playback-failed state
 @MainActor
 public struct PlaybackView<Root: Node, NodeView: View>: View {
 
@@ -19,9 +20,9 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     let tree = root.tree()
     _tree = .init(wrappedValue: tree)
     let recorder = Recorder(tree: tree)
+    try! tree.start()
     try! recorder
       .start()
-    try! tree.start()
     _root = TreeNode(scope: root.scope)
     _mode = .init(wrappedValue: .record(recorder))
     _scanReporter = .init(wrappedValue: .init(recorder.frameCountEmitter.erase()))
@@ -57,7 +58,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
                 .overlay(
                   RoundedRectangle(cornerRadius: 4)
                     .foregroundColor(.pink)
-                    .opacity(control == .record ? 1.0 : 0.5)
+                    .opacity(control == .play ? 1.0 : 0.5)
                     .blendMode(.color)
                     .padding(2)
                 )
@@ -73,7 +74,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
                   RoundedRectangle(cornerRadius: 4)
                     .foregroundColor(.green)
                     .blendMode(.color)
-                    .opacity(control == .play ? 1.0 : 0.3)
+                    .opacity(control == .record ? 1.0 : 0.3)
                     .padding(2)
                 )
             }
@@ -201,7 +202,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
       switch (mode, control) {
       case (.record(let recorder), .play):
         do {
-          let frames = recorder.frames
+          let frames = try recorder.stop()
           let player = try Player(tree: tree, frames: frames)
           try player.start()
           mode = .play(player)
@@ -211,28 +212,17 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
         }
       case (.play(let player), .record):
         do {
-          let keptFrames = player.frames
-          try player.stop()
+          let keptFrames = try player.stop()
           let recorder = tree.recorder(frames: keptFrames)
           frameRange = 0.0 ... Double(max(1, keptFrames.count - 1))
-          try recorder
-            .start()
+          try recorder.start()
           mode = .record(recorder)
           scanReporter.emit(value: recorder.frameCountEmitter.erase())
         } catch {
           assertionFailure("❌ \(error.localizedDescription)")
         }
-      case (_, .record):
-        do {
-          let recorder = Recorder(tree: tree)
-          try recorder
-            .start()
-          mode = .record(recorder)
-          scanReporter.emit(value: recorder.frameCountEmitter.erase())
-        } catch {
-          assertionFailure("❌ \(error.localizedDescription)")
-        }
-      default: break
+      default:
+        assertionFailure()
       }
     }
   }

@@ -9,13 +9,20 @@ public final class Player<Root: Node> {
   // MARK: Lifecycle
 
   public init(tree: Tree<Root>, frames: [StateFrame]) throws {
-    guard
-      !frames.isEmpty,
-      let initialFrame = frames.first,
-      initialFrame.state != nil
+    guard !frames.isEmpty
     else {
       throw NoFramesPlaybackError()
     }
+
+    let frames = frames.drop { frame in
+      frame.state == nil
+    }.map { $0 }
+
+    guard let initialFrame = frames.first
+    else {
+      throw MissingStateFrameError()
+    }
+
     self.tree = tree
     self.finalFrameIndex = frames.endIndex - 1
     self.currentFrameIndexSubject = .init(finalFrameIndex)
@@ -49,7 +56,7 @@ public final class Player<Root: Node> {
     Array(frames[0 ... currentFrameIndex])
   }
 
-  @TreeActor  public var currentStateRecord: StateFrame {
+  @TreeActor public var currentStateRecord: StateFrame {
     for i in (0 ..< framesToCurrent.count).reversed() {
       let frame = frames[i]
       if let state = frame.state {
@@ -132,7 +139,21 @@ public final class Player<Root: Node> {
 
 // MARK: - NoFramesPlaybackError
 
-struct NoFramesPlaybackError: Error { }
+struct NoFramesPlaybackError: Error {
+  let description = """
+    A Player must be instantiated with at least one frame containing a TreeStateRecord.
+    (Array was empty)
+    """
+}
+
+// MARK: - MissingStateFrameError
+
+struct MissingStateFrameError: Error {
+  let description = """
+    A Player must be instantiated with at least one frame containing a TreeStateRecord.
+    (Array contained only metadata frames)
+    """
+}
 
 // MARK: - PlayerInactiveError
 

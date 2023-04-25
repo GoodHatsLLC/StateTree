@@ -7,23 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F756EA2B29F7A66D009D868B /* StateTree in Frameworks */ = {isa = PBXBuildFile; productRef = F756EA2A29F7A66D009D868B /* StateTree */; };
+		F756EA2D29F7A672009D868B /* StateTreeSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = F756EA2C29F7A672009D868B /* StateTreeSwiftUI */; };
+		F756EA2F29F7A680009D868B /* TicTacToeDomain in Frameworks */ = {isa = PBXBuildFile; productRef = F756EA2E29F7A680009D868B /* TicTacToeDomain */; };
+		F756EA3129F7A680009D868B /* TicTacToeUI in Frameworks */ = {isa = PBXBuildFile; productRef = F756EA3029F7A680009D868B /* TicTacToeUI */; };
 		F7B9BED329753D9A006E5DCE /* TicTacToeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B9BED229753D9A006E5DCE /* TicTacToeApp.swift */; };
 		F7B9BED729753D9B006E5DCE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F7B9BED629753D9B006E5DCE /* Assets.xcassets */; };
 		F7B9BEDB29753D9B006E5DCE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F7B9BEDA29753D9B006E5DCE /* Preview Assets.xcassets */; };
-		F7CA67DA29829E2F00A77EAB /* StateTree in Frameworks */ = {isa = PBXBuildFile; productRef = F7CA67D929829E2F00A77EAB /* StateTree */; };
-		F7CA67DC29829E2F00A77EAB /* StateTreeSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = F7CA67DB29829E2F00A77EAB /* StateTreeSwiftUI */; };
-		F7E840B329B70B0900DBA18B /* TicTacToeDomain in Frameworks */ = {isa = PBXBuildFile; productRef = F7E840B229B70B0900DBA18B /* TicTacToeDomain */; };
-		F7E840B529B70B0900DBA18B /* TicTacToeUI in Frameworks */ = {isa = PBXBuildFile; productRef = F7E840B429B70B0900DBA18B /* TicTacToeUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F756EA3229F7A725009D868B /* TicTacToeSupport */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = TicTacToeSupport; sourceTree = "<group>"; };
 		F7B9BECF29753D9A006E5DCE /* TicTacToe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TicTacToe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7B9BED229753D9A006E5DCE /* TicTacToeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeApp.swift; sourceTree = "<group>"; };
 		F7B9BED629753D9B006E5DCE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F7B9BED829753D9B006E5DCE /* TicTacToe.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TicTacToe.entitlements; sourceTree = "<group>"; };
 		F7B9BEDA29753D9B006E5DCE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		F7CA67D429829E1A00A77EAB /* StateTree */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = StateTree; path = ../../..; sourceTree = "<group>"; };
-		F7E840B129B70AD400DBA18B /* TicTacToeSupport */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = TicTacToeSupport; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,10 +30,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7CA67DC29829E2F00A77EAB /* StateTreeSwiftUI in Frameworks */,
-				F7E840B529B70B0900DBA18B /* TicTacToeUI in Frameworks */,
-				F7E840B329B70B0900DBA18B /* TicTacToeDomain in Frameworks */,
-				F7CA67DA29829E2F00A77EAB /* StateTree in Frameworks */,
+				F756EA2D29F7A672009D868B /* StateTreeSwiftUI in Frameworks */,
+				F756EA3129F7A680009D868B /* TicTacToeUI in Frameworks */,
+				F756EA2F29F7A680009D868B /* TicTacToeDomain in Frameworks */,
+				F756EA2B29F7A66D009D868B /* StateTree in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,7 +43,7 @@
 		F7B9BEC629753D9A006E5DCE = {
 			isa = PBXGroup;
 			children = (
-				F7CA67D229829DCB00A77EAB /* Packages */,
+				F756EA3229F7A725009D868B /* TicTacToeSupport */,
 				F7B9BED129753D9A006E5DCE /* TicTacToe */,
 				F7B9BED029753D9A006E5DCE /* Products */,
 				F7B9BEE129753DBC006E5DCE /* Frameworks */,
@@ -85,15 +84,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		F7CA67D229829DCB00A77EAB /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				F7E840B129B70AD400DBA18B /* TicTacToeSupport */,
-				F7CA67D429829E1A00A77EAB /* StateTree */,
-			);
-			name = Packages;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -111,10 +101,10 @@
 			);
 			name = TicTacToe;
 			packageProductDependencies = (
-				F7CA67D929829E2F00A77EAB /* StateTree */,
-				F7CA67DB29829E2F00A77EAB /* StateTreeSwiftUI */,
-				F7E840B229B70B0900DBA18B /* TicTacToeDomain */,
-				F7E840B429B70B0900DBA18B /* TicTacToeUI */,
+				F756EA2A29F7A66D009D868B /* StateTree */,
+				F756EA2C29F7A672009D868B /* StateTreeSwiftUI */,
+				F756EA2E29F7A680009D868B /* TicTacToeDomain */,
+				F756EA3029F7A680009D868B /* TicTacToeUI */,
 			);
 			productName = TicTacToe;
 			productReference = F7B9BECF29753D9A006E5DCE /* TicTacToe.app */;
@@ -394,19 +384,19 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		F7CA67D929829E2F00A77EAB /* StateTree */ = {
+		F756EA2A29F7A66D009D868B /* StateTree */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = StateTree;
 		};
-		F7CA67DB29829E2F00A77EAB /* StateTreeSwiftUI */ = {
+		F756EA2C29F7A672009D868B /* StateTreeSwiftUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = StateTreeSwiftUI;
 		};
-		F7E840B229B70B0900DBA18B /* TicTacToeDomain */ = {
+		F756EA2E29F7A680009D868B /* TicTacToeDomain */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TicTacToeDomain;
 		};
-		F7E840B429B70B0900DBA18B /* TicTacToeUI */ = {
+		F756EA3029F7A680009D868B /* TicTacToeUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TicTacToeUI;
 		};

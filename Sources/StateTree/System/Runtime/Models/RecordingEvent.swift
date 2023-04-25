@@ -7,7 +7,7 @@ public enum RecordingEvent: TreeState, CustomStringConvertible {
     case .started(let recorderID):
       return "started recorder (id: \(recorderID)"
     case .stopped(let recorderID):
-      return "started recorder (id: \(recorderID)"
+      return "stopped recorder (id: \(recorderID)"
     }
   }
 

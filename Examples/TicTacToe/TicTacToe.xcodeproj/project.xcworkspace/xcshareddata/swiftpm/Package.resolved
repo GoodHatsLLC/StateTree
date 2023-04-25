@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GoodHatsLLC/Emitter.git",
       "state" : {
-        "revision" : "2141dcd51f6f29fdd5287d404e7cfbdf1f3ddd8f",
-        "version" : "0.8.1"
+        "revision" : "a6180c53f824aa5829dfd0992595891a8652b530",
+        "version" : "0.8.4"
       }
     },
     {
@@ -24,7 +24,7 @@
       "location" : "https://github.com/apple/swift-collections.git",
       "state" : {
         "branch" : "release/1.1",
-        "revision" : "8c7b8536ea0d21faeeb05229aa7537e9e2636794"
+        "revision" : "992e0f3446b4f608f5ead9dd6edc92f6bbc0b0a0"
       }
     }
   ],
