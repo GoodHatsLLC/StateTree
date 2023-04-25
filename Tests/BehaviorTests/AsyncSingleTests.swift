@@ -26,18 +26,17 @@ final class AsyncSingleTests: XCTestCase {
       .make(.id("test_success"), input: Void.self) { () async -> Int in
         123_321
       }
-    let scoped = behavior
-      .scoped(to: stage, tracker: tracker)
 
-    let res = scoped
-      .onSuccess { value in
+    await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onSuccess: { value in
         XCTAssertEqual(value, 123_321)
         Task { await didSucceed.resolve(to: true) }
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
 
-    let resolved = await res.value
+    let res = await tracker.behaviorResolutions.first
+    let resolved = try XCTUnwrap(res)
     XCTAssertEqual(resolved.id, .id("test_success"))
     XCTAssertEqual(resolved.state, .finished)
     let success = await didSucceed.value
@@ -51,13 +50,13 @@ final class AsyncSingleTests: XCTestCase {
       .make(.auto(), input: Void.self) { () async -> Int in
         123
       }
-    behavior
-      .scoped(to: stage, tracker: tracker)
-      .onResult { _ in
+    await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onResult: { _ in
         XCTFail()
-      } onCancel: {
+      }, onCancel: {
         didCancel = true
-      }
+      }))
+
     try await tracker.awaitReady()
     XCTAssert(didCancel)
   }
@@ -70,17 +69,16 @@ final class AsyncSingleTests: XCTestCase {
       .make(.auto(), input: Void.self) { () async -> Int in
         await never.value
       }
-    let scoped = behavior.scoped(to: stage, tracker: tracker)
     Task {
       await Flush.tasks()
       stage.dispose()
       await didRunTask.resolve(to: true)
     }
-    _ = scoped.onSuccess { _ in
+    await behavior.run(tracker: tracker, scope: stage, input: (), handler: .init(onSuccess: { _ in
       XCTFail()
-    } onCancel: {
+    }, onCancel: {
       didCancel = true
-    }
+    }))
     try await tracker.awaitBehaviors()
     XCTAssert(didCancel)
     let didRun = await didRunTask.value
@@ -99,10 +97,8 @@ final class AsyncSingleTests: XCTestCase {
           return 234_124
         }
       }
-    let scoped = behavior
-      .scoped(to: stage, tracker: .init())
-    let res = scoped
-      .onResult { result in
+    _ = await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onResult: { result in
         guard case .success(let value) = result
         else {
           XCTFail()
@@ -110,10 +106,11 @@ final class AsyncSingleTests: XCTestCase {
         }
         XCTAssertEqual(234_124, value)
         Task { await didSucceed.resolve(to: true) }
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
-    let resolved = await res.value
+      }))
+    let res = await tracker.behaviorResolutions.first
+    let resolved = try XCTUnwrap(res)
     XCTAssertEqual(resolved.id, .id("test_throwing_success"))
     XCTAssertEqual(resolved.state, .finished)
     let success = await didSucceed.value
@@ -132,9 +129,8 @@ final class AsyncSingleTests: XCTestCase {
           return 234_124
         }
       }
-    let res = behavior
-      .scoped(to: stage, tracker: .init())
-      .onResult { result in
+    let res = await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onResult: { result in
         guard
           case .failure(let error) = result,
           error is TestError
@@ -143,9 +139,9 @@ final class AsyncSingleTests: XCTestCase {
           return
         }
         didFail = true
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
     let resolved = await res.value
     XCTAssertEqual(resolved.id, .id("test_throwing_failure"))
     XCTAssertEqual(resolved.state, .failed)
@@ -167,16 +163,15 @@ final class AsyncSingleTests: XCTestCase {
       .make(.id("test_interception"), input: Void.self) { () async throws -> Int in
         initial
       }
-    _ = behavior
-      .scoped(to: stage, tracker: tracker)
-      .onResult {
-        switch $0 {
+    _ = await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onResult: { result in
+        switch result {
         case .success(let value):
           received = value
         case .failure:
           XCTFail()
         }
-      }
+      }, onCancel: { }))
     try await tracker.awaitBehaviors()
     XCTAssertEqual(received, replacement)
   }

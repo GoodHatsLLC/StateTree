@@ -3,7 +3,6 @@ import SwiftUI
 
 // MARK: - SingleRouterAccess
 
-/// TODO: this file is largely duplicated from StateTreeSwiftUI
 @TreeActor
 struct SingleRouterAccess<R: SingleRouterType, Child: Node> where R.Value == Child {
   init(route: Route<R>) {

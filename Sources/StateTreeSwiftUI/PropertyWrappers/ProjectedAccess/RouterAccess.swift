@@ -3,9 +3,6 @@ import SwiftUI
 
 // MARK: - SingleRouterAccess
 
-// TODO: these separate implementations might be refactorable into one.
-// This probably requires refactoring the RouterType.
-
 @MainActor
 struct SingleRouterAccess<R: SingleRouterType, Child: Node> where R.Value == Child {
   init(route: Route<R>) {

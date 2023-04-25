@@ -10,9 +10,11 @@ import XCTest
 final class StreamTests: XCTestCase {
 
   let stage = DisposableStage()
+  var tracker = BehaviorTracker()
 
   override func setUp() { }
   override func tearDown() {
+    tracker = BehaviorTracker()
     stage.reset()
   }
 
@@ -25,18 +27,17 @@ final class StreamTests: XCTestCase {
       .make(.id("test_output_success"), input: Void.self) {
         AnyAsyncSequence(expected)
       }
-    let res = behavior
-      .scoped(to: stage, tracker: .init())
-      .onValue { value in
+    let res = await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onValue: { value in
         received.append(value)
-      } onFinish: {
+      }, onFinish: {
         didFinish = true
         Task { await asyncBlock.resolve() }
-      } onFailure: { _ in
+      }, onFailure: { _ in
         XCTFail()
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
     let resolved = await res.value
     XCTAssertEqual(resolved.id, .id("test_output_success"))
     XCTAssertEqual(resolved.state, .finished)
@@ -57,17 +58,17 @@ final class StreamTests: XCTestCase {
         }
       }
 
-    let res = behavior
-      .scoped(to: stage, tracker: .init())
-      .onValue { _ in
+    let res = await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onValue: { _ in
         XCTFail()
-      } onFinish: {
+      }, onFinish: {
         XCTFail()
-      } onFailure: { error in
+      }, onFailure: { error in
         Task { await receivedError.resolve(to: error) }
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
+
     let resolved = await res.value
     XCTAssertEqual(resolved.id, .id("stream_fail"))
     XCTAssertEqual(resolved.state, .failed)
@@ -85,27 +86,24 @@ final class StreamTests: XCTestCase {
       .make(.id("stream_eventual_fail"), input: Void.self) {
         subject.values
       }
-    let scoped = behavior
-      .scoped(to: stage, tracker: tracker)
-
-    let res = scoped
-      .onValue { value in
+    let res = await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onValue: { value in
         receivedOutput.append(value)
         if receivedOutput.count == 3 {
           Task {
             await asyncBlocks[0].resolve()
           }
         }
-      } onFinish: {
+      }, onFinish: {
         XCTFail()
-      } onFailure: { error in
+      }, onFailure: { error in
         receivedError = error
         Task {
           await asyncBlocks[1].resolve()
         }
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
     try await tracker.awaitReady()
     subject.emit(value: 3)
     subject.emit(value: 4)
@@ -140,17 +138,16 @@ final class StreamTests: XCTestCase {
       .make(.id("test_interception"), input: Void.self) {
         AnyAsyncSequence(original)
       }
-    let res = behavior
-      .scoped(to: stage, tracker: tracker)
-      .onValue { value in
+    let res = await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onValue: { value in
         received.append(value)
-      } onFinish: {
+      }, onFinish: {
         didFinish = true
-      } onFailure: { _ in
+      }, onFailure: { _ in
         XCTFail()
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
     _ = await res.value
     XCTAssertEqual(received, expected)
     XCTAssert(didFinish)
@@ -176,19 +173,18 @@ extension StreamTests {
     var receivedOutput: [Int] = []
     var didFinish = false
     let tracker = BehaviorTracker()
-    let res = Behaviors.make(.id("combine_stream"), input: Void.self) {
+    let res = await Behaviors.make(.id("combine_stream"), input: Void.self) {
       publisher.values
     }
-    .scoped(to: stage, tracker: tracker)
-    .onValue { value in
+    .run(tracker: tracker, scope: stage, input: (), handler: .init(onValue: { value in
       receivedOutput.append(value)
-    } onFinish: {
+    }, onFinish: {
       didFinish = true
-    } onFailure: { _ in
+    }, onFailure: { _ in
       XCTFail()
-    } onCancel: {
+    }, onCancel: {
       XCTFail()
-    }
+    }))
     let resolved = await res.value
     XCTAssert(didFinish)
     XCTAssertEqual(resolved.id, .id("combine_stream"))
@@ -204,26 +200,23 @@ extension StreamTests {
     let behavior = Behaviors.make(.id("combine_stream"), input: Void.self) {
       subject
     }
-    let scoped = behavior
-      .scoped(to: stage, tracker: tracker)
-
-    let resolution = scoped
-      .onValue { value in
+    let res = await behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onValue: { value in
         receivedOutput.append(value)
-      } onFinish: {
+      }, onFinish: {
         didFinish = true
-      } onFailure: { _ in
+      }, onFailure: { _ in
         XCTFail()
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
     try await tracker.awaitReady()
     subject.send(1)
     subject.send(2)
     subject.send(3)
     subject.send(4)
     subject.send(completion: .finished)
-    let resolved = await resolution.value
+    let resolved = await res.value
     XCTAssert(didFinish)
     XCTAssertEqual(resolved.id, .id("combine_stream"))
     XCTAssertEqual(resolved.state, .finished)

@@ -28,13 +28,12 @@ final class SyncSingleTests: XCTestCase {
         123_321
       }
     let res = behavior
-      .scoped(to: stage, tracker: tracker)
-      .onSuccess { value in
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onSuccess: { value in
         XCTAssertEqual(value, 123_321)
         Task { await didSucceed.resolve(to: true) }
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
 
     let resolved = await res.value
     XCTAssertEqual(resolved.id, .id("test_sync_success"))
@@ -48,31 +47,13 @@ final class SyncSingleTests: XCTestCase {
     stage.dispose()
     let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
       .make(.auto(), input: Void.self) { () -> Int in
-        123
+        XCTFail()
+        return 1
       }
     let scoped = behavior
-      .scoped(to: stage, tracker: tracker)
-
-    XCTAssertNil(
-      scoped.value
-    )
-  }
-
-  @TreeActor
-  func test_spi_get_success() async throws {
-    let behavior: Behaviors.SyncSingle<Void, Int, Never> = Behaviors
-      .make(.auto(), input: Void.self) { () -> Int in
-        123_555
-      }
-    let scoped = behavior
-      .scoped(to: stage, tracker: tracker)
-
-    XCTAssertEqual(
-      scoped.value, 123_555,
-      "the success value should be available as the behavior is not cancelled"
-    )
-    try await tracker.awaitReady()
-    try await tracker.awaitBehaviors()
+      .run(tracker: tracker, scope: stage, input: ())
+    let value = await scoped.value
+    XCTAssertEqual(value.state, .cancelled)
   }
 
   @TreeActor
@@ -88,11 +69,8 @@ final class SyncSingleTests: XCTestCase {
           return 234_124
         }
       }
-    let scoped = behavior
-      .scoped(to: stage, tracker: .init())
-
-    let res = scoped
-      .onResult { result in
+    let res = behavior
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onResult: { result in
         guard case .success(let value) = result
         else {
           XCTFail()
@@ -100,9 +78,10 @@ final class SyncSingleTests: XCTestCase {
         }
         XCTAssertEqual(234_124, value)
         didSucceed = true
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
+
     XCTAssert(didSucceed, "didSucceed should be synchronously set")
     let resolved = await res.value
     XCTAssertEqual(resolved.id, .id("test_throwing_sync_success"))
@@ -125,8 +104,7 @@ final class SyncSingleTests: XCTestCase {
         }
       }
     let res = behavior
-      .scoped(to: stage, tracker: .init())
-      .onResult { result in
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onResult: { result in
         guard
           case .failure(let error) = result,
           error is TestError
@@ -135,9 +113,10 @@ final class SyncSingleTests: XCTestCase {
           return
         }
         didFail = true
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
+
     XCTAssert(didFail, "didFail should be synchronously set")
     let resolved = await res.value
     XCTAssertEqual(resolved.id, .id("test_throwing_sync_failure"))
@@ -165,12 +144,12 @@ final class SyncSingleTests: XCTestCase {
         initial
       }
     _ = behavior
-      .scoped(to: stage, tracker: tracker)
-      .onSuccess { value in
+      .run(tracker: tracker, scope: stage, input: (), handler: .init(onSuccess: { value in
         received = value
-      } onCancel: {
+      }, onCancel: {
         XCTFail()
-      }
+      }))
+
     XCTAssertEqual(received, replacement)
     try await tracker.awaitReady()
     try await tracker.awaitBehaviors()
