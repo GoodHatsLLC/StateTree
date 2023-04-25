@@ -6,7 +6,6 @@ import SwiftUI
 
 // MARK: - PlaybackView
 
-/// TODO: make playback-failed state
 @MainActor
 public struct PlaybackView<Root: Node, NodeView: View>: View {
 
@@ -20,9 +19,16 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     let tree = root.tree()
     _tree = .init(wrappedValue: tree)
     let recorder = Recorder(tree: tree)
-    try! tree.start()
-    try! recorder
-      .start()
+    do {
+      try recorder.start()
+    } catch {
+      preconditionFailure(
+        """
+        Could not start PlaybackView's Recorder.
+        error: \(error.localizedDescription)
+        """
+      )
+    }
     _root = TreeNode(scope: root.scope)
     _mode = .init(wrappedValue: .record(recorder))
     _scanReporter = .init(wrappedValue: .init(recorder.frameCountEmitter.erase()))
@@ -213,7 +219,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
       case (.play(let player), .record):
         do {
           let keptFrames = try player.stop()
-          let recorder = tree.recorder(frames: keptFrames)
+          let recorder = Recorder(tree: tree, frames: keptFrames)
           frameRange = 0.0 ... Double(max(1, keptFrames.count - 1))
           try recorder.start()
           mode = .record(recorder)
@@ -222,7 +228,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
           assertionFailure("❌ \(error.localizedDescription)")
         }
       default:
-        assertionFailure()
+        assertionFailure("❌ Unexpected player/recorder state.")
       }
     }
   }

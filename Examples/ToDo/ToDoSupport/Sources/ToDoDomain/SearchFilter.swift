@@ -19,15 +19,15 @@ public struct SearchFilter: TreeState {
   func matches(todo: ToDoData, tags: [TagData]) -> Bool {
     switch type {
     case .title:
-      todo.title?.contains(query.textQuery) ?? false
+      return todo.title?.contains(query.textQuery) ?? false
     case .completed:
-      todo.isCompleted == query.toggleQuery
+      return todo.isCompleted == query.toggleQuery
     case .note:
-      todo.note?.contains(query.textQuery) ?? false
+      return todo.note?.contains(query.textQuery) ?? false
     case .tags:
-      tags.contains(where: { $0.title.contains(query.textQuery) })
+      return tags.contains(where: { $0.title.contains(query.textQuery) })
     case .dueDate:
-      todo.dueDate?.timeIntervalSince(query.dateQuery).magnitude
+      return todo.dueDate?.timeIntervalSince(query.dateQuery).magnitude
         .isLess(than: 24 * 60 * 60) ?? false
     }
   }
@@ -104,36 +104,36 @@ public enum ToDoMetadata: TreeState, CaseIterable, Identifiable {
 
   public var text: String {
     switch self {
-    case .title: "Title"
-    case .completed: "Completed"
-    case .note: "Notes"
-    case .tags: "Tags"
-    case .dueDate: "Due Date"
+    case .title: return "Title"
+    case .completed: return "Completed"
+    case .note: return "Notes"
+    case .tags: return "Tags"
+    case .dueDate: return "Due Date"
     }
   }
 
   public var shortText: String {
     switch self {
-    case .title: "Title"
-    case .completed: "Complete"
-    case .note: "Notes"
-    case .tags: "Tags"
-    case .dueDate: "Due"
+    case .title: return "Title"
+    case .completed: return "Complete"
+    case .note: return "Notes"
+    case .tags: return "Tags"
+    case .dueDate: return "Due"
     }
   }
 
   public var initialQuery: SearchQuery {
     switch self {
     case .note:
-      .text("")
+      return .text("")
     case .tags:
-      .text("")
+      return .text("")
     case .title:
-      .text("")
+      return .text("")
     case .dueDate:
-      .date(.now)
+      return .date(.now)
     case .completed:
-      .toggle(false)
+      return .toggle(false)
     }
   }
 

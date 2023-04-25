@@ -13,6 +13,17 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
     wrappedValue: N
   ) {
     let tree = Tree(root: wrappedValue, from: nil, dependencies: .defaults, configuration: .init())
+    do {
+      let handle = try tree.start().autostop()
+      _handle = .init(wrappedValue: handle)
+    } catch {
+      preconditionFailure(
+        """
+        Could not start Tree.
+        error: \(error.localizedDescription)
+        """
+      )
+    }
     let root = ObservableRoot(tree: tree)
     _observed = .init(wrappedValue: root)
   }
@@ -43,19 +54,11 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
     observed.tree
   }
 
-  public func player(frames: [StateFrame]) throws -> Player<N> {
-    try observed.tree.player(frames: frames)
-  }
-
-  public func recorder(frames: [StateFrame] = []) -> Recorder<N> {
-    observed.tree.recorder(frames: frames)
-  }
-
   // MARK: Internal
 
   @StateObject var observed: ObservableRoot<N>
 
   // MARK: Private
 
-  private var disposable: AutoDisposable?
+  @State private var handle: TreeHandle<N>.StopHandle
 }

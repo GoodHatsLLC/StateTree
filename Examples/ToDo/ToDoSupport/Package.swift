@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.8
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -17,7 +17,7 @@ let package = Package(
     ),
   ],
   dependencies: [
-    .package(name: "StateTree", path: "../../../../"),
+    .package(name: "StateTree", path: "../../../"),
   ],
   targets: [
     .target(
@@ -26,16 +26,37 @@ let package = Package(
         "ToDoDomain",
         .product(name: "StateTreeSwiftUI", package: "StateTree"),
         "UIComponents",
+      ],
+      swiftSettings: [
+        .enableUpcomingFeature("ConciseMagicFile"),
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("StrictConcurrency"),
+        .enableUpcomingFeature("ImplicitOpenExistentials"),
+        .enableUpcomingFeature("BareSlashRegexLiterals"),
       ]
     ),
     .target(
       name: "ToDoDomain",
       dependencies: [
         .product(name: "StateTree", package: "StateTree"),
+      ],
+      swiftSettings: [
+        .enableUpcomingFeature("ConciseMagicFile"),
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("StrictConcurrency"),
+        .enableUpcomingFeature("ImplicitOpenExistentials"),
+        .enableUpcomingFeature("BareSlashRegexLiterals"),
       ]
     ),
     .target(
-      name: "UIComponents"
+      name: "UIComponents",
+      swiftSettings: [
+        .enableUpcomingFeature("ConciseMagicFile"),
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("StrictConcurrency"),
+        .enableUpcomingFeature("ImplicitOpenExistentials"),
+        .enableUpcomingFeature("BareSlashRegexLiterals"),
+      ]
     ),
     .testTarget(
       name: "ToDoDomainTests",

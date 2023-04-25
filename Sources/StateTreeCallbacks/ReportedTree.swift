@@ -14,9 +14,18 @@ public final class ReportedTree<N: Node> {
 
   public init(tree: Tree<N>) {
     self.tree = tree
-    let handle = try! tree.start()
-    let root = handle.root
-    subject.value = .init(reporter: Reporter(scope: root))
+    do {
+      let handle = try tree.start()
+      let root = handle.root
+      subject.value = .init(reporter: Reporter(scope: root))
+    } catch {
+      preconditionFailure(
+        """
+        Could not start Tree.
+        error: \(error.localizedDescription)
+        """
+      )
+    }
   }
 
   // MARK: Public

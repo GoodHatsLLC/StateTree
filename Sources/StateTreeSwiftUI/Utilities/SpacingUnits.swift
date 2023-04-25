@@ -2,9 +2,9 @@ import SwiftUI
 
 // MARK: - Spacing
 
-public enum Spacing {
-  public typealias Unit = Double
-  public static var unit: Double = 8
+enum Spacing {
+  typealias Unit = Double
+  static var unit: Double = 8
 }
 
 extension BinaryInteger {
