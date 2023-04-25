@@ -7,11 +7,11 @@ import SwiftUI
 
 @propertyWrapper
 @dynamicMemberLookup
-public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
+public struct TreeNode<NodeType: Node>: DynamicProperty, NodeAccess {
 
   // MARK: Lifecycle
 
-  init(scope: NodeScope<N>) {
+  init(scope: NodeScope<NodeType>) {
     self.scope = scope
     self.observed = .init(scope: scope)
     self.nid = scope.nid
@@ -19,20 +19,20 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
     observed.startIfNeeded()
   }
 
-  public init(projectedValue: TreeNode<N>) {
+  public init(projectedValue: TreeNode<NodeType>) {
     self = projectedValue
     observed.startIfNeeded()
   }
 
   // MARK: Public
 
-  @_spi(Implementation) public let scope: NodeScope<N>
+  @_spi(Implementation) public let scope: NodeScope<NodeType>
 
-  public var wrappedValue: N {
+  public var wrappedValue: NodeType {
     scope.node
   }
 
-  public var projectedValue: TreeNode<N> {
+  public var projectedValue: TreeNode<NodeType> {
     self
   }
 
@@ -41,7 +41,7 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
   let nid: NodeID
   let cuid: CUID?
 
-  @ObservedObject var observed: ObservableNode<N>
+  @ObservedObject var observed: ObservableNode<NodeType>
 
   var runtime: Runtime {
     scope.runtime
@@ -58,7 +58,7 @@ public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
 
 // MARK: Identifiable
 
-extension TreeNode: Identifiable where N: Identifiable {
+extension TreeNode: Identifiable where NodeType: Identifiable {
   public var id: CUID {
     cuid ?? .invalid
   }

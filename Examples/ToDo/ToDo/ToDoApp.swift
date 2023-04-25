@@ -11,28 +11,43 @@ struct ToDoApp: App {
 
   // MARK: Internal
 
-  @TreeRoot var root = ToDoList()
+  @TreeRoot var tree = ToDoList()
 
   var body: some Scene {
     WindowGroup {
       HStack {
-        ToDoListView(list: $root.root)
+        ToDoListView(test: Test(root: $tree.root))
       }
     }
   }
 }
 
+// MARK: - Test
+
+class Test: ObservableObject {
+
+  // MARK: Lifecycle
+
+  init(root: TreeNode<ToDoList>) {
+    _root = .init(projectedValue: root)
+  }
+
+  // MARK: Internal
+
+  @PublishedNode var root: ToDoList
+}
+
 // MARK: - ToDoListView
 
 struct ToDoListView: View {
-  @TreeNode var list: ToDoList
+  @StateObject var test: Test
 
   var body: some View {
-    Text($list.$filteredToDos.first?.title ?? "first")
+    Text(test.root.filteredToDos?.first?.title ?? "first")
       .onTapGesture {
-        list.filteredToDos?.first?.title = "OH BOI"
+        test.root.filteredToDos?.first?.title = "OH BOI"
       }
-    List($list.$filteredToDos) { node in
+    List(test.$root.$filteredToDos) { node in
       Text(node.title ?? "<no title>").onTapGesture {
         node.title = "LOL\(Int.random(in: .init(1 ... 100)))"
       }
