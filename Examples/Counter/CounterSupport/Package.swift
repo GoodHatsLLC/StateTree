@@ -17,7 +17,7 @@ let package = Package(
     ),
   ],
   dependencies: [
-    .package(path: "../../../../"),
+    .package(path: "../../../"),
     .package(
       url: "https://github.com/apple/swift-collections.git",
       branch: "release/1.1"

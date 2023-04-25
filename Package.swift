@@ -73,7 +73,7 @@ let package = Package(
   name: "StateTree",
   platforms: [
     .macOS("12.3"),
-    .iOS("15"),
+    .iOS("15.4"),
   ],
   products: [
     .library(
