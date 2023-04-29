@@ -1,6 +1,14 @@
 // MARK: - InitializedNode
 
-struct InitializedNode<N: Node> {
+struct InitializedNode<N: Node>: Hashable, Identifiable {
+  static func == (lhs: InitializedNode<N>, rhs: InitializedNode<N>) -> Bool {
+    lhs.id == rhs.id
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+  }
+
   let id: NodeID
   let node: N
   let dependencies: DependencyValues

@@ -14,23 +14,23 @@ import SwiftUI
 /// ```
 @MainActor
 @propertyWrapper
-public final class PublishedNode<N: Node> {
+public final class PublishedNode<NodeType: Node> {
 
   // MARK: Lifecycle
 
-  public init(projectedValue: TreeNode<N>) {
+  public init(projectedValue: TreeNode<NodeType>) {
     self.projectedValue = projectedValue
   }
 
   // MARK: Public
 
-  public let projectedValue: TreeNode<N>
+  public let projectedValue: TreeNode<NodeType>
 
   @available(
     *,
     unavailable,
     message: "@PublishedNode can only be used in an ObservableObject"
-  ) public var wrappedValue: N {
+  ) public var wrappedValue: NodeType {
     get {
       fatalError("@PublishedNode can only be used in an ObservableObject")
     }
@@ -43,10 +43,10 @@ public final class PublishedNode<N: Node> {
     Instance: ObservableObject
   >(
     _enclosingInstance instance: Instance,
-    wrapped _: ReferenceWritableKeyPath<Instance, N>,
+    wrapped _: ReferenceWritableKeyPath<Instance, NodeType>,
     storage storageKeyPath: ReferenceWritableKeyPath<Instance, PublishedNode>
   )
-    -> N where Instance.ObjectWillChangePublisher == ObservableObjectPublisher
+    -> NodeType where Instance.ObjectWillChangePublisher == ObservableObjectPublisher
   {
     get {
       let storage = instance[keyPath: storageKeyPath]
@@ -67,13 +67,6 @@ public final class PublishedNode<N: Node> {
       return storage.projectedValue.node
     }
     set { }
-  }
-
-  // MARK: Internal
-
-  enum ChangeEvent {
-    case update
-    case stop
   }
 
   // MARK: Private

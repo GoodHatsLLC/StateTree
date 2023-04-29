@@ -1,5 +1,6 @@
 import Disposable
 import OrderedCollections
+@_spi(Implementation) import Utilities
 
 // MARK: - ListRouter
 
@@ -51,13 +52,30 @@ extension ListRouter: RouterType {
 
   @TreeActor
   public mutating func applyRule(with context: RuleContext) throws {
-    let initialized = try initialize(
-      captures: capture(),
-      context: context
-    )
-    try start(
-      initializedList: initialized,
-      on: context.runtime
+    let captures = capture()
+    let scopes = try captures.compactMap { capture -> AnyScope? in
+      guard let id = capture.cuid
+      else {
+        return nil
+      }
+      return try UninitializedNode(
+        capture: capture,
+        runtime: context.runtime
+      )
+      .initialize(
+        as: N.self,
+        depth: context.depth + 1,
+        dependencies: context.dependencies,
+        on: .init(
+          fieldID: fieldID,
+          identity: id,
+          type: .list
+        )
+      ).connect().erase()
+    }
+    context.runtime.updateRoutedNodes(
+      at: fieldID,
+      to: .list(.init(nodeIDs: scopes.map(\.nid)))
     )
   }
 
@@ -67,45 +85,44 @@ extension ListRouter: RouterType {
       .updateRoutedNodes(at: fieldID, to: .list(nil))
   }
 
+  /// FIXME: ordering is lost
   @TreeActor
   public mutating func updateRule(
     from new: ListRouter<N>,
     with context: RuleContext
   ) throws {
-    let currentScopes = context.scope.childScopes
-    let currentIDs = Set(currentScopes.compactMap(\.cuid))
+    let currentScopes = context.scope.childScopes.indexed(by: \.cuid)
     let captures = new.capture()
-    let newIDs = Set(captures.compactMap(\.cuid))
 
-    let continuedIdentifiableNodeIDs = currentIDs.intersection(newIDs)
-    let startedIdentifiableNodeIDs = newIDs.subtracting(currentIDs)
-
-    let continuedScopes = currentScopes.filter {
-      guard let id = $0.cuid
+    let scopes: [AnyScope] = try captures.compactMap { capture -> AnyScope? in
+      guard let id = capture.cuid
       else {
-        return false
+        return nil
       }
-      return continuedIdentifiableNodeIDs.contains(id)
-    }
-    let newCaptures = captures.filter {
-      guard let id = $0.cuid
-      else {
-        return false
+      if let scope = currentScopes[id] {
+        return scope
+      } else {
+        return try UninitializedNode(
+          capture: capture,
+          runtime: context.runtime
+        )
+        .initialize(
+          as: N.self,
+          depth: context.depth + 1,
+          dependencies: context.dependencies,
+          on: .init(
+            fieldID: fieldID,
+            identity: id,
+            type: .list
+          )
+        ).connect().erase()
       }
-      return startedIdentifiableNodeIDs.contains(id)
     }
-
-    let initialized = try initialize(
-      captures: newCaptures,
-      context: context
-    )
-    return try start(
-      initializedList: initialized,
-      continuing: continuedScopes,
-      on: context.runtime
+    context.runtime.updateRoutedNodes(
+      at: fieldID,
+      to: .list(.init(nodeIDs: scopes.map(\.nid)))
     )
   }
-
 }
 
 extension ListRouter {
@@ -132,62 +149,6 @@ extension ListRouter {
         record: record
       )
     return initialized
-  }
-
-  @TreeActor
-  private func initialize(
-    captures: [NodeCapture],
-    context: RuleContext
-  ) throws -> [InitializedNode<N>] {
-    let uninitializedList = captures.map { capture in
-      UninitializedNode(
-        capture: capture,
-        runtime: context.runtime
-      )
-    }
-    return try uninitializedList.map { uninitialized in
-      try uninitialized
-        .initialize(
-          as: N.self,
-          depth: context.depth + 1,
-          dependencies: context.dependencies,
-          on: .init(
-            fieldID: fieldID,
-            identity: uninitialized.capture.anyNode.cuid,
-            type: .list
-          )
-        )
-    }
-  }
-
-  @TreeActor
-  private mutating func start(
-    initializedList: [InitializedNode<N>],
-    on runtime: Runtime
-  ) throws {
-    let scopes = try initializedList.map { initialized in
-      try initialized.connect().erase()
-    }
-    runtime.updateRoutedNodes(
-      at: fieldID,
-      to: .list(.init(nodeIDs: scopes.map(\.nid)))
-    )
-  }
-
-  @TreeActor
-  private mutating func start(
-    initializedList: [InitializedNode<N>],
-    continuing: [AnyScope],
-    on runtime: Runtime
-  ) throws {
-    let newScopes = try initializedList.map { initialized in
-      try initialized.connect().erase()
-    }
-    let scopes = newScopes + continuing
-    runtime.updateRoutedNodes(
-      at: fieldID,
-      to: .list(.init(nodeIDs: scopes.map(\.nid)))
-    )
   }
 
 }

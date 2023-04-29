@@ -5,12 +5,12 @@ import SwiftUI
 
 @propertyWrapper
 @dynamicMemberLookup
-public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
+public struct TreeRoot<NodeType: Node>: DynamicProperty, NodeAccess {
 
   // MARK: Lifecycle
 
   public init(
-    wrappedValue: N
+    wrappedValue: NodeType
   ) {
     let tree = Tree(root: wrappedValue, from: nil, dependencies: .defaults, configuration: .init())
     do {
@@ -30,7 +30,7 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
 
   // MARK: Public
 
-  @_spi(Implementation) public var scope: NodeScope<N> {
+  @_spi(Implementation) public var scope: NodeScope<NodeType> {
     try! observed.tree.assume.root
   }
 
@@ -38,11 +38,11 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
     try! observed.tree.assume.root.nid
   }
 
-  public var wrappedValue: N {
+  public var wrappedValue: NodeType {
     try! observed.tree.assume.root.node
   }
 
-  public var root: TreeNode<N> {
+  public var root: TreeNode<NodeType> {
     TreeNode(scope: scope)
   }
 
@@ -56,9 +56,9 @@ public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
 
   // MARK: Internal
 
-  @StateObject var observed: ObservableRoot<N>
+  @StateObject var observed: ObservableRoot<NodeType>
 
   // MARK: Private
 
-  @State private var handle: TreeHandle<N>.StopHandle
+  @State private var handle: TreeHandle<NodeType>.StopHandle
 }

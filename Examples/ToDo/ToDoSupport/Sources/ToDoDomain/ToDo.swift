@@ -1,53 +1,73 @@
 import Foundation
 import StateTree
 
-// MARK: - SelectedToDo
+// MARK: - UnknownToDoRecord
+
+struct UnknownToDoRecord: Error { }
+
+// MARK: - ToDo
 
 public struct ToDo: Node, Identifiable {
 
-  public let id: UUID
-  @Scope private var scope
-  @Route([Tag].self) public var tags
-  @Projection public var tagIDs: [UUID]
-  @Projection public var isCompleted: Bool
-  @Projection public var dueDate: Date?
-  @Projection public var note: String?
-  @Projection public var title: String?
+  // MARK: Lifecycle
 
-  @Projection var selectedToDoID: UUID?
+  init(record dbRecord: ToDoRecord) throws {
+    _record = .init(wrappedValue: dbRecord)
+    _isPersisted = .init(wrappedValue: true)
+    if dbRecord.id == nil {
+      throw UnknownToDoRecord()
+    }
+  }
 
-  public var isSelected: Bool {
+  init() async throws {
+    var record = ToDoRecord.new()
+    try await db.saveToDo(&record)
+    _record = .init(wrappedValue: record)
+    _isPersisted = .init(wrappedValue: true)
+  }
+
+  // MARK: Public
+
+  public var id: Int64 {
+    record!.id!
+  }
+
+  public var title: String {
     get {
-      selectedToDoID == id
+      record?.title ?? ""
     }
     set {
-      selectedToDoID = newValue ? id : nil
+      record?.title = newValue
     }
+  }
+
+  public var isCompleted: Bool {
+    get { record?.completed ?? false }
+    set { record?.completed = newValue }
+  }
+
+  public var dueDate: Date? {
+    get { record?.dueDate }
+    set { record?.dueDate = newValue }
   }
 
   public var rules: some Rules {
-    $tags.route {
-      tagIDs.map { id in
-        Tag(id: id)
-      }
+    ()
+  }
+
+  public func save() {
+    scope.run {
+      var record = record!
+      try await db.saveToDo(&record)
+      self.record = record
     }
   }
 
-}
+  // MARK: Private
 
-//
-// extension ToDo {
-//
-//  /// Provide some default state for SwiftUI previews to use.
-//  public static var example: Self {
-//    .init(
-//      TODO: ToDoData(
-//        id: .init(),
-//        completionData: .init(),
-//        titleData: .init(title: "A title"),
-//        noteData: .init(),
-//        tagData: .init()
-//      )
-//    )
-//  }
-// }
+  @Dependency(\.database) private var db
+  @Value private var record: ToDoRecord?
+  @Value private var isPersisted: Bool = false
+  @Scope private var scope
+
+}
