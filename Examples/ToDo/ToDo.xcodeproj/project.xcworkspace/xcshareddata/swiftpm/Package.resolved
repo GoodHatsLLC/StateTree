@@ -14,17 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GoodHatsLLC/Emitter.git",
       "state" : {
-        "revision" : "a6180c53f824aa5829dfd0992595891a8652b530",
-        "version" : "0.8.4"
-      }
-    },
-    {
-      "identity" : "grdb.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/groue/GRDB.swift.git",
-      "state" : {
-        "revision" : "5aa385094b0d6b862bd1f8b671369044a6457ad0",
-        "version" : "6.11.0"
+        "revision" : "84614b2f05e51deb1ada3bd9fc36bf431bc25e44",
+        "version" : "0.8.5"
       }
     },
     {

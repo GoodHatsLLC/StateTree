@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - MaybeRule
 @TreeActor
 public struct MaybeRule<R: Rules>: Rules {

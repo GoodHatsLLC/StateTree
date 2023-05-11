@@ -4,15 +4,34 @@ import StateTreePlayback
 import SwiftUI
 
 @propertyWrapper
-@dynamicMemberLookup
-public struct TreeRoot<NodeType: Node>: DynamicProperty, NodeAccess {
+public struct TreeRoot<NodeType: Node>: DynamicProperty {
 
   // MARK: Lifecycle
 
   public init(
+    state: TreeStateRecord,
+    rootNode: NodeType
+  ) {
+    let tree = Tree(root: rootNode, dependencies: .defaults, configuration: .init())
+    do {
+      let handle = try tree.start(from: state).autostop()
+      _handle = .init(wrappedValue: handle)
+    } catch {
+      preconditionFailure(
+        """
+        Could not start Tree.
+        error: \(error.localizedDescription)
+        """
+      )
+    }
+    let root = ObservableRoot(tree: tree)
+    _observed = .init(wrappedValue: root)
+  }
+
+  public init(
     wrappedValue: NodeType
   ) {
-    let tree = Tree(root: wrappedValue, from: nil, dependencies: .defaults, configuration: .init())
+    let tree = Tree(root: wrappedValue, dependencies: .defaults, configuration: .init())
     do {
       let handle = try tree.start().autostop()
       _handle = .init(wrappedValue: handle)
@@ -42,7 +61,7 @@ public struct TreeRoot<NodeType: Node>: DynamicProperty, NodeAccess {
     try! observed.tree.assume.root.node
   }
 
-  public var root: TreeNode<NodeType> {
+  public var node: TreeNode<NodeType> {
     TreeNode(scope: scope)
   }
 
@@ -50,7 +69,7 @@ public struct TreeRoot<NodeType: Node>: DynamicProperty, NodeAccess {
     self
   }
 
-  public func tree() -> Tree<N> {
+  public var tree: Tree<NodeType> {
     observed.tree
   }
 

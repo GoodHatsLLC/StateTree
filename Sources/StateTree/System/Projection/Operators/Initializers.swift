@@ -1,3 +1,5 @@
+import TreeActor
+
 extension Projection {
 
   init(

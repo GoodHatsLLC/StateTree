@@ -1,7 +1,7 @@
 import Disposable
+import TreeActor
 
 // MARK: - Attach
-@TreeActor
 public struct Attach<Router: RouterType>: Rules {
 
   // MARK: Lifecycle

@@ -1,3 +1,6 @@
+import TreeActor
+import Utilities
+
 // MARK: - StateApplier
 
 @TreeActor
@@ -168,7 +171,7 @@ final class StateApplier: ChangeManager {
       // 2. Have child nodes added in the change
       //
       // These are the nodes whose update() calls create
-      // new scopes.
+      // new scopes. // TODO: why?
       for nodeID in changes.dirtyScopes {
         guard let scope = scopes.getScope(for: nodeID)
         else {
@@ -261,6 +264,21 @@ final class StateApplier: ChangeManager {
       try handle(changes: stagedChanges.take())
     }
     updateCollector.stats.recordTimeElapsed(from: timer)
+
+    let stateIDs = Set(state.nodeIDs)
+    let scopeIDs = Set(scopes.scopeIDs)
+    let oldStateIDs = stateIDs.subtracting(scopeIDs)
+    if !oldStateIDs.isEmpty {
+      runtimeWarning("Warning: removing invalid state nodes — assuming they are init artifacts.")
+      // Records are currently made for identifiable nodes created with a default id.
+      // i.e. `struct SomeNode: Node, Identifiable { var id = UUID() }`
+      // These can be safely stripped.
+      // TODO: change node creation to prevent these records being made.
+    }
+    for id in oldStateIDs {
+      state.removeRecord(id)
+    }
+
     // Return the list of updated nodes to fire notifications
     // to the UI layer for.
     return updateCollector.collectChanges()

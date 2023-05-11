@@ -78,7 +78,7 @@ public struct StateTreeInfo {
   ///
   /// External consumers should never be able to receive a `false` value from this field.
   @TreeActor public var isConsistent: Bool {
-    let isConsistent = runtime.isConsistent
+    let isConsistent = runtime.checkConsistency()
     assert(isConsistent)
     return isConsistent
   }

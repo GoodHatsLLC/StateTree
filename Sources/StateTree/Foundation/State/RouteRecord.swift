@@ -16,7 +16,7 @@ import OrderedCollections
 /// For example a route to one of two types,`NodeA` or `NodeB` might be represented by
 /// `.a(<NodeID>)`
 /// which would in turn correspond to a known `Node` type of the router's`Union.Two<NodeA, NodeB>`.
-public enum RouteRecord: TreeState {
+public enum RouteRecord: Codable {
   case single(Single?)
   case union2(Union2?)
   case union3(Union3?)
@@ -24,11 +24,11 @@ public enum RouteRecord: TreeState {
 
   // MARK: Public
 
-  public struct Single: TreeState {
+  public struct Single: Codable {
     var id: NodeID
   }
 
-  public enum Union2: TreeState {
+  public enum Union2: Codable {
     case a(NodeID)
     case b(NodeID)
     var id: NodeID {
@@ -39,7 +39,7 @@ public enum RouteRecord: TreeState {
     }
   }
 
-  public enum Union3: TreeState {
+  public enum Union3: Codable {
     case a(NodeID)
     case b(NodeID)
     case c(NodeID)
@@ -52,7 +52,7 @@ public enum RouteRecord: TreeState {
     }
   }
 
-  public struct List: TreeState {
+  public struct List: Codable {
 
     // MARK: Lifecycle
 

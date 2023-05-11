@@ -1,5 +1,6 @@
 @_spi(Implementation) import StateTree
 import SwiftUI
+import TreeActor
 
 // MARK: - SingleRouterAccess
 

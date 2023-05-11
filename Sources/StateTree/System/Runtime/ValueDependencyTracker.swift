@@ -1,3 +1,5 @@
+import TreeActor
+
 struct ValueDependencyTracker {
 
   // MARK: Internal

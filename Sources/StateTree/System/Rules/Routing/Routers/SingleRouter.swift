@@ -1,4 +1,5 @@
 import Disposable
+import TreeActor
 
 // MARK: - SingleRouterType
 
@@ -85,14 +86,6 @@ extension SingleRouter: SingleRouterType {
       try removeRule(with: context)
       self = new
       try applyRule(with: context)
-    } else {
-      let existingManagedFieldsRecord = currentScope.record
-      let replacementNode = try new.initialize(
-        capture: newCapture,
-        context: context,
-        record: existingManagedFieldsRecord
-      )
-      currentScope.node = replacementNode.node
     }
   }
 

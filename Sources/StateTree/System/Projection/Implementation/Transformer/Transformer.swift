@@ -15,7 +15,6 @@
 /// > Warning: ``Transformer/value`` should not be called on an
 /// invalid `Transformer`. The  property's behavior is undefined
 /// when the `Transformer` is invalid and the program may fault.
-@TreeActor
 protocol Transformer<Upstream, Downstream> {
   associatedtype Upstream
   associatedtype Downstream

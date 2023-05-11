@@ -1,3 +1,4 @@
+import TreeActor
 import Utilities
 
 // MARK: - UninitializedNode
@@ -153,7 +154,7 @@ extension UninitializedNode {
           )
           return FieldRecord(
             id: fieldID,
-            payload: .value(initial.anyTreeState)
+            payload: .value(initial.anyPayload)
           )
         case .unmanaged:
           let fieldID = FieldID(

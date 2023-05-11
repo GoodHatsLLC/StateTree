@@ -395,7 +395,7 @@ extension IntentApplicationTests {
     @Value var validNext: ValidNext = .initial
     @Value var shouldRoute: Bool = false
 
-    enum ValidNext: TreeState {
+    enum ValidNext: Codable {
       case initial
       case later
     }

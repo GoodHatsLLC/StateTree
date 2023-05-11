@@ -2,7 +2,7 @@ import Behavior
 
 // MARK: - TreeEvent
 
-public enum TreeEvent: TreeState, CustomStringConvertible {
+public enum TreeEvent: Codable, CustomStringConvertible {
 
   case recording(event: RecordingEvent)
   case tree(event: TreeLifecycleEvent)

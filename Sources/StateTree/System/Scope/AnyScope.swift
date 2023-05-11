@@ -2,6 +2,7 @@ import Behavior
 import Disposable
 import Emitter
 import Intents
+import TreeActor
 
 // MARK: - AnyScope
 
@@ -97,6 +98,10 @@ extension AnyScope: BehaviorScoping {
 
   func sendUpdateEvent() {
     underlying.sendUpdateEvent()
+  }
+
+  func disconnectSendingNotification() {
+    underlying.disconnectSendingNotification()
   }
 
 }

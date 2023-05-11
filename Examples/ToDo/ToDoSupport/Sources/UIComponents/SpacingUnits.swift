@@ -1,5 +1,3 @@
-import SwiftUI
-
 // MARK: - Spacing
 
 public enum Spacing {
@@ -8,9 +6,9 @@ public enum Spacing {
 }
 
 extension BinaryInteger {
-  public var su: Spacing.Unit { Spacing.unitSize }
+  public var su: Spacing.Unit { Spacing.unitSize * Double(self) }
 }
 
 extension BinaryFloatingPoint {
-  public var su: Spacing.Unit { Spacing.unitSize }
+  public var su: Spacing.Unit { Spacing.unitSize * Double(self) }
 }

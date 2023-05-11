@@ -1,4 +1,5 @@
 @_spi(Implementation) import StateTree
+import TreeActor
 
 @TreeActor
 @propertyWrapper

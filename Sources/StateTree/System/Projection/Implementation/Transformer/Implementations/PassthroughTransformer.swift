@@ -1,7 +1,8 @@
+import TreeActor
+
 extension Transform {
   /// A ``Transform/Passthrough`` forwards an upstream value as a downstream value
   /// without making any changes, using stored state, or triggering side effects.
-  @TreeActor
   struct Passthrough<Value>: Transformer {
 
     init() { }

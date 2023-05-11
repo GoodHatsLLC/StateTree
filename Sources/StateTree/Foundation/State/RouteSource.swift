@@ -1,10 +1,10 @@
 // MARK: - RouteID
 
-public struct RouteSource: TreeState, CustomDebugStringConvertible {
+public struct RouteSource: Codable, Hashable, CustomDebugStringConvertible {
 
   // MARK: Public
 
-  public enum RouteType: String, TreeState {
+  public enum RouteType: String, Codable, Hashable {
     case single
     case union2
     case union3

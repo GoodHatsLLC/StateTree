@@ -1,4 +1,3 @@
-import TreeState
 
 // MARK: - NodeRecord
 
@@ -8,7 +7,7 @@ import TreeState
 /// (Fields are managed by StateTree when annotated with property wrappers like ``Value`` and
 /// ``Projection``.
 @_spi(Implementation)
-public struct NodeRecord: TreeState {
+public struct NodeRecord: Codable {
   var id: NodeID
   let origin: RouteSource
   var records: [FieldRecord]

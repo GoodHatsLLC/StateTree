@@ -104,7 +104,7 @@ final class Union3RouteTests: XCTestCase {
 
 extension Union3RouteTests {
 
-  enum Model: TreeState {
+  enum Model: Codable {
     case a
     case b
     case c

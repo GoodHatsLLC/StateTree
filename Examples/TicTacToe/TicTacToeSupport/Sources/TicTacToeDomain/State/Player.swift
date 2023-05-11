@@ -2,7 +2,7 @@ import StateTree
 
 // MARK: - Player
 
-public enum Player: TreeState {
+public enum Player: Codable, Hashable {
   case X
   case O
 

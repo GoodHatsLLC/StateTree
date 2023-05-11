@@ -39,5 +39,6 @@ public protocol ScopeType<N>: BehaviorScoping, Hashable {
   func stepTowardsReady() throws -> Bool
   func stepTowardsFinished() throws -> Bool
   func stop() throws
+  func disconnectSendingNotification()
   func erase() -> AnyScope
 }

@@ -1,5 +1,5 @@
 import Intents
-import TreeState
+import TreeActor
 
 // MARK: - StateStorage
 
@@ -49,10 +49,6 @@ extension StateStorage {
     state = newState
   }
 
-  func valueRecords() -> [ValueRecord] {
-    state.valueRecords()
-  }
-
   func getRecord(_ nodeID: NodeID) -> NodeRecord? {
     state.getRecord(nodeID)
   }
@@ -71,11 +67,11 @@ extension StateStorage {
       .removeValue(forKey: nodeID)
   }
 
-  func getValue<T: TreeState>(_ fieldID: FieldID, as type: T.Type) -> T? {
+  func getValue<T: Codable & Hashable>(_ fieldID: FieldID, as type: T.Type) -> T? {
     state.getValue(fieldID, as: type)
   }
 
-  func setValue(_ fieldID: FieldID, to newValue: some TreeState) -> Bool? {
+  func setValue(_ fieldID: FieldID, to newValue: some Codable & Hashable) -> Bool? {
     state.setValue(fieldID, to: newValue)
   }
 
@@ -90,7 +86,7 @@ extension StateStorage {
       if case .single(let single) = nodeIDs {
         state.root = single?.id
       } else {
-        throw NodeNotFoundError()
+        throw NodesNotFoundError(ids: nodeIDs.ids)
       }
       return .init(
         addedScopes: [state.root].compactMap { $0 },

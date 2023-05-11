@@ -2,7 +2,7 @@ import StateTree
 
 // MARK: - BoardState
 
-public struct BoardState: TreeState {
+public struct BoardState: Codable, Hashable {
 
   // MARK: Lifecycle
 
@@ -16,7 +16,7 @@ public struct BoardState: TreeState {
 
   // MARK: Public
 
-  public struct Cell: TreeState, Identifiable {
+  public struct Cell: Codable, Hashable, Identifiable {
     public var id: String
     public var player: Player?
     public let row: Int

@@ -1,5 +1,5 @@
 import Intents
-import TreeState
+import Utilities
 
 // MARK: properties
 extension TreeStateRecord {
@@ -89,24 +89,27 @@ extension TreeStateRecord {
 // MARK: Values
 extension TreeStateRecord {
 
-  func getValue<T: TreeState>(_ fieldID: FieldID, as _: T.Type) -> T? {
-    if
-      let node = nodes[fieldID.nodeID],
-      node.records.count > fieldID.offset,
-      case .value(let value) = node.records[fieldID.offset].payload
-    {
-      return value.anyValue as? T
-    }
-    return nil
-  }
-
-  mutating func setValue(_ fieldID: FieldID, to newValue: some TreeState) -> Bool? {
+  mutating func getValue<T: Codable & Hashable>(_ fieldID: FieldID, as _: T.Type) -> T? {
     if
       let node = nodes[fieldID.nodeID],
       node.records.count > fieldID.offset,
       case .value(var value) = node.records[fieldID.offset].payload
     {
-      let newValue = AnyTreeState(newValue)
+      if let extracted = try? value.extract(as: T.self) {
+        nodes[fieldID.nodeID]?.records[fieldID.offset].payload = .value(value)
+        return extracted
+      }
+    }
+    return nil
+  }
+
+  mutating func setValue(_ fieldID: FieldID, to newValue: some Codable & Hashable) -> Bool? {
+    if
+      let node = nodes[fieldID.nodeID],
+      node.records.count > fieldID.offset,
+      case .value(var value) = node.records[fieldID.offset].payload
+    {
+      let newValue = try! ValuePayload(newValue)
       if value != newValue {
         value = newValue
         nodes[fieldID.nodeID]?.records[fieldID.offset].payload = .value(value)
@@ -136,20 +139,6 @@ extension TreeStateRecord {
 
 // MARK: Records
 extension TreeStateRecord {
-  func valueRecords() -> [ValueRecord] {
-    nodes.values
-      .flatMap { record in
-        record
-          .records
-          .compactMap { field in
-            if case .value(let valueRecord) = field.payload {
-              return .init(id: field.id, value: valueRecord)
-            } else {
-              return nil
-            }
-          }
-      }
-  }
 
   func getRecord(_ nodeID: NodeID) -> NodeRecord? {
     nodes[nodeID]
@@ -184,7 +173,7 @@ extension TreeStateRecord {
       node.records.count > field.offset,
       case .route(let original) = node.records[field.offset].payload
     else {
-      throw NodeNotFoundError()
+      throw NodeNotFoundError(id: field.nodeID)
     }
     nodes[field.nodeID]?.records[field.offset].payload = .route(nodeIDs)
     return original

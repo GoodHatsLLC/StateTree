@@ -53,12 +53,12 @@ final class StressTests: XCTestCase {
     }
 
     let depthSnapshot = try testTree.assume.snapshot()
-    XCTAssertNotEqual(initialSnapshot, depthSnapshot)
+    XCTAssertNotEqual(initialSnapshot.formattedJSON, depthSnapshot.formattedJSON)
 
     node.depth = 1
     let finalSnapshot = try testTree.assume.snapshot()
 
-    XCTAssertEqual(initialSnapshot, finalSnapshot)
+    XCTAssertEqual(initialSnapshot.formattedJSON, finalSnapshot.formattedJSON)
     XCTAssert(try testTree.assume.info.isActive == true)
   }
 }

@@ -92,7 +92,7 @@ final class SerializationTests: XCTestCase {
       try tree1.assume.rootNode.primeSquared?.square,
       try tree2.assume.rootNode.primeSquared?.square
     )
-    XCTAssertEqual(snap1, snap2)
+    XCTAssertEqual(snap1.formattedJSON, snap2.formattedJSON)
   }
 
   @TreeActor
@@ -254,7 +254,7 @@ extension SerializationTests {
               "id" : "v:1:FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳",
               "payload" : {
                 "value" : {
-                  "_0" : 7
+                  "_0" : "7"
                 }
               }
             },
@@ -303,7 +303,7 @@ extension SerializationTests {
               "id" : "v:0:F0000000-F000-F000-F000-000000000003:",
               "payload" : {
                 "value" : {
-                  "_0" : 49
+                  "_0" : "49"
                 }
               }
             },
@@ -338,7 +338,7 @@ extension SerializationTests {
               "id" : "v:1:F0000000-F000-F000-F000-000000000004:yes1",
               "payload" : {
                 "value" : {
-                  "_0" : "It's a prime!"
+                  "_0" : "\\"It's a prime!\\""
                 }
               }
             },
@@ -364,7 +364,7 @@ extension SerializationTests {
               "id" : "v:1:F0000000-F000-F000-F000-000000000005:yes2",
               "payload" : {
                 "value" : {
-                  "_0" : "really!"
+                  "_0" : "\\"really!\\""
                 }
               }
             },
@@ -419,7 +419,7 @@ extension SerializationTests {
               "id" : "v:1:FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF:🌳",
               "payload" : {
                 "value" : {
-                  "_0" : 8
+                  "_0" : "8"
                 }
               }
             },
@@ -472,7 +472,7 @@ extension SerializationTests {
               "id" : "v:1:F0000000-F000-F000-F000-000000000001:no1",
               "payload" : {
                 "value" : {
-                  "_0" : "Not a prime :("
+                  "_0" : "\\"Not a prime :(\\""
                 }
               }
             },
@@ -498,7 +498,7 @@ extension SerializationTests {
               "id" : "v:1:F0000000-F000-F000-F000-000000000002:no2",
               "payload" : {
                 "value" : {
-                  "_0" : "srsly"
+                  "_0" : "\\"srsly\\""
                 }
               }
             },

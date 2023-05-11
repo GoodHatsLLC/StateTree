@@ -1,7 +1,7 @@
 @_spi(Implementation)
 public struct NodeCapture: Equatable {
   public static func == (lhs: NodeCapture, rhs: NodeCapture) -> Bool {
-    lhs.fields == rhs.fields
+    lhs.fields == rhs.fields && lhs.cuid == rhs.cuid
   }
 
   init(_ node: some Node) {

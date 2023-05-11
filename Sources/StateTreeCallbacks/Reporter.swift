@@ -1,6 +1,7 @@
 import Disposable
 import Emitter
 @_spi(Implementation) import StateTree
+import TreeActor
 
 // MARK: - ObservableNode
 

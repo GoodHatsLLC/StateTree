@@ -1,7 +1,8 @@
+import TreeActor
+
 // MARK: CompactMap
 extension Projection {
 
-  @TreeActor
   public func compact<Downstream>() -> Projection<Downstream>? where Value == Downstream? {
     value.map { _ in
       .init(

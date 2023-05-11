@@ -2,6 +2,7 @@ import Behavior
 import Disposable
 import Emitter
 import Foundation
+import TreeActor
 @_spi(Implementation) import StateTree
 
 // MARK: - TreeRecorder

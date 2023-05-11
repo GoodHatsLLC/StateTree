@@ -1,11 +1,10 @@
 import Foundation
-import TreeState
 
 // MARK: - CUID
 
 /// CUID — Custom User Identity
 /// The `CUID` contains a ``Node``'s defined `id` if it is `Identifiable`
-public struct CUID: LosslessStringConvertible, TreeState {
+public struct CUID: LosslessStringConvertible, Codable, Hashable {
   public init?(_ description: String) {
     guard !description.isEmpty
     else {

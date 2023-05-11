@@ -1,3 +1,4 @@
+import TreeActor
 import Utilities
 
 // MARK: - ProjectionField
@@ -40,7 +41,7 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
 
   // MARK: Lifecycle
 
-  nonisolated init(_ access: some Accessor<Value>, initial: Value) {
+  public nonisolated init(_ access: some Accessor<Value>, initial: Value) {
     self.access = access
     self.inner = Inner(cache: initial)
   }
@@ -54,7 +55,6 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
         runtimeWarning(
           "The projection accessed was invalid. The last cached value was returned."
         )
-        assertionFailure("the projection cache should never be used")
         return inner.cache
       }
       let value = access.value
@@ -67,7 +67,6 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
         runtimeWarning(
           "The projection written to was invalid. The write was discarded."
         )
-        assertionFailure("an invalidated projection should never be written to")
         return
       }
       if access.value != newValue {
@@ -91,19 +90,19 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
     nonmutating set { }
   }
 
+  public var source: ProjectionSource {
+    access.source
+  }
+
+  public func isValid() -> Bool {
+    access.isValid()
+  }
+
   // MARK: Internal
 
   @TreeActor var projectionContext: ProjectionConnection? {
     get { inner.projectionContext }
     nonmutating set { inner.projectionContext = newValue }
-  }
-
-  var source: ProjectionSource {
-    access.source
-  }
-
-  func isValid() -> Bool {
-    access.isValid()
   }
 
   // MARK: Private

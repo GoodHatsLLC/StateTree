@@ -1,5 +1,6 @@
 import Disposable
 @_spi(Implementation) import StateTree
+import TreeActor
 import XCTest
 
 // MARK: - OnChangeTests

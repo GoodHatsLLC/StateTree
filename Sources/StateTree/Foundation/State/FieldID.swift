@@ -1,9 +1,7 @@
-import TreeState
-
 // MARK: - FieldID
 
 /// The unique identifier of each ``Node`` field tracked by StateTree.
-public struct FieldID: TreeState, LosslessStringConvertible {
+public struct FieldID: Codable, Hashable, LosslessStringConvertible {
 
   // MARK: Lifecycle
 

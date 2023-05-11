@@ -1,9 +1,8 @@
 import Foundation
-import TreeState
 
 // MARK: - UpdateStats
 
-public struct UpdateStats: TreeState {
+public struct UpdateStats: Codable {
 
   // MARK: Public
 
@@ -81,7 +80,7 @@ public struct UpdateStats: TreeState {
 
   // MARK: Internal
 
-  struct NodeStats: TreeState {
+  struct NodeStats: Codable {
     let nodeID: NodeID
     var starts: Int = 0
     var updates: Int = 0

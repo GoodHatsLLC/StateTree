@@ -1,4 +1,4 @@
-public enum NodeEvent: TreeState, CustomStringConvertible {
+public enum NodeEvent: Codable, CustomStringConvertible {
   case start(id: NodeID, depth: Int?)
   case update(id: NodeID, depth: Int)
   case stop(id: NodeID, depth: Int?)

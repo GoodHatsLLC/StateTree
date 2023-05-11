@@ -3,7 +3,7 @@ import StateTree
 
 // MARK: - Authentication
 
-public struct Authentication: TreeState {
+public struct Authentication: Codable, Hashable {
 
   public init(
     playerX: String?,

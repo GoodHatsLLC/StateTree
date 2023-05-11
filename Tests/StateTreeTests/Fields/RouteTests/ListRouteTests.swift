@@ -39,7 +39,7 @@ final class ListRouteTests: XCTestCase {
     nodes = try XCTUnwrap(try tree.assume.rootNode.route)
     XCTAssertEqual(
       nodes.map(\.idStr),
-      ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "10", "11", "12", "13", "14"]
+      ["10", "11", "12", "13", "14", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29"]
     )
     XCTAssertEqual(nodes.count, 15)
     try tree.assume.rootNode.numbers! += Array(1000 ..< 2000)

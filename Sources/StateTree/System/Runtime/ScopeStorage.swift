@@ -1,5 +1,6 @@
 import Disposable
 import OrderedCollections
+import TreeActor
 // MARK: - ScopeStorage
 
 @TreeActor

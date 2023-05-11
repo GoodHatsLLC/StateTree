@@ -1,14 +1,13 @@
 import Disposable
 import Foundation
 import Intents
-import TreeState
 
 // MARK: - NodeID
 
 /// The runtime identifier  representing a ``Node``.
 ///
 /// String serialised `NodeIDs` are formatted as `<UUID>:<CUID>`
-public struct NodeID: TreeState, LosslessStringConvertible {
+public struct NodeID: Codable, Hashable, LosslessStringConvertible, Comparable {
 
   // MARK: Lifecycle
 
@@ -54,6 +53,10 @@ public struct NodeID: TreeState, LosslessStringConvertible {
   /// `"<UUID>:<OptionalMetadata>"`
   public var description: String {
     "\(uuid.description):\(cuid?.description ?? "")"
+  }
+
+  public static func < (lhs: NodeID, rhs: NodeID) -> Bool {
+    lhs.description < rhs.description
   }
 
   /// Encode a `NodeID` to a serialised representation.

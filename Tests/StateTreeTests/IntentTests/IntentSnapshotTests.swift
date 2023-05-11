@@ -52,7 +52,7 @@ final class IntentSnapshotTests: XCTestCase {
     XCTAssertThrowsError(try tree.assume.info.isActive)
 
     // create a new tree from the saved state
-    let tree2 = Tree(root: PendingNode<ValueSetNode>(), from: snapshot)
+    let tree2 = Tree(root: PendingNode<ValueSetNode>())
     try tree2.start(from: snapshot)
       .autostop()
       .stage(on: stage)

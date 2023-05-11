@@ -83,7 +83,7 @@ extension ProjectionTests {
   // MARK: - SubnodeC
 
   struct SubnodeC: Node {
-    struct State: TreeState {
+    struct State: Codable, Hashable {
       var value = "👀"
     }
 

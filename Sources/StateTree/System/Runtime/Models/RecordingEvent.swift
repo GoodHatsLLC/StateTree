@@ -1,7 +1,6 @@
 import Foundation
-import TreeState
 
-public enum RecordingEvent: TreeState, CustomStringConvertible {
+public enum RecordingEvent: Codable, CustomStringConvertible {
   public var description: String {
     switch self {
     case .started(let recorderID):

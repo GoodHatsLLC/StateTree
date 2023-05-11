@@ -3,6 +3,7 @@ import Disposable
 import Emitter
 import Foundation
 import Intents
+import TreeActor
 import Utilities
 
 // MARK: - NodeScope
@@ -107,7 +108,13 @@ extension NodeScope: ScopeType {
     assert(activeRules != nil)
     activeRules = nil
     stage.dispose()
-    disconnect()
+    // NOTE: The scope must still disconnect
+  }
+
+  @TreeActor
+  public func disconnectSendingNotification() {
+    runtime.disconnect(scopeID: nid)
+    sendFinishEvent()
   }
 
   // MARK: Private
@@ -132,11 +139,6 @@ extension NodeScope: ScopeType {
     } else {
       try update()
     }
-  }
-
-  @TreeActor
-  private func disconnect() {
-    runtime.disconnect(scopeID: nid)
   }
 
   @TreeActor
@@ -388,7 +390,6 @@ extension NodeScope {
         self = .finished
         return {
           try scope.stop()
-          scope.sendFinishEvent()
           return true
         }
       default: return nil

@@ -1,3 +1,4 @@
+import Utilities
 import XCTest
 @testable import Intents
 

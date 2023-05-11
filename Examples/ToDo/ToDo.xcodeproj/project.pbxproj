@@ -12,6 +12,7 @@
 		F7839B59292275DB008CB8AD /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F7839B58292275DB008CB8AD /* Preview Assets.xcassets */; };
 		F7839B6C2922859D008CB8AD /* ToDoDomain in Frameworks */ = {isa = PBXBuildFile; productRef = F7839B6B2922859D008CB8AD /* ToDoDomain */; };
 		F7839B6E2922859D008CB8AD /* ToDoUI in Frameworks */ = {isa = PBXBuildFile; productRef = F7839B6D2922859D008CB8AD /* ToDoUI */; };
+		F7EF33062A0C9546008099B8 /* payload.json in Resources */ = {isa = PBXBuildFile; fileRef = F7EF33052A0C9546008099B8 /* payload.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,7 @@
 		F7839B55292275DB008CB8AD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F7839B58292275DB008CB8AD /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		F7839B68292284E8008CB8AD /* ToDoSupport */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ToDoSupport; sourceTree = "<group>"; };
+		F7EF33052A0C9546008099B8 /* payload.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = payload.json; sourceTree = "<group>"; };
 		F7F3FFE5292482840033C21E /* ToDo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ToDo.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -61,6 +63,7 @@
 				F7839B51292275D9008CB8AD /* ToDoApp.swift */,
 				F7839B55292275DB008CB8AD /* Assets.xcassets */,
 				F7839B57292275DB008CB8AD /* Preview Content */,
+				F7EF33052A0C9546008099B8 /* payload.json */,
 			);
 			path = ToDo;
 			sourceTree = "<group>";
@@ -150,6 +153,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F7EF33062A0C9546008099B8 /* payload.json in Resources */,
 				F7839B59292275DB008CB8AD /* Preview Assets.xcassets in Resources */,
 				F7839B56292275DB008CB8AD /* Assets.xcassets in Resources */,
 			);

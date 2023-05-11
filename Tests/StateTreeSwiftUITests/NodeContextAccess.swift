@@ -28,16 +28,17 @@ final class NodeContextAccess: XCTestCase {
 
   func test_routeAccess() async throws {
     await tree.once.behaviorsStarted()
-    let context = try TreeNode(scope: tree.assume.root)
-    XCTAssertEqual(55, context.$single?.v1)
-    XCTAssertEqual(nil, context.$union2.a?.v1)
-    XCTAssertEqual(55, context.$union2.b?.v1)
-    XCTAssertEqual(nil, context.$union3.a?.v1)
-    XCTAssertEqual(nil, context.$union3.b?.v1)
-    XCTAssertEqual(55, context.$union3.c?.v1)
-    XCTAssertEqual(55, context.$list[1].v1)
-    XCTAssertEqual(nil, context.$list.at(index: 100)?.v1)
-    XCTAssertNotNil(context.$union3.c?.$v1 is Binding<Int>)
+    let root = try tree.assume.rootNode
+
+    XCTAssertEqual(55, root.single?.v1)
+    XCTAssertEqual(nil, root.union2?.a?.v1)
+    XCTAssertEqual(55, try tree.assume.rootNode.union2?.b?.v1)
+    XCTAssertEqual(nil, try tree.assume.rootNode.union3?.a?.v1)
+    XCTAssertEqual(nil, try tree.assume.rootNode.union3?.b?.v1)
+    XCTAssertEqual(55, try tree.assume.rootNode.union3?.c?.v1)
+    XCTAssertEqual(55, try tree.assume.rootNode.list?[1].v1)
+    XCTAssertEqual(nil, try tree.assume.rootNode.list?.at(index: 100)?.v1)
+    XCTAssertNotNil(try tree.assume.rootNode.union3?.c?.$v1 is Binding<Int>)
   }
 }
 

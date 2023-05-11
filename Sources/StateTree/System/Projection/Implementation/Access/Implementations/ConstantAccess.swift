@@ -1,3 +1,5 @@
+import TreeActor
+
 /// An `Access` conformer which provides a constant value.
 ///
 /// > Warning: `Access.ConstantAccess` ignores value setter calls.

@@ -1,8 +1,8 @@
-import TreeState
+import Utilities
 
 // MARK: - FieldRecord
 
-struct FieldRecord: TreeState {
+struct FieldRecord: Codable {
 
   let id: FieldID
   var payload: FieldRecordPayload?
@@ -15,7 +15,7 @@ struct FieldRecord: TreeState {
 // MARK: - FieldRecordPayload
 
 /// The underlying representation of a ``Node`` field managed by StateTree.
-enum FieldRecordPayload: TreeState {
+enum FieldRecordPayload: Codable {
 
   /// `@Projection` (``Projection``) field on ``Node``.
   case projection(ProjectionSource)
@@ -24,34 +24,34 @@ enum FieldRecordPayload: TreeState {
   case route(RouteRecord)
 
   /// `@Value` (``Value``) field on a ``Node``.
-  case value(AnyTreeState)
+  case value(ValuePayload)
 
 }
 
 // MARK: - TypeDescription
 
-struct TypeDescription: TreeState {
+struct TypeDescription: Codable, Hashable {
   let description: String
 }
 
 // MARK: - ValueRecord
 
-struct ValueRecord: TreeState {
+struct ValueRecord: Codable, Hashable {
   let id: FieldID
-  let value: AnyTreeState
+  let value: ValuePayload
 }
 
 // MARK: - ProjectionSource
 
 /// The source of a `Projection` — used for dependency analysis.
-enum ProjectionSource: TreeState {
+public enum ProjectionSource: Codable, Hashable {
   case valueField(FieldID)
   case programmatic
   case invalid
 }
 
 extension FieldRecord {
-  func value() -> AnyTreeState? {
+  func value() -> ValuePayload? {
     if case .value(let valueRecord) = payload {
       return valueRecord
     }

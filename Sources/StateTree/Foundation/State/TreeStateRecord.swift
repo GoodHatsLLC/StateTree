@@ -1,12 +1,11 @@
 import Foundation
 import Intents
 import OrderedCollections
-import TreeState
 
 // MARK: - TreeStateRecord
 
 /// The full StateTree state at a moment in time.
-public struct TreeStateRecord: TreeState {
+public struct TreeStateRecord: Codable {
 
   // MARK: Lifecycle
 

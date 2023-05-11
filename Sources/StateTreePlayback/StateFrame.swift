@@ -6,7 +6,7 @@ import StateTree
 /// A snapshot of the StateTree at a moment in time
 ///
 /// `StateFrames` contain the `TreeStateRecord` state and metadata
-public struct StateFrame: TreeState, Identifiable {
+public struct StateFrame: Codable, Identifiable {
 
   // MARK: Lifecycle
 
@@ -18,7 +18,7 @@ public struct StateFrame: TreeState, Identifiable {
 
   // MARK: Public
 
-  public enum FrameData: TreeState {
+  public enum FrameData: Codable {
     case meta(TreeEvent)
     case update(TreeEvent, TreeStateRecord)
   }

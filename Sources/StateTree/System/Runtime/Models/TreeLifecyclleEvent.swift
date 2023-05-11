@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - TreeLifecycleEvent
-public enum TreeLifecycleEvent: TreeState, CustomStringConvertible {
+public enum TreeLifecycleEvent: Codable, CustomStringConvertible {
   public var description: String {
     switch self {
     case .started(let treeID):

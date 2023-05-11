@@ -14,7 +14,6 @@ public final class Tree<N: Node>: Identifiable {
 
   public init(
     root inputRoot: N,
-    from _: TreeStateRecord? = nil,
     dependencies: DependencyValues = .defaults,
     configuration: RuntimeConfiguration = .init()
   ) {
@@ -156,7 +155,7 @@ public final class Tree<N: Node>: Identifiable {
     /// > Note: This method is used as part of `StateTreePlayback` time travel debugging.
     @TreeActor
     public func restore(state: TreeStateRecord) throws {
-      try runtime.set(state: state)
+      try runtime.apply(state: state)
     }
 
     /// Save the current state of the tree.
@@ -246,6 +245,7 @@ public final class Tree<N: Node>: Identifiable {
       dependencies: dependencies,
       configuration: configuration
     )
+    defer { assert(runtime.checkConsistency()) }
     sessionSubject.value = Session(state: .created(runtime: runtime))
     do {
       let rootScope = try runtime.start(
@@ -315,14 +315,14 @@ public final class Tree<N: Node>: Identifiable {
 
   // MARK: Internal
 
-  struct Session: Equatable {
+  struct Session {
     let id = UUID()
     static var inactive: Session {
       .init(state: .inactive)
     }
 
     var state: State
-    enum State: Equatable {
+    enum State {
       case inactive
       case created(runtime: Runtime)
       case started(

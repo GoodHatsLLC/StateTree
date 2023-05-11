@@ -2,7 +2,7 @@ import StateTree
 
 // MARK: - Score
 
-public struct Score: TreeState {
+public struct Score: Codable, Hashable {
   public init(x: Int = 0, o: Int = 0) {
     self.x = x
     self.o = o
@@ -15,7 +15,7 @@ public struct Score: TreeState {
 
 // MARK: - GameResult
 
-public enum GameResult: TreeState {
+public enum GameResult: Codable, Hashable {
   case win(Player)
   case draw
 

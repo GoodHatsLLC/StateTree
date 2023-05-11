@@ -9,11 +9,15 @@ public struct InternalStateInconsistency: Error, CustomStringConvertible {
     self.state = state
     let scopeIDs = Set(scopes.map(\.nid))
     let nodeIDs = Set(state.nodeIDs)
+    self.scopeIDs = Array(scopeIDs)
+    self.nodeIDs = Array(nodeIDs)
     self.stateDiscrepancy = Array(nodeIDs.subtracting(scopeIDs))
     self.scopeDiscrepancy = Array(scopeIDs.subtracting(nodeIDs))
   }
 
   public let state: TreeStateRecord
+  public let scopeIDs: [NodeID]
+  public let nodeIDs: [NodeID]
   public let stateDiscrepancy: [NodeID]
   public let scopeDiscrepancy: [NodeID]
   public var description: String {
@@ -21,8 +25,9 @@ public struct InternalStateInconsistency: Error, CustomStringConvertible {
     StateTree inconsistency found between recorded state and runtime scopes.
     This should never happen.
 
-    - Node records without scopes: \(stateDiscrepancy)
-    - Scopes without node records: \(scopeDiscrepancy)
+    - Node records without scopes (\(stateDiscrepancy.count)/\(nodeIDs.count)): \(stateDiscrepancy)
+    - Scopes without node records (\(scopeDiscrepancy.count)/\(scopeIDs.count)): \(scopeDiscrepancy)
+    - State: \(state.formattedJSON)
     """
   }
 }
@@ -55,7 +60,15 @@ struct UnexpectedMemberTypeError: Error { }
 
 // MARK: - NodeNotFoundError
 
-struct NodeNotFoundError: Error { }
+struct NodeNotFoundError: Error {
+  let id: NodeID
+}
+
+// MARK: - NodesNotFoundError
+
+struct NodesNotFoundError: Error {
+  let ids: [NodeID]
+}
 
 // MARK: - RootNodeMissingError
 

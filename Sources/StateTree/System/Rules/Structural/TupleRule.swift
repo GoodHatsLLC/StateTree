@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - TupleRule
 @TreeActor
 public struct TupleRule<M1: Rules, M2: Rules>: Rules {

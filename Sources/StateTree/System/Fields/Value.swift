@@ -1,4 +1,4 @@
-import TreeState
+import TreeActor
 
 // MARK: - TreeValueAccess
 
@@ -17,11 +17,11 @@ struct TreeValue {
     try? runtime.getScope(for: id.nodeID)
   }
 
-  func getValue<T: TreeState>(as t: T.Type) -> T? {
+  func getValue<T: Codable & Hashable>(as t: T.Type) -> T? {
     runtime.getValue(field: id, as: t)
   }
 
-  func setValue(to newValue: some TreeState) {
+  func setValue(to newValue: some Codable & Hashable) {
     runtime.setValue(field: id, to: newValue)
   }
 }
@@ -29,16 +29,16 @@ struct TreeValue {
 // MARK: - ValueField
 
 protocol ValueField<WrappedValue> {
-  associatedtype WrappedValue: TreeState
+  associatedtype WrappedValue: Codable & Hashable
   var access: any TreeValueAccess { get }
-  var anyInitial: any TreeState { get }
+  var anyInitial: any Codable & Hashable { get }
   var initial: WrappedValue { get }
 }
 
 // MARK: - Value
 
 @propertyWrapper
-public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
+public struct Value<WrappedValue: Codable & Hashable>: ValueField, Accessor {
 
   // MARK: Lifecycle
 
@@ -48,6 +48,8 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
   }
 
   // MARK: Public
+
+  public typealias WrappedValue = WrappedValue
 
   @TreeActor public var wrappedValue: WrappedValue {
     get {
@@ -71,6 +73,27 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
     )
   }
 
+  public var value: WrappedValue {
+    get {
+      wrappedValue
+    }
+    nonmutating set {
+      wrappedValue = newValue
+    }
+  }
+
+  public var source: ProjectionSource {
+    if let id = inner.treeValue?.id {
+      return .valueField(id)
+    } else {
+      return .programmatic
+    }
+  }
+
+  public func isValid() -> Bool {
+    inner.treeValue != nil
+  }
+
   // MARK: Internal
 
   @TreeActor final class InnerValue: TreeValueAccess {
@@ -91,30 +114,9 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
 
   let initial: WrappedValue
 
-  var value: WrappedValue {
-    get {
-      wrappedValue
-    }
-    nonmutating set {
-      wrappedValue = newValue
-    }
-  }
-
-  var source: ProjectionSource {
-    if let id = inner.treeValue?.id {
-      return .valueField(id)
-    } else {
-      return .programmatic
-    }
-  }
-
   var access: any TreeValueAccess { inner }
-  var anyInitial: any TreeState {
+  var anyInitial: any Codable & Hashable {
     initial
-  }
-
-  func isValid() -> Bool {
-    inner.treeValue != nil
   }
 
 }

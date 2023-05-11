@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - RuleSet
 @TreeActor
 public struct RuleSet<R: Rules>: Rules {

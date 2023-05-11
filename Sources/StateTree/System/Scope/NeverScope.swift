@@ -146,6 +146,10 @@ struct NeverScope: ScopeType {
     assertionFailure("NeverScope should never be invoked")
   }
 
+  func disconnectSendingNotification() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
   func markDirty(pending _: ExternalRequirement) {
     assertionFailure("NeverScope should never be invoked")
   }

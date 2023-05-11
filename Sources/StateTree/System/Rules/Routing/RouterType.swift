@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - RouterType
 
 public protocol RouterType<Value>: Rules {

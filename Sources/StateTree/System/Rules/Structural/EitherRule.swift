@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - EitherRule
 @TreeActor
 public enum EitherRule<RA: Rules, RB: Rules>: Rules {

@@ -1,4 +1,4 @@
-import TreeState
+import TreeActor
 
 // MARK: - UpdateCollector
 

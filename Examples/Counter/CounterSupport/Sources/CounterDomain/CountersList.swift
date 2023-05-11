@@ -34,7 +34,7 @@ public struct CountersList: Node {
   }
 
   public func delete(counter id: Int) {
-    counterIDs.remove(at: id)
+    counterIDs.removeAll { $0 == id }
   }
 
   // MARK: Private

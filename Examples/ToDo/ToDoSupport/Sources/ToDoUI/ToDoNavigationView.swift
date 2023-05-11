@@ -2,6 +2,9 @@ import Foundation
 import StateTreeSwiftUI
 import SwiftUI
 import ToDoDomain
+import UIComponents
+
+// MARK: - ToDoNavigationView
 
 public struct ToDoNavigationView: View {
 
@@ -17,31 +20,47 @@ public struct ToDoNavigationView: View {
     NavigationSplitView(
       columnVisibility: $sidebarVisibility
     ) {
-      Text("Sidebar")
+      VStack {
+        TagView(manager: $todoManager)
+      }
     } content: {
-      List(todoManager.todos ?? []) { todo in
-        Text(todo.title)
+      List(
+        todoManager.todoList ?? [],
+        id: \.id,
+        selection: todoManager.$selectedRecord.binding()
+      ) { todo in
+        NavigationLink(todo.title, value: todo.id)
+          .strikethrough(todo.isCompleted)
       }
     } detail: {
-      Text("Detail")
+      if let selected = $todoManager.$selectedToDo {
+        SelectedToDoView(selected: selected)
+      } else {
+        EmptyView()
+      }
     }
     .navigationTitle(
       Text("ToDo")
     )
     .toolbar {
-      ToolbarItemGroup(placement: .primaryAction) {
+      ToolbarItemGroup {
+        Spacer()
+      }
+      ToolbarItemGroup {
         Button {
-          todoManager.createToDo(title: "Test")
+          todoManager.createToDo()
         } label: {
-          Label("Create", systemImage: "plus.app")
+          Label("Create", systemImage: "plus.square")
         }
-        Button { } label: {
+        Button {
+          if let id = todoManager.selectedRecord {
+            todoManager.deleteToDo(id: id)
+          }
+        } label: {
           Label("Delete", systemImage: "minus.square")
         }
+        .disabled(todoManager.selectedRecord == nil)
       }
-    }
-    .onAppear {
-      todoManager.reloadAll()
     }
   }
 

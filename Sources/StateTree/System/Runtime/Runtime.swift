@@ -3,6 +3,7 @@ import Emitter
 import Foundation
 import HeapModule
 import Intents
+import TreeActor
 import Utilities
 
 // MARK: - Runtime
@@ -88,15 +89,13 @@ extension Runtime {
     let scope = try initialized.connect()
     emitUpdates(events: [.tree(event: .started(treeID: treeID))])
     if let initialState {
-      let changes = try apply(state: initialState)
-      emitUpdates(events: changes)
+      try apply(state: initialState)
     } else {
       updateRoutedNodes(
         at: .system,
         to: .single(.init(id: scope.nid))
       )
     }
-
     return scope
   }
 
@@ -155,27 +154,6 @@ extension Runtime {
     stateEmpty && runtimeEmpty
   }
 
-  var isConsistent: Bool {
-    let stateIDs = state.nodeIDs
-    let scopeKeys = scopes.scopeIDs
-    let hasRootUnlessEmpty = (
-      state.rootNodeID != nil
-        || state.nodeIDs.isEmpty
-    )
-    let isConsistent = (
-      (stateIDs == scopeKeys)
-        && hasRootUnlessEmpty
-    )
-    assert(
-      isConsistent || isPerformingStateChange,
-      InternalStateInconsistency(
-        state: state.snapshot(),
-        scopes: scopes.scopes
-      ).description
-    )
-    return isConsistent
-  }
-
   var isActive: Bool {
     root?.isActive == true
   }
@@ -191,6 +169,33 @@ extension Runtime {
 
   var activeIntent: ActiveIntent<NodeID>? {
     state.activeIntent
+  }
+
+  func checkConsistency() -> Bool {
+    #if DEBUG
+    let stateIDs = state.nodeIDs.sorted()
+    let scopeKeys = scopes.scopeIDs.sorted()
+    let hasRootUnlessEmpty = (
+      state.rootNodeID != nil
+        || state.nodeIDs.isEmpty
+    )
+    let isConsistent = (
+      (stateIDs == scopeKeys)
+        && hasRootUnlessEmpty
+    )
+    if !(isConsistent || isPerformingStateChange) {
+      print(InternalStateInconsistency(
+        state: state.snapshot(),
+        scopes: scopes.scopes
+      ).description)
+    }
+    assert(
+      isConsistent || isPerformingStateChange
+    )
+    return isConsistent || isPerformingStateChange
+    #else
+    return true
+    #endif
   }
 
   func recordIntentScopeDependency(_ scopeID: NodeID) {
@@ -209,8 +214,6 @@ extension Runtime {
 // MARK: Public
 extension Runtime {
 
-  // MARK: Public
-
   public nonisolated var info: StateTreeInfo {
     StateTreeInfo(
       runtime: self,
@@ -224,7 +227,7 @@ extension Runtime {
       let nodeID = try state
         .getRoutedNodeID(at: routeID)
     else {
-      throw NodeNotFoundError()
+      throw NodeNotFoundError(id: routeID.nodeID)
     }
     return try getScope(for: nodeID)
   }
@@ -237,20 +240,9 @@ extension Runtime {
     {
       return scope
     } else {
-      throw NodeNotFoundError()
+      throw NodeNotFoundError(id: nodeID)
     }
   }
-
-  // MARK: Internal
-
-  func getNode(id: NodeID) -> (any Node)? {
-    nodeCache[id] ?? {
-      let node = try? getScope(for: id).node
-      nodeCache[id] = node
-      return node
-    }()
-  }
-
 }
 
 // MARK: Internal
@@ -277,7 +269,7 @@ extension Runtime {
   }
 
   func contains(_ scopeID: NodeID) -> Bool {
-    assert(isConsistent)
+    assert(checkConsistency())
     return scopes.contains(scopeID)
   }
 
@@ -304,7 +296,7 @@ extension Runtime {
         error.localizedDescription
       )
     }
-    assert(isConsistent)
+    assert(checkConsistency())
     return value
   }
 
@@ -374,11 +366,11 @@ extension Runtime {
       }
   }
 
-  func getValue<T: TreeState>(field: FieldID, as type: T.Type) -> T? {
+  func getValue<T: Codable & Hashable>(field: FieldID, as type: T.Type) -> T? {
     state.getValue(field, as: type)
   }
 
-  func setValue(field: FieldID, to newValue: some TreeState) {
+  func setValue(field: FieldID, to newValue: some Codable & Hashable) {
     transaction {
       if
         state.setValue(
@@ -397,11 +389,6 @@ extension Runtime {
 
   func ancestors(of nodeID: NodeID) -> [NodeID]? {
     state.ancestors(of: nodeID)
-  }
-
-  func set(state newState: TreeStateRecord) throws {
-    let events = try apply(state: newState)
-    emitUpdates(events: events)
   }
 
   // MARK: Private
@@ -437,9 +424,11 @@ extension Runtime {
           assert(scope?.isActive == true)
           scope?.sendUpdateEvent()
         case .stop(let id, _):
-          // The node has already been removed, and its parent
-          // has been notified to update.
-          assert(scopes.getScope(for: id)?.isActive == false || scopes.getScope(for: id) == nil)
+          /// The scope has been stopped but not disconnected.
+          /// External consumers have not yet been notified.
+          let scope = scopes.getScope(for: id)
+          assert(scope != nil || changeManager is StateApplier)
+          scope?.disconnectSendingNotification()
         }
       }
     }
@@ -452,6 +441,39 @@ extension Runtime {
 
 // MARK: Private implementation
 extension Runtime {
+
+  // MARK: Internal
+
+  func apply(
+    state newState: TreeStateRecord
+  ) throws {
+    guard
+      transactionCount == 0,
+      updates == .none
+    else {
+      throw InTransactionError()
+    }
+    transactionCount += 1
+    let applier = StateApplier(
+      state: state,
+      scopes: scopes
+    )
+    changeManager = applier
+    defer {
+      assert(updates == .none)
+      assert(checkConsistency())
+      transactionCount -= 1
+      changeManager = nil
+    }
+    let updateInfo = try applier.apply(
+      state: newState
+    )
+    updateStats = updateStats.merged(with: updateInfo.stats)
+    let changes: [TreeEvent] = updateInfo.events.map { .node(event: $0) }
+    emitUpdates(events: changes)
+  }
+
+  // MARK: Private
 
   private func register(changes: TreeChanges) {
     if let changeManager {
@@ -474,36 +496,6 @@ extension Runtime {
     changeManager = updater
     defer { changeManager = nil }
     let updateInfo = try updater.flush()
-    updateStats = updateStats.merged(with: updateInfo.stats)
-    return updateInfo.events.map { .node(event: $0) }
-  }
-
-  private func apply(
-    state newState: TreeStateRecord
-  ) throws
-    -> [TreeEvent]
-  {
-    guard
-      transactionCount == 0,
-      updates == .none
-    else {
-      throw InTransactionError()
-    }
-    transactionCount += 1
-    let applier = StateApplier(
-      state: state,
-      scopes: scopes
-    )
-    changeManager = applier
-    defer {
-      assert(updates == .none)
-      assert(isConsistent)
-      transactionCount -= 1
-      changeManager = nil
-    }
-    let updateInfo = try applier.apply(
-      state: newState
-    )
     updateStats = updateStats.merged(with: updateInfo.stats)
     return updateInfo.events.map { .node(event: $0) }
   }

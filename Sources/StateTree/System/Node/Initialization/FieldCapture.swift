@@ -1,4 +1,4 @@
-import TreeState
+import Utilities
 
 enum FieldCapture: Equatable {
 
@@ -90,10 +90,10 @@ enum FieldCapture: Equatable {
     }
   }
 
-  struct InitialValue: Equatable {
-    let anyTreeState: AnyTreeState
+  struct InitialValue {
+    let anyPayload: ValuePayload
     init(valueField: any ValueField) {
-      self.anyTreeState = AnyTreeState(valueField.anyInitial)
+      self.anyPayload = try! ValuePayload(valueField.anyInitial)
     }
   }
 

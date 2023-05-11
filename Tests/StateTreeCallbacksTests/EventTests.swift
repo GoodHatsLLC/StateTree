@@ -1,5 +1,6 @@
 import Disposable
 import SwiftUI
+import TreeActor
 import XCTest
 @_spi(Implementation) @testable import StateTree
 @_spi(Implementation) @testable import StateTreeCallbacks

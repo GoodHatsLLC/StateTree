@@ -1,9 +1,9 @@
 @_spi(Implementation) import StateTree
 import SwiftUI
+import TreeActor
 
 // MARK: - NodeAccess
 
-@MainActor
 @dynamicMemberLookup
 public protocol NodeAccess<N> {
   associatedtype N: Node
@@ -12,6 +12,7 @@ public protocol NodeAccess<N> {
 
 extension NodeAccess {
 
+  @TreeActor
   public subscript<R: SingleRouterType>(dynamicMember dynamicMember: KeyPath<N, Route<R>>)
     -> TreeNode<R.Value>? where R.Value: Node
   {
@@ -23,6 +24,7 @@ extension NodeAccess {
     nonmutating set { }
   }
 
+  @TreeActor
   public subscript<
     A: Node,
     B: Node
@@ -36,6 +38,7 @@ extension NodeAccess {
     nonmutating set { }
   }
 
+  @TreeActor
   public subscript<
     A: Node,
     B: Node,
@@ -50,6 +53,7 @@ extension NodeAccess {
     nonmutating set { }
   }
 
+  @TreeActor
   public subscript<Child: Node>(dynamicMember dynamicMember: KeyPath<N, Route<ListRouter<Child>>>)
     -> ListRouterAccess<Child>
   {
@@ -60,6 +64,7 @@ extension NodeAccess {
     nonmutating set { }
   }
 
+  @TreeActor
   public subscript<T>(dynamicMember dynamicMember: KeyPath<N, Projection<T>>) -> Binding<T> {
     get {
       scope.node[keyPath: dynamicMember].binding()
@@ -67,16 +72,14 @@ extension NodeAccess {
     nonmutating set { }
   }
 
-  public subscript<T>(dynamicMember dynamicMember: WritableKeyPath<N, T>) -> T {
-    get {
+  public subscript<T>(dynamicMember dynamicMember: WritableKeyPath<N, T>) -> Binding<T> {
+    Binding {
       scope.node[keyPath: dynamicMember]
-    }
-    nonmutating set {
+    } set: { value in
       // This copy avoids an exclusive access error as the eventual
       // update calls use node.rules.
       var node = scope.node
-      node[keyPath: dynamicMember] = newValue
-//      scope.node = node
+      node[keyPath: dynamicMember] = value
     }
   }
 

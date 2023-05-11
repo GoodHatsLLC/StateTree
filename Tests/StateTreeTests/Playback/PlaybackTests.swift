@@ -55,8 +55,8 @@ final class PlaybackTests: XCTestCase {
     XCTAssertNotNil(try restartTree.assume.rootNode.subRoute)
     XCTAssertEqual(try restartTree.assume.rootNode.subRoute?.value, -2)
     XCTAssertEqual(try restartTree.assume.rootNode.subRoute?.subValue, 123)
-    XCTAssertEqual(replayedState, laterState)
-    XCTAssertNotEqual(replayedState, initialState)
+    XCTAssertEqual(replayedState.formattedJSON, laterState.formattedJSON)
+    XCTAssertNotEqual(replayedState.formattedJSON, initialState.formattedJSON)
     stage.reset()
   }
 
@@ -89,12 +89,12 @@ final class PlaybackTests: XCTestCase {
     XCTAssertEqual(try tree.assume.rootNode.subRoute?.subSubRoute?.value, -2)
 
     let recapture = try tree.assume.snapshot()
-    XCTAssertEqual(laterState, recapture)
+    XCTAssertEqual(laterState.formattedJSON, recapture.formattedJSON)
 
     try tree.assume.rootNode.routeIfNegative = -3
     let finalRecapture = try tree.assume.snapshot()
 
-    XCTAssertEqual(finalState, finalRecapture)
+    XCTAssertEqual(finalState.formattedJSON, finalRecapture.formattedJSON)
     stage.reset()
   }
 

@@ -1,8 +1,8 @@
-import TreeState
+
 // MARK: - MemberType
 
 /// The type of a``Node`` fields managed by StateTree are one of these types.
-enum FieldType: TreeState, CaseIterable, LosslessStringConvertible {
+enum FieldType: Codable, CaseIterable, LosslessStringConvertible {
 
   /// `@Dependency` (``Dependency``)  field on ``Node``.
   case dependency

@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - AnyInitializedNode
 
 struct AnyInitializedNode {

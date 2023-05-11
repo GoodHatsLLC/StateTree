@@ -18,7 +18,10 @@ let package = Package(
   ],
   dependencies: [
     .package(name: "StateTree", path: "../../../"),
-    .package(url: "https://github.com/groue/GRDB.swift.git", .upToNextMinor(from: "6.11.0")),
+    .package(
+      url: "https://github.com/apple/swift-collections.git",
+      branch: "release/1.1"
+    ),
   ],
   targets: [
     .target(
@@ -26,6 +29,7 @@ let package = Package(
       dependencies: [
         "ToDoDomain",
         .product(name: "StateTreeSwiftUI", package: "StateTree"),
+        .product(name: "OrderedCollections", package: "swift-collections"),
         "UIComponents",
       ],
       swiftSettings: [
@@ -40,7 +44,6 @@ let package = Package(
       name: "ToDoDomain",
       dependencies: [
         .product(name: "StateTree", package: "StateTree"),
-        .product(name: "GRDB", package: "GRDB.swift"),
       ],
       swiftSettings: [
         .enableUpcomingFeature("ConciseMagicFile"),
@@ -59,10 +62,6 @@ let package = Package(
         .enableUpcomingFeature("ImplicitOpenExistentials"),
         .enableUpcomingFeature("BareSlashRegexLiterals"),
       ]
-    ),
-    .testTarget(
-      name: "ToDoDomainTests",
-      dependencies: ["ToDoDomain", "StateTree"]
     ),
   ]
 )

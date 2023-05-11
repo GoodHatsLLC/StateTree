@@ -1,12 +1,12 @@
 import Emitter
 import Foundation
 import TreeActor
-import TreeState
+
 @_spi(Implementation) import Utilities
 
 // MARK: - BehaviorEvent
 
-public enum BehaviorEvent: TreeState, CustomStringConvertible {
+public enum BehaviorEvent: Codable, CustomStringConvertible {
   public var description: String {
     switch self {
     case .created(let behaviorID):

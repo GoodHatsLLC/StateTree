@@ -1,6 +1,5 @@
 // MARK: - Inject
 
-@TreeActor
 public struct Inject<R: Rules>: Rules {
 
   // MARK: Lifecycle

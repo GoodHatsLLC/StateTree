@@ -3,6 +3,7 @@ import Emitter
 import Foundation
 @_spi(Implementation) import StateTree
 import SwiftUI
+import TreeActor
 import Utilities
 
 // MARK: - ReportedTree

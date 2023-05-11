@@ -2,6 +2,7 @@ import Behavior
 import Disposable
 import StateTree
 import StateTreePlayback
+import TreeActor
 import Utilities
 import XCTest
 

@@ -75,7 +75,7 @@ final class Union2RouteTests: XCTestCase {
 
 extension Union2RouteTests {
 
-  enum Model: TreeState {
+  enum Model: Codable {
     case a
     case b
   }

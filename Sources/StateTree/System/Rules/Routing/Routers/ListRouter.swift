@@ -1,5 +1,6 @@
 import Disposable
 import OrderedCollections
+import TreeActor
 @_spi(Implementation) import Utilities
 
 // MARK: - ListRouter
@@ -32,7 +33,9 @@ extension ListRouter: RouterType {
     }
     return list.nodeIDs
       .compactMap { id in
-        runtime.getNode(id: id) as? N
+        let node = try? runtime.getScope(for: id).node as? N
+        assert(node?.cuid == id.cuid)
+        return node
       }
   }
 
@@ -85,21 +88,29 @@ extension ListRouter: RouterType {
       .updateRoutedNodes(at: fieldID, to: .list(nil))
   }
 
-  /// FIXME: ordering is lost
   @TreeActor
   public mutating func updateRule(
     from new: ListRouter<N>,
     with context: RuleContext
   ) throws {
-    let currentScopes = context.scope.childScopes.indexed(by: \.cuid)
+    let currentlyRouted = context.runtime.getRoutedNodeSet(at: fieldID)?.ids ?? []
+    let currentScopes = currentlyRouted.compactMap { id in
+      let scope = try? context.runtime.getScope(for: id)
+      assert(scope != nil)
+      return scope
+    }.indexed(by: \.cuid)
     let captures = new.capture()
 
     let scopes: [AnyScope] = try captures.compactMap { capture -> AnyScope? in
-      guard let id = capture.cuid
+      guard let cuid = capture.cuid
       else {
         return nil
       }
-      if let scope = currentScopes[id] {
+      if let scope = currentScopes[cuid] {
+//        scope.node = capture.anyNode
+        if scope.node.cuid != cuid {
+          scope.node = capture.anyNode
+        }
         return scope
       } else {
         return try UninitializedNode(
@@ -112,7 +123,7 @@ extension ListRouter: RouterType {
           dependencies: context.dependencies,
           on: .init(
             fieldID: fieldID,
-            identity: id,
+            identity: cuid,
             type: .list
           )
         ).connect().erase()

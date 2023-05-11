@@ -16,7 +16,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
     @ViewBuilder rootViewBuilder: @escaping (_ node: TreeNode<Root>) -> NodeView
   ) {
     self.rootViewBuilder = rootViewBuilder
-    let tree = root.tree()
+    let tree = root.tree
     _tree = .init(wrappedValue: tree)
     let recorder = Recorder(tree: tree)
     do {

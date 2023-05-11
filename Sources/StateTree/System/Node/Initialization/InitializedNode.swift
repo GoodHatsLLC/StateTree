@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - InitializedNode
 
 struct InitializedNode<N: Node>: Hashable, Identifiable {

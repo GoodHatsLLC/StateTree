@@ -1,5 +1,3 @@
-import TreeState
-
 // MARK: - Projection + Sequence
 
 extension Projection: Sequence
