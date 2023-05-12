@@ -26,7 +26,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Input, Output>.SyncFunc.NonThrowing
+    subscribe: @escaping (_ input: Input) -> Output
   ) -> SyncSingle<Input, Output, Never> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "sync-single"),
@@ -47,16 +47,16 @@ extension Behaviors {
   ///
   /// > Tip: The behavior is not executed and can be passed to other consumers.
   @TreeActor
-  public static func make<Void, Output>(
+  public static func make<Output>(
     _ id: BehaviorID? = nil,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Void, Output>.SyncFunc.NonThrowing
+    subscribe: @escaping () -> Output
   ) -> SyncSingle<Void, Output, Never> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "sync-single"),
-      subscribeFunc: subscribe
+      subscribeFunc: { _ in subscribe() }
     )
   }
 
@@ -81,7 +81,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Input, Output>.SyncFunc.Throwing
+    subscribe: @escaping (_ input: Input) throws -> Output
   ) -> SyncSingle<Input, Output, any Error> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "sync-single-throws"),
@@ -104,16 +104,16 @@ extension Behaviors {
   ///
   /// > Tip: The behavior is not executed and can be passed to other consumers.
   @TreeActor
-  public static func make<Void, Output>(
+  public static func make<Output>(
     _ id: BehaviorID? = nil,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Void, Output>.SyncFunc.Throwing
+    subscribe: @escaping () throws -> Output
   ) -> SyncSingle<Void, Output, any Error> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "sync-single-throws"),
-      subscribeFunc: subscribe
+      subscribeFunc: { _ in try subscribe() }
     )
   }
 }
@@ -141,7 +141,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Input, Output>.AsyncFunc.NonThrowing
+    subscribe: @escaping (_ input: Input) async -> Output
   ) -> AsyncSingle<Input, Output, Never> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "async-single"),
@@ -159,16 +159,16 @@ extension Behaviors {
   /// - Returns: A ``Behaviors/Behaviors/AsyncSingle`` asynchronously emitting an `Output` value.
   ///
   /// > Tip: The behavior is not executed and can be passed to other consumers.
-  public static func make<Void, Output>(
+  public static func make<Output>(
     _ id: BehaviorID? = nil,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Void, Output>.AsyncFunc.NonThrowing
+    subscribe: @escaping () async -> Output
   ) -> AsyncSingle<Void, Output, Never> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "async-single"),
-      subscribeFunc: subscribe
+      subscribeFunc: { _ in await subscribe() }
     )
   }
 
@@ -192,7 +192,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Input, Output>.AsyncFunc.Throwing
+    subscribe: @escaping (_ input: Input) async throws -> Output
   ) -> AsyncSingle<Input, Output, any Error> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "async-single-throws"),
@@ -212,16 +212,16 @@ extension Behaviors {
   /// asynchronously emitting an `Output` value, or failing with an `any Error`.
   ///
   /// > Tip: The behavior is not executed and can be passed to other consumers.
-  public static func make<Void, Output>(
+  public static func make<Output>(
     _ id: BehaviorID? = nil,
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Void, Output>.AsyncFunc.Throwing
+    subscribe: @escaping () async throws -> Output
   ) -> AsyncSingle<Void, Output, any Error> {
     .init(
       id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "async-single-throws"),
-      subscribeFunc: subscribe
+      subscribeFunc: { _ in try await subscribe() }
     )
   }
 }
@@ -252,7 +252,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Input, Seq.Element>.StreamFunc.Concrete<Seq>
+    subscribe: @escaping (_ input: Input) async -> Seq
   ) -> Stream<Input, Seq.Element, Error> {
     let id = id ?? .meta(
       moduleFile: moduleFile,
@@ -283,7 +283,7 @@ extension Behaviors {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    subscribe: @escaping Make<Void, Seq.Element>.StreamFunc.Concrete<Seq>
+    subscribe: @escaping () async -> Seq
   ) -> Stream<Void, Seq.Element, Error> {
     let id = id ?? .meta(
       moduleFile: moduleFile,
@@ -291,7 +291,7 @@ extension Behaviors {
       column: column,
       meta: "stream-asyncfunc"
     )
-    return .init(id, subscribeFunc: subscribe)
+    return .init(id, subscribeFunc: { _ in await subscribe() })
   }
 
   /// **Convenience:* Make a `Stream<Input, Output>` behavior from an `Emitter`.
@@ -412,7 +412,7 @@ extension Behaviors {
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
   /// > Tip: The `Behavior` is not executed and can be passed to other consumers.
-  public static func make<Void, Output>(
+  public static func make<Output>(
     _ id: BehaviorID? = nil,
     moduleFile: String = #file,
     line: Int = #line,
@@ -480,7 +480,7 @@ extension Behaviors {
   /// of `Output` values before finishing successfully or failing with `any Error`.
   ///
   /// > Tip: The behavior is not executed and can be passed to other consumers.
-  public static func make<Void, Output>(
+  public static func make<Output>(
     _ id: BehaviorID? = nil,
     moduleFile: String = #file,
     line: Int = #line,
