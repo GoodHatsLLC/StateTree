@@ -274,6 +274,7 @@ public struct Route<Router: RouterType>: RouteField {
     )
   }
 
+  /// TODO: replace this with a data oriented list routing.
   @TreeActor
   public func route<N: Node>(to nodes: [N]) -> some Rules
     where N: Identifiable, Router == ListRouter<N>
