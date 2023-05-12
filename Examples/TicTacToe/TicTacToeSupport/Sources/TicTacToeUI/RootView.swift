@@ -8,9 +8,9 @@ struct RootView: View {
 
   var body: some View {
     VStack(alignment: .center, spacing: 2.su) {
-      if let gameInfo = $model.$loggedIn {
+      if let gameInfo = $model.$gameOrSignIn.a {
         LoggedInView(model: gameInfo)
-      } else if let loggedOut = $model.$loggedOut {
+      } else if let loggedOut = $model.$gameOrSignIn.b {
         LoggedOutView(model: loggedOut)
       }
     }

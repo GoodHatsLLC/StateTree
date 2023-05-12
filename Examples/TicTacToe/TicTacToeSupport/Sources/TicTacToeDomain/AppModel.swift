@@ -5,21 +5,24 @@ public struct AppModel: Node {
 
   public nonisolated init() { }
 
-  @Value var authentication: Authentication?
-  @Route(GameInfoModel.self) public var loggedIn
-  @Route(UnauthenticatedModel.self) public var loggedOut
+  @Value private var authentication: Authentication?
+  @Route(GameInfoModel.self, UnauthenticatedModel.self) public var gameOrSignIn
 
   public var rules: some Rules {
     if let auth = $authentication.compact() {
-      $loggedIn.route {
-        GameInfoModel(authentication: auth) {
-          authentication = nil
-        }
+      $gameOrSignIn.route {
+        .a(
+          GameInfoModel(authentication: auth) {
+            authentication = nil
+          }
+        )
       }
     } else {
-      $loggedOut.route {
-        UnauthenticatedModel(
-          authentication: $authentication
+      $gameOrSignIn.route {
+        .b(
+          UnauthenticatedModel(
+            authentication: $authentication
+          )
         )
       }
     }
