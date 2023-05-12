@@ -1,8 +1,8 @@
 import StateTree
 
-// MARK: - UnauthenticatedModel
+// MARK: - UnauthenticatedNode
 
-public struct UnauthenticatedModel: Node {
+public struct UnauthenticatedNode: Node {
 
   // MARK: Lifecycle
 
@@ -25,7 +25,7 @@ public struct UnauthenticatedModel: Node {
     isLoading = true
 
     $scope
-      .action {
+      .action(.id("auth")) {
         try await authClient
           .auth(
             playerX: playerX,

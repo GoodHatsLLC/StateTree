@@ -3,7 +3,7 @@ final class StoredAccess<Value>: Accessor {
 
   // MARK: Lifecycle
 
-  init(_ value: Value) {
+  nonisolated init(_ value: Value) {
     self.value = value
   }
 

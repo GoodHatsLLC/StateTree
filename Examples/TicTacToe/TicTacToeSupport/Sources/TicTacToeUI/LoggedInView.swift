@@ -16,7 +16,7 @@ struct LoggedInView: View {
     }
   }
 
-  @TreeNode var model: GameInfoModel
+  @TreeNode var model: GameInfoNode
 
 }
 
@@ -24,7 +24,7 @@ struct LoggedInView: View {
 
 struct LoggedInView_Previews: PreviewProvider {
 
-  @PreviewNode static var gameInfo = GameInfoModel(
+  @PreviewNode static var gameInfo = GameInfoNode(
     authentication: .stored(
       .init(
         playerX: "one",

@@ -8,7 +8,7 @@ struct LoggedOutView: View {
 
   // MARK: Internal
 
-  @TreeNode var model: UnauthenticatedModel
+  @TreeNode var model: UnauthenticatedNode
 
   @State var playerX = ""
   @State var playerO = ""
@@ -101,7 +101,7 @@ struct LoggedOutView: View {
 
 struct LoggedOut_Previews: PreviewProvider {
 
-  @PreviewNode static var root = UnauthenticatedModel(
+  @PreviewNode static var root = UnauthenticatedNode(
     authentication: .stored(
       Authentication(
         playerX: "one",

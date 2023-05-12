@@ -1,18 +1,18 @@
 import Foundation
 import StateTree
 
-public struct AppModel: Node {
+public struct AppNode: Node {
 
   public nonisolated init() { }
 
   @Value private var authentication: Authentication?
-  @Route(GameInfoModel.self, UnauthenticatedModel.self) public var gameOrSignIn
+  @Route(GameInfoNode.self, UnauthenticatedNode.self) public var gameOrSignIn
 
   public var rules: some Rules {
     if let auth = $authentication.compact() {
       $gameOrSignIn.route {
         .a(
-          GameInfoModel(authentication: auth) {
+          GameInfoNode(authentication: auth) {
             authentication = nil
           }
         )
@@ -20,7 +20,7 @@ public struct AppModel: Node {
     } else {
       $gameOrSignIn.route {
         .b(
-          UnauthenticatedModel(
+          UnauthenticatedNode(
             authentication: $authentication
           )
         )

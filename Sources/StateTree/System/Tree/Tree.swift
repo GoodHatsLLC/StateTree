@@ -6,13 +6,47 @@ import Intents
 import TreeActor
 import Utilities
 
+// MARK: - TreeType
+
+public protocol TreeType: Identifiable {
+  @TreeActor @discardableResult
+  func stop() throws -> Result<TreeStateRecord, TreeError>
+  var behaviorTracker: BehaviorTracker { get }
+  var isActive: Bool { get }
+  var id: UUID { get }
+}
+
+extension TreeType {
+  @TreeActor
+  public func stopIfActive() {
+    _ = try? stop()
+  }
+}
+
 // MARK: - Tree
 
-public final class Tree<N: Node>: Identifiable {
+public final class Tree<N: Node>: TreeType, Identifiable {
 
   // MARK: Lifecycle
 
-  public init(
+  public convenience nonisolated init(
+    root: N,
+    dependencies: DependencyValues = .defaults,
+    interceptors: [BehaviorInterceptor] = []
+  ) {
+    self.init(
+      root: root,
+      dependencies: dependencies,
+      configuration: .init(
+        behaviorTracker: .init(
+          tracking: .defaults,
+          behaviorInterceptors: interceptors
+        )
+      )
+    )
+  }
+
+  private nonisolated init(
     root inputRoot: N,
     dependencies: DependencyValues = .defaults,
     configuration: RuntimeConfiguration = .init()
@@ -223,6 +257,10 @@ public final class Tree<N: Node>: Identifiable {
     }
   }
 
+  public var behaviorTracker: BehaviorTracker {
+    configuration.behaviorTracker
+  }
+
   /// Start the tree.
   ///
   /// - Parameters:
@@ -265,6 +303,11 @@ public final class Tree<N: Node>: Identifiable {
       sessionSubject.value.state = .ended(result: .failure(error))
       throw error
     }
+  }
+
+  @TreeActor
+  public func startIfPossible() {
+    _ = try? start()
   }
 
   /// Stop the tree.

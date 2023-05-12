@@ -14,6 +14,20 @@ public struct BehaviorInterceptor {
     self.handler = BehaviorInterceptionHandler<B>(id: id, filter: filter, subscriber: subscriber)
   }
 
+  public init<B: BehaviorType>(
+    id: BehaviorID,
+    behavior: B,
+    filter: @escaping @Sendable (_ input: B.Input) -> Bool = { _ in true }
+  ) {
+    self.id = id
+    self
+      .handler = BehaviorInterceptionHandler<B>(
+        id: id,
+        filter: filter,
+        subscriber: behavior.subscriber
+      )
+  }
+
   // MARK: Internal
 
   let id: BehaviorID

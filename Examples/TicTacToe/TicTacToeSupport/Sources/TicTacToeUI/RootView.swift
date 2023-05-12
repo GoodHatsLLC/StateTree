@@ -16,7 +16,7 @@ struct RootView: View {
     }
   }
 
-  @TreeNode var model: AppModel
+  @TreeNode var model: AppNode
 
 }
 
@@ -24,7 +24,7 @@ struct RootView: View {
 
 struct RootView_Previews: PreviewProvider {
 
-  @PreviewNode static var root = AppModel()
+  @PreviewNode static var root = AppNode()
 
   static var previews: some View {
     RootView(model: $root)

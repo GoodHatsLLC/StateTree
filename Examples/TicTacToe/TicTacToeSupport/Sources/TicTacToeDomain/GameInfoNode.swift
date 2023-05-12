@@ -1,9 +1,9 @@
 import Foundation
 import StateTree
 
-// MARK: - GameInfoModel
+// MARK: - GameInfoNode
 
-public struct GameInfoModel: Node {
+public struct GameInfoNode: Node {
 
   // MARK: Lifecycle
 
@@ -17,13 +17,13 @@ public struct GameInfoModel: Node {
 
   // MARK: Public
 
-  @Route(GameModel.self) public var game
+  @Route(GameNode.self) public var game
   @Value public private(set) var lastResult: GameResult? = nil
 
   public var rules: some Rules {
     if let player = $activePlayer.compact() {
       $game.route {
-        GameModel(
+        GameNode(
           currentPlayer: player,
           finishHandler: finishHandler(result:)
         )
@@ -50,7 +50,7 @@ public struct GameInfoModel: Node {
 
 }
 
-extension GameInfoModel {
+extension GameInfoNode {
 
   // MARK: Public
 

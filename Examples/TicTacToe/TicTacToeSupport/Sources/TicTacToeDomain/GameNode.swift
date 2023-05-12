@@ -3,7 +3,7 @@ import StateTree
 
 // MARK: - GameModel
 
-public struct GameModel: Node {
+public struct GameNode: Node {
 
   // MARK: Lifecycle
 

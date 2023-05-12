@@ -12,13 +12,11 @@ final class StateUpdater: ChangeManager {
   nonisolated init(
     changes: TreeChanges,
     state: StateStorage,
-    scopes: ScopeStorage,
-    userError: RuntimeConfiguration.ErrorHandler
+    scopes: ScopeStorage
   ) {
     self.state = state
     self.scopes = scopes
     self.stagedChanges = changes
-    self.userError = userError
   }
 
   // MARK: Internal
@@ -48,7 +46,6 @@ final class StateUpdater: ChangeManager {
 
   // MARK: Private
 
-  private let userError: RuntimeConfiguration.ErrorHandler
   private let state: StateStorage
   private let scopes: ScopeStorage
 

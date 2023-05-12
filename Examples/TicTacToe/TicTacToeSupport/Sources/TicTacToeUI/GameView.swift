@@ -6,7 +6,7 @@ import TicTacToeDomain
 
 struct GameView: View {
 
-  @TreeNode var model: GameModel
+  @TreeNode var model: GameNode
 
   var body: some View {
     VStack {
@@ -60,7 +60,7 @@ extension Player {
 
 struct GameView_Previews: PreviewProvider {
 
-  @PreviewNode static var gameInfo = GameModel(
+  @PreviewNode static var gameInfo = GameNode(
     currentPlayer: .stored(.O),
     finishHandler: { _ in }
   )

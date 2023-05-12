@@ -391,6 +391,35 @@ extension Runtime {
     state.ancestors(of: nodeID)
   }
 
+  func apply(
+    state newState: TreeStateRecord
+  ) throws {
+    guard
+      transactionCount == 0,
+      updates == .none
+    else {
+      throw InTransactionError()
+    }
+    transactionCount += 1
+    let applier = StateApplier(
+      state: state,
+      scopes: scopes
+    )
+    changeManager = applier
+    defer {
+      assert(updates == .none)
+      assert(checkConsistency())
+      transactionCount -= 1
+      changeManager = nil
+    }
+    let updateInfo = try applier.apply(
+      state: newState
+    )
+    updateStats = updateStats.merged(with: updateInfo.stats)
+    let changes: [TreeEvent] = updateInfo.events.map { .node(event: $0) }
+    emitUpdates(events: changes)
+  }
+
   // MARK: Private
 
   private func emitUpdates(events: [TreeEvent]) {
@@ -442,39 +471,6 @@ extension Runtime {
 // MARK: Private implementation
 extension Runtime {
 
-  // MARK: Internal
-
-  func apply(
-    state newState: TreeStateRecord
-  ) throws {
-    guard
-      transactionCount == 0,
-      updates == .none
-    else {
-      throw InTransactionError()
-    }
-    transactionCount += 1
-    let applier = StateApplier(
-      state: state,
-      scopes: scopes
-    )
-    changeManager = applier
-    defer {
-      assert(updates == .none)
-      assert(checkConsistency())
-      transactionCount -= 1
-      changeManager = nil
-    }
-    let updateInfo = try applier.apply(
-      state: newState
-    )
-    updateStats = updateStats.merged(with: updateInfo.stats)
-    let changes: [TreeEvent] = updateInfo.events.map { .node(event: $0) }
-    emitUpdates(events: changes)
-  }
-
-  // MARK: Private
-
   private func register(changes: TreeChanges) {
     if let changeManager {
       changeManager.flush(dependentChanges: changes)
@@ -490,8 +486,7 @@ extension Runtime {
     let updater = StateUpdater(
       changes: updates.take(),
       state: state,
-      scopes: scopes,
-      userError: configuration.userError
+      scopes: scopes
     )
     changeManager = updater
     defer { changeManager = nil }

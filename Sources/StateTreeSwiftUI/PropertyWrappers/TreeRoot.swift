@@ -10,9 +10,10 @@ public struct TreeRoot<NodeType: Node>: DynamicProperty {
 
   public init(
     state: TreeStateRecord,
-    rootNode: NodeType
+    rootNode: NodeType,
+    dependencies: DependencyValues = .defaults
   ) {
-    let tree = Tree(root: rootNode, dependencies: .defaults, configuration: .init())
+    let tree = Tree(root: rootNode, dependencies: dependencies)
     do {
       let handle = try tree.start(from: state).autostop()
       _handle = .init(wrappedValue: handle)
@@ -31,7 +32,7 @@ public struct TreeRoot<NodeType: Node>: DynamicProperty {
   public init(
     wrappedValue: NodeType
   ) {
-    let tree = Tree(root: wrappedValue, dependencies: .defaults, configuration: .init())
+    let tree = Tree(root: wrappedValue, dependencies: .defaults)
     do {
       let handle = try tree.start().autostop()
       _handle = .init(wrappedValue: handle)
