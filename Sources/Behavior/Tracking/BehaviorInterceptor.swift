@@ -16,7 +16,7 @@ public struct BehaviorInterceptor {
 
   public init<B: BehaviorType>(
     id: BehaviorID,
-    behavior: B,
+    replacement: B,
     filter: @escaping @Sendable (_ input: B.Input) -> Bool = { _ in true }
   ) {
     self.id = id
@@ -24,7 +24,7 @@ public struct BehaviorInterceptor {
       .handler = BehaviorInterceptionHandler<B>(
         id: id,
         filter: filter,
-        subscriber: behavior.subscriber
+        subscriber: replacement.subscriber
       )
   }
 
