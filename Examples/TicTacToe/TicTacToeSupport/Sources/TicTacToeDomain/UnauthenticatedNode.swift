@@ -32,11 +32,11 @@ public struct UnauthenticatedNode: Node {
             playerO: playerO,
             password: password
           )
-      } success: { auth in
+      } onSuccess: { auth in
         shouldHint = false
         authentication = auth
         isLoading = false
-      } failure: { _ in
+      } onFailure: { _ in
         shouldHint = true
         isLoading = false
       }

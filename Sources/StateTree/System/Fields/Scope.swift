@@ -105,9 +105,9 @@ extension Scope {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    action: @escaping Behaviors.Run<Output>.AsyncFunc.Throwing,
-    success: @escaping (_ value: Output) -> Void,
-    failure: @escaping (_ error: Error) -> Void
+    action: @escaping () async throws -> Output,
+    onSuccess success: @escaping (_ value: Output) -> Void,
+    onFailure failure: @escaping (_ error: Error) -> Void
   ) {
     let id = id ?? BehaviorID.meta(
       moduleFile: moduleFile,
@@ -138,8 +138,8 @@ extension Scope {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    action: @escaping Behaviors.Run<Output>.AsyncFunc.NonThrowing,
-    success: @escaping @TreeActor (_ value: Output) -> Void
+    action: @escaping () async -> Output,
+    onSuccess success: @escaping @TreeActor (_ value: Output) -> Void
   ) {
     let id = id ?? BehaviorID.meta(
       moduleFile: moduleFile,
@@ -163,8 +163,8 @@ extension Scope {
     line: Int = #line,
     column: Int = #column,
     action: @escaping Behaviors.Run<Output>.SyncFunc.Throwing,
-    success: @escaping (_ value: Output) -> Void,
-    failure: @escaping (_ error: Error) -> Void
+    onSuccess success: @escaping (_ value: Output) -> Void,
+    onFailure failure: @escaping (_ error: Error) -> Void
   ) {
     let id = id ?? BehaviorID.meta(
       moduleFile: moduleFile,
@@ -195,8 +195,8 @@ extension Scope {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    action: @escaping Behaviors.Run<Output>.SyncFunc.NonThrowing,
-    success: @escaping @TreeActor (_ value: Output) -> Void
+    action: @escaping () -> Output,
+    onSuccess success: @escaping @TreeActor (_ value: Output) -> Void
   ) {
     let id = id ?? BehaviorID.meta(
       moduleFile: moduleFile,
@@ -219,7 +219,7 @@ extension Scope {
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    action: @escaping Behaviors.Run<Void>.AsyncFunc.Throwing
+    action: @escaping () async throws -> Void
   ) {
     let id = id ?? BehaviorID.meta(
       moduleFile: moduleFile,
