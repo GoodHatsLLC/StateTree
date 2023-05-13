@@ -28,19 +28,17 @@ public struct GameNode: Node {
   public var rules: some Rules {
     OnChange(board) { board in
       if board.boardFilled || board.winner != nil {
-        Task {
-          try? await Task.sleep(for: .seconds(0.1))
-          await finishHandler(board.winner.map { .win($0) } ?? .draw)
-        }
+        try? await Task.sleep(for: .seconds(0.1))
+        await finishHandler(board.winner.map { .win($0) } ?? .draw)
       }
-    }
-    OnChange(board) { _ in
-      currentPlayer = (currentPlayer == .X) ? .O : .X
     }
   }
 
   public func play(row: Int, col: Int) {
-    try? board.play(currentPlayer, row: row, col: col)
+    $scope.transaction {
+      try? board.play(currentPlayer, row: row, col: col)
+      currentPlayer = (currentPlayer == .X) ? .O : .X
+    }
   }
 
   // MARK: Private
