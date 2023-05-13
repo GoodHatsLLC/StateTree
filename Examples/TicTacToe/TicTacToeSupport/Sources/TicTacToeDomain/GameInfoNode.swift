@@ -81,7 +81,7 @@ extension GameInfoNode {
 
   // MARK: Private
 
-  private func finishHandler(result: GameResult) async {
+  private func finishHandler(result: GameResult) {
     $scope.transaction {
       if case .win(let winner) = result {
         switch winner {

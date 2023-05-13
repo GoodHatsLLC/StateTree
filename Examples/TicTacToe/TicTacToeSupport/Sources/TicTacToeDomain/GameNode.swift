@@ -10,7 +10,7 @@ public struct GameNode: Node {
   public init(
     currentPlayer: Projection<Player>,
     board: BoardState = .init(),
-    finishHandler: @escaping (GameResult) async -> Void
+    finishHandler: @escaping (GameResult) -> Void
   ) {
     _currentPlayer = currentPlayer
     self.finishHandler = finishHandler
@@ -19,7 +19,7 @@ public struct GameNode: Node {
 
   // MARK: Public
 
-  @Projection public var currentPlayer: Player
+  @Projection public private(set) var currentPlayer: Player
 
   public var grid: [[BoardState.Cell]] {
     board.cells
@@ -28,8 +28,7 @@ public struct GameNode: Node {
   public var rules: some Rules {
     OnChange(board) { board in
       if board.boardFilled || board.winner != nil {
-        try? await Task.sleep(for: .seconds(0.1))
-        await finishHandler(board.winner.map { .win($0) } ?? .draw)
+        finishHandler(board.winner.map { .win($0) } ?? .draw)
       }
     }
   }
@@ -46,6 +45,6 @@ public struct GameNode: Node {
   @Scope private var scope
   @Value private var board: BoardState = .init()
 
-  private let finishHandler: (GameResult) async -> Void
+  private let finishHandler: (GameResult) -> Void
 
 }
