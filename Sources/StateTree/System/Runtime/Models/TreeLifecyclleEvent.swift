@@ -5,9 +5,9 @@ public enum TreeLifecycleEvent: Codable, CustomStringConvertible {
   public var description: String {
     switch self {
     case .started(let treeID):
-      return "started tree (id: \(treeID)"
+      return "started tree (id: \(treeID))"
     case .stopped(let treeID):
-      return "stopped tree (id: \(treeID)"
+      return "stopped tree (id: \(treeID))"
     }
   }
 

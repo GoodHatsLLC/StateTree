@@ -10,20 +10,14 @@ public struct AppNode: Node {
 
   public var rules: some Rules {
     if let auth = $authentication.compact() {
-      $gameOrSignIn.route {
-        .a(
-          GameInfoNode(authentication: auth) {
-            authentication = nil
-          }
-        )
+      try $gameOrSignIn.route {
+        GameInfoNode(authentication: auth) {
+          authentication = nil
+        }
       }
     } else {
-      $gameOrSignIn.route {
-        .b(
-          UnauthenticatedNode(
-            authentication: $authentication
-          )
-        )
+      try $gameOrSignIn.route {
+        UnauthenticatedNode(authentication: $authentication)
       }
     }
   }

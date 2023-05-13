@@ -10,7 +10,7 @@ public struct GameNode: Node {
   public init(
     currentPlayer: Projection<Player>,
     board: BoardState = .init(),
-    finishHandler: @escaping @TreeActor (GameResult) -> Void
+    finishHandler: @escaping (GameResult) async -> Void
   ) {
     _currentPlayer = currentPlayer
     self.finishHandler = finishHandler
@@ -28,24 +28,28 @@ public struct GameNode: Node {
   public var rules: some Rules {
     OnChange(board) { board in
       if board.boardFilled || board.winner != nil {
-        finishHandler(board.winner.map { .win($0) } ?? .draw)
+        Task {
+          try? await Task.sleep(for: .seconds(0.1))
+          await finishHandler(board.winner.map { .win($0) } ?? .draw)
+        }
       }
+    }
+    OnChange(board) { _ in
+      currentPlayer = (currentPlayer == .X) ? .O : .X
     }
   }
 
   public func play(row: Int, col: Int) {
-    $scope.transaction {
-      do {
-        try board.play(currentPlayer, row: row, col: col)
-      } catch { return }
-      currentPlayer = (currentPlayer == .X) ? .O : .X
-    }
+    try? board.play(currentPlayer, row: row, col: col)
   }
 
   // MARK: Internal
 
   @Scope var scope
   @Value var board: BoardState = .init()
-  let finishHandler: @TreeActor (GameResult) -> Void
+
+  // MARK: Private
+
+  private let finishHandler: (GameResult) async -> Void
 
 }

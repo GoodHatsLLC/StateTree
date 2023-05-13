@@ -82,6 +82,18 @@ public final class Recorder<Root: Node>: TreeRecorder {
       .events
       .treeEventEmitter
       .withPrefix([TreeEvent.recording(event: .started(recorderID: id))])
+      .map { events in
+        events.filter { event in
+          switch event {
+          case .behavior(event: let event):
+            switch event {
+            case .created: return false
+            default: return true
+            }
+          default: return true
+          }
+        }
+      }
       .subscribeMain { events in
         var hasUpdateEvent = false
         for event in events {

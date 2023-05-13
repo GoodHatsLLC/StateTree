@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
   name: "TicTacToeSupport",
-  platforms: [.macOS("12.3"), .iOS(.v15)],
+  platforms: [.macOS(.v13), .iOS(.v16)],
   products: [
     .library(
       name: "TicTacToeUI",

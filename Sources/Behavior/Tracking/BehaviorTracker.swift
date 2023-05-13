@@ -10,11 +10,11 @@ public enum BehaviorEvent: Codable, CustomStringConvertible {
   public var description: String {
     switch self {
     case .created(let behaviorID):
-      return "created behavior (id: \(behaviorID)"
+      return "created behavior (id: \(behaviorID))"
     case .started(let behaviorID):
-      return "started behavior (id: \(behaviorID)"
+      return "started behavior (id: \(behaviorID))"
     case .finished(let behaviorID):
-      return "finished behavior (id: \(behaviorID)"
+      return "finished behavior (id: \(behaviorID))"
     }
   }
 
