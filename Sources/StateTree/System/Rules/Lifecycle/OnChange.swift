@@ -18,9 +18,11 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
     column: Int = #column,
     _ value: Input,
     _ id: BehaviorID? = nil,
+    includeInitial: Bool = true,
     action: @TreeActor @escaping (_ value: Input) -> Void
   ) where B == Behaviors.SyncSingle<Input, Void, Never> {
     self.value = value
+    self.includeInitial = includeInitial
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.SyncSingle<Input, Void, Never> = Behaviors
       .make(id, input: Input.self) { action($0) }
@@ -35,9 +37,11 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
     column: Int = #column,
     _ value: Input,
     _ id: BehaviorID? = nil,
+    includeInitial: Bool = true,
     action: @TreeActor @escaping (_ value: Input) async -> Void
   ) where B == Behaviors.AsyncSingle<Input, Void, Never> {
     self.value = value
+    self.includeInitial = includeInitial
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.AsyncSingle<Input, Void, Never> = Behaviors
       .make(id, input: B.Input.self) { await action($0) }
@@ -52,12 +56,14 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
     column: Int = #column,
     _ value: Input,
     _ id: BehaviorID? = nil,
+    includeInitial: Bool = true,
     run behaviorFunc: @escaping (_ value: Input) async -> Seq,
     onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
     onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }
   ) where B == Behaviors.Stream<Input, Seq.Element, Error> {
     self.value = value
+    self.includeInitial = includeInitial
     let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
     let behavior: Behaviors.Stream<Input, Seq.Element, Error> = Behaviors
       .make(id, input: Input.self) {
@@ -75,12 +81,14 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
 
   @TreeActor
   public init(
-    _ id: BehaviorID? = nil,
     _ value: B.Input,
+    _ id: BehaviorID? = nil,
+    includeInitial: Bool = true,
     run behavior: B
   ) {
     var behavior = behavior
     self.value = value
+    self.includeInitial = includeInitial
     if let id = id {
       behavior.setID(to: id)
     }
@@ -91,14 +99,16 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
 
   @TreeActor
   public init(
-    _ id: BehaviorID? = nil,
     _ value: B.Input,
+    _ id: BehaviorID? = nil,
+    includeInitial: Bool = true,
     run behavior: B,
     handler: B.Handler
   )
     where B: Behavior
   {
     self.value = value
+    self.includeInitial = includeInitial
     var behavior = behavior
     if let id = id {
       behavior.setID(to: id)
@@ -120,7 +130,9 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
   }
 
   public mutating func applyRule(with context: RuleContext) throws {
-    callback(scope, context.runtime.behaviorTracker, value)
+    if includeInitial {
+      callback(scope, context.runtime.behaviorTracker, value)
+    }
   }
 
   public mutating func removeRule(with _: RuleContext) throws {
@@ -140,6 +152,7 @@ public struct OnChange<B: Behavior>: Rules where B.Input: Equatable,
 
   // MARK: Private
 
+  private let includeInitial: Bool
   private var value: B.Input
   private let callback: (any BehaviorScoping, BehaviorTracker, B.Input) -> Void
   private let scope: BehaviorStage = .init()
