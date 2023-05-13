@@ -42,12 +42,10 @@ public struct UnauthenticatedNode: Node {
       }
   }
 
-  // MARK: Internal
-
-  @Scope var scope
-  @Projection var authentication: Authentication?
-
   // MARK: Private
+
+  @Scope private var scope
+  @Projection private var authentication: Authentication?
 
   @Dependency(\.authClient) private var authClient: any AuthClientType
 

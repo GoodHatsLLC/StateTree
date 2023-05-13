@@ -5,7 +5,7 @@ public struct AppNode: Node {
 
   public nonisolated init() { }
 
-  @Value private var authentication: Authentication?
+  @Value var authentication: Authentication?
   @Route(GameInfoNode.self, UnauthenticatedNode.self) public var gameOrSignIn
 
   public var rules: some Rules {

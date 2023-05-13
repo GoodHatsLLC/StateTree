@@ -43,12 +43,10 @@ public struct GameNode: Node {
     try? board.play(currentPlayer, row: row, col: col)
   }
 
-  // MARK: Internal
-
-  @Scope var scope
-  @Value var board: BoardState = .init()
-
   // MARK: Private
+
+  @Scope private var scope
+  @Value private var board: BoardState = .init()
 
   private let finishHandler: (GameResult) async -> Void
 

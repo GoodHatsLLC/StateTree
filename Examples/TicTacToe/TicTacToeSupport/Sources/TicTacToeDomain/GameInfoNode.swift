@@ -40,13 +40,13 @@ public struct GameInfoNode: Node {
     }
   }
 
-  // MARK: Internal
+  // MARK: Private
 
-  @Projection var authentication: Authentication
-  @Scope var scope
-  @Value var score: Score = .init()
-  @Value var activePlayer: Player? = nil
-  let logoutFunc: () -> Void
+  @Projection private var authentication: Authentication
+  @Scope private var scope
+  @Value private var score: Score = .init()
+  @Value private var activePlayer: Player? = nil
+  private let logoutFunc: () -> Void
 
 }
 
