@@ -12,8 +12,8 @@ public struct UnauthenticatedNode: Node {
 
   // MARK: Public
 
-  @Value public var shouldHint = false
-  @Value public var isLoading = false
+  @Value public private(set) var shouldHint = false
+  @Value public private(set) var isLoading = false
 
   public var rules: some Rules { () }
 
