@@ -60,7 +60,7 @@ extension Union {
       return nil
     }
 
-    public init?(maybe: A?) {
+    init?(maybe: A?) {
       if let a = maybe {
         self = .a(a)
       } else {
@@ -68,7 +68,7 @@ extension Union {
       }
     }
 
-    public init?(maybe: B?) {
+    init?(maybe: B?) {
       if let b = maybe {
         self = .b(b)
       } else {
@@ -76,12 +76,12 @@ extension Union {
       }
     }
 
-    public init(_ a: A) { self = .a(a) }
-    public init(_ b: B) { self = .b(b) }
+    init(_ a: A) { self = .a(a) }
+    init(_ b: B) { self = .b(b) }
 
     // MARK: Public
 
-    public static var empty: RouteRecord { .union2(nil) }
+    @_spi(Implementation)  public static var empty: RouteRecord { .union2(nil) }
 
     public var anyNode: any Node {
       switch self {
@@ -104,6 +104,7 @@ extension Union {
       }
     }
 
+    @_spi(Implementation)
     public func idSet(from nodeID: NodeID) -> RouteRecord {
       switch self {
       case .a: return .union2(.a(nodeID))
@@ -111,6 +112,7 @@ extension Union {
       }
     }
 
+    @_spi(Implementation)
     public func matchesCase(of idSet: RouteRecord) -> Bool {
       guard case .union2(let union2ID) = idSet else {
         return false

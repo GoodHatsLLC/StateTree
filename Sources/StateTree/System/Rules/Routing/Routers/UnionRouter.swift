@@ -200,9 +200,12 @@ public protocol NodeUnion {
   var anyNode: any Node { get }
   @_spi(Implementation)
   init?(record: RouteRecord, runtime: Runtime)
+  @_spi(Implementation)
   init?(asCaseContaining: some Node)
-  static var empty: RouteRecord { get }
+  @_spi(Implementation)  static var empty: RouteRecord { get }
+  @_spi(Implementation)
   func idSet(from: NodeID) -> RouteRecord
+  @_spi(Implementation)
   func matchesCase(of: RouteRecord) -> Bool
 }
 

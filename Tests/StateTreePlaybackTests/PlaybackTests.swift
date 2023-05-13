@@ -65,7 +65,9 @@ final class PlaybackTests: XCTestCase {
       .id("run"): 2,
     ]
 
-    XCTAssertEqual(created, all)
+    // Created events aren't super useful for visualization
+    // and so are suppressed in playback.
+    XCTAssertEqual(created, [:])
     XCTAssertEqual(started, all)
     XCTAssertEqual(finished, all)
   }
