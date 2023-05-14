@@ -29,6 +29,21 @@ final class GameNodeTests: XCTestCase {
   }
 
   @TreeActor
+  func test_play_isAtomic() async throws {
+    let player: Projection<Player> = .stored(.O)
+    let tree = Tree(
+      root: GameNode(currentPlayer: player, finishHandler: { _ in })
+    )
+    self.tree = tree
+    try tree.start()
+    let node = try tree.assume.rootNode
+    _ = try tree.assume.info.flushUpdateStats()
+    node.play(row: 0, col: 0)
+    let stats = try tree.assume.info.flushUpdateStats()
+    XCTAssertEqual(stats.counts.allNodeEvents, 1)
+  }
+
+  @TreeActor
   func test_win_firesFinishHandler() async throws {
     let player: Projection<Player> = .stored(.O)
     var result: GameResult? = nil

@@ -237,7 +237,7 @@ public final class Tree<N: Node>: TreeType, Identifiable {
   }
 
   /// Access session events as they happen via this property.
-  public var events: Events {
+  @_spi(Implementation) public var events: Events {
     Events(sessionSubject: sessionSubject)
   }
 
