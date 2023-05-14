@@ -4,6 +4,7 @@ import Foundation
 
 /// CUID — Custom User Identity
 /// The `CUID` contains a ``Node``'s defined `id` if it is `Identifiable`
+/// FIXME: remove current list access, and CUID
 public struct CUID: LosslessStringConvertible, Codable, Hashable {
   public init?(_ description: String) {
     guard !description.isEmpty

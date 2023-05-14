@@ -1,4 +1,4 @@
-import StateTree
+import StateTreeTesting
 import XCTest
 @testable import TicTacToeDomain
 
@@ -6,33 +6,56 @@ import XCTest
 
 final class GameInfoNodeTests: XCTestCase {
 
-  var tree: (any TreeType)?
+  let manager = TestTreeManager()
+  var auth: Projection<Authentication>!
 
-  override func setUp() async throws { }
+  override func setUp() async throws {
+    auth = .stored(
+      .init(playerX: "xxx", playerO: "ooo", token: "token")
+    )
+  }
 
   override func tearDown() async throws {
-    await tree?.stopIfActive()
+    manager.tearDown()
   }
 
   @TreeActor
-  func test_logOutCallback_called() async throws {
+  func test_logOutCallback_called_onLogOut() async throws {
     var didLogOut = false
-    let tree = Tree(
-      root: GameInfoNode(
-        authentication: .stored(
-          .init(playerX: "xxx", playerO: "ooo", token: "token")
-        ),
-        logoutFunc: {
-          didLogOut = true
-        }
-      )
+    @TestingTree var root = GameInfoNode(
+      authentication: auth,
+      logoutFunc: {
+        didLogOut = true
+      }
     )
-    self.tree = tree
-    try tree.start()
-    let node = try tree.assume.rootNode
+    try $root.start(with: manager)
+
     XCTAssertEqual(didLogOut, false)
-    node.logout()
+    root.logout()
     XCTAssertEqual(didLogOut, true)
+  }
+
+  @TreeActor
+  func test_activePlayerSet_onInitialGameStart() async throws {
+    @TestingTree var root = GameInfoNode(authentication: auth, logoutFunc: { })
+    try $root.start(with: manager)
+
+    XCTAssertNil(root.activePlayer)
+    root.startGame()
+    XCTAssertNotNil(root.activePlayer)
+  }
+
+  @TreeActor
+  func test_activePlayerSwapped_onGameStart() async throws {
+    @TestingTree var root = GameInfoNode(authentication: auth, logoutFunc: { })
+    try $root.start(with: manager)
+    root.startGame()
+
+    let initial = try XCTUnwrap(root.activePlayer)
+    root.startGame()
+    let swapped = try XCTUnwrap(root.activePlayer)
+
+    XCTAssertNotEqual(initial, swapped)
   }
 
 }

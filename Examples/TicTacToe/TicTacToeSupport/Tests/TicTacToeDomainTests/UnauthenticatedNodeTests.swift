@@ -1,4 +1,4 @@
-import StateTree
+import StateTreeTesting
 import TicTacToeDomain
 import XCTest
 
@@ -6,68 +6,63 @@ import XCTest
 
 final class UnauthenticatedNodeTests: XCTestCase {
 
-  var tree: (any TreeType)?
+  let manager = TestTreeManager()
 
   override func setUp() async throws { }
 
   override func tearDown() async throws {
-    await tree?.stopIfActive()
+    manager.tearDown()
   }
 
   @TreeActor
   func test_authSuccess() async throws {
     let auth: Projection<Authentication?> = .stored(nil)
     let payload = Authentication(playerX: "XXX", playerO: "OOO", token: "token")
-    let tree = Tree(
-      root: UnauthenticatedNode(authentication: auth),
-      interceptors: [
-        .init(id: .id("auth"), replacement: Behaviors.make {
+    @TestingTree var root = UnauthenticatedNode(authentication: auth)
+    $root.interceptors = [
+      .init(
+        id: .id("auth"),
+        replacement: Behaviors.make {
           let fn: () async throws -> Authentication = { payload }
           return try await fn()
-        }),
-      ]
-    )
-    self.tree = tree
-    try tree.start()
-    let node = try tree.assume.rootNode
-    XCTAssertEqual(node.isLoading, false)
-    XCTAssertEqual(node.shouldHint, false)
+        }
+      ),
+    ]
+    try $root.start(with: manager)
+    XCTAssertEqual(root.isLoading, false)
+    XCTAssertEqual(root.shouldHint, false)
     XCTAssertEqual(auth.value, nil)
-    node.authenticate(playerX: "", playerO: "", password: "")
-    XCTAssertEqual(node.isLoading, true)
-    XCTAssertEqual(node.shouldHint, false)
+    root.authenticate(playerX: "", playerO: "", password: "")
+    XCTAssertEqual(root.isLoading, true)
+    XCTAssertEqual(root.shouldHint, false)
     XCTAssertEqual(auth.value, nil)
-    try await tree.behaviorTracker.awaitBehaviors()
-    XCTAssertEqual(node.isLoading, false)
-    XCTAssertEqual(node.shouldHint, false)
+    try await $root.awaitBehaviors()
+    XCTAssertEqual(root.isLoading, false)
+    XCTAssertEqual(root.shouldHint, false)
     XCTAssertEqual(auth.value, payload)
   }
 
   @TreeActor
   func test_authFailure() async throws {
     let auth: Projection<Authentication?> = .stored(nil)
-    let tree = Tree(
-      root: UnauthenticatedNode(authentication: auth),
-      interceptors: [
-        .init(id: .id("auth"), replacement: Behaviors.make {
-          let fn: () async throws -> Authentication = { throw TestFail() }
-          return try await fn()
-        }),
-      ]
-    )
-    self.tree = tree
-    try tree.start()
-    let node = try tree.assume.rootNode
-    XCTAssertEqual(node.isLoading, false)
-    XCTAssertEqual(node.shouldHint, false)
+    @TestingTree var root = UnauthenticatedNode(authentication: auth)
+    $root.interceptors = [
+      .init(id: .id("auth"), replacement: Behaviors.make {
+        let fn: () async throws -> Authentication = { throw TestFail() }
+        return try await fn()
+      }),
+    ]
+    try $root.start(with: manager)
+    XCTAssertEqual(root.isLoading, false)
+    XCTAssertEqual(root.shouldHint, false)
     XCTAssertEqual(auth.value, nil)
-    node.authenticate(playerX: "", playerO: "", password: "")
-    XCTAssertEqual(node.isLoading, true)
-    XCTAssertEqual(node.shouldHint, false)
+    root.authenticate(playerX: "", playerO: "", password: "")
+    XCTAssertEqual(root.isLoading, true)
+    XCTAssertEqual(root.shouldHint, false)
     XCTAssertEqual(auth.value, nil)
-    try await tree.behaviorTracker.awaitBehaviors()
-    XCTAssertEqual(node.isLoading, false)
-    XCTAssertEqual(node.shouldHint, true)
+    try await $root.awaitBehaviors()
+    XCTAssertEqual(root.isLoading, false)
+    XCTAssertEqual(root.shouldHint, true)
     XCTAssertEqual(auth.value, nil)
   }
 
@@ -82,17 +77,14 @@ final class UnauthenticatedNodeTests: XCTestCase {
       didCall = true
       throw TestFail()
     }
-    let tree = Tree(
-      root: UnauthenticatedNode(authentication: auth),
-      dependencies: .defaults.inject(\.authClient, value: mock)
-    )
-    self.tree = tree
-    try tree.start()
-    let node = try tree.assume.rootNode
+    @TestingTree var root = UnauthenticatedNode(authentication: auth)
+    $root.dependencies.inject(\.authClient, value: mock)
+
+    try $root.start(with: manager)
 
     XCTAssertFalse(didCall)
-    node.authenticate(playerX: "px", playerO: "po", password: "pass")
-    try await tree.behaviorTracker.awaitBehaviors()
+    root.authenticate(playerX: "px", playerO: "po", password: "pass")
+    try await $root.awaitBehaviors()
     XCTAssert(didCall)
   }
 }

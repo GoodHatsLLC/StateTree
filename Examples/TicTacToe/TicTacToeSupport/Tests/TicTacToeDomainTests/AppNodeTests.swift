@@ -1,4 +1,4 @@
-import StateTree
+import StateTreeTesting
 import XCTest
 @testable import TicTacToeDomain
 
@@ -6,27 +6,24 @@ import XCTest
 
 final class AppNodeTests: XCTestCase {
 
-  var tree: (any TreeType)?
+  var manager = TestTreeManager()
 
   override func setUp() async throws { }
 
   override func tearDown() async throws {
-    await tree?.stopIfActive()
+    manager.tearDown()
   }
 
   @TreeActor
   func test_route_byAuthentication() async throws {
-    let tree = Tree(
-      root: AppNode()
-    )
-    self.tree = tree
-    try tree.start()
-    let node = try tree.assume.rootNode
+    @TestingTree var root = AppNode()
 
-    XCTAssertNil(node.authentication)
-    XCTAssert(node.gameOrSignIn?.anyNode is UnauthenticatedNode)
-    node.authentication = .init(playerX: "", playerO: "", token: "")
-    XCTAssert(node.gameOrSignIn?.anyNode is GameInfoNode)
+    try $root.start(with: manager)
+
+    XCTAssertNil(root.authentication)
+    XCTAssert(root.gameOrSignIn?.anyNode is UnauthenticatedNode)
+    root.authentication = .init(playerX: "", playerO: "", token: "")
+    XCTAssert(root.gameOrSignIn?.anyNode is GameInfoNode)
   }
 
 }

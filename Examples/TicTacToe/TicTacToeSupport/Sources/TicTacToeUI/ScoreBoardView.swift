@@ -23,9 +23,9 @@ struct ScoreBoardView: View {
         VStack(alignment: .leading, spacing: 1.su) {
           Text("Score")
             .font(.title.monospaced())
-          Text("\(Player.X.icon) \(model.name(of: .X)): \t\(model.xScore)")
+          Text("\(Player.X.icon) \(model.xName): \t\(model.xScore)")
             .font(.body.monospaced())
-          Text("\(Player.O.icon) \(model.name(of: .O)): \t\(model.oScore)")
+          Text("\(Player.O.icon) \(model.oName): \t\(model.oScore)")
             .font(.body.monospaced())
         }
         Divider()

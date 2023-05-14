@@ -51,6 +51,7 @@ let package = Package(
       name: "TicTacToeDomainTests",
       dependencies: [
         "TicTacToeDomain",
+        .product(name: "StateTreeTesting", package: "StateTree"),
       ]
     ),
   ]

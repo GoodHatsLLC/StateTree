@@ -31,21 +31,15 @@ public struct GameInfoNode: Node {
     }
   }
 
-  public func name(of player: Player) -> String {
-    switch player {
-    case .X:
-      return authentication.playerX
-    case .O:
-      return authentication.playerO
-    }
-  }
+  // MARK: Internal
+
+  @Value var score: Score = .init()
+  @Value var activePlayer: Player? = nil
 
   // MARK: Private
 
   @Projection private var authentication: Authentication
   @Scope private var scope
-  @Value private var score: Score = .init()
-  @Value private var activePlayer: Player? = nil
   private let logoutFunc: () -> Void
 
 }
@@ -53,6 +47,14 @@ public struct GameInfoNode: Node {
 extension GameInfoNode {
 
   // MARK: Public
+
+  public var xName: String {
+    authentication.playerX
+  }
+
+  public var oName: String {
+    authentication.playerO
+  }
 
   public var xScore: Int {
     score.x
@@ -63,11 +65,7 @@ extension GameInfoNode {
   }
 
   public func startGame() {
-    if case .win(let player) = lastResult {
-      activePlayer = player.other()
-    } else {
-      activePlayer = Bool.random() ? .X : .O
-    }
+    activePlayer = activePlayer?.other() ?? (Bool.random() ? .X : .O)
   }
 
   public func resetScore() {

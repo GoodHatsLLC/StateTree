@@ -28,7 +28,7 @@ public struct PreviewNode<N: Node> {
   public let wrappedValue: N
 
   public var projectedValue: TreeNode<N> {
-    PreviewLife(root: wrappedValue)
+    PreviewLifetime(root: wrappedValue)
       .node(
         moduleFile: moduleFile,
         line: line,
@@ -45,10 +45,10 @@ public struct PreviewNode<N: Node> {
 
 }
 
-// MARK: - PreviewLife
+// MARK: - PreviewLifetime
 
 @MainActor
-public struct PreviewLife<N: Node> {
+public struct PreviewLifetime<N: Node> {
   init(
     root: N
   ) {

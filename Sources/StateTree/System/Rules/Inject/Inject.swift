@@ -10,7 +10,7 @@ public struct Inject<R: Rules>: Rules {
     @RuleBuilder into rules: () -> R
   ) {
     self.dependenciesUpdateFunc = { initial in
-      initial.inject(path, value: value)
+      initial.injecting(path, value: value)
     }
     self.containedRules = rules()
   }

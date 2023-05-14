@@ -4,6 +4,7 @@ import TreeActor
 
 // MARK: - SingleRouterAccess
 
+/// FIXME: dedupe RouterAccess & NodeAccess. Move common into StateTreeAccess.
 @TreeActor
 struct SingleRouterAccess<R: SingleRouterType, Child: Node> where R.Value == Child {
   init(route: Route<R>) {

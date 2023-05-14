@@ -14,7 +14,7 @@ class DependencyValuesTests: XCTestCase {
   }
 
   func test_inject() throws {
-    let defaults = DependencyValues.defaults
+    var defaults = DependencyValues.defaults
 
     // start with only one changed
     var modified = defaults.inject(\.one, value: true)

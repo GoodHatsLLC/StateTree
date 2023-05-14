@@ -4,6 +4,7 @@ import TreeActor
 
 // MARK: - NodeAccess
 
+/// FIXME: dedupe RouterAccess & NodeAccess. Move common into StateTreeAccess.
 @TreeActor
 @dynamicMemberLookup
 public protocol NodeAccess<N> {

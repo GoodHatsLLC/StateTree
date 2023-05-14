@@ -94,6 +94,12 @@ let package = Package(
         "StateTreeCallbacks",
       ]
     ),
+    .library(
+      name: "StateTreeTesting",
+      targets: [
+        "StateTreeTesting",
+      ]
+    ),
   ],
   dependencies: [
     .package(
@@ -158,6 +164,20 @@ let package = Package(
     ),
     .target(
       name: "StateTreeSwiftUI",
+      dependencies: [
+        "Behavior",
+        "Disposable",
+        "Emitter",
+        "Intents",
+        "StateTree",
+        "StateTreePlayback",
+        "TreeActor",
+        "Utilities",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "StateTreeTesting",
       dependencies: [
         "StateTree",
         "StateTreePlayback",
