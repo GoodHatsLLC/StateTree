@@ -36,6 +36,7 @@ struct BehaviorScopeHandler: BehaviorScoping {
 public struct BehaviorStage: BehaviorScoping, Disposable {
   public init() { }
   private let stage = DisposableStage()
+  @_spi(Implementation)
   public func own(_ disposable: some Disposable) {
     disposable.stage(on: stage)
   }
@@ -80,12 +81,13 @@ private final class ReportingDisposable_HACK: Disposable {
 
 extension Behaviors {
   public enum Scope {
-    public static var invalid: InvalidScope {
+    @_spi(Implementation) public static var invalid: InvalidScope {
       runtimeWarning("The scope is not connected to a state tree and can not run a Behavior.")
       return .init()
     }
   }
 
+  @_spi(Implementation)
   public struct InvalidScope: BehaviorScoping {
     public func own(_ disposable: some Disposable) {
       disposable.dispose()

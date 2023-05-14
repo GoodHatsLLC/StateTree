@@ -84,7 +84,7 @@ public final class BehaviorTracker {
     trackedBehaviors.withLock { $0 }.map { $0 }
   }
 
-  public var behaviorEvents: some Emitter<BehaviorEvent, Never> {
+  @_spi(Implementation) public var behaviorEvents: some Emitter<BehaviorEvent, Never> {
     behaviorEventSubject
   }
 

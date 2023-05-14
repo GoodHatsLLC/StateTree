@@ -1,4 +1,4 @@
-import Behavior
+@_spi(Implementation) import Behavior
 import Emitter
 import Foundation
 import HeapModule

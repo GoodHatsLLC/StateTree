@@ -1,5 +1,5 @@
 import Disposable
-import StateTree
+@_spi(Implementation) import StateTree
 import XCTest
 
 // MARK: - PlaybackTests

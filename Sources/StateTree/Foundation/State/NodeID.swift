@@ -66,6 +66,7 @@ public struct NodeID: Codable, Hashable, LosslessStringConvertible, Comparable {
   }
 
   #if DEBUG
+  @_spi(Implementation)
   public static func incrementForTesting() -> AutoDisposable {
     incrementingForTesting = 1
     return .init {
