@@ -33,8 +33,7 @@ struct ProjectionConnection {
 ///
 /// > Important: Shared state should have a clear contract. If multiple nodes react to shared
 /// state changes in conflicting ways they may create a circular dependency in their combined
-/// reaction logic. StateTree will detect and revert the state change triggering the circular
-/// dependency—but that's likely to be a costly process with a poor end-user  uexperience.
+/// reaction logic.
 @propertyWrapper
 @dynamicMemberLookup
 public struct Projection<Value: Equatable>: ProjectionField, Accessor {

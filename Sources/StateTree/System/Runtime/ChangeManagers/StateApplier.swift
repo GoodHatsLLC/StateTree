@@ -27,7 +27,6 @@ final class StateApplier: ChangeManager {
   /// not triggered.
   ///
   /// This method is used when:
-  /// - reverting state changes triggering circular updates
   /// - applying time-travel-debugging `StateFrames`
   func apply(state newState: TreeStateRecord) throws
     -> (events: [NodeEvent], stats: UpdateStats)
