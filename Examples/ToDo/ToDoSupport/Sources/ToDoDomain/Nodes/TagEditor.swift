@@ -33,7 +33,7 @@ public struct TagEditor: Node {
   @Value public var editingTag: TagRecord
 
   public var rules: some Rules {
-    OnChange(selected) { new in
+    OnUpdate(selected) { new in
       if new != initialSelected {
         isActive = false
       }

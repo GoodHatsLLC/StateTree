@@ -98,7 +98,7 @@ extension ProjectionTests {
     @Projection var intVal: Int
     @Value var derived = 0
     var rules: some Rules {
-      OnChange(intVal) { value in
+      OnUpdate(intVal) { value in
         derived = -value
       }
     }

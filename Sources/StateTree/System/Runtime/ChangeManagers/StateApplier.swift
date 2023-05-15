@@ -23,7 +23,7 @@ final class StateApplier: ChangeManager {
   /// Directly apply a previous state to the active tree.
   ///
   /// The state is directly swapped and the active tree reconciled.
-  /// Lifecycle rules like ``OnStart`` and ``OnChange`` are
+  /// Lifecycle rules like ``OnStart`` and ``OnUpdate`` are
   /// not triggered.
   ///
   /// This method is used when:

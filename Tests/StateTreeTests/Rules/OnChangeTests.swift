@@ -15,34 +15,31 @@ final class OnChangeTests: XCTestCase {
   }
 
   @TreeActor
-  func test_playground() async throws {
+  func test_onChange_fibonacci() async throws {
     let tree = Tree(root: OnChangeNode())
     try tree.start()
     let node = try tree.assume.rootNode
-
-    XCTAssertEqual(node.intVal, 0)
-    XCTAssertEqual(node.derived, 0)
-
-    node.intVal = 5
-
-    XCTAssertEqual(node.intVal, 5)
-    XCTAssertEqual(node.derived, -5)
-
-    node.intVal = 3
-
-    XCTAssertEqual(node.intVal, 3)
-    XCTAssertEqual(node.derived, -3)
+    XCTAssertEqual(node.record, [0, 1, 1, 2, 3, 5, 8, 13, 21, 34])
   }
 }
 
 // MARK: - OnChangeNode
 
 struct OnChangeNode: Node {
-  @Value var intVal = 0
-  @Value var derived = 0
+  @Value var record: [Int] = [0]
   var rules: some Rules {
-    OnChange(intVal) { value in
-      derived = -value
+    OnStart {
+      record.append(1)
+    }
+    OnChange(record) { old, new in
+      // We're taking advantage of a circular update.
+      // Maybe in the future this won't be allowed!
+      guard record.count < 10
+      else {
+        return
+      }
+
+      record.append(old.last! + new.last!)
     }
   }
 }

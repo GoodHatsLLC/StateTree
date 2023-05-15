@@ -158,7 +158,7 @@ extension SerializationTests {
     @Projection var value: Int
 
     var rules: some Rules {
-      OnChange(value) { newValue in
+      OnUpdate(value) { newValue in
         square = newValue * newValue
       }
     }

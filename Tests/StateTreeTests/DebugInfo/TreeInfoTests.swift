@@ -125,7 +125,7 @@ extension TreeInfoTests {
     @Projection var parentHeight: Int
 
     var rules: some Rules {
-      OnChange(parentHeight) { _ in
+      OnUpdate(parentHeight) { _ in
         height = parentHeight - 1
       }
       if height > 1 {

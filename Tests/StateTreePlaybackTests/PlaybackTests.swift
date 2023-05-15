@@ -92,7 +92,7 @@ extension PlaybackTests {
     @Projection var number: Int
 
     var rules: some Rules {
-      OnChange(number, .id("onchange")) { _ in
+      OnUpdate(number, .id("onchange")) { _ in
         noop()
       }
       OnStart(.id("onstart")) {

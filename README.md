@@ -78,7 +78,7 @@ struct Squarer: Node {
   // reevaluated and reapplied when state changes.
 
   var rules: some Rules {
-    OnChange(input) { input in
+    OnUpdate(input) { input in
       output = input * input
     }
   }

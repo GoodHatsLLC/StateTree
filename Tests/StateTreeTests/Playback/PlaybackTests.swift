@@ -216,7 +216,7 @@ extension PlaybackTests {
     @Projection var value: Int
 
     var rules: some Rules {
-      OnChange(value) { value in
+      OnUpdate(value) { value in
         square = value * value
       }
     }
