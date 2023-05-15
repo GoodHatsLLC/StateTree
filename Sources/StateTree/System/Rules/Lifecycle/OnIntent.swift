@@ -4,18 +4,46 @@ import TreeActor
 
 // MARK: - OnIntent
 
-@TreeActor
+/// Register an ``Intent`` Step handler.
+///
+/// Register the type of payload expected and return an action or a pending state.
+///
+/// The handler is called when:
+/// * No lower level handler has acted for the step.
+/// * Any previous step in the intent was handled by an ancestor node.
+/// * The step's name matches the registered type's `name` field.
+/// * The step's payload can be deserialized to the registered type.
+///
+/// If a pending state is returned, the handler will be called again for the payload
+/// when the node's state changes—unless another node has handled the step.
+///
+/// ```swift
+/// OnIntent(PendingNodeStep.self) { step in
+///   if /* should act now */ {
+///     return .act { shouldRoute = step.shouldRoute }
+///   } else {
+///     return .pend
+///   }
+/// }
+/// ```
 public struct OnIntent: Rules {
 
   // MARK: Lifecycle
 
+  /// Register an ``Intent`` Step handler.
+  ///
+  /// - Parameter payloadType: The type the step's payload must match for the handler to fire.
+  /// (A payload matches if it's name matche the types static `name` field, and it can be
+  /// deserialized to the type.)
+  /// - Parameter handler: The handler for a matching payload. It must return either an action or a
+  /// pending state.
   public init<Step: IntentStepPayload>(
     _: Step.Type,
-    _ stepAction: @TreeActor @escaping (_ step: Step) -> IntentAction
+    handler: @TreeActor @escaping (_ step: Step) -> IntentAction
   ) {
     self.resolver = IntentStepResolver(id: UUID()) { step in
       if let step = try? step.decode(as: Step.self) {
-        return .init(stepAction(step))
+        return .init(handler(step))
       } else {
         return .inapplicable
       }

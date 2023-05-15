@@ -6,12 +6,27 @@ import Utilities
 
 // MARK: - OnUpdate
 
+/// `OnUpdate` registers an action to run when a value is created or changed.
+///
+/// > Tip: Unlike ``OnChange``, `OnUpdate` will fire for a node's initial value.
+///
+/// ```swift
+/// OnUpdate(value) { value in
+///   // ...
+/// }
+/// ```
 public struct OnUpdate<B: Behavior>: Rules where B.Input: Equatable,
   B.Output: Sendable
 {
 
   // MARK: Lifecycle
 
+  /// Register a synchronous action to run when a value is created or changed.
+  ///
+  /// - Parameter value: the `Equatable` value whose changes trigger the `action`.
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when the value is set or changed.
   public init<Input>(
     moduleFile: String = #file,
     line: Int = #line,
@@ -29,6 +44,12 @@ public struct OnUpdate<B: Behavior>: Rules where B.Input: Equatable,
     }
   }
 
+  /// Register an asynchronous action to run when a value is created or changed.
+  ///
+  /// - Parameter value: the `Equatable` value whose changes trigger the `action`.
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when the value is set or changed.
   public init<Input>(
     moduleFile: String = #file,
     line: Int = #line,
@@ -46,6 +67,17 @@ public struct OnUpdate<B: Behavior>: Rules where B.Input: Equatable,
     }
   }
 
+  /// Register a stream action to run when a value is created or changed.
+  /// The stream subscription is maintained only until the value changes again.
+  ///
+  /// - Parameter value: the `Equatable` value whose changes trigger the `action`.
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter maker: The action run for the initial value and when changes to the value are
+  /// detected. It must return an `AsyncSequence`.
+  /// - Parameter onValue: A callback fired with values emitted by the `AsyncSequence`.
+  /// - Parameter onFinish: A callback run if the `AsyncSequence` completes successfully.
+  /// - Parameter onFailure: A callback run if the `AsyncSequence` fails with an error.
   public init<Input, Seq: AsyncSequence>(
     moduleFile: String = #file,
     line: Int = #line,
@@ -112,26 +144,18 @@ public struct OnUpdate<B: Behavior>: Rules where B.Input: Equatable,
 
 extension OnUpdate {
 
-  public init(
-    _ value: B.Input,
-    _ id: BehaviorID? = nil,
-    runBehavior behavior: B
-  ) {
-    var behavior = behavior
-    self.value = value
-    if let id = id {
-      behavior.setID(to: id)
-    }
-    self.callback = { scope, tracker, value in
-      behavior.run(tracker: tracker, scope: scope, input: value)
-    }
-  }
-
+  /// Register a pre-existing ``Behavior`` to be run when a value is updated.
+  ///
+  /// - Parameter value: the `Equatable` value whose changes trigger the `action`.
+  /// - Parameter id: *Optional*:  A *overriding* ``BehaviorID`` representing the ``Behavior``
+  /// created to run the action.
+  /// - Parameter runBehavior: The ``Behavior`` run when changes to the value are detected.
+  /// - Parameter handler: *Optional*: A handler to run with values created by the ``Behavior``.
   public init(
     _ value: B.Input,
     _ id: BehaviorID? = nil,
     runBehavior behavior: B,
-    handler: B.Handler
+    handler: B.Handler? = nil
   )
     where B: Behavior
   {
@@ -140,8 +164,14 @@ extension OnUpdate {
     if let id = id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, tracker, value in
-      behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
+    if let handler {
+      self.callback = { scope, tracker, value in
+        behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
+      }
+    } else {
+      self.callback = { scope, tracker, value in
+        behavior.run(tracker: tracker, scope: scope, input: value)
+      }
     }
   }
 }

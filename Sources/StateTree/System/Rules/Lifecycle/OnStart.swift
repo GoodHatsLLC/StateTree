@@ -6,12 +6,24 @@ import Utilities
 
 // MARK: - OnStart
 
+/// Register an action to run as a Node is being stopped.
+///
+/// ```swift
+/// OnStart {
+///   // ...
+/// }
+/// ```
 public struct OnStart<B: Behavior>: Rules where B.Input == Void,
   B.Output: Sendable
 {
 
   // MARK: Lifecycle
 
+  /// Register a synchronous action to run as a Node is started.
+  ///
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when the node is started.
   public init(
     moduleFile: String = #file,
     line: Int = #line,
@@ -27,6 +39,11 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     }
   }
 
+  /// Register an asynchronous action to run as a Node is started.
+  ///
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when the node is started.
   public init(
     moduleFile: String = #file,
     line: Int = #line,
@@ -42,12 +59,20 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     }
   }
 
+  /// Register a stream action to run when a node is started
+  ///
+  /// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter maker: The action run to create the `AsyncSequence`.
+  /// - Parameter onValue: A callback fired with values emitted by the `AsyncSequence`.
+  /// - Parameter onFinish: A callback run if the `AsyncSequence` completes successfully.
+  /// - Parameter onFailure: A callback run if the `AsyncSequence` fails with an error.
   public init<Seq: AsyncSequence>(
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     _ id: BehaviorID? = nil,
-    _ behaviorFunc: @escaping () async -> Seq,
+    maker behaviorFunc: @escaping () async -> Seq,
     onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
     onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }
@@ -67,34 +92,30 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     }
   }
 
-  @TreeActor
-  public init(
-    _: B.Input,
-    _ id: BehaviorID? = nil,
-    run behavior: B
-  ) {
-    var behavior = behavior
-    if let id {
-      behavior.setID(to: id)
-    }
-    self.callback = { scope, tracker in
-      behavior.run(tracker: tracker, scope: scope, input: ())
-    }
-  }
-
-  @TreeActor
+  /// Register a pre-existing ``Behavior`` to be run when a node is started.
+  ///
+  /// - Parameter id: *Optional*:  A *overriding* ``BehaviorID`` representing the ``Behavior``
+  /// created to run the action.
+  /// - Parameter runBehavior: The ``Behavior`` run as the node is started.
+  /// - Parameter handler: *Optional*: A handler to run with values created by the ``Behavior``.
   public init(
     _ value: B.Input,
     _ id: BehaviorID? = nil,
-    run behavior: B,
-    handler: B.Handler
+    runBehavior behavior: B,
+    handler: B.Handler? = nil
   ) {
     var behavior = behavior
     if let id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, tracker in
-      behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
+    if let handler {
+      self.callback = { scope, tracker in
+        behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
+      }
+    } else {
+      self.callback = { scope, tracker in
+        behavior.run(tracker: tracker, scope: scope, input: ())
+      }
     }
   }
 

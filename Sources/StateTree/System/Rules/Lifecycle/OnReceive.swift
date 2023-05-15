@@ -3,10 +3,31 @@ import TreeActor
 
 // MARK: - OnReceive
 
+/// Subscribe to and receive values and lifecycle events from an `AsyncSequence` or Combine
+/// `Publisher`.
+///
+/// ```swift
+/// OnReceive(someSequence) { value in
+///   // ...
+/// } onFinish: {
+///   // ...
+/// } onFailure: { error in
+///   // ...
+/// }
+/// ```
 public struct OnReceive<Value: Sendable>: Rules {
 
   // MARK: Lifecycle
 
+  /// Subscribe to and receive values and lifecycle events from an `AsyncSequence`.
+  ///
+  /// - Parameter seq: An `AsyncSequence` to subscribe to.
+  /// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter onValue: A callback fired with values emitted by the `AsyncSequence`.
+  /// - Parameter onFinish: *Optional:* A callback run if the `AsyncSequence` completes
+  /// successfully.
+  /// - Parameter onFailure: *Optional:* A callback run if the `AsyncSequence` fails with an error.
   public init<Seq: AsyncSequence>(
     moduleFile: String = #file,
     line: Int = #line,
@@ -62,10 +83,17 @@ public struct OnReceive<Value: Sendable>: Rules {
   private let scope: BehaviorStage = .init()
 }
 
-#if canImport(Emitter)
 import Emitter
 extension OnReceive {
 
+  /// Subscribe to and receive values and lifecycle events from an `Emitter`.
+  ///
+  /// - Parameter publisher: A `Emitter` to subscribe to.
+  /// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter onValue: A callback fired with values emitted by the `Emitter`.
+  /// - Parameter onFinish: *Optional:* A callback run if the `Emitter` completes successfully.
+  /// - Parameter onFailure: *Optional:* A callback run if the `Emitter` fails with an error.
   @_spi(Implementation)
   public init(
     moduleFile: String = #file,
@@ -96,10 +124,18 @@ extension OnReceive {
     }
   }
 }
-#endif
 
 #if canImport(Combine)
 import Combine
+
+/// Subscribe to and receive values and lifecycle events from a Combine `Publisher`.
+///
+/// - Parameter publisher: A `Publisher` to subscribe to.
+/// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+/// action.
+/// - Parameter onValue: A callback fired with values emitted by the `Publisher`.
+/// - Parameter onFinish: *Optional:* A callback run if the `Publisher` completes successfully.
+/// - Parameter onFailure: *Optional:* A callback run if the `Publisher` fails with an error.
 extension OnReceive {
   public init(
     moduleFile: String = #file,

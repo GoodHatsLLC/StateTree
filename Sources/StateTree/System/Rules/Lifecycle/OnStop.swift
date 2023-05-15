@@ -6,12 +6,25 @@ import Utilities
 
 // MARK: - OnStop
 
+/// Register a synchronous action to run as a Node is being stopped.
+///
+/// ```swift
+/// OnStop {
+///   // ...
+///   // some cleanup
+/// }
+/// ```
 public struct OnStop<B: Behavior>: Rules where B.Input == Void,
   B.Output: Sendable
 {
 
   // MARK: Lifecycle
 
+  /// Register a synchronous action to run as a Node is stopped.
+  ///
+  /// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when the node is stopped.
   public init(
     moduleFile: String = #file,
     line: Int = #line,
@@ -27,29 +40,16 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
     }
   }
 
-  @TreeActor
+  /// Register a pre-existing synchronous ``Behavior`` to be run when a node is stopped.
+  ///
+  /// - Parameter id: *Optional*:  A *overriding* ``BehaviorID`` representing the ``Behavior``
+  /// created to run the action.
+  /// - Parameter runBehavior: The ``Behavior`` run as the node is stopped.
+  /// - Parameter handler: *Optional*: A handler to run with values created by the ``Behavior``.
   public init(
     _ id: BehaviorID? = nil,
-    run behavior: B
-  ) where B.Handler == Behaviors.SingleHandler<
-    Synchronous,
-    B.Output,
-    B.Failure
-  > {
-    var behavior = behavior
-    if let id {
-      behavior.setID(to: id)
-    }
-    self.callback = { scope, tracker in
-      behavior.run(tracker: tracker, scope: scope, input: ())
-    }
-  }
-
-  @TreeActor
-  public init(
-    _ id: BehaviorID? = nil,
-    run behavior: B,
-    handler: B.Handler
+    runBehavior behavior: B,
+    handler: B.Handler? = nil
   )
     where B.Handler.SubscribeType == Synchronous
   {
@@ -57,8 +57,14 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
     if let id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, tracker in
-      behavior.run(tracker: tracker, scope: scope, input: (), handler: handler)
+    if let handler {
+      self.callback = { scope, tracker in
+        behavior.run(tracker: tracker, scope: scope, input: (), handler: handler)
+      }
+    } else {
+      self.callback = { scope, tracker in
+        behavior.run(tracker: tracker, scope: scope, input: ())
+      }
     }
   }
 

@@ -6,12 +6,32 @@ import Utilities
 
 // MARK: - OnChange
 
+/// `OnChange` registers an action to run when a value is changed. The action
+/// is passed both the `old` and `new` values.
+///
+/// The action is run as a `Behavior` and can be swapped
+/// out in testing by assigning it a `BehaviorID`.
+///
+/// ```swift
+/// OnChange(value) { old, new in
+///   // ...
+/// }
+/// ```
+///
+/// > Tip: Unlike ``OnUpdate`` which fires during Node start when there is no
+/// previous value, `OnChange` will not fire unless the previous value is known.
 public struct OnChange<Value: Equatable, B: Behavior>: Rules where B.Input == (Value, Value),
   B.Output: Sendable
 {
 
   // MARK: Lifecycle
 
+  /// Register a synchronous action to run when a value is changed.
+  ///
+  /// - Parameter value: the `Equatable` value whose changes trigger the `action`.
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when changes to the value are detected.
   public init(
     moduleFile: String = #file,
     line: Int = #line,
@@ -29,6 +49,12 @@ public struct OnChange<Value: Equatable, B: Behavior>: Rules where B.Input == (V
     }
   }
 
+  /// Register an asynchronous action to run when a value is changed.
+  ///
+  /// - Parameter value: the `Equatable` value whose changes trigger the `action`.
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when changes to the value are detected.
   public init(
     moduleFile: String = #file,
     line: Int = #line,
@@ -46,13 +72,24 @@ public struct OnChange<Value: Equatable, B: Behavior>: Rules where B.Input == (V
     }
   }
 
+  /// Register a stream action to run when a value is changed.
+  /// The stream subscription is maintained only until the value changes again.
+  ///
+  /// - Parameter value: the `Equatable` value whose changes trigger the `action`.
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter maker: The action run when changes to the value are detected. It must return an
+  /// `AsyncSequence`.
+  /// - Parameter onValue: A callback fired with values emitted by the `AsyncSequence`.
+  /// - Parameter onFinish: A callback run if the `AsyncSequence` completes successfully.
+  /// - Parameter onFailure: A callback run if the `AsyncSequence` fails with an error.
   public init<Seq: AsyncSequence>(
     moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     _ value: Value,
     _ id: BehaviorID? = nil,
-    run behaviorFunc: @escaping (_ oldValue: Value, _ newValue: Value) async -> Seq,
+    maker behaviorFunc: @escaping (_ oldValue: Value, _ newValue: Value) async -> Seq,
     onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
     onFinish: @escaping @TreeActor () -> Void = { },
     onFailure: @escaping @TreeActor (_ error: Error) -> Void = { _ in }
@@ -111,26 +148,18 @@ public struct OnChange<Value: Equatable, B: Behavior>: Rules where B.Input == (V
 
 extension OnChange {
 
-  public init(
-    _ value: Value,
-    _ id: BehaviorID? = nil,
-    runBehavior behavior: B
-  ) {
-    var behavior = behavior
-    self.value = value
-    if let id = id {
-      behavior.setID(to: id)
-    }
-    self.callback = { scope, tracker, value in
-      behavior.run(tracker: tracker, scope: scope, input: value)
-    }
-  }
-
+  /// Register a pre-existing ``Behavior`` to be run when a value is changed.
+  ///
+  /// - Parameter value: the `Equatable` value whose changes trigger the `action`.
+  /// - Parameter id: *Optional*:  A *overriding* ``BehaviorID`` representing the ``Behavior``
+  /// created to run the action.
+  /// - Parameter runBehavior: The ``Behavior`` run when changes to the value are detected.
+  /// - Parameter handler: *Optional*: A handler to run with values created by the ``Behavior``.
   public init(
     _ value: Value,
     _ id: BehaviorID? = nil,
     runBehavior behavior: B,
-    handler: B.Handler
+    handler: B.Handler? = nil
   )
     where B: Behavior
   {
@@ -139,8 +168,14 @@ extension OnChange {
     if let id = id {
       behavior.setID(to: id)
     }
-    self.callback = { scope, tracker, value in
-      behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
+    if let handler {
+      self.callback = { scope, tracker, value in
+        behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
+      }
+    } else {
+      self.callback = { scope, tracker, value in
+        behavior.run(tracker: tracker, scope: scope, input: value)
+      }
     }
   }
 }
