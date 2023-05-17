@@ -26,7 +26,6 @@ public final class NodeScope<N: Node>: Equatable {
     self.initialRecord = node.nodeRecord
     self.node = node.node
     self.runtime = node.runtime
-    self.cuid = node.node.cuid
     self.valueFieldDependencies = node.getValueDependencies()
   }
 
@@ -34,7 +33,6 @@ public final class NodeScope<N: Node>: Equatable {
 
   public var node: N
   public let nid: NodeID
-  public let cuid: CUID?
   public let depth: Int
   public let dependencies: DependencyValues
   public let valueFieldDependencies: Set<FieldID>

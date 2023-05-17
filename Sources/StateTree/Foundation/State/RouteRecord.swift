@@ -17,10 +17,10 @@ import OrderedCollections
 /// `.a(<NodeID>)`
 /// which would in turn correspond to a known `Node` type of the router's`Union.Two<NodeA, NodeB>`.
 public enum RouteRecord: Codable {
-  case single(Single?)
+  case single(NodeID?)
   case union2(Union2?)
   case union3(Union3?)
-  case list(List?)
+  case list(List)
 
   // MARK: Public
 
@@ -55,41 +55,8 @@ public enum RouteRecord: Codable {
   public struct List: Codable {
 
     // MARK: Lifecycle
-
-    init(nodeIDs: [NodeID]) {
-      self.idMap = Self.identityDict(nodeIDs: nodeIDs)
-    }
-
-    init(idMap: OrderedDictionary<CUID, NodeID>) {
+    init(idMap: OrderedDictionary<LSID, NodeID>) {
       self.idMap = idMap
-    }
-
-    public init(from decoder: Decoder) throws {
-      let container = try decoder.singleValueContainer()
-      let nids = try container.decode([NodeID].self)
-      self.idMap = Self.identityDict(nodeIDs: nids)
-    }
-
-    // MARK: Public
-
-    public static func identityDict(nodeIDs: [NodeID]) -> OrderedDictionary<CUID, NodeID> {
-      let pairs: [(CUID, NodeID)] = nodeIDs
-        .compactMap { nid in
-          if let cuid = nid.cuid {
-            return (cuid, nid)
-          } else {
-            return nil
-          }
-        }
-      return pairs
-        .reduce(into: OrderedDictionary<CUID, NodeID>()) { acc, curr in
-          acc[curr.0] = curr.1
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-      var container = encoder.singleValueContainer()
-      try container.encode(Array(idMap.values))
     }
 
     // MARK: Internal
@@ -102,17 +69,28 @@ public enum RouteRecord: Codable {
       route.identity.flatMap { idMap[$0] }
     }
 
-    // MARK: Private
-
-    private var idMap: OrderedDictionary<CUID, NodeID>
+    var idMap: OrderedDictionary<LSID, NodeID>
   }
 
   public var ids: [NodeID] {
     switch self {
-    case .single(let single): return (single?.id).map { [$0] } ?? []
+    case .single(let single): return single.map { [$0] } ?? []
     case .union2(let union2): return (union2?.id).map { [$0] } ?? []
     case .union3(let union3): return (union3?.id).map { [$0] } ?? []
-    case .list(let list): return list?.nodeIDs ?? []
+    case .list(let list): return list.nodeIDs
+    }
+  }
+
+  public var type: RouteType {
+    switch self {
+    case .single:
+      return .single
+    case .union2:
+      return .union2
+    case .union3:
+      return .union3
+    case .list:
+      return .list
     }
   }
 
@@ -120,10 +98,10 @@ public enum RouteRecord: Codable {
 
   func nodeID(matching route: RouteSource) -> NodeID? {
     switch (route.identity, self) {
-    case (.none, .single(let single)): return single?.id
+    case (.none, .single(let single)): return single
     case (.none, .union2(let union2)): return union2?.id
     case (.none, .union3(let union3)): return union3?.id
-    case (.some, .list(let list)): return list?.nodeID(matching: route)
+    case (.some, .list(let list)): return list.nodeID(matching: route)
     default: return nil
     }
   }

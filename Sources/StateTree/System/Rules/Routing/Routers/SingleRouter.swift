@@ -7,23 +7,25 @@ public protocol SingleRouterType: RouterType { }
 
 // MARK: - SingleRouter
 
-public struct SingleRouter<N: Node>: RouterType {
+public struct SingleRouter<N: Node>: SingleRouterType, OneRouterType {
+  public static var routeType: RouteType { .single }
 
-  public typealias Value = N
-  public init(container: Value, fieldID: FieldID) {
-    self.container = container
+  public init(builder: @escaping () -> N?, fieldID: FieldID) {
+    self.builder = builder
     self.fieldID = fieldID
   }
 
-  public let container: N
-  private var node: N { container }
+  public private(set) var builder: () -> N?
+
+  public typealias Value = N
+
   private let fieldID: FieldID
 }
 
 // MARK: SingleRouterType
 
 @_spi(Implementation)
-extension SingleRouter: SingleRouterType {
+extension SingleRouter {
 
   // MARK: Public
 
@@ -32,7 +34,7 @@ extension SingleRouter: SingleRouterType {
     if
       case .single(let single) = record,
       let single = single,
-      let scope = try? runtime.getScope(for: single.id),
+      let scope = try? runtime.getScope(for: single),
       let node = scope.node as? N
     {
       return node
@@ -56,19 +58,24 @@ extension SingleRouter: SingleRouterType {
 
   @TreeActor
   public mutating func applyRule(with context: RuleContext) throws {
-    let initialized = try initialize(
-      context: context
-    )
-    return try start(
-      initialized: initialized,
-      on: context.runtime
-    )
+    if
+      let initialized = try initialize(
+        context: context
+      )
+    {
+      try start(
+        initialized: initialized,
+        on: context.runtime
+      )
+    } else {
+      try removeRule(with: context)
+    }
   }
 
   @TreeActor
   public mutating func removeRule(with context: RuleContext) throws {
     context.runtime
-      .updateRoutedNodes(at: fieldID, to: .single(nil))
+      .updateRouteRecord(at: fieldID, to: .single(nil))
   }
 
   @TreeActor
@@ -93,7 +100,7 @@ extension SingleRouter: SingleRouterType {
   @_spi(Implementation)
   public func currentScope(on runtime: Runtime) -> AnyScope? {
     if
-      let ids = runtime.getRoutedNodeSet(at: fieldID)?.ids,
+      let ids = runtime.getRouteRecord(at: fieldID)?.ids,
       let id = ids.first
     {
       assert(ids.count == 1)
@@ -104,8 +111,8 @@ extension SingleRouter: SingleRouterType {
 
   // MARK: Private
 
-  private func capture() -> NodeCapture {
-    NodeCapture(node)
+  private func capture() -> NodeCapture? {
+    builder().map { NodeCapture($0) }
   }
 
   @TreeActor
@@ -129,8 +136,11 @@ extension SingleRouter: SingleRouterType {
   }
 
   @TreeActor
-  private func initialize(context: RuleContext) throws -> InitializedNode<N> {
-    let capture = capture()
+  private func initialize(context: RuleContext) throws -> InitializedNode<N>? {
+    guard let capture = capture()
+    else {
+      return nil
+    }
     let uninitialized = UninitializedNode(
       capture: capture,
       runtime: context.runtime
@@ -142,7 +152,7 @@ extension SingleRouter: SingleRouterType {
         dependencies: context.dependencies,
         on: .init(
           fieldID: fieldID,
-          identity: capture.anyNode.cuid,
+          identity: nil,
           type: .single
         )
       )
@@ -155,11 +165,9 @@ extension SingleRouter: SingleRouterType {
     on runtime: Runtime
   ) throws {
     let scope = try initialized.connect().erase()
-    runtime.updateRoutedNodes(
+    runtime.updateRouteRecord(
       at: fieldID,
-      to: .single(
-        .init(id: scope.nid)
-      )
+      to: .single(scope.nid)
     )
     assert(scope == currentScope(on: runtime))
   }

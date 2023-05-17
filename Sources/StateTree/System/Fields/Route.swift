@@ -1,11 +1,14 @@
 import Disposable
+import OrderedCollections
 import TreeActor
+@_spi(Implementation) import Utilities
 
 // MARK: - RouteField
 
 protocol RouteField<Router> {
   associatedtype Router: RouterType
   @TreeActor var connection: RouteConnection? { get nonmutating set }
+  var type: RouteType { get }
 }
 
 // MARK: - Route
@@ -44,7 +47,11 @@ public struct Route<Router: RouterType>: RouteField {
   @TreeActor public var record: RouteRecord? {
     connection?
       .runtime
-      .getRoutedNodeSet(at: connection?.fieldID ?? .invalid)
+      .getRouteRecord(at: connection?.fieldID ?? .invalid)
+  }
+
+  public var type: RouteType {
+    Router.routeType
   }
 
   @_spi(Implementation)
@@ -56,7 +63,7 @@ public struct Route<Router: RouterType>: RouteField {
     guard
       let idSet = connection
         .runtime
-        .getRoutedNodeSet(at: connection.fieldID)
+        .getRouteRecord(at: connection.fieldID)
     else {
       return nil
     }
@@ -73,7 +80,7 @@ public struct Route<Router: RouterType>: RouteField {
       let connection,
       let idSet = connection
         .runtime
-        .getRoutedNodeSet(at: connection.fieldID)
+        .getRouteRecord(at: connection.fieldID)
     else {
       return 0
     }
@@ -112,6 +119,33 @@ public struct Route<Router: RouterType>: RouteField {
 
   @_spi(Implementation) @TreeActor public var runtime: Runtime? { connection?.runtime }
 
+  // MARK: Internal
+
+  @TreeActor var connection: RouteConnection? {
+    get { inner.connection }
+    nonmutating set { inner.connection = newValue }
+  }
+
+  // MARK: Private
+
+  @TreeActor private final class Inner {
+
+    // MARK: Lifecycle
+
+    nonisolated init() { }
+
+    // MARK: Internal
+
+    var connection: RouteConnection?
+
+  }
+
+  private let inner = Inner()
+
+}
+
+extension Route where Router: OneRouterType {
+
   /// Attempt to route an arbitrary ``Node`` with a union router.
   ///
   /// This route overload will throw if the node's type isn't declared in the ``Route`` initializer.
@@ -130,60 +164,18 @@ public struct Route<Router: RouterType>: RouteField {
   ///
   /// > Tip: Consider using the compile-time safe overload ``route(to:)-2xtev``.
   @TreeActor
-  public func route<U: NodeUnion>(to nodeBuilder: @escaping () -> some Node) throws -> some Rules
+  public func route<U: NodeUnion>(to nodeBuilder: @escaping () -> (some Node)?) throws -> some Rules
     where Router == UnionRouter<U>
   {
-    let node = nodeBuilder()
-    let maybeValue = U(asCaseContaining: node)
-    if let value: Router.Value = maybeValue {
-      return Attach(
-        router: .init(
-          container: value,
-          fieldID: connection?.fieldID ?? .invalid
-        ),
-        to: self
-      )
-    } else {
-      throw UnenumeratedRouteError()
-    }
-  }
-
-  /// Attempt to route an arbitrary ``Node`` with a union router.
-  ///
-  /// This route overload will throw if the node's type isn't declared in the ``Route`` initializer.
-  ///
-  /// ```swift
-  /// @Route(NodeOne.self, NodeTwo.self) var unionRoute
-  ///
-  /// var rules: some Rules {
-  ///   // This will throw, creating a logging error rule.
-  ///   try $unionRoute.route(to: NodeThree())
-  ///
-  ///   // This will succeed.
-  ///   try $unionRoute.route(to: NodeTwo())
-  /// }
-  /// ```
-  ///
-  /// > Tip: Consider using the compile-time safe overload ``route(to:)-2xtev``.
-  @TreeActor
-  public func route<U: NodeUnion>(to node: some Node) throws -> some Rules
-    where Router == UnionRouter<U>
-  {
-    let maybeValue = U(asCaseContaining: node)
-    if
-      let value: Router.Value = maybeValue,
-      let fieldID = connection?.fieldID
-    {
-      return Attach(
-        router: .init(
-          container: value,
-          fieldID: fieldID
-        ),
-        to: self
-      )
-    } else {
-      throw UnenumeratedRouteError()
-    }
+    Attach(
+      router: .init(
+        builder: {
+          nodeBuilder().flatMap { U(asCaseContaining: $0) }
+        },
+        fieldID: connection?.fieldID ?? .invalid
+      ),
+      to: self
+    )
   }
 
   /// Route to the passed ``Node``, attaching it to the NodeTree ``Tree`` as a sub-node of the
@@ -224,90 +216,64 @@ public struct Route<Router: RouterType>: RouteField {
   /// }
   /// ```
   @TreeActor
-  public func route(to containerBuilder: () -> Router.Value) -> Attach<Router> {
-    route(to: containerBuilder())
-  }
-
-  /// Route to the passed ``Node``, attaching it to the NodeTree ``Tree`` as a sub-node of the
-  /// routing node.
-  ///
-  /// > Parameters:
-  /// - to: The node to route — within the wrapper required by the route if required.
-  ///
-  /// A single-type `Route` doesn't require a wrapper. A union type `Route` requires a wrapper
-  /// identifying the
-  /// node as its first, second, or third type.—
-  /// i.e. `.a(NodeOne())`, `.b(NodeTwo())`, `.c(NodeThree())` respectively.
-  ///
-  /// > Tip: Union routes can also be used with the throwing overload ``route(to:)-8f0z6``
-  ///
-  /// ```swift
-  /// @Route(NodeOne.self) var singleRoute
-  /// @Route(NodeOne.self, NodeTwo.self) var unionRoute
-  ///
-  /// var rules: some Rules {
-  ///   // Working examples.
-  ///   // These are compile-time safe.
-  ///   $singleRoute.route(to: NodeOne())
-  ///   $unionRoute.route(to: .a(NodeTwo()))
-  ///
-  ///   // This would fail to compile.
-  ///   // $unionRoute(to: NodeOne())
-  ///
-  ///   // This will call the throwing overload of route(to:)
-  ///   // and succeed.
-  ///   try $unionRoute.route(to: NodeOne())
-  ///
-  ///   // This will call the throwing overload and fail, creating
-  ///   // an UnenumeratedRouteError and returning a logging Error rule.
-  ///   try $unionRoute.route(to: NodeThree())
-  /// }
-  /// ```
-  @TreeActor
-  public func route(to container: Router.Value) -> Attach<Router> {
-    Attach(
+  public func route(to builder: @escaping () -> Router.Value) -> Attach<Router> {
+    return Attach(
       router: .init(
-        container: container,
+        builder: builder,
         fieldID: connection?.fieldID ?? .invalid
       ),
       to: self
     )
   }
+}
 
-  /// TODO: replace this with a data oriented list routing.
+extension Route where Router: NRouterType {
+
   @TreeActor
-  public func route<N: Node>(to nodes: [N]) -> some Rules
-    where N: Identifiable, Router == ListRouter<N>
+  public func route<Data: Collection>(
+    data: Data,
+    builder: @escaping (_ datum: Data.Element) -> Router.NodeType
+  )
+    -> some Rules
+    where Data.Element: Identifiable
   {
-    Attach(
-      router: .init(container: nodes, fieldID: connection?.fieldID ?? .invalid),
+    let pairs = data.map { datum in
+      (id: LSID(hashable: datum.id), datum: datum)
+    }
+    lazy var idMap = pairs.orderedIndexed(by: \.id).mapValues(\.datum)
+    return Attach(
+      router: .init(
+        ids: idMap.keys,
+        builder: { id in
+          idMap[id].flatMap { datum in
+            builder(datum)
+          }
+        },
+        fieldID: connection?.fieldID ?? .invalid
+      ),
       to: self
     )
   }
+}
 
-  // MARK: Internal
-
-  @TreeActor var connection: RouteConnection? {
-    get { inner.connection }
-    nonmutating set { inner.connection = newValue }
+extension Route where Router: NRouterType, Router.NodeType: Identifiable {
+  @TreeActor
+  public func route(to nodes: [Router.NodeType]) -> some Rules {
+    let pairs = nodes.map { node in
+      (id: LSID(hashable: node.id), node: node)
+    }
+    lazy var idMap = pairs.indexed(by: \.id).mapValues(\.node)
+    return Attach(
+      router: .init(
+        ids: OrderedSet(pairs.map(\.id)),
+        builder: {
+          idMap[$0]
+        },
+        fieldID: connection?.fieldID ?? .invalid
+      ),
+      to: self
+    )
   }
-
-  // MARK: Private
-
-  @TreeActor private final class Inner {
-
-    // MARK: Lifecycle
-
-    nonisolated init() { }
-
-    // MARK: Internal
-
-    var connection: RouteConnection?
-
-  }
-
-  private let inner = Inner()
-
 }
 
 extension Route {

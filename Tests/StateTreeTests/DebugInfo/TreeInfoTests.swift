@@ -134,7 +134,9 @@ extension TreeInfoTests {
         }
       }
       if height == 11 {
-        $sideChain.route(to: .init(parentHeight: $sideChainHeight))
+        $sideChain.route {
+          .init(parentHeight: $sideChainHeight)
+        }
       }
     }
   }

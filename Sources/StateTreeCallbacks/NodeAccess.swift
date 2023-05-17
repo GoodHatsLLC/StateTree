@@ -1,5 +1,4 @@
 @_spi(Implementation) import StateTree
-import SwiftUI
 import TreeActor
 
 // MARK: - NodeAccess
@@ -56,14 +55,6 @@ extension NodeAccess {
   {
     let route = scope.node[keyPath: dynamicMember]
     return ListRouterAccess(route: route)
-  }
-
-  public subscript<T>(dynamicMember dynamicMember: KeyPath<N, Projection<T>>) -> Binding<T> {
-    scope.node[keyPath: dynamicMember].binding()
-  }
-
-  public subscript<T>(dynamicMember dynamicMember: KeyPath<N, T>) -> T {
-    scope.node[keyPath: dynamicMember]
   }
 
 }

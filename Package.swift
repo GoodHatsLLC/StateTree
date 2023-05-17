@@ -135,6 +135,7 @@ let package = Package(
       name: "Utilities",
       dependencies: [
         "Disposable",
+        .product(name: "OrderedCollections", package: "swift-collections"),
       ],
       swiftSettings: Build.globalSwiftSettings
     ),

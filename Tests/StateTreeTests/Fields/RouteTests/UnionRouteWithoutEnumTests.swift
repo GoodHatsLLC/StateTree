@@ -51,13 +51,13 @@ extension UnionRouteWithoutEnumTests {
     var rules: some Rules {
       switch select {
       case "a":
-        try $route.route(to: NodeA())
+        try $route.route { NodeA() }
       case "b":
         try $route.route {
           NodeB()
         }
       default:
-        try $route.route(to: BadNode())
+        try $route.route { BadNode() }
       }
     }
   }
@@ -67,7 +67,7 @@ extension UnionRouteWithoutEnumTests {
     @Route(NodeA.self, NodeB.self, NodeC.self) var route
     var rules: some Rules {
       if select == "a" {
-        try $route.route(to: NodeA())
+        try $route.route { NodeA() }
       } else if select == "b" {
         try $route.route {
           NodeB()
@@ -75,9 +75,9 @@ extension UnionRouteWithoutEnumTests {
       }
 
       if select == "c" {
-        try $route.route(to: NodeC())
+        try $route.route { NodeC() }
       } else if select == "bad" {
-        try $route.route(to: BadNode())
+        try $route.route { BadNode() }
       }
     }
   }

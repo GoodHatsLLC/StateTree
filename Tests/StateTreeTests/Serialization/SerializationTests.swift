@@ -189,21 +189,21 @@ extension SerializationTests {
           Square(value: $potentialPrime)
         }
 
-        $commentaries.route {
+        $commentaries.route(to: {
           let text = "It's a prime!"
           return [
             Commentary(id: "yes1", note: useUpper ? text.uppercased() : text),
             Commentary(id: "yes2", note: "really!"),
           ]
-        }
+        }())
       } else {
-        $commentaries.route {
+        $commentaries.route(to: {
           let text = "Not a prime :("
           return [
             Commentary(id: "no1", note: useUpper ? text.uppercased() : text),
             Commentary(id: "no2", note: "srsly"),
           ]
-        }
+        }())
       }
       OnIntent(SomeIntentStep.self) { _ in
         // keep the intent pending to keep it present in the state.

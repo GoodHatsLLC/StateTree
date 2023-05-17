@@ -119,7 +119,7 @@ extension IntentSnapshotTests {
 
     var rules: some Rules {
       if shouldRoute {
-        $child.route(to: Next())
+        $child.route { Next() }
       }
       OnIntent(PendingNodeStep.self) { step in
         mayRoute

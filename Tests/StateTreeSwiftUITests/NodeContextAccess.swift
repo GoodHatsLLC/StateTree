@@ -71,10 +71,10 @@ extension NodeContextAccess {
       $single.route {
         ChildOne(v1: $v1)
       }
-      try $union2.route(to: ChildTwo(id: 1, v1: $v1))
-      $union3.route(
-        to: .c(.init(v1: $v1))
-      )
+      try $union2.route { ChildTwo(id: 1, v1: $v1) }
+      try $union3.route {
+        ChildThree(v1: $v1)
+      }
       $list.route(
         to: [
           .init(id: 1, v1: $v1),

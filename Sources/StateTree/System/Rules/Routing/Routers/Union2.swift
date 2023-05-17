@@ -13,7 +13,6 @@ protocol Union2Route<A, B>: NodeUnionInternal {
 extension Union {
 
   public enum Two<A: Node, B: Node>: Union2Route {
-
     case a(A)
     case b(B)
 
@@ -81,7 +80,8 @@ extension Union {
 
     // MARK: Public
 
-    @_spi(Implementation)  public static var empty: RouteRecord { .union2(nil) }
+    public static var routeType: RouteType { .union2 }
+    @_spi(Implementation) public static var empty: RouteRecord { .union2(nil) }
 
     public var anyNode: any Node {
       switch self {
@@ -137,7 +137,7 @@ extension Union {
     {
       let routeID = RouteSource(
         fieldID: fieldID,
-        identity: uninitialized.capture.anyNode.cuid,
+        identity: nil,
         type: .union2
       )
       switch self {

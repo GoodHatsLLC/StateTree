@@ -1,7 +1,7 @@
 @_spi(Implementation)
 public struct NodeCapture: Equatable {
   public static func == (lhs: NodeCapture, rhs: NodeCapture) -> Bool {
-    lhs.fields == rhs.fields && lhs.cuid == rhs.cuid
+    lhs.fields == rhs.fields
   }
 
   init(_ node: some Node) {
@@ -13,10 +13,6 @@ public struct NodeCapture: Equatable {
       .map { offset, child in
         FieldCapture(child, offset: offset)
       }
-  }
-
-  var cuid: CUID? {
-    anyNode.cuid
   }
 
   let anyNode: any Node

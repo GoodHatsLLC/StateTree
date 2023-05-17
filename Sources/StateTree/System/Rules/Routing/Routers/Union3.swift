@@ -15,7 +15,6 @@ protocol Union3Route: NodeUnionInternal {
 extension Union {
 
   public enum Three<A: Node, B: Node, C: Node>: Union3Route {
-
     case a(A)
     case b(B)
     case c(C)
@@ -101,6 +100,7 @@ extension Union {
 
     // MARK: Public
 
+    public static var routeType: RouteType { .union3 }
     @_spi(Implementation) public static var empty: RouteRecord { .union3(nil) }
 
     public var anyNode: any Node {
@@ -171,7 +171,7 @@ extension Union {
     {
       let routeID = RouteSource(
         fieldID: fieldID,
-        identity: uninitialized.capture.anyNode.cuid,
+        identity: nil,
         type: .union3
       )
       switch self {

@@ -91,9 +91,9 @@ extension Runtime {
     if let initialState {
       try apply(state: initialState)
     } else {
-      updateRoutedNodes(
+      updateRouteRecord(
         at: .system,
-        to: .single(.init(id: scope.nid))
+        to: .single(scope.nid)
       )
     }
     return scope
@@ -290,11 +290,9 @@ extension Runtime {
       emitUpdates(events: nodeUpdates)
     } catch {
       runtimeWarning(
-        "An update failed and couldn't be reverted leaving the tree in an illegal state."
+        "An update failed leaving the tree in an illegal state."
       )
-      assertionFailure(
-        error.localizedDescription
-      )
+      assertionFailure("\(error.self)")
     }
     assert(checkConsistency())
     return value
@@ -312,7 +310,7 @@ extension Runtime {
     state.removeRecord(scopeID)
   }
 
-  func updateRoutedNodes(
+  func updateRouteRecord(
     at fieldID: FieldID,
     to ids: RouteRecord
   ) {
@@ -329,9 +327,9 @@ extension Runtime {
     }
   }
 
-  func getRoutedNodeSet(at fieldID: FieldID) -> RouteRecord? {
+  func getRouteRecord(at fieldID: FieldID) -> RouteRecord? {
     do {
-      return try state.getRoutedNodeSet(at: fieldID)
+      return try state.getRouteRecord(at: fieldID)
     } catch {
       assertionFailure(error.localizedDescription)
       return nil

@@ -5,36 +5,37 @@ import TreeActor
 
 // MARK: - ListRouter
 
-public struct ListRouter<N: Node> where N: Identifiable {
+public struct ListRouter<NodeType: Node>: NRouterType {
+  public static var routeType: RouteType { .list }
 
-  public typealias Value = [N]
-  public init(container: Value, fieldID: FieldID) {
-    self.container = container
+  public init(ids: OrderedSet<LSID>, builder: @escaping (LSID) -> NodeType?, fieldID: FieldID) {
+    self.builder = builder
     self.fieldID = fieldID
+    self.ids = ids
   }
 
-  public let container: [N]
+  public typealias Value = [NodeType]
+  private var ids: OrderedSet<LSID>
+  public private(set) var builder: (LSID) -> NodeType?
   private let fieldID: FieldID
-  private var nodes: [N] { container }
 }
 
 // MARK: RouterType
 
-extension ListRouter: RouterType {
+extension ListRouter {
   @TreeActor
   @_spi(Implementation)
   public static func value(
     for record: RouteRecord,
     in runtime: Runtime
-  ) -> [N]? {
-    guard case .list(let list) = record, let list
+  ) -> [NodeType]? {
+    guard case .list(let list) = record
     else {
       return nil
     }
     return list.nodeIDs
       .compactMap { id in
-        let node = try? runtime.getScope(for: id).node as? N
-        assert(node?.cuid == id.cuid)
+        let node = try? runtime.getScope(for: id).node as? NodeType
         return node
       }
   }
@@ -55,18 +56,56 @@ extension ListRouter: RouterType {
 
   @TreeActor
   public mutating func applyRule(with context: RuleContext) throws {
-    let captures = capture()
-    let scopes = try captures.compactMap { capture -> AnyScope? in
-      guard let id = capture.cuid
+    try updateBackingRecord(context: context)
+  }
+
+  @TreeActor
+  public mutating func updateRule(
+    from new: ListRouter<NodeType>,
+    with context: RuleContext
+  ) throws {
+    if ids != new.ids {
+      builder = new.builder
+      ids = new.ids
+      try updateBackingRecord(context: context)
+    }
+  }
+
+  @TreeActor
+  public mutating func removeRule(with context: RuleContext) throws {
+    ids = []
+    context.runtime
+      .updateRouteRecord(at: fieldID, to: .list(.init(idMap: [:])))
+  }
+
+  public func updateBackingRecord(context: RuleContext) throws {
+    let current = context.runtime.getRouteRecord(at: fieldID) ?? .list(.init(idMap: [:]))
+    guard case .list(var list) = current
+    else {
+      throw UnexpectedMemberTypeError()
+    }
+
+    let existingIDs = list.idMap.keys
+    let newIDs = ids
+    let remove = existingIDs.subtracting(newIDs)
+    let add = newIDs.subtracting(existingIDs)
+
+    for id in remove {
+      list.idMap.removeValue(forKey: id)
+    }
+
+    let idPairs = try add.compactMap { id -> (lsid: LSID, nid: NodeID)? in
+      guard let node = builder(id)
       else {
         return nil
       }
-      return try UninitializedNode(
+      let capture = NodeCapture(node)
+      let nodeID = try UninitializedNode(
         capture: capture,
         runtime: context.runtime
       )
       .initialize(
-        as: N.self,
+        as: NodeType.self,
         depth: context.depth + 1,
         dependencies: context.dependencies,
         on: .init(
@@ -74,92 +113,18 @@ extension ListRouter: RouterType {
           identity: id,
           type: .list
         )
-      ).connect().erase()
-    }
-    context.runtime.updateRoutedNodes(
-      at: fieldID,
-      to: .list(.init(nodeIDs: scopes.map(\.nid)))
-    )
-  }
-
-  @TreeActor
-  public mutating func removeRule(with context: RuleContext) throws {
-    context.runtime
-      .updateRoutedNodes(at: fieldID, to: .list(nil))
-  }
-
-  @TreeActor
-  public mutating func updateRule(
-    from new: ListRouter<N>,
-    with context: RuleContext
-  ) throws {
-    let currentlyRouted = context.runtime.getRoutedNodeSet(at: fieldID)?.ids ?? []
-    let currentScopes = currentlyRouted.compactMap { id in
-      let scope = try? context.runtime.getScope(for: id)
-      assert(scope != nil)
-      return scope
-    }.indexed(by: \.cuid)
-    let captures = new.capture()
-
-    let scopes: [AnyScope] = try captures.compactMap { capture -> AnyScope? in
-      guard let cuid = capture.cuid
-      else {
-        return nil
-      }
-      if let scope = currentScopes[cuid] {
-//        scope.node = capture.anyNode
-        if scope.node.cuid != cuid {
-          scope.node = capture.anyNode
-        }
-        return scope
-      } else {
-        return try UninitializedNode(
-          capture: capture,
-          runtime: context.runtime
-        )
-        .initialize(
-          as: N.self,
-          depth: context.depth + 1,
-          dependencies: context.dependencies,
-          on: .init(
-            fieldID: fieldID,
-            identity: cuid,
-            type: .list
-          )
-        ).connect().erase()
-      }
-    }
-    context.runtime.updateRoutedNodes(
-      at: fieldID,
-      to: .list(.init(nodeIDs: scopes.map(\.nid)))
-    )
-  }
-}
-
-extension ListRouter {
-
-  private func capture() -> [NodeCapture] {
-    nodes.map(NodeCapture.init)
-  }
-
-  @TreeActor
-  private func initialize(
-    capture: NodeCapture,
-    context: RuleContext,
-    record: NodeRecord
-  ) throws -> InitializedNode<N> {
-    let uninitialized = UninitializedNode(
-      capture: capture,
-      runtime: context.runtime
-    )
-    let initialized = try uninitialized
-      .initialize(
-        as: N.self,
-        depth: context.depth + 1,
-        dependencies: context.dependencies,
-        record: record
       )
-    return initialized
+      .connect()
+      .nid
+
+      return (lsid: id, nid: nodeID)
+    }
+
+    for pair in idPairs {
+      list.idMap[pair.lsid] = pair.nid
+    }
+
+    context.runtime.updateRouteRecord(at: fieldID, to: .list(list))
   }
 
 }

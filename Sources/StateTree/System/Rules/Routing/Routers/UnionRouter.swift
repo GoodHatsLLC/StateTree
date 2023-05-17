@@ -3,24 +3,24 @@ import TreeActor
 
 // MARK: - UnionRouter
 
-public struct UnionRouter<U: NodeUnion> {
-  public typealias Value = U
-  public init(
-    container: U,
-    fieldID: FieldID
-  ) {
-    self.container = container
-    self.fieldID = fieldID
+public struct UnionRouter<U: NodeUnion>: OneRouterType {
+  public static var routeType: RouteType {
+    U.routeType
   }
 
-  public let container: U
-  private var union: U { container }
+  public init(builder: @escaping () -> U?, fieldID: FieldID) {
+    self.fieldID = fieldID
+    self.builder = builder
+  }
+
+  public typealias Value = U
+  public private(set) var builder: () -> U?
   private let fieldID: FieldID
 }
 
 // MARK: RouterType
 
-extension UnionRouter: RouterType {
+extension UnionRouter {
 
   // MARK: Public
 
@@ -50,12 +50,13 @@ extension UnionRouter: RouterType {
 
   @TreeActor
   public mutating func applyRule(with context: RuleContext) throws {
-    let (union, initialized) = try initializeNode(context: context)
-    return try start(
-      union: union,
-      initialized: initialized,
-      on: context.runtime
-    )
+    if let (union, initialized) = try initializeNode(context: context) {
+      try start(
+        union: union,
+        initialized: initialized,
+        on: context.runtime
+      )
+    }
   }
 
   @TreeActor
@@ -68,10 +69,14 @@ extension UnionRouter: RouterType {
       self = new
       return try applyRule(with: context)
     }
+    guard let (newCapture, newUnion) = captureUnion()
+    else {
+      self = new
+      return try removeRule(with: context)
+    }
     let currentScope = currentScopeContext.scope
     let currentIDSet = currentScopeContext.idSet
 
-    let (newCapture, newUnion) = captureUnion()
     if !newUnion.matchesCase(of: currentIDSet) || newCapture != currentScope.initialCapture {
       try removeRule(with: context)
       self = new
@@ -90,7 +95,7 @@ extension UnionRouter: RouterType {
 
   @TreeActor
   public mutating func removeRule(with context: RuleContext) throws {
-    context.runtime.updateRoutedNodes(at: fieldID, to: U.empty)
+    context.runtime.updateRouteRecord(at: fieldID, to: U.empty)
     assert(currentScope(on: context.runtime) == nil)
   }
 
@@ -104,7 +109,7 @@ extension UnionRouter: RouterType {
 
   @TreeActor
   func currentIDSet(on runtime: Runtime) -> RouteRecord? {
-    runtime.getRoutedNodeSet(at: fieldID)
+    runtime.getRouteRecord(at: fieldID)
   }
 
   @TreeActor
@@ -126,9 +131,12 @@ extension UnionRouter: RouterType {
 
   // MARK: Private
 
-  private func captureUnion() -> (NodeCapture, U) {
-    let capture = NodeCapture(union.anyNode)
-    return (capture, union)
+  private func captureUnion() -> (NodeCapture, U)? {
+    if let union = builder() {
+      let capture = NodeCapture(union.anyNode)
+      return (capture, union)
+    }
+    return nil
   }
 
   @TreeActor
@@ -160,9 +168,12 @@ extension UnionRouter: RouterType {
 
   @TreeActor
   private func initializeNode(context: RuleContext) throws
-    -> (union: U, initialized: AnyInitializedNode)
+    -> (union: U, initialized: AnyInitializedNode)?
   {
-    let (capture, publicUnion) = captureUnion()
+    guard let (capture, publicUnion) = captureUnion()
+    else {
+      return nil
+    }
     guard let union = publicUnion as? any NodeUnionInternal
     else {
       throw UnionMissingInternalImplementationError()
@@ -189,7 +200,7 @@ extension UnionRouter: RouterType {
     let scope = try initialized.connect()
     let id = scope.nid
     let idSet = union.idSet(from: id)
-    runtime.updateRoutedNodes(at: fieldID, to: idSet)
+    runtime.updateRouteRecord(at: fieldID, to: idSet)
   }
 
 }
@@ -202,11 +213,12 @@ public protocol NodeUnion {
   init?(record: RouteRecord, runtime: Runtime)
   @_spi(Implementation)
   init?(asCaseContaining: some Node)
-  @_spi(Implementation)  static var empty: RouteRecord { get }
+  @_spi(Implementation) static var empty: RouteRecord { get }
   @_spi(Implementation)
   func idSet(from: NodeID) -> RouteRecord
   @_spi(Implementation)
   func matchesCase(of: RouteRecord) -> Bool
+  @_spi(Implementation)  static var routeType: RouteType { get }
 }
 
 // MARK: - NodeUnionInternal

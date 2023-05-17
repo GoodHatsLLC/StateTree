@@ -84,7 +84,7 @@ extension StateStorage {
     if field == .system {
       let oldRoot = state.root
       if case .single(let single) = nodeIDs {
-        state.root = single?.id
+        state.root = single
       } else {
         throw NodesNotFoundError(ids: nodeIDs.ids)
       }
@@ -102,14 +102,14 @@ extension StateStorage {
     )
   }
 
-  func getRoutedNodeSet(at route: FieldID) throws -> RouteRecord? {
+  func getRouteRecord(at route: FieldID) throws -> RouteRecord? {
     if
       let root = state.root,
       route == .system
     {
-      return .single(.init(id: root))
+      return .single(root)
     }
-    return try state.getRoutedNodeSet(at: route)
+    return try state.getRouteRecord(at: route)
   }
 
   func getRoutedNodeID(at routeID: RouteSource) throws -> NodeID? {

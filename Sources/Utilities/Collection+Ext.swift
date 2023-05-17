@@ -1,3 +1,5 @@
+import OrderedCollections
+
 extension Collection {
   @_spi(Implementation)
   public func compact<E>() -> [E] where E? == Element {
@@ -11,6 +13,17 @@ extension Collection {
     -> [Key: Element]
   {
     reduce(into: [Key: Element]()) { acc, curr in
+      acc[curr[keyPath: path]] = curr
+    }
+  }
+}
+
+extension Collection {
+  @_spi(Implementation)
+  public func orderedIndexed<Key: Hashable>(by path: KeyPath<Element, Key>)
+    -> OrderedDictionary<Key, Element>
+  {
+    reduce(into: OrderedDictionary<Key, Element>()) { acc, curr in
       acc[curr[keyPath: path]] = curr
     }
   }

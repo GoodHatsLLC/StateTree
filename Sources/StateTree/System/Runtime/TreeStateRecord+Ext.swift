@@ -179,7 +179,7 @@ extension TreeStateRecord {
     return original
   }
 
-  func getRoutedNodeSet(at route: FieldID) throws -> RouteRecord? {
+  func getRouteRecord(at route: FieldID) throws -> RouteRecord? {
     guard route.type == .route
     else {
       throw UnexpectedMemberTypeError()

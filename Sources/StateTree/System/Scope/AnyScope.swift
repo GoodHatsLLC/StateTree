@@ -16,7 +16,6 @@ public struct AnyScope: Hashable {
     self.nid = scope.nid
     self.depth = scope.depth
     self.underlying = scope
-    self.cuid = scope.cuid
     self.getNodeFunc = {
       scope.node
     }
@@ -30,8 +29,6 @@ public struct AnyScope: Hashable {
   // MARK: Public
 
   public let underlying: any ScopeType
-
-  public let cuid: CUID?
 
   public nonisolated static func == (lhs: AnyScope, rhs: AnyScope) -> Bool {
     lhs.nid == rhs.nid

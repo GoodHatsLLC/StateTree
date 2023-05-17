@@ -15,7 +15,6 @@ public struct TreeNode<NodeType: Node>: DynamicProperty, NodeAccess {
     self.scope = scope
     self.observed = .init(scope: scope)
     self.nid = scope.nid
-    self.cuid = scope.cuid
     observed.startIfNeeded()
   }
 
@@ -44,7 +43,6 @@ public struct TreeNode<NodeType: Node>: DynamicProperty, NodeAccess {
   // MARK: Internal
 
   let nid: NodeID
-  let cuid: CUID?
 
   @ObservedObject var observed: ObservableNode<NodeType>
 
@@ -59,12 +57,4 @@ public struct TreeNode<NodeType: Node>: DynamicProperty, NodeAccess {
   // MARK: Private
 
   private var disposable: AutoDisposable?
-}
-
-// MARK: Identifiable
-
-extension TreeNode: Identifiable where NodeType: Identifiable {
-  public var id: CUID {
-    cuid ?? .invalid
-  }
 }
