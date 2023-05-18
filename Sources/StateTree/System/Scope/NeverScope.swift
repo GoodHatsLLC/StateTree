@@ -46,11 +46,6 @@ struct NeverScope: ScopeType {
     return Int.max
   }
 
-  var cuid: CUID? {
-    assertionFailure("NeverScope should never be invoked")
-    return .invalid
-  }
-
   var node: N {
     get {
       assertionFailure("NeverScope should never be invoked")

@@ -2,13 +2,11 @@ import Foundation
 
 // MARK: - LSID
 
-/// LSID — Lifetime Spanning Identity
+/// `LSID` — Lifetime-Stable Identity
 ///
 /// An `LSID` represents a value's identity. Values of the same type with the same`LSID` are
-/// understood
-/// to model the same underlying entity, even if they are not equal. (The entity has changed, but it
-/// has maintained
-/// its identity).
+/// understood to model the same underlying entity, even if they are not equal. (The entity has
+/// changed, but it has maintained its identity).
 ///
 /// `LSID` serves the same purpose as `Identifiable's` `ID`.
 public struct LSID: LosslessStringConvertible, Codable, Hashable {
