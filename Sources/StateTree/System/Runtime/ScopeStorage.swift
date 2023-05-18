@@ -40,7 +40,7 @@ final class ScopeStorage {
   }
 
   func insert(_ scope: AnyScope) {
-    assert(scopeMap[scope.nid] == nil)
+    assert(scopeMap[scope.nid] == nil, "pre-existing: \(scope.nid)")
     scopeMap[scope.nid] = scope
     valueDependencyTracker
       .addValueDependencies(for: scope)

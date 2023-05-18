@@ -79,11 +79,17 @@ extension ListRouter {
   }
 
   public func updateBackingRecord(context: RuleContext) throws {
-    let current = context.runtime.getRouteRecord(at: fieldID) ?? .list(.init(idMap: [:]))
+    let expCurr = context.runtime.getRouteRecord(at: fieldID)
+    assert(expCurr != nil)
+    let current = expCurr ?? .list(.init(idMap: [:]))
     guard case .list(var list) = current
     else {
       throw UnexpectedMemberTypeError()
     }
+
+    // FIXME: when recreating state, the state says nodes exist,
+    // but the scopes don't actually exist — and so they don't get
+    // made here. (why does this work elsewhere? should it?)
 
     let existingIDs = list.idMap.keys
     let newIDs = ids
@@ -100,7 +106,7 @@ extension ListRouter {
         return nil
       }
       let capture = NodeCapture(node)
-      let nodeID = try UninitializedNode(
+      let scope = try UninitializedNode(
         capture: capture,
         runtime: context.runtime
       )
@@ -115,7 +121,7 @@ extension ListRouter {
         )
       )
       .connect()
-      .nid
+      let nodeID = scope.nid
 
       return (lsid: id, nid: nodeID)
     }
