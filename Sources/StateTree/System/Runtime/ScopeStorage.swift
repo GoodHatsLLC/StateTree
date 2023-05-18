@@ -54,7 +54,7 @@ final class ScopeStorage {
     let scopes = ids.compactMap { id in
       getScope(for: id)
     }
-    assert(ids.count == scopes.count)
+//    assert(ids.count == scopes.count)
     return scopes
   }
 

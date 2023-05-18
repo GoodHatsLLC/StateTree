@@ -233,6 +233,12 @@ extension Runtime {
   }
 
   @_spi(Implementation)
+  public func getScopes(at fieldID: FieldID) throws -> [AnyScope] {
+    let nodeIDs = try state.getRouteRecord(at: fieldID)?.ids ?? []
+    return scopes.getScopes(for: nodeIDs)
+  }
+
+  @_spi(Implementation)
   public func getScope(for nodeID: NodeID) throws -> AnyScope {
     if
       let scope = scopes

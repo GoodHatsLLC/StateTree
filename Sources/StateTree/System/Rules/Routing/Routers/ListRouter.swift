@@ -23,6 +23,9 @@ public struct ListRouter<NodeType: Node>: NRouterType {
 // MARK: RouterType
 
 extension ListRouter {
+
+  // MARK: Public
+
   @TreeActor
   @_spi(Implementation)
   public static func value(
@@ -56,7 +59,7 @@ extension ListRouter {
 
   @TreeActor
   public mutating func applyRule(with context: RuleContext) throws {
-    try updateBackingRecord(context: context)
+    try updateScopes(context: context)
   }
 
   @TreeActor
@@ -64,11 +67,8 @@ extension ListRouter {
     from new: ListRouter<NodeType>,
     with context: RuleContext
   ) throws {
-    if ids != new.ids {
-      builder = new.builder
-      ids = new.ids
-      try updateBackingRecord(context: context)
-    }
+    ids = new.ids
+    try updateScopes(context: context)
   }
 
   @TreeActor
@@ -78,7 +78,11 @@ extension ListRouter {
       .updateRouteRecord(at: fieldID, to: .list(.init(idMap: [:])))
   }
 
-  public func updateBackingRecord(context: RuleContext) throws {
+  // MARK: Private
+
+  private func updateScopes(context: RuleContext) throws {
+    let existingScopes = try context.runtime.getScopes(at: fieldID)
+    let existingScopeNodeIDs = Set(existingScopes.map(\.nid))
     let expCurr = context.runtime.getRouteRecord(at: fieldID)
     assert(expCurr != nil)
     let current = expCurr ?? .list(.init(idMap: [:]))
@@ -87,11 +91,13 @@ extension ListRouter {
       throw UnexpectedMemberTypeError()
     }
 
-    // FIXME: when recreating state, the state says nodes exist,
-    // but the scopes don't actually exist — and so they don't get
-    // made here. (why does this work elsewhere? should it?)
+//    let existingIDs = list.idMap.keys
 
-    let existingIDs = list.idMap.keys
+    // FIXME: we shouldn't really just arbitrarily accept that some scopes might not exist.
+    let existingIDs = list.idMap.filter { el in
+      existingScopeNodeIDs.contains(el.value)
+    }.keys
+
     let newIDs = ids
     let remove = existingIDs.subtracting(newIDs)
     let add = newIDs.subtracting(existingIDs)
