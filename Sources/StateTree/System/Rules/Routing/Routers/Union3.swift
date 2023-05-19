@@ -23,7 +23,7 @@ extension Union {
 
     @TreeActor
     @_spi(Implementation)
-    public init?(record: RouteRecord, runtime: Runtime) {
+    public init(record: RouteRecord, runtime: Runtime) throws {
       if case .union3(let union3) = record, let union3 {
         switch union3 {
         case .a(let nodeID):
@@ -52,7 +52,7 @@ extension Union {
           }
         }
       }
-      return nil
+      throw InvalidRouteRecordError()
     }
 
     @_spi(Implementation)

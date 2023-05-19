@@ -48,7 +48,7 @@ extension RetentionTests {
 
   struct DeepNode: Node {
 
-    @Route(DeepNode.self) var next
+    @Route var next: DeepNode? = nil
     @Value var depth: Int
 
     var rules: some Rules {

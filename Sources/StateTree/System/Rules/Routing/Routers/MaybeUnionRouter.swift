@@ -1,31 +1,31 @@
 import Disposable
 import TreeActor
 
-// MARK: - UnionRouter
+// MARK: - MaybeUnionRouter
 
-public struct UnionRouter<U: NodeUnion>: OneRouterType {
+public struct MaybeUnionRouter<U: NodeUnion>: OneRouterType {
 
-  public static func emptyValue() throws -> U {
-    throw RouteDefaultFailure()
+  public static func emptyValue() throws -> U? {
+    nil
   }
 
   public static var routeType: RouteType {
     U.routeType
   }
 
-  public init(builder: @escaping () -> U, fieldID: FieldID) {
+  public init(builder: @escaping () -> U?, fieldID: FieldID) {
     self.fieldID = fieldID
     self.builder = builder
   }
 
-  public typealias Value = U
-  public let builder: () -> U
+  public typealias Value = U?
+  public let builder: () -> U?
   private let fieldID: FieldID
 }
 
 // MARK: RouterType
 
-extension UnionRouter {
+extension MaybeUnionRouter {
 
   // MARK: Public
 
@@ -34,9 +34,9 @@ extension UnionRouter {
     for record: RouteRecord,
     in runtime: Runtime
   ) throws
-    -> U
+    -> U?
   {
-    try U(record: record, runtime: runtime)
+    try? U(record: record, runtime: runtime)
   }
 
   public func act(for lifecycle: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
@@ -66,7 +66,7 @@ extension UnionRouter {
 
   @TreeActor
   public mutating func updateRule(
-    from new: UnionRouter<U>,
+    from new: MaybeUnionRouter<U>,
     with context: RuleContext
   ) throws {
     guard let currentScopeContext = currentScopeContext(on: context.runtime)
@@ -74,7 +74,11 @@ extension UnionRouter {
       self = new
       return try applyRule(with: context)
     }
-    let (newCapture, newUnion) = captureUnion()
+    guard let (newCapture, newUnion) = captureUnion()
+    else {
+      try removeRule(with: context)
+      return
+    }
     let currentScope = currentScopeContext.scope
     let currentIDSet = currentScopeContext.idSet
 
@@ -132,10 +136,13 @@ extension UnionRouter {
 
   // MARK: Private
 
-  private func captureUnion() -> (NodeCapture, U) {
-    let union = builder()
-    let capture = NodeCapture(union.anyNode)
-    return (capture, union)
+  private func captureUnion() -> (NodeCapture, U)? {
+    if let union = builder() {
+      let capture = NodeCapture(union.anyNode)
+      return (capture, union)
+    } else {
+      return nil
+    }
   }
 
   @TreeActor
@@ -169,9 +176,9 @@ extension UnionRouter {
   private func initializeNode(context: RuleContext) throws
     -> (union: U, initialized: AnyInitializedNode)?
   {
-    let (capture, publicUnion) = captureUnion()
-
-    guard let union = publicUnion as? any NodeUnionInternal
+    guard
+      let (capture, publicUnion) = captureUnion(),
+      let union = publicUnion as? any NodeUnionInternal
     else {
       throw UnionMissingInternalImplementationError()
     }
@@ -201,45 +208,3 @@ extension UnionRouter {
   }
 
 }
-
-// MARK: - NodeUnion
-
-public protocol NodeUnion {
-  var anyNode: any Node { get }
-  @_spi(Implementation)
-  init(record: RouteRecord, runtime: Runtime) throws
-  @_spi(Implementation)
-  init?(asCaseContaining: some Node)
-  @_spi(Implementation) static var empty: RouteRecord { get }
-  @_spi(Implementation)
-  func idSet(from: NodeID) -> RouteRecord
-  @_spi(Implementation)
-  func matchesCase(of: RouteRecord) -> Bool
-  @_spi(Implementation) static var routeType: RouteType { get }
-}
-
-// MARK: - NodeUnionInternal
-
-protocol NodeUnionInternal: NodeUnion {
-  func initialize(
-    from: UninitializedNode,
-    depth: Int,
-    dependencies: DependencyValues,
-    fieldID: FieldID
-  ) throws -> AnyInitializedNode
-
-  func initialize(
-    from: UninitializedNode,
-    depth: Int,
-    dependencies: DependencyValues,
-    withKnownRecord: NodeRecord
-  ) throws -> AnyInitializedNode
-}
-
-// MARK: - Union
-
-public enum Union { }
-
-// MARK: - UnionMissingInternalImplementationError
-
-struct UnionMissingInternalImplementationError: Error { }

@@ -49,7 +49,7 @@ extension ProjectionTests {
 
   struct ProjectionHost: Node {
 
-    @Route(SubnodeA.self, SubnodeB.self, SubnodeC.self) var route
+    @Route var route: Union.Three<SubnodeA, SubnodeB, SubnodeC>? = nil
     @Value var val: Int?
 
     var rules: some Rules {
@@ -108,7 +108,7 @@ extension ProjectionTests {
 
   struct ReferencedHost: Node {
     @Value var intVal: Int
-    @Route(DisplayedReference.self) var displayed
+    @Route var displayed: DisplayedReference? = nil
     var rules: some Rules {
       $displayed.route { DisplayedReference(intVal: $intVal) }
     }

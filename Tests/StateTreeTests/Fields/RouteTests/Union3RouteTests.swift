@@ -133,7 +133,7 @@ extension Union3RouteTests {
   struct NestedUnion3RouteHost: Node {
 
     @Value var routeTo: Model?
-    @Route(AModel.self, BModel.self, CModel.self) var hosted
+    @Route var hosted: Union.Three<AModel, BModel, CModel>? = nil
 
     var rules: some Rules {
       if let routeTo {

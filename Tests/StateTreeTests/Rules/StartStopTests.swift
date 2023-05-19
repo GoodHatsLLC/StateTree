@@ -68,7 +68,7 @@ extension StartStopTests {
     let start: () -> Void
     let stop: () -> Void
 
-    @Route(StartStop.self) var startStop
+    @Route var startStop: StartStop? = nil
     var rules: some Rules {
       $startStop.route {
         StartStop(start: start, stop: stop)

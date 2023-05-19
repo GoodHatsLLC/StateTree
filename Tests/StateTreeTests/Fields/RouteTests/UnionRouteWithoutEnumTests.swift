@@ -47,37 +47,37 @@ extension UnionRouteWithoutEnumTests {
 
   struct Union2Node: Node {
     @Value var select: String?
-    @Route(NodeA.self, NodeB.self) var route
+    @Route var route: Union.Two<NodeA, NodeB>? = nil
     var rules: some Rules {
       switch select {
       case "a":
-        try $route.route { NodeA() }
+        $route.route { .a(NodeA()) }
       case "b":
-        try $route.route {
-          NodeB()
+        $route.route {
+          .b(NodeB())
         }
       default:
-        try $route.route { BadNode() }
+        .none
       }
     }
   }
 
   struct Union3Node: Node {
     @Value var select: String?
-    @Route(NodeA.self, NodeB.self, NodeC.self) var route
+    @Route var route: Union.Three<NodeA, NodeB, NodeC>? = nil
     var rules: some Rules {
       if select == "a" {
-        try $route.route { NodeA() }
+        $route.route { .a(NodeA()) }
       } else if select == "b" {
-        try $route.route {
-          NodeB()
+        $route.route {
+          .b(NodeB())
         }
       }
 
       if select == "c" {
-        try $route.route { NodeC() }
+        $route.route { .c(NodeC()) }
       } else if select == "bad" {
-        try $route.route { BadNode() }
+        .none
       }
     }
   }

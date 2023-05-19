@@ -45,7 +45,7 @@ extension DependencyTests {
 
   struct DependencyHost: Node {
 
-    @Route(DependencyUserOne.self) var hosted
+    @Route var hosted: DependencyUserOne? = nil
 
     @Dependency(\.myCustomValue) var value
 
@@ -62,7 +62,7 @@ extension DependencyTests {
   struct DependencyUserOne: Node {
 
     @Dependency(\.myCustomValue) var value
-    @Route(DependencyUserTwo.self) var hosted
+    @Route var hosted: DependencyUserTwo? = nil
     var rules: some Rules {
       Inject(\.myCustomValue, "Another Other Value") {
         $hosted

@@ -28,7 +28,7 @@ final class ListRouteTests: XCTestCase {
     func assertAfter(_ nums: [Int]) {
       sorted = nums.map { String($0) }
       rootNode.numbers = nums
-      nodes = rootNode.route ?? []
+      nodes = rootNode.route
       XCTAssertEqual(nodes.map(\.idStr), sorted)
     }
 
@@ -53,13 +53,14 @@ extension ListRouteTests {
 
   struct ListNode: Node {
     @Value var numbers: [Int]? = nil
-    @Route([NodeA].self) var route
+    @Route var route: [NodeA] = []
     var rules: some Rules {
       if let numbers {
-        let nodes = numbers.map { id in
-          NodeA(id: id)
+        $route.route {
+          numbers.map { id in
+            NodeA(id: id)
+          }
         }
-        $route.route(to: nodes)
       }
     }
   }

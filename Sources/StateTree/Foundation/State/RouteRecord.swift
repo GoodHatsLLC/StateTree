@@ -18,6 +18,7 @@ import OrderedCollections
 /// which would in turn correspond to a known `Node` type of the router's`Union.Two<NodeA, NodeB>`.
 public enum RouteRecord: Codable {
   case single(NodeID?)
+  case maybe(NodeID?)
   case union2(Union2?)
   case union3(Union3?)
   case list(List)
@@ -75,6 +76,7 @@ public enum RouteRecord: Codable {
   public var ids: [NodeID] {
     switch self {
     case .single(let single): return single.map { [$0] } ?? []
+    case .maybe(let maybe): return maybe.map { [$0] } ?? []
     case .union2(let union2): return (union2?.id).map { [$0] } ?? []
     case .union3(let union3): return (union3?.id).map { [$0] } ?? []
     case .list(let list): return list.nodeIDs
@@ -85,6 +87,8 @@ public enum RouteRecord: Codable {
     switch self {
     case .single:
       return .single
+    case .maybe:
+      return .maybe
     case .union2:
       return .union2
     case .union3:
@@ -99,6 +103,7 @@ public enum RouteRecord: Codable {
   func nodeID(matching route: RouteSource) -> NodeID? {
     switch (route.identity, self) {
     case (.none, .single(let single)): return single
+    case (.none, .maybe(let maybe)): return maybe
     case (.none, .union2(let union2)): return union2?.id
     case (.none, .union3(let union3)): return union3?.id
     case (.some, .list(let list)): return list.nodeID(matching: route)

@@ -8,15 +8,16 @@ import TreeActor
 public struct ListRouter<NodeType: Node>: NRouterType {
   public static var routeType: RouteType { .list }
 
-  public init(ids: OrderedSet<LSID>, builder: @escaping (LSID) -> NodeType?, fieldID: FieldID) {
+  public init(ids: OrderedSet<LSID>, builder: @escaping (LSID) -> NodeType, fieldID: FieldID) {
     self.builder = builder
     self.fieldID = fieldID
     self.ids = ids
   }
 
+  public static func emptyValue() throws -> [NodeType] { [] }
   public typealias Value = [NodeType]
   private var ids: OrderedSet<LSID>
-  public private(set) var builder: (LSID) -> NodeType?
+  public let builder: (LSID) -> NodeType
   private let fieldID: FieldID
 }
 
@@ -31,10 +32,10 @@ extension ListRouter {
   public static func value(
     for record: RouteRecord,
     in runtime: Runtime
-  ) -> [NodeType]? {
+  ) throws -> [NodeType] {
     guard case .list(let list) = record
     else {
-      return nil
+      throw InvalidRouteRecordError()
     }
     return list.nodeIDs
       .compactMap { id in
@@ -106,11 +107,8 @@ extension ListRouter {
       list.idMap.removeValue(forKey: id)
     }
 
-    let idPairs = try add.compactMap { id -> (lsid: LSID, nid: NodeID)? in
-      guard let node = builder(id)
-      else {
-        return nil
-      }
+    let idPairs = try add.map { id -> (lsid: LSID, nid: NodeID) in
+      let node = builder(id)
       let capture = NodeCapture(node)
       let scope = try UninitializedNode(
         capture: capture,

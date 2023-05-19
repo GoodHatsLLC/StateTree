@@ -102,23 +102,23 @@ extension EventTests {
     @Route(ChildOne.self) var single
     @Route(ChildOne.self, ChildTwo.self) var union2
     @Route(ChildOne.self, ChildTwo.self, ChildThree.self) var union3
-    @Route([ChildTwo].self) var list
+    @Route var list: [ChildTwo] = []
 
     var rules: some Rules {
       $single.route {
         ChildOne(v1: $v1)
       }
-      try $union2.route { ChildTwo(id: 1, v1: $v1) }
-      try $union3.route { ChildThree(v1: $v1) }
+      $union2.route { .b(ChildTwo(id: 1, v1: $v1)) }
+      $union3.route { .c(ChildThree(v1: $v1)) }
 
-      $list.route(
-        to: [
+      $list.route {
+        [
           .init(id: 1, v1: $v1),
           .init(id: 2, v1: $v1),
           .init(id: 3, v1: $v1),
           .init(id: 4, v1: $v1),
         ]
-      )
+      }
     }
   }
 

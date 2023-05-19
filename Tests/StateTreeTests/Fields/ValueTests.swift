@@ -31,8 +31,8 @@ extension ValueTests {
 
   struct ValueTestHost: Node {
 
-    @Route(SubnodeA.self, SubnodeB.self, SubnodeC.self) var route
-    @Route(SubnodeA.self) var otherRoute
+    @Route var route: Union.Three<SubnodeA, SubnodeB, SubnodeC>? = nil
+    @Route var otherRoute: SubnodeA? = nil
     @Value var val: Int?
 
     var rules: some Rules {

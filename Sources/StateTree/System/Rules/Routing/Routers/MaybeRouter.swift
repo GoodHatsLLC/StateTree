@@ -1,40 +1,40 @@
 import Disposable
 import TreeActor
 
-// MARK: - SingleRouterType
+// MARK: - MaybeRouterType
 
-public protocol SingleRouterType: RouterType { }
+public protocol MaybeRouterType: RouterType { }
 
-// MARK: - SingleRouter
+// MARK: - MaybeRouter
 
-public struct SingleRouter<N: Node>: SingleRouterType, OneRouterType {
-  public static func emptyValue() throws -> N {
-    throw RouteDefaultFailure()
+public struct MaybeRouter<N: Node>: MaybeRouterType, OneRouterType {
+  public static func emptyValue() throws -> N? {
+    return nil
   }
 
   public static var routeType: RouteType { .single }
 
-  public init(builder: @escaping () -> N, fieldID: FieldID) {
+  public init(builder: @escaping () -> N?, fieldID: FieldID) {
     self.builder = builder
     self.fieldID = fieldID
   }
 
-  public private(set) var builder: () -> N
+  public private(set) var builder: () -> N?
 
-  public typealias Value = N
+  public typealias Value = N?
 
   private let fieldID: FieldID
 }
 
-// MARK: SingleRouterType
+// MARK: MaybeRouterType
 
 @_spi(Implementation)
-extension SingleRouter {
+extension MaybeRouter {
 
   // MARK: Public
 
   @TreeActor
-  public static func value(for record: RouteRecord, in runtime: Runtime) throws -> N {
+  public static func value(for record: RouteRecord, in runtime: Runtime) throws -> N? {
     if
       case .single(let single) = record,
       let single = single,
@@ -65,21 +65,26 @@ extension SingleRouter {
     let initialized = try initialize(
       context: context
     )
-    try start(
-      initialized: initialized,
-      on: context.runtime
-    )
+    if let initialized {
+      try start(
+        initialized: initialized,
+        on: context.runtime
+      )
+    } else {
+      context.runtime
+        .updateRouteRecord(at: fieldID, to: .maybe(nil))
+    }
   }
 
   @TreeActor
   public mutating func removeRule(with context: RuleContext) throws {
     context.runtime
-      .updateRouteRecord(at: fieldID, to: .single(nil))
+      .updateRouteRecord(at: fieldID, to: .maybe(nil))
   }
 
   @TreeActor
   public mutating func updateRule(
-    from new: SingleRouter<N>,
+    from new: MaybeRouter<N>,
     with context: RuleContext
   ) throws {
     guard let currentScope = currentScope(on: context.runtime)
@@ -110,8 +115,8 @@ extension SingleRouter {
 
   // MARK: Private
 
-  private func capture() -> NodeCapture {
-    NodeCapture(builder())
+  private func capture() -> NodeCapture? {
+    builder().map { NodeCapture($0) }
   }
 
   @TreeActor
@@ -135,8 +140,11 @@ extension SingleRouter {
   }
 
   @TreeActor
-  private func initialize(context: RuleContext) throws -> InitializedNode<N> {
-    let capture = capture()
+  private func initialize(context: RuleContext) throws -> InitializedNode<N>? {
+    guard let capture = capture()
+    else {
+      return nil
+    }
     let uninitialized = UninitializedNode(
       capture: capture,
       runtime: context.runtime

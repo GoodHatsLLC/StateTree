@@ -179,7 +179,7 @@ extension PlaybackTests {
 
   struct SubNode: Node {
 
-    @Route(SubSubNode.self) var subSubRoute
+    @Route var subSubRoute: SubSubNode? = nil
     @Value var subValue = 32
     @Projection var value: Int
 
@@ -197,7 +197,7 @@ extension PlaybackTests {
   struct RootNode: Node {
 
     @Value var routeIfNegative = 0
-    @Route(SubNode.self) var subRoute
+    @Route var subRoute: SubNode? = nil
 
     var rules: some Rules {
       if routeIfNegative < 0 {
@@ -227,7 +227,7 @@ extension PlaybackTests {
   struct PrimeSquare: Node {
 
     @Value var potentialPrime = 0
-    @Route(Square.self) var primeSquared
+    @Route var primeSquared: Square? = nil
 
     var rules: some Rules {
       if isPrime(potentialPrime) {

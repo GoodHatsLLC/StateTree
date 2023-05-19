@@ -62,7 +62,7 @@ extension SingleRouteTests {
   struct SingleRouteHost: Node {
 
     @Value var route: Bool
-    @Route(AModel.self) var hosted
+    @Route var hosted: AModel? = nil
 
     var rules: some Rules {
       if route {

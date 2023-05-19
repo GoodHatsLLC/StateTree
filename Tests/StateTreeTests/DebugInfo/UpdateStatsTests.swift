@@ -73,7 +73,7 @@ extension UpdateStatsTests {
 
   struct DeepNode: Node {
 
-    @Route(BNode.self) var next
+    @Route var next: BNode? = nil
     @Value var height: Int
 
     var rules: some Rules {
@@ -87,8 +87,8 @@ extension UpdateStatsTests {
 
   struct BNode: Node {
 
-    @Route(BNode.self) var next
-    @Route(BNode.self) var sideChain
+    @Route var next: BNode? = nil
+    @Route var sideChain: BNode? = nil
     @Value var sideChainHeight: Int = 11
     @Value var height: Int = 0
     @Projection var parentHeight: Int

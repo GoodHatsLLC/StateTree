@@ -97,7 +97,7 @@ extension Union2RouteTests {
   struct NestedUnion2RouteHost: Node {
 
     @Value var routeTo: Model?
-    @Route(AModel.self, BModel.self) var hosted
+    @Route var hosted: Union.Two<AModel, BModel>? = nil
 
     var rules: some Rules {
       if let routeTo {

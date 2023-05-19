@@ -40,7 +40,9 @@ public struct Route<Router: RouterType>: RouteField {
 
   // MARK: Lifecycle
 
-  public nonisolated init() { }
+  public nonisolated init(defaultValue: Router.Value) {
+    self.inner = .init(defaultValue: defaultValue)
+  }
 
   // MARK: Public
 
@@ -67,7 +69,7 @@ public struct Route<Router: RouterType>: RouteField {
     else {
       return nil
     }
-    guard let value = Router.value(for: idSet, in: connection.runtime)
+    guard let value = try? Router.value(for: idSet, in: connection.runtime)
     else {
       return nil
     }
@@ -101,8 +103,8 @@ public struct Route<Router: RouterType>: RouteField {
   ///   }
   /// }
   /// ```
-  @TreeActor public var wrappedValue: Router.Value? {
-    current?.value
+  @TreeActor public var wrappedValue: Router.Value {
+    current?.value ?? inner.defaultValue
   }
 
   /// The `Route` itself, used for routing with ``route(to:)-2xtev``
@@ -132,15 +134,23 @@ public struct Route<Router: RouterType>: RouteField {
 
     // MARK: Lifecycle
 
-    nonisolated init() { }
+    nonisolated init(defaultValue: Router.Value) {
+      self.defaultValue = defaultValue
+    }
 
     // MARK: Internal
 
-    var connection: RouteConnection?
+    let defaultValue: Router.Value
+
+    var connection: RouteConnection? {
+      didSet {
+        // TODO: set up default value
+      }
+    }
 
   }
 
-  private let inner = Inner()
+  private let inner: Inner
 
 }
 
@@ -148,7 +158,8 @@ extension Route where Router: OneRouterType {
 
   /// Attempt to route an arbitrary ``Node`` with a union router.
   ///
-  /// This route overload will throw if the node's type isn't declared in the ``Route`` initializer.
+  /// This route overload will throw if the node's type isn't declared in the ``Route``
+  /// defaultValueizer.
   ///
   /// ```swift
   /// @Route(NodeOne.self, NodeTwo.self) var unionRoute
@@ -161,17 +172,13 @@ extension Route where Router: OneRouterType {
   ///   try $unionRoute.route { NodeTwo() }
   /// }
   /// ```
-  ///
-  /// > Tip: Consider using the compile-time safe overload ``route(to:)-2xtev``.
   @TreeActor
-  public func route<U: NodeUnion>(to nodeBuilder: @escaping () -> (some Node)?) throws -> some Rules
+  public func route<U: NodeUnion>(to nodeBuilder: @escaping () -> U) throws -> some Rules
     where Router == UnionRouter<U>
   {
     Attach(
       router: .init(
-        builder: {
-          nodeBuilder().flatMap { U(asCaseContaining: $0) }
-        },
+        builder: nodeBuilder,
         fieldID: connection?.fieldID ?? .invalid
       ),
       to: self
@@ -247,7 +254,7 @@ extension Route where Router: NRouterType {
         builder: { id in
           idMap[id].flatMap { datum in
             builder(datum)
-          }
+          }!
         },
         fieldID: connection?.fieldID ?? .invalid
       ),
@@ -258,7 +265,8 @@ extension Route where Router: NRouterType {
 
 extension Route where Router: NRouterType, Router.NodeType: Identifiable {
   @TreeActor
-  public func route(to nodes: [Router.NodeType]) -> some Rules {
+  public func route(builder: () -> [Router.NodeType]) -> some Rules {
+    let nodes = builder()
     let pairs = nodes.map { node in
       (id: LSID(hashable: node.id), node: node)
     }
@@ -267,7 +275,7 @@ extension Route where Router: NRouterType, Router.NodeType: Identifiable {
       router: .init(
         ids: OrderedSet(pairs.map(\.id)),
         builder: {
-          idMap[$0]
+          idMap[$0]!
         },
         fieldID: connection?.fieldID ?? .invalid
       ),
@@ -277,27 +285,45 @@ extension Route where Router: NRouterType, Router.NodeType: Identifiable {
 }
 
 extension Route {
-  public init<A: Node>(_: A.Type)
+  public init<A: Node>(wrappedValue: A? = nil)
+    where Router == MaybeRouter<A>
+  { self.init(defaultValue: wrappedValue) }
+}
+
+extension Route {
+  public init<A: Node>(wrappedValue: A)
     where Router == SingleRouter<A>
-  { self.init() }
+  { self.init(defaultValue: wrappedValue) }
 }
 
 extension Route {
-  public init<A: Node, B: Node>(_: A.Type, _: B.Type)
+  public init<A: Node, B: Node>(wrappedValue: Union.Two<A, B>)
     where Router == UnionRouter<Union.Two<A, B>>
-  { self.init() }
+  { self.init(defaultValue: wrappedValue) }
 }
 
 extension Route {
-  public init<A: Node, B: Node, C: Node>(_: A.Type, _: B.Type, _: C.Type)
+  public init<A: Node, B: Node, C: Node>(wrappedValue: Union.Three<A, B, C>)
     where Router == UnionRouter<Union.Three<A, B, C>>
-  { self.init() }
+  { self.init(defaultValue: wrappedValue) }
 }
 
 extension Route {
-  public init<A: Node>(_: [A].Type)
+  public init<A: Node, B: Node>(wrappedValue: Union.Two<A, B>?)
+    where Router == MaybeUnionRouter<Union.Two<A, B>>
+  { self.init(defaultValue: wrappedValue) }
+}
+
+extension Route {
+  public init<A: Node, B: Node, C: Node>(wrappedValue: Union.Three<A, B, C>?)
+    where Router == MaybeUnionRouter<Union.Three<A, B, C>>
+  { self.init(defaultValue: wrappedValue) }
+}
+
+extension Route {
+  public init<A: Node>(wrappedValue: [A])
     where Router == ListRouter<A>
-  { self.init() }
+  { self.init(defaultValue: wrappedValue) }
 }
 
 // MARK: - RouteConnection

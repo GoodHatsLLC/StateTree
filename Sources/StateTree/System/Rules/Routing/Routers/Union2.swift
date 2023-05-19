@@ -20,32 +20,32 @@ extension Union {
 
     @TreeActor
     @_spi(Implementation)
-    public init?(record: RouteRecord, runtime: Runtime) {
-      if case .union2(let union2) = record {
-        guard let union2
-        else {
-          return nil
+    public init(record: RouteRecord, runtime: Runtime) throws {
+      guard case .union2(let union2) = record
+      else {
+        throw InvalidRouteRecordError()
+      }
+      switch union2 {
+      case .none:
+        throw InvalidRouteRecordError()
+      case .a(let nodeID):
+        if
+          let scope = try? runtime.getScope(for: nodeID),
+          let node = scope.node as? A
+        {
+          self = .a(node)
+          return
         }
-        switch union2 {
-        case .a(let nodeID):
-          if
-            let scope = try? runtime.getScope(for: nodeID),
-            let node = scope.node as? A
-          {
-            self = .a(node)
-            return
-          }
-        case .b(let nodeID):
-          if
-            let scope = try? runtime.getScope(for: nodeID),
-            let node = scope.node as? B
-          {
-            self = .b(node)
-            return
-          }
+      case .b(let nodeID):
+        if
+          let scope = try? runtime.getScope(for: nodeID),
+          let node = scope.node as? B
+        {
+          self = .b(node)
+          return
         }
       }
-      return nil
+      throw InvalidRouteRecordError()
     }
 
     public init?(asCaseContaining node: some Node) {

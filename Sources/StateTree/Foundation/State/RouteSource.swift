@@ -2,6 +2,7 @@
 
 public enum RouteType: String, Codable, Hashable {
   case single
+  case maybe
   case union2
   case union3
   case list
@@ -10,6 +11,8 @@ public enum RouteType: String, Codable, Hashable {
     switch self {
     case .single:
       return .single(nil)
+    case .maybe:
+      return .maybe(nil)
     case .union2:
       return .union2(nil)
     case .union3:

@@ -350,7 +350,7 @@ extension IntentApplicationTests {
   }
 
   fileprivate struct RoutingIntentNode<Next: DefaultInitNode>: DefaultInitNode {
-    @Route(Next.self) var child
+    @Route var child: Next? = nil
     @Value private var shouldRoute: Bool = false
     var rules: some Rules {
       if shouldRoute {
@@ -365,7 +365,7 @@ extension IntentApplicationTests {
   }
 
   fileprivate struct IntermediateNode<Next: DefaultInitNode>: DefaultInitNode {
-    @Route(Next.self) var child
+    @Route var child: Next? = nil
     var rules: some Rules {
       $child.route { Next() }
     }
@@ -375,7 +375,7 @@ extension IntentApplicationTests {
 
     @Value var mayRoute: Bool = false
     @Value var shouldRoute: Bool = false
-    @Route(Next.self) var child
+    @Route var child: Next? = nil
 
     var rules: some Rules {
       if shouldRoute {
@@ -390,8 +390,8 @@ extension IntentApplicationTests {
   }
 
   fileprivate struct InvalidatingNode<Next: DefaultInitNode>: DefaultInitNode {
-    @Route(Next.self) var initialNext
-    @Route(Next.self) var laterNext
+    @Route var initialNext: Next? = nil
+    @Route var laterNext: Next? = nil
     @Value var validNext: ValidNext = .initial
     @Value var shouldRoute: Bool = false
 

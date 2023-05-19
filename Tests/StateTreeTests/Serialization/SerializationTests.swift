@@ -58,7 +58,7 @@ final class SerializationTests: XCTestCase {
     let snapshot = try tree.assume.snapshot()
     let string = snapshot.formattedJSON
     XCTAssertEqual(string, primeStateString)
-    XCTAssert(try tree.assume.rootNode.commentaries?[0].note != nil)
+    XCTAssert(try tree.assume.rootNode.commentaries.first?.note != nil)
   }
 
   @TreeActor
@@ -81,8 +81,8 @@ final class SerializationTests: XCTestCase {
 
     XCTAssertEqual(try tree1.assume.rootID, try tree2.assume.rootID)
     XCTAssertEqual(
-      try tree1.assume.rootNode.commentaries?[0].note,
-      try tree2.assume.rootNode.commentaries?[0].note
+      try tree1.assume.rootNode.commentaries.first?.note,
+      try tree2.assume.rootNode.commentaries.first?.note
     )
     XCTAssertEqual(
       try tree1.assume.rootNode.primeSquared?.value,
@@ -177,9 +177,9 @@ extension SerializationTests {
     }
 
     @Value var potentialPrime = 0
-    @Route(Square.self) var primeSquared
+    @Route var primeSquared: Square? = nil
     @Scope var scope
-    @Route([Commentary].self) var commentaries
+    @Route var commentaries: [Commentary] = []
 
     var rules: some Rules {
       if isPrime(potentialPrime) {
@@ -187,20 +187,19 @@ extension SerializationTests {
           Square(value: $potentialPrime)
         }
 
-        $commentaries.route(
-          to: [
+        $commentaries.route {
+          [
             Commentary(id: "yes1", note: "It's a prime!"),
             Commentary(id: "yes2", note: "really!"),
           ]
-        )
+        }
       } else {
-        $commentaries.route(
-          to:
+        $commentaries.route {
           [
             Commentary(id: "no1", note: "Not a prime :("),
             Commentary(id: "no2", note: "srsly"),
           ]
-        )
+        }
       }
       OnIntent(SomeIntentStep.self) { _ in
         // keep the intent pending to keep it present in the state.

@@ -115,7 +115,7 @@ extension IntentSnapshotTests {
 
     @Value var mayRoute: Bool = false
     @Value var shouldRoute: Bool = false
-    @Route(Next.self) var child
+    @Route var child: Next? = nil
 
     var rules: some Rules {
       if shouldRoute {

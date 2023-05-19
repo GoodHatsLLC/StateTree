@@ -46,8 +46,8 @@ extension RoutingInitializationTests {
 
   struct DeepValueNode: Node {
 
-    @Route(DeepValueNode.self) var next
-    @Route(DeepValueNode.self) var always
+    @Route var next: DeepValueNode? = nil
+    @Route var always: DeepValueNode? = nil
     @Value var depth: Int
 
     var rules: some Rules {
