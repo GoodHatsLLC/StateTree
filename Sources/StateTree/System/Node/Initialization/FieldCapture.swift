@@ -114,7 +114,7 @@ enum FieldCapture: Equatable {
     }
   }
 
-  var type: FieldType {
+  var fieldType: FieldType {
     switch self {
     case .dependency:
       return .dependency
