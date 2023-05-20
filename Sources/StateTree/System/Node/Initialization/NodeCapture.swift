@@ -1,7 +1,15 @@
 @_spi(Implementation)
 public struct NodeCapture: Equatable {
   public static func == (lhs: NodeCapture, rhs: NodeCapture) -> Bool {
-    lhs.fields == rhs.fields
+    lhs.nodeTypeEquals(other: rhs.anyNode)
+  }
+
+  private func nodeTypeEquals<N: Node>(other: N) -> Bool {
+    if (anyNode as? N) != nil {
+      return true
+    } else {
+      return false
+    }
   }
 
   init(_ node: some Node) {

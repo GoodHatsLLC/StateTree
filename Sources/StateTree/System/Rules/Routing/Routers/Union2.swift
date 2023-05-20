@@ -1,20 +1,24 @@
 import TreeActor
 
-// MARK: - Union2Route
-
-protocol Union2Route<A, B>: NodeUnionInternal {
-  associatedtype A: Node
-  associatedtype B: Node
-  init?(asCaseContaining node: some Node)
-}
-
 // MARK: - Union.Two
 
-extension Union {
+extension Union.Two: NodeUnion where A: Node, B: Node {
+  public static var cardinality: NodeUnionCardinality {
+    .three
+  }
 
-  public enum Two<A: Node, B: Node>: Union2Route {
-    case a(A)
-    case b(B)
+  public var anyNode: any Node {
+    switch self {
+    case .a(let a):
+      return a
+    case .b(let b):
+      return b
+    }
+  }
+}
+
+extension Union.Two: NodeUnionInternal where A: Node, B: Node {
+
 
     // MARK: Lifecycle
 
@@ -26,8 +30,6 @@ extension Union {
         throw InvalidRouteRecordError()
       }
       switch union2 {
-      case .none:
-        throw InvalidRouteRecordError()
       case .a(let nodeID):
         if
           let scope = try? runtime.getScope(for: nodeID),
@@ -48,61 +50,7 @@ extension Union {
       throw InvalidRouteRecordError()
     }
 
-    public init?(asCaseContaining node: some Node) {
-      if let a = node as? A {
-        self.init(a)
-        return
-      } else if let b = node as? B {
-        self.init(b)
-        return
-      }
-      return nil
-    }
-
-    init?(maybe: A?) {
-      if let a = maybe {
-        self = .a(a)
-      } else {
-        return nil
-      }
-    }
-
-    init?(maybe: B?) {
-      if let b = maybe {
-        self = .b(b)
-      } else {
-        return nil
-      }
-    }
-
-    init(_ a: A) { self = .a(a) }
-    init(_ b: B) { self = .b(b) }
-
     // MARK: Public
-
-    public static var routeType: RouteType { .union2 }
-    @_spi(Implementation) public static var empty: RouteRecord { .union2(nil) }
-
-    public var anyNode: any Node {
-      switch self {
-      case .a(let a): return a
-      case .b(let b): return b
-      }
-    }
-
-    public var a: A? {
-      switch self {
-      case .a(let a): return a
-      case .b: return nil
-      }
-    }
-
-    public var b: B? {
-      switch self {
-      case .b(let b): return b
-      case .a: return nil
-      }
-    }
 
     @_spi(Implementation)
     public func idSet(from nodeID: NodeID) -> RouteRecord {
@@ -191,5 +139,3 @@ extension Union {
     }
 
   }
-
-}

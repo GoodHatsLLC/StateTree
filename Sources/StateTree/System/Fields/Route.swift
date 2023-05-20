@@ -7,7 +7,7 @@ import TreeActor
 
 protocol RouteField<Router> {
   associatedtype Router: RouterType
-  @TreeActor var connection: RouteConnection? { get nonmutating set }
+  @TreeActor func connect(with connection: RouteConnection) -> RouteRecord
   var type: RouteType { get }
 }
 
@@ -47,39 +47,46 @@ public struct Route<Router: RouterType>: RouteField {
   // MARK: Public
 
   @TreeActor public var record: RouteRecord? {
-    connection?
+    guard let connection = inner.connection
+    else { return nil }
+    return connection
       .runtime
-      .getRouteRecord(at: connection?.fieldID ?? .invalid)
+      .getRouteRecord(at: connection.fieldID)
   }
 
-  public var type: RouteType {
-    Router.routeType
+  var type: RouteType {
+    Router.type
+  }
+
+  @TreeActor
+  func connect(with connection: RouteConnection) -> RouteRecord {
+    inner.connect(with: connection)
   }
 
   @_spi(Implementation)
-  @TreeActor public var current: (idSet: RouteRecord, value: Router.Value)? {
-    guard let connection
+  @TreeActor public var currentRoute: (record: RouteRecord, value: Router.Value)? {
+    guard let connection = inner.connection
     else {
       return nil
     }
     guard
-      let idSet = connection
+      let record = connection
         .runtime
         .getRouteRecord(at: connection.fieldID)
     else {
       return nil
     }
-    guard let value = try? Router.value(for: idSet, in: connection.runtime)
+    guard let value = try? Router.value(for: record, in: connection.runtime)
     else {
       return nil
     }
-    return (idSet, value)
+    return (record, value)
   }
 
   @_spi(Implementation)
   @TreeActor public var endIndex: Int {
     guard
-      let connection,
+      let connection = inner.connection,
       let idSet = connection
         .runtime
         .getRouteRecord(at: connection.fieldID)
@@ -104,7 +111,7 @@ public struct Route<Router: RouterType>: RouteField {
   /// }
   /// ```
   @TreeActor public var wrappedValue: Router.Value {
-    current?.value ?? inner.defaultValue
+    currentRoute?.value ?? inner.defaultValue
   }
 
   /// The `Route` itself, used for routing with ``route(to:)-2xtev``
@@ -119,14 +126,7 @@ public struct Route<Router: RouterType>: RouteField {
   /// ```
   public var projectedValue: Route<Router> { self }
 
-  @_spi(Implementation) @TreeActor public var runtime: Runtime? { connection?.runtime }
-
-  // MARK: Internal
-
-  @TreeActor var connection: RouteConnection? {
-    get { inner.connection }
-    nonmutating set { inner.connection = newValue }
-  }
+  @_spi(Implementation) @TreeActor public var runtime: Runtime? { inner.connection?.runtime }
 
   // MARK: Private
 
@@ -140,13 +140,21 @@ public struct Route<Router: RouterType>: RouteField {
 
     // MARK: Internal
 
+    func connect(with connection: RouteConnection) -> RouteRecord {
+      assert(self.connection == nil)
+      self.connection = connection
+      return routeToDefault()
+    }
+
+    func routeToDefault() -> RouteRecord {
+      assert(self.connection != nil)
+      // TODO: make default record
+      fatalError()
+    }
+
     let defaultValue: Router.Value
 
-    var connection: RouteConnection? {
-      didSet {
-        // TODO: set up default value
-      }
-    }
+    private(set) var connection: RouteConnection?
 
   }
 
@@ -179,55 +187,18 @@ extension Route where Router: OneRouterType {
     Attach(
       router: .init(
         builder: nodeBuilder,
-        fieldID: connection?.fieldID ?? .invalid
+        fieldID: inner.connection?.fieldID ?? .invalid
       ),
       to: self
     )
   }
 
-  /// Route to the passed ``Node``, attaching it to the NodeTree ``Tree`` as a sub-node of the
-  /// routing node.
-  ///
-  /// - Parameters:
-  ///   - to: A closure returning a ``Node`` instance. If building a node for a union-type route, it
-  /// should be
-  ///   wrapped in a union type indicator. i.e. `.a(node)`, `.b(node)`, or `.c(node)`.
-  ///
-  /// A single-type `Route` doesn't require a wrapper. A union type `Route` requires a wrapper
-  /// identifying the
-  /// node as its first, second, or third type.—
-  /// i.e. `.a(NodeOne())`, `.b(NodeTwo())`, `.c(NodeThree())` respectively.
-  ///
-  /// > Tip: Union routes can also be used with the throwing overload ``route(to:)-8f0z6``
-  ///
-  /// ```swift
-  /// @Route(NodeOne.self) var singleRoute
-  /// @Route(NodeOne.self, NodeTwo.self) var unionRoute
-  ///
-  /// var rules: some Rules {
-  ///   // Working examples.
-  ///   // These are compile-time safe.
-  ///   $singleRoute.route { NodeOne() }
-  ///   $unionRoute.route { .a(NodeTwo()) }
-  ///
-  ///   // This would fail to compile.
-  ///   // $unionRoute { NodeOne() }
-  ///
-  ///   // This will call the throwing overload of route(to:)
-  ///   // and succeed.
-  ///   try $unionRoute.route { NodeOne() }
-  ///
-  ///   // This will call the throwing overload and fail, creating
-  ///   // an UnenumeratedRouteError and returning a logging Error rule.
-  ///   try $unionRoute.route { NodeThree() }
-  /// }
-  /// ```
   @TreeActor
   public func route(to builder: @escaping () -> Router.Value) -> Attach<Router> {
-    return Attach(
+    Attach(
       router: .init(
         builder: builder,
-        fieldID: connection?.fieldID ?? .invalid
+        fieldID: inner.connection?.fieldID ?? .invalid
       ),
       to: self
     )
@@ -256,7 +227,7 @@ extension Route where Router: NRouterType {
             builder(datum)
           }!
         },
-        fieldID: connection?.fieldID ?? .invalid
+        fieldID: inner.connection?.fieldID ?? .invalid
       ),
       to: self
     )
@@ -277,7 +248,7 @@ extension Route where Router: NRouterType, Router.NodeType: Identifiable {
         builder: {
           idMap[$0]!
         },
-        fieldID: connection?.fieldID ?? .invalid
+        fieldID: inner.connection?.fieldID ?? .invalid
       ),
       to: self
     )
@@ -286,7 +257,7 @@ extension Route where Router: NRouterType, Router.NodeType: Identifiable {
 
 extension Route {
   public init<A: Node>(wrappedValue: A? = nil)
-    where Router == MaybeRouter<A>
+    where Router == MaybeSingleRouter<A>
   { self.init(defaultValue: wrappedValue) }
 }
 
@@ -332,7 +303,3 @@ struct RouteConnection {
   let runtime: Runtime
   let fieldID: FieldID
 }
-
-// MARK: - UnenumeratedRouteError
-
-struct UnenumeratedRouteError: Error { }

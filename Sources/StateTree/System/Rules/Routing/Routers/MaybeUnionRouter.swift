@@ -5,12 +5,13 @@ import TreeActor
 
 public struct MaybeUnionRouter<U: NodeUnion>: OneRouterType {
 
-  public static func emptyValue() throws -> U? {
-    nil
-  }
-
-  public static var routeType: RouteType {
-    U.routeType
+  public static var type: RouteType {
+    switch U.cardinality {
+    case .two:
+      return .maybeUnion2
+    case .three:
+      return .maybeUnion3
+    }
   }
 
   public init(builder: @escaping () -> U?, fieldID: FieldID) {

@@ -17,18 +17,15 @@ import OrderedCollections
 /// `.a(<NodeID>)`
 /// which would in turn correspond to a known `Node` type of the router's`Union.Two<NodeA, NodeB>`.
 public enum RouteRecord: Codable {
-  case single(NodeID?)
-  case maybe(NodeID?)
-  case union2(Union2?)
-  case union3(Union3?)
+  case single(NodeID)
+  case union2(Union2)
+  case union3(Union3)
+  case maybeSingle(NodeID?)
+  case maybeUnion2(Union2?)
+  case maybeUnion3(Union3?)
   case list(List)
 
   // MARK: Public
-
-  public struct Single: Codable {
-    var id: NodeID
-  }
-
   public enum Union2: Codable {
     case a(NodeID)
     case b(NodeID)
@@ -75,10 +72,12 @@ public enum RouteRecord: Codable {
 
   public var ids: [NodeID] {
     switch self {
-    case .single(let single): return single.map { [$0] } ?? []
-    case .maybe(let maybe): return maybe.map { [$0] } ?? []
-    case .union2(let union2): return (union2?.id).map { [$0] } ?? []
-    case .union3(let union3): return (union3?.id).map { [$0] } ?? []
+    case .single(let single): return [single]
+    case .union2(let union2): return [union2.id]
+    case .union3(let union3): return [union3.id]
+    case .maybeSingle(let single): return [single].compactMap { $0 }
+    case .maybeUnion2(let union2): return [union2?.id].compactMap { $0 }
+    case .maybeUnion3(let union3): return [union3?.id].compactMap { $0 }
     case .list(let list): return list.nodeIDs
     }
   }
@@ -87,12 +86,16 @@ public enum RouteRecord: Codable {
     switch self {
     case .single:
       return .single
-    case .maybe:
-      return .maybe
     case .union2:
       return .union2
     case .union3:
       return .union3
+    case .maybeSingle:
+      return .maybeSingle
+    case .maybeUnion2:
+      return .maybeUnion2
+    case .maybeUnion3:
+      return .maybeUnion3
     case .list:
       return .list
     }
@@ -101,13 +104,21 @@ public enum RouteRecord: Codable {
   // MARK: Internal
 
   func nodeID(matching route: RouteSource) -> NodeID? {
-    switch (route.identity, self) {
-    case (.none, .single(let single)): return single
-    case (.none, .maybe(let maybe)): return maybe
-    case (.none, .union2(let union2)): return union2?.id
-    case (.none, .union3(let union3)): return union3?.id
-    case (.some, .list(let list)): return list.nodeID(matching: route)
-    default: return nil
+    switch self {
+    case .single(let nodeID):
+      return nodeID
+    case .union2(let union2):
+      return union2.id
+    case .union3(let union3):
+      return union3.id
+    case .maybeSingle(let nodeID):
+      return nodeID
+    case .maybeUnion2(let union2):
+      return union2?.id
+    case .maybeUnion3(let union3):
+      return union3?.id
+    case .list(let list):
+      return list.nodeID(matching: route)
     }
   }
 }

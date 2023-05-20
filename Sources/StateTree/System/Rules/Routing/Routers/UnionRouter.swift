@@ -5,12 +5,13 @@ import TreeActor
 
 public struct UnionRouter<U: NodeUnion>: OneRouterType {
 
-  public static func emptyValue() throws -> U {
-    throw RouteDefaultFailure()
-  }
-
-  public static var routeType: RouteType {
-    U.routeType
+  public static var type: RouteType {
+    switch U.cardinality {
+    case .two:
+      return .union2
+    case .three:
+      return .union3
+    }
   }
 
   public init(builder: @escaping () -> U, fieldID: FieldID) {
@@ -209,13 +210,18 @@ public protocol NodeUnion {
   @_spi(Implementation)
   init(record: RouteRecord, runtime: Runtime) throws
   @_spi(Implementation)
-  init?(asCaseContaining: some Node)
-  @_spi(Implementation) static var empty: RouteRecord { get }
+  init?(payload: some Node)
   @_spi(Implementation)
   func idSet(from: NodeID) -> RouteRecord
   @_spi(Implementation)
   func matchesCase(of: RouteRecord) -> Bool
-  @_spi(Implementation) static var routeType: RouteType { get }
+  @_spi(Implementation)
+  static var cardinality: NodeUnionCardinality { get }
+}
+
+public enum NodeUnionCardinality {
+  case two
+  case three
 }
 
 // MARK: - NodeUnionInternal
@@ -235,10 +241,6 @@ protocol NodeUnionInternal: NodeUnion {
     withKnownRecord: NodeRecord
   ) throws -> AnyInitializedNode
 }
-
-// MARK: - Union
-
-public enum Union { }
 
 // MARK: - UnionMissingInternalImplementationError
 

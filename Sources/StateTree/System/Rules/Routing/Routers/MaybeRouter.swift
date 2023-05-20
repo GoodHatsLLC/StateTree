@@ -1,18 +1,15 @@
 import Disposable
 import TreeActor
 
-// MARK: - MaybeRouterType
+// MARK: - MaybeSingleRouterType
 
-public protocol MaybeRouterType: RouterType { }
+public protocol MaybeSingleRouterType: RouterType { }
 
-// MARK: - MaybeRouter
+// MARK: - MaybeSingleRouter
 
-public struct MaybeRouter<N: Node>: MaybeRouterType, OneRouterType {
-  public static func emptyValue() throws -> N? {
-    return nil
-  }
+public struct MaybeSingleRouter<N: Node>: MaybeSingleRouterType, OneRouterType {
 
-  public static var routeType: RouteType { .single }
+  public static var type: RouteType { .maybeSingle }
 
   public init(builder: @escaping () -> N?, fieldID: FieldID) {
     self.builder = builder
@@ -26,10 +23,10 @@ public struct MaybeRouter<N: Node>: MaybeRouterType, OneRouterType {
   private let fieldID: FieldID
 }
 
-// MARK: MaybeRouterType
+// MARK: MaybeSingleRouterType
 
 @_spi(Implementation)
-extension MaybeRouter {
+extension MaybeSingleRouter {
 
   // MARK: Public
 
@@ -37,13 +34,12 @@ extension MaybeRouter {
   public static func value(for record: RouteRecord, in runtime: Runtime) throws -> N? {
     if
       case .single(let single) = record,
-      let single = single,
       let scope = try? runtime.getScope(for: single),
       let node = scope.node as? N
     {
       return node
     }
-    throw InvalidRouteRecordError()
+    return nil
   }
 
   public func act(for lifecycle: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
@@ -72,19 +68,19 @@ extension MaybeRouter {
       )
     } else {
       context.runtime
-        .updateRouteRecord(at: fieldID, to: .maybe(nil))
+        .updateRouteRecord(at: fieldID, to: .maybeSingle(nil))
     }
   }
 
   @TreeActor
   public mutating func removeRule(with context: RuleContext) throws {
     context.runtime
-      .updateRouteRecord(at: fieldID, to: .maybe(nil))
+      .updateRouteRecord(at: fieldID, to: .maybeSingle(nil))
   }
 
   @TreeActor
   public mutating func updateRule(
-    from new: MaybeRouter<N>,
+    from new: MaybeSingleRouter<N>,
     with context: RuleContext
   ) throws {
     guard let currentScope = currentScope(on: context.runtime)
@@ -157,7 +153,7 @@ extension MaybeRouter {
         on: .init(
           fieldID: fieldID,
           identity: nil,
-          type: .single
+          type: .maybeSingle
         )
       )
     return initialized

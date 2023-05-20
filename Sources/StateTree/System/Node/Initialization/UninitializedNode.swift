@@ -13,80 +13,106 @@ extension UninitializedNode {
   // MARK: Internal
 
   @TreeActor
-  func initialize<N: Node>(
-    as _: N.Type,
-    depth: Int,
-    dependencies: DependencyValues,
-    on route: RouteSource
+  func initializeRoot<N: Node>(
+    asType _: N.Type,
+    dependencies: DependencyValues
   ) throws -> InitializedNode<N> {
-    let existingRecord = runtime
-      .getRoutedRecord(at: route)
-    let record = existingRecord ?? createRecord(for: route)
-    return try initialize(
-      as: N.self,
-      depth: depth,
+    try initializeNode(
+      asType: N.self,
+      id: .root,
       dependencies: dependencies,
-      record: record
+      on: .system
     )
   }
 
   @TreeActor
-  func initialize<N: Node>(
-    as _: N.Type,
-    depth: Int,
+  func initializeNode<N: Node>(
+    asType _: N.Type,
+    id nodeID: NodeID = NodeID(),
     dependencies: DependencyValues,
-    record: NodeRecord
+    on route: RouteSource
   ) throws -> InitializedNode<N> {
     guard let node = capture.anyNode as? N
     else {
       runtimeWarning("Node type mismatch")
       throw NodeInitializationError()
     }
+    let record = createRecord(
+      id: nodeID,
+      on: route,
+      dependencies: dependencies
+    )
+    return .init(
+      id: nodeID,
+      node: node,
+      dependencies: dependencies,
+      depth: route.depth,
+      initialCapture: capture,
+      nodeRecord: record,
+      runtime: runtime
+    )
+  }
 
+  @TreeActor
+  func reinitializeNode<N: Node>(
+    asType _: N.Type,
+    from record: NodeRecord,
+    at route: RouteSource,
+    dependencies: DependencyValues
+  ) throws -> InitializedNode<N> {
     let nodeID = record.id
+    guard let node = capture.anyNode as? N
+    else {
+      runtimeWarning("Node type mismatch")
+      throw NodeReinitializationError()
+    }
     guard capture.fields.count == record.records.count
     else {
       runtimeWarning("Node field count mismatch")
-      throw NodeInitializationError()
+      throw NodeReinitializationError()
     }
 
-    for i in 0 ..< record.records.count {
-      let captureField = capture.fields[i]
-      let fieldRecord = record.records[i]
-      switch (captureField, fieldRecord.type) {
-      case (.dependency(let field), .dependency):
+    for (capture, record) in zip(capture.fields, record.records) {
+      assert(capture.type == record.type)
+      switch capture {
+      case .dependency(let field):
         field.value.inner.dependencies = dependencies
-      case (.projection(let field), .projection):
+
+      case .projection(let field):
         field.value.projectionContext = .init(
           runtime: runtime,
-          fieldID: fieldRecord.id
+          fieldID: record.id
         )
-      case (.scope(let field), .scope):
+
+      case .scope(let field):
         field.value.inner.treeScope = .init(
           runtime: runtime,
           id: nodeID
         )
-      case (.route(let field), .route):
-        field.value.connection = .init(
-          runtime: runtime,
-          fieldID: fieldRecord.id
+
+      case .route(let field):
+        _ = field.value.connect(
+          with: .init(
+            runtime: runtime,
+            fieldID: record.id
+          )
         )
-      case (.value(let field, _), .value):
+
+      case .value(let field, _):
         field.value.access.treeValue = .init(
           runtime: runtime,
-          id: fieldRecord.id
+          id: record.id
         )
-      case (.unmanaged, .unmanaged):
+
+      case .unmanaged:
         continue
-      default:
-        throw NodeInitializationError()
       }
     }
     return .init(
       id: nodeID,
       node: node,
       dependencies: dependencies,
-      depth: depth,
+      depth: route.depth,
       initialCapture: capture,
       nodeRecord: record,
       runtime: runtime
@@ -95,66 +121,96 @@ extension UninitializedNode {
 
   // MARK: Private
 
-  /// Create the node record—the underlying state that can be added to the tree.
   @TreeActor
-  private func createRecord(for route: RouteSource) -> NodeRecord {
-    let nodeID = route.nodeID == .system ? .root : NodeID()
-
+  /// Create the node record—the underlying state that can be added to the tree.
+  private func createRecord(
+    id nodeID: NodeID,
+    on route: RouteSource,
+    dependencies: DependencyValues
+  ) -> NodeRecord {
     let fieldRecords: [FieldRecord] = capture
       .fields
       .enumerated()
       .map { offset, field in
         switch field {
-        case .dependency:
+        case .dependency(let field):
           let fieldID = FieldID(
             type: .dependency,
             nodeID: nodeID,
             offset: offset
           )
+          field.value.inner
+            .dependencies = dependencies
           return FieldRecord(
             id: fieldID,
             payload: nil
           )
-        case .projection(let projection):
+        case .projection(let field):
           let fieldID = FieldID(
             type: .projection,
             nodeID: nodeID,
             offset: offset
           )
+          field.value
+            .projectionContext = .init(
+              runtime: runtime,
+              fieldID: fieldID
+            )
           return FieldRecord(
             id: fieldID,
-            payload: .projection(projection.value.source)
+            payload: .projection(
+              field.value.source
+            )
           )
-        case .route(let record):
+        case .route(let field):
           let fieldID = FieldID(
             type: .route,
             nodeID: nodeID,
             offset: offset
           )
-          // NOTE: route records are always created with no sub-routes.
+          let routeField = field.value
+          let record = routeField
+            .connect(
+              with: .init(
+                runtime: runtime,
+                fieldID: fieldID
+              )
+            )
           return FieldRecord(
             id: fieldID,
-            payload: .route(record.value.type.emptyRecord())
+            payload: .route(record)
           )
-        case .scope:
+        case .scope(let field):
           let fieldID = FieldID(
             type: .scope,
             nodeID: nodeID,
             offset: offset
           )
+          field.value.inner
+            .treeScope = .init(
+              runtime: runtime,
+              id: nodeID
+            )
           return FieldRecord(
             id: fieldID,
             payload: nil
           )
-        case .value(_, let initial):
+        case .value(let field, let initial):
           let fieldID = FieldID(
             type: .value,
             nodeID: nodeID,
             offset: offset
           )
+          field.value.access
+            .treeValue = .init(
+              runtime: runtime,
+              id: fieldID
+            )
           return FieldRecord(
             id: fieldID,
-            payload: .value(initial.anyPayload)
+            payload: .value(
+              initial.anyPayload
+            )
           )
         case .unmanaged:
           let fieldID = FieldID(
@@ -168,7 +224,6 @@ extension UninitializedNode {
           )
         }
       }
-
     return NodeRecord(
       id: nodeID,
       origin: route,
@@ -180,3 +235,4 @@ extension UninitializedNode {
 // MARK: - NodeInitializationError
 
 struct NodeInitializationError: Error { }
+struct NodeReinitializationError: Error { }

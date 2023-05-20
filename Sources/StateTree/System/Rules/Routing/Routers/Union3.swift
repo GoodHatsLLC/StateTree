@@ -7,24 +7,40 @@ protocol Union3Route: NodeUnionInternal {
   associatedtype B: Node
   associatedtype C: Node
 
-  init?(asCaseContaining: some Node)
+  init?(payload: some Node)
 }
 
 // MARK: - Union.Three
 
-extension Union {
+extension Union.Three: NodeUnion where A: Node, B: Node, C: Node {
 
-  public enum Three<A: Node, B: Node, C: Node>: Union3Route {
-    case a(A)
-    case b(B)
-    case c(C)
+  public static var cardinality: NodeUnionCardinality {
+    .three
+  }
+
+  public var anyNode: any Node {
+    switch self {
+    case .a(let a):
+      return a
+    case .b(let b):
+      return b
+    case .c(let c):
+      return c
+    }
+  }
+}
+
+extension Union.Three: NodeUnionInternal where A: Node, B: Node, C: Node {}
+
+extension Union.Three: Union3Route where A: Node, B: Node, C: Node {
+
 
     // MARK: Lifecycle
 
     @TreeActor
     @_spi(Implementation)
     public init(record: RouteRecord, runtime: Runtime) throws {
-      if case .union3(let union3) = record, let union3 {
+      if case .union3(let union3) = record {
         switch union3 {
         case .a(let nodeID):
           if
@@ -55,85 +71,6 @@ extension Union {
       throw InvalidRouteRecordError()
     }
 
-    @_spi(Implementation)
-    public init?(asCaseContaining node: some Node) {
-      if let a = node as? A {
-        self.init(a)
-        return
-      } else if let b = node as? B {
-        self.init(b)
-        return
-      } else if let c = node as? C {
-        self.init(c)
-        return
-      }
-      return nil
-    }
-
-    init?(maybe: A?) {
-      if let a = maybe {
-        self = .a(a)
-      } else {
-        return nil
-      }
-    }
-
-    init?(maybe: B?) {
-      if let b = maybe {
-        self = .b(b)
-      } else {
-        return nil
-      }
-    }
-
-    init?(maybe: C?) {
-      if let c = maybe {
-        self = .c(c)
-      } else {
-        return nil
-      }
-    }
-
-    init(_ a: A) { self = .a(a) }
-    init(_ b: B) { self = .b(b) }
-    init(_ c: C) { self = .c(c) }
-
-    // MARK: Public
-
-    public static var routeType: RouteType { .union3 }
-    @_spi(Implementation) public static var empty: RouteRecord { .union3(nil) }
-
-    public var anyNode: any Node {
-      switch self {
-      case .a(let a): return a
-      case .b(let b): return b
-      case .c(let c): return c
-      }
-    }
-
-    public var a: A? {
-      switch self {
-      case .a(let a): return a
-      case .b: return nil
-      case .c: return nil
-      }
-    }
-
-    public var b: B? {
-      switch self {
-      case .b(let b): return b
-      case .a: return nil
-      case .c: return nil
-      }
-    }
-
-    public var c: C? {
-      switch self {
-      case .c(let c): return c
-      case .a: return nil
-      case .b: return nil
-      }
-    }
 
     @_spi(Implementation)
     public func idSet(from nodeID: NodeID) -> RouteRecord {
@@ -239,6 +176,4 @@ extension Union {
           ).erase()
       }
     }
-
-  }
 }

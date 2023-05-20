@@ -9,8 +9,7 @@ public protocol RouterType<Value>: Rules {
   @TreeActor
   @_spi(Implementation)
   static func value(for record: RouteRecord, in runtime: Runtime) throws -> Value
-  static var routeType: RouteType { get }
-  static func emptyValue() throws -> Value
+  static var type: RouteType { get }
 }
 
 // MARK: - RouteDefaultFailure

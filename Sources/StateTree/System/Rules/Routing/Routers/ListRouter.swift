@@ -6,7 +6,7 @@ import TreeActor
 // MARK: - ListRouter
 
 public struct ListRouter<NodeType: Node>: NRouterType {
-  public static var routeType: RouteType { .list }
+  public static var type: RouteType { .list }
 
   public init(ids: OrderedSet<LSID>, builder: @escaping (LSID) -> NodeType, fieldID: FieldID) {
     self.builder = builder
@@ -14,10 +14,9 @@ public struct ListRouter<NodeType: Node>: NRouterType {
     self.ids = ids
   }
 
-  public static func emptyValue() throws -> [NodeType] { [] }
   public typealias Value = [NodeType]
   private var ids: OrderedSet<LSID>
-  public let builder: (LSID) -> NodeType
+  public private(set) var builder: (LSID) -> NodeType
   private let fieldID: FieldID
 }
 
@@ -69,6 +68,7 @@ extension ListRouter {
     with context: RuleContext
   ) throws {
     ids = new.ids
+    builder = new.builder
     try updateScopes(context: context)
   }
 

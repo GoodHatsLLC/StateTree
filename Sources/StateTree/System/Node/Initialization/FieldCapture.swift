@@ -114,6 +114,23 @@ enum FieldCapture: Equatable {
     }
   }
 
+  var type: FieldType {
+    switch self {
+    case .dependency:
+      return .dependency
+    case .projection:
+      return .projection
+    case .route:
+      return .route
+    case .scope:
+      return .scope
+    case .value:
+      return .value
+    case .unmanaged:
+      return .unmanaged
+    }
+  }
+
   var typeDescription: TypeDescription {
     switch self {
     case .dependency(let structure):

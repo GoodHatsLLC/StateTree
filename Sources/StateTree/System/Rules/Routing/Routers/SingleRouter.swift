@@ -8,11 +8,8 @@ public protocol SingleRouterType: RouterType { }
 // MARK: - SingleRouter
 
 public struct SingleRouter<N: Node>: SingleRouterType, OneRouterType {
-  public static func emptyValue() throws -> N {
-    throw RouteDefaultFailure()
-  }
 
-  public static var routeType: RouteType { .single }
+  public static var type: RouteType { .single }
 
   public init(builder: @escaping () -> N, fieldID: FieldID) {
     self.builder = builder
@@ -37,7 +34,6 @@ extension SingleRouter {
   public static func value(for record: RouteRecord, in runtime: Runtime) throws -> N {
     if
       case .single(let single) = record,
-      let single = single,
       let scope = try? runtime.getScope(for: single),
       let node = scope.node as? N
     {
