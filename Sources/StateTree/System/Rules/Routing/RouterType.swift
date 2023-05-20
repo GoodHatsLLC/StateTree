@@ -1,36 +1,48 @@
 import OrderedCollections
 import TreeActor
 
-// MARK: - RouterType
+// MARK: - RouteConnection
 
-public protocol RouterType<Value>: Rules {
-  associatedtype Value
-
-  @TreeActor
-  @_spi(Implementation)
-  static func value(for record: RouteRecord, in runtime: Runtime) throws -> Value
-  static var type: RouteType { get }
+public struct RouteConnection {
+  let runtime: Runtime
+  let fieldID: FieldID
 }
 
-// MARK: - RouteDefaultFailure
+// MARK: - RouterWriteContext
 
-struct RouteDefaultFailure: Error { }
+public struct RouterWriteContext {
+  let depth: Int
+  let dependencies: DependencyValues
+}
 
-// MARK: - InvalidRouteRecordError
+// MARK: - RouterType
 
-struct InvalidRouteRecordError: Error { }
+public protocol RouterType<Value> {
+  associatedtype Value
+  static var type: RouteType { get }
+  var fallback: Value { get }
+  var current: Value { get throws }
+  var initialRecord: RouteRecord { get }
+  func apply(
+    connection: RouteConnection,
+    writeContext: RouterWriteContext
+  ) throws
+}
 
 // MARK: - OneRouterType
 
-public protocol OneRouterType<Value>: RouterType {
-  init(builder: @escaping () -> Value, fieldID: FieldID)
-  var builder: () -> Value { get }
+protocol OneRouterType<Value>: RouterType {
+  init(
+    builder: @escaping () -> Value
+  )
 }
 
 // MARK: - NRouterType
 
-public protocol NRouterType<NodeType>: RouterType where Value == [NodeType] {
-  associatedtype NodeType: Node
-  init(ids: OrderedSet<LSID>, builder: @escaping (LSID) -> NodeType, fieldID: FieldID)
-  var builder: (LSID) -> NodeType { get }
+protocol NRouterType<Element>: RouterType where Value == [Element] {
+  associatedtype Element
+  init(
+    buildKeys: OrderedSet<LSID>,
+    builder: @escaping (LSID) throws -> Element
+  )
 }

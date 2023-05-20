@@ -26,6 +26,7 @@ public enum RouteRecord: Codable {
   case list(List)
 
   // MARK: Public
+
   public enum Union2: Codable {
     case a(NodeID)
     case b(NodeID)

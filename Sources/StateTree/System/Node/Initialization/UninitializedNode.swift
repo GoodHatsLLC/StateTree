@@ -73,7 +73,7 @@ extension UninitializedNode {
     }
 
     for (capture, record) in zip(capture.fields, record.records) {
-      assert(capture.type == record.type)
+      assert(capture.fieldType == record.fieldType)
       switch capture {
       case .dependency(let field):
         field.value.inner.dependencies = dependencies
@@ -91,13 +91,17 @@ extension UninitializedNode {
         )
 
       case .route(let field):
-        _ = field.value.connect(
-          with: .init(
-            runtime: runtime,
-            fieldID: record.id
+        field.value
+          .connect(
+            .init(
+              runtime: runtime,
+              fieldID: record.id
+            ),
+            writeContext: .init(
+              depth: route.depth,
+              dependencies: dependencies
+            )
           )
-        )
-
       case .value(let field, _):
         field.value.access.treeValue = .init(
           runtime: runtime,
@@ -127,7 +131,9 @@ extension UninitializedNode {
     id nodeID: NodeID,
     on route: RouteSource,
     dependencies: DependencyValues
-  ) -> NodeRecord {
+  )
+    -> NodeRecord
+  {
     let fieldRecords: [FieldRecord] = capture
       .fields
       .enumerated()
@@ -168,17 +174,20 @@ extension UninitializedNode {
             nodeID: nodeID,
             offset: offset
           )
-          let routeField = field.value
-          let record = routeField
+          field.value
             .connect(
-              with: .init(
+              .init(
                 runtime: runtime,
                 fieldID: fieldID
+              ),
+              writeContext: .init(
+                depth: route.depth,
+                dependencies: dependencies
               )
             )
           return FieldRecord(
             id: fieldID,
-            payload: .route(record)
+            payload: .route(field.value.initialRecord)
           )
         case .scope(let field):
           let fieldID = FieldID(
@@ -235,4 +244,7 @@ extension UninitializedNode {
 // MARK: - NodeInitializationError
 
 struct NodeInitializationError: Error { }
+
+// MARK: - NodeReinitializationError
+
 struct NodeReinitializationError: Error { }

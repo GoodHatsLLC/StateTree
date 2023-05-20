@@ -80,11 +80,9 @@ extension Runtime {
       runtime: self
     )
     let initialized = try uninitialized
-      .initialize(
-        as: N.self,
-        depth: 0,
-        dependencies: dependencies,
-        on: .system
+      .initializeRoot(
+        asType: N.self,
+        dependencies: dependencies
       )
     let scope = try initialized.connect()
     emitUpdates(events: [.tree(event: .started(treeID: treeID))])

@@ -7,7 +7,7 @@ struct FieldRecord: Codable {
   let id: FieldID
   var payload: FieldRecordPayload?
 
-  var type: FieldType {
+  var fieldType: FieldType {
     id.type
   }
 }
