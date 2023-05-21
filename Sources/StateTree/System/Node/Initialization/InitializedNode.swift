@@ -18,6 +18,7 @@ struct InitializedNode<N: Node>: Hashable, Identifiable {
   let initialCapture: NodeCapture
   let nodeRecord: NodeRecord
   let runtime: Runtime
+  let routerSet: RouterSet
 }
 
 extension InitializedNode {

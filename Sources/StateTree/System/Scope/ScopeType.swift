@@ -21,7 +21,7 @@ public protocol ScopeType<N>: BehaviorScoping, Hashable {
   associatedtype N: Node
   nonisolated var nid: NodeID { get }
   nonisolated var depth: Int { get }
-  var node: N { get nonmutating set }
+  var node: N { get }
   var requiresReadying: Bool { get }
   var requiresFinishing: Bool { get }
   var isActive: Bool { get }

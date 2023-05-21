@@ -33,7 +33,6 @@ public struct Attach<Router: RouterType>: Rules {
     with _: RuleContext
   ) throws {
     router = new.router
-    route.appliedRouter?.update(from: new.router)
   }
 
   // MARK: Internal

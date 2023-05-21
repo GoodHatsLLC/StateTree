@@ -47,11 +47,8 @@ struct NeverScope: ScopeType {
   }
 
   var node: N {
-    get {
-      assertionFailure("NeverScope should never be invoked")
-      return _node
-    }
-    nonmutating set { }
+    assertionFailure("NeverScope should never be invoked")
+    return _node
   }
 
   var isActive: Bool {

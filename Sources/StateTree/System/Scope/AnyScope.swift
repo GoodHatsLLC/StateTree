@@ -12,17 +12,12 @@ public struct AnyScope: Hashable {
 
   // MARK: Lifecycle
 
-  nonisolated init<N: Node>(scope: some ScopeType<N>) {
+  nonisolated init(scope: some ScopeType<some Node>) {
     self.nid = scope.nid
     self.depth = scope.depth
     self.underlying = scope
     self.getNodeFunc = {
       scope.node
-    }
-    self.setNodeFunc = { node in
-      if let node = node as? N {
-        scope.node = node
-      }
     }
   }
 
@@ -46,7 +41,6 @@ public struct AnyScope: Hashable {
   let nid: NodeID
   let depth: Int
   let getNodeFunc: @TreeActor () -> any Node
-  let setNodeFunc: @TreeActor (any Node) -> Void
 }
 
 // MARK: BehaviorScoping
@@ -64,12 +58,7 @@ extension AnyScope: BehaviorScoping {
   // MARK: Internal
 
   var node: any Node {
-    get {
-      getNodeFunc()
-    }
-    nonmutating set {
-      setNodeFunc(newValue)
-    }
+    getNodeFunc()
   }
 
   var childScopes: [AnyScope] { underlying.childScopes }

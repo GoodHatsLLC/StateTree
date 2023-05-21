@@ -37,7 +37,7 @@ extension UninitializedNode {
       runtimeWarning("Node type mismatch")
       throw NodeInitializationError()
     }
-    let record = createRecord(
+    let (record, routerSet) = createRecord(
       id: nodeID,
       on: route,
       dependencies: dependencies
@@ -49,7 +49,8 @@ extension UninitializedNode {
       depth: route.depth,
       initialCapture: capture,
       nodeRecord: record,
-      runtime: runtime
+      runtime: runtime,
+      routerSet: routerSet
     )
   }
 
@@ -91,6 +92,8 @@ extension UninitializedNode {
       throw NodeReinitializationError()
     }
 
+    var routerSet = RouterSet()
+
     for (capture, record) in zip(capture.fields, record.records) {
       assert(capture.fieldType == record.fieldType)
 
@@ -122,6 +125,7 @@ extension UninitializedNode {
               dependencies: dependencies
             )
           )
+        routerSet.routers[record.id] = field.value.handle
 
       case .value(let field, _):
         field.value.access.treeValue = .init(
@@ -140,7 +144,8 @@ extension UninitializedNode {
       depth: route.depth,
       initialCapture: capture,
       nodeRecord: record,
-      runtime: runtime
+      runtime: runtime,
+      routerSet: routerSet
     )
   }
 
@@ -153,111 +158,115 @@ extension UninitializedNode {
     on route: RouteSource,
     dependencies: DependencyValues
   )
-    -> NodeRecord
+    -> (NodeRecord, RouterSet)
   {
-    let fieldRecords: [FieldRecord] = capture
-      .fields
-      .enumerated()
-      .map { offset, field in
-        switch field {
-        case .dependency(let field):
-          let fieldID = FieldID(
-            type: .dependency,
-            nodeID: nodeID,
-            offset: offset
+    var fieldRecords: [FieldRecord] = []
+    var routerSet = RouterSet()
+
+    for (offset, field) in capture.fields.enumerated() {
+      switch field {
+      case .dependency(let field):
+        let fieldID = FieldID(
+          type: .dependency,
+          nodeID: nodeID,
+          offset: offset
+        )
+        field.value.inner
+          .dependencies = dependencies
+        fieldRecords.append(.init(
+          id: fieldID,
+          payload: nil
+        ))
+      case .projection(let field):
+        let fieldID = FieldID(
+          type: .projection,
+          nodeID: nodeID,
+          offset: offset
+        )
+        field.value
+          .projectionContext = .init(
+            runtime: runtime,
+            fieldID: fieldID
           )
-          field.value.inner
-            .dependencies = dependencies
-          return FieldRecord(
-            id: fieldID,
-            payload: nil
+        fieldRecords.append(.init(
+          id: fieldID,
+          payload: .projection(
+            field.value.source
           )
-        case .projection(let field):
-          let fieldID = FieldID(
-            type: .projection,
-            nodeID: nodeID,
-            offset: offset
-          )
-          field.value
-            .projectionContext = .init(
+        ))
+      case .route(let field):
+        let fieldID = FieldID(
+          type: .route,
+          nodeID: nodeID,
+          offset: offset
+        )
+        field.value
+          .connect(
+            .init(
               runtime: runtime,
               fieldID: fieldID
-            )
-          return FieldRecord(
-            id: fieldID,
-            payload: .projection(
-              field.value.source
-            )
-          )
-        case .route(let field):
-          let fieldID = FieldID(
-            type: .route,
-            nodeID: nodeID,
-            offset: offset
-          )
-          field.value
-            .connect(
-              .init(
-                runtime: runtime,
-                fieldID: fieldID
-              ),
-              writeContext: .init(
-                depth: route.depth,
-                dependencies: dependencies
-              )
-            )
-          return FieldRecord(
-            id: fieldID,
-            payload: .route(field.value.initialRecord)
-          )
-        case .scope(let field):
-          let fieldID = FieldID(
-            type: .scope,
-            nodeID: nodeID,
-            offset: offset
-          )
-          field.value.inner
-            .treeScope = .init(
-              runtime: runtime,
-              id: nodeID
-            )
-          return FieldRecord(
-            id: fieldID,
-            payload: nil
-          )
-        case .value(let field, let initial):
-          let fieldID = FieldID(
-            type: .value,
-            nodeID: nodeID,
-            offset: offset
-          )
-          field.value.access
-            .treeValue = .init(
-              runtime: runtime,
-              id: fieldID
-            )
-          return FieldRecord(
-            id: fieldID,
-            payload: .value(
-              initial.anyPayload
+            ),
+            writeContext: .init(
+              depth: route.depth,
+              dependencies: dependencies
             )
           )
-        case .unmanaged:
-          let fieldID = FieldID(
-            type: .unmanaged,
-            nodeID: nodeID,
-            offset: offset
+        routerSet.routers[fieldID] = field.value.handle
+        fieldRecords.append(.init(
+          id: fieldID,
+          payload: .route(field.value.initialRecord)
+        ))
+      case .scope(let field):
+        let fieldID = FieldID(
+          type: .scope,
+          nodeID: nodeID,
+          offset: offset
+        )
+        field.value.inner
+          .treeScope = .init(
+            runtime: runtime,
+            id: nodeID
           )
-          return FieldRecord(
-            id: fieldID,
-            payload: nil
+        fieldRecords.append(.init(
+          id: fieldID,
+          payload: nil
+        ))
+      case .value(let field, let initial):
+        let fieldID = FieldID(
+          type: .value,
+          nodeID: nodeID,
+          offset: offset
+        )
+        field.value.access
+          .treeValue = .init(
+            runtime: runtime,
+            id: fieldID
           )
-        }
+        fieldRecords.append(.init(
+          id: fieldID,
+          payload: .value(
+            initial.anyPayload
+          )
+        ))
+      case .unmanaged:
+        let fieldID = FieldID(
+          type: .unmanaged,
+          nodeID: nodeID,
+          offset: offset
+        )
+        fieldRecords.append(.init(
+          id: fieldID,
+          payload: nil
+        ))
       }
-    return NodeRecord(
-      id: nodeID,
-      origin: route,
-      records: fieldRecords
+    }
+    return (
+      NodeRecord(
+        id: nodeID,
+        origin: route,
+        records: fieldRecords
+      ),
+      routerSet
     )
   }
 }

@@ -20,7 +20,7 @@ protocol RouteField<Router> {
 // MARK: - RouterHandle
 
 @TreeActor
-protocol RouterHandle {
+protocol RouterHandle: AnyObject {
   func apply() throws
 }
 

@@ -27,11 +27,12 @@ public final class NodeScope<N: Node>: Equatable {
     self.node = node.node
     self.runtime = node.runtime
     self.valueFieldDependencies = node.getValueDependencies()
+    self.routerSet = node.routerSet
   }
 
   // MARK: Public
 
-  public var node: N
+  public let node: N
   public let nid: NodeID
   public let depth: Int
   public let dependencies: DependencyValues
@@ -48,6 +49,7 @@ public final class NodeScope<N: Node>: Equatable {
   private let stage = DisposableStage()
   private var activeRules: N.NodeRules?
   private var state: ScopeLifecycle = .shouldStart
+  private let routerSet: RouterSet
   private let didUpdateSubject = PublishSubject<Void, Never>()
 
   private var context: RuleContext {
