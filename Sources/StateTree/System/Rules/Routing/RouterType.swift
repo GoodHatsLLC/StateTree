@@ -23,6 +23,7 @@ public protocol RouterType<Value> {
   var fallback: Value { get }
   var current: Value { get throws }
   var initialRecord: RouteRecord { get }
+  func update(from: Self)
   func apply(
     connection: RouteConnection,
     writeContext: RouterWriteContext

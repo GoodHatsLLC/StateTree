@@ -8,13 +8,12 @@ import TreeActor
 
 protocol RouteField<Router> {
   associatedtype Router: RouterType
-  var type: RouteType { get }
   @TreeActor
   func connect(
     _ connection: RouteConnection,
     writeContext: RouterWriteContext
   )
-  @TreeActor  var initialRecord: RouteRecord { get }
+  @TreeActor var initialRecord: RouteRecord { get }
   var handle: any RouterHandle { get }
 }
 
@@ -32,7 +31,6 @@ public struct Route<Router: RouterType>: RouteField {
 
   // MARK: Lifecycle
 
-  @TreeActor
   init(defaultRouter: Router) {
     self.inner = .init(
       defaultRouter: defaultRouter
@@ -41,7 +39,7 @@ public struct Route<Router: RouterType>: RouteField {
 
   // MARK: Public
 
-  @TreeActor  public var wrappedValue: Router.Value {
+  @TreeActor public var wrappedValue: Router.Value {
     inner.value
   }
 
@@ -51,11 +49,11 @@ public struct Route<Router: RouterType>: RouteField {
 
   // MARK: Internal
 
-  @TreeActor  final class Inner: RouterHandle {
+  @TreeActor final class Inner: RouterHandle {
 
     // MARK: Lifecycle
 
-    init(
+    nonisolated init(
       defaultRouter: Router
     ) {
       self.defaultRouter = defaultRouter
@@ -107,13 +105,22 @@ public struct Route<Router: RouterType>: RouteField {
 
   }
 
-  var type: RouteType {
-    Router.type
+  @TreeActor var initialRecord: RouteRecord {
+    inner.initialRecord
   }
 
-  @TreeActor  var initialRecord: RouteRecord { inner.initialRecord }
+  var handle: any RouterHandle {
+    inner
+  }
 
-  var handle: any RouterHandle { inner }
+  @TreeActor var appliedRouter: Router? {
+    get {
+      inner.appliedRouter
+    }
+    nonmutating set {
+      inner.appliedRouter = newValue
+    }
+  }
 
   @TreeActor
   func connect(
@@ -124,18 +131,6 @@ public struct Route<Router: RouterType>: RouteField {
       connection,
       writeContext: writeContext
     )
-  }
-
-  @TreeActor
-  func assign(router: Router) {
-    assert(inner.appliedRouter == nil)
-    inner.appliedRouter = router
-  }
-
-  @TreeActor
-  func unassignRouter() {
-    assert(inner.appliedRouter != nil)
-    inner.appliedRouter = nil
   }
 
   // MARK: Private

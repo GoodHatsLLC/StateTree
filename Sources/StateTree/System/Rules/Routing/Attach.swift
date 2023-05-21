@@ -17,15 +17,15 @@ public struct Attach<Router: RouterType>: Rules {
   // MARK: Public
 
   public func act(for _: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
-    return .init()
+    .init()
   }
 
   public mutating func applyRule(with _: RuleContext) throws {
-    route.assign(router: router)
+    route.appliedRouter = router
   }
 
   public mutating func removeRule(with _: RuleContext) throws {
-    route.unassignRouter()
+    route.appliedRouter = nil
   }
 
   public mutating func updateRule(
@@ -33,8 +33,7 @@ public struct Attach<Router: RouterType>: Rules {
     with _: RuleContext
   ) throws {
     router = new.router
-    route.unassignRouter()
-    route.assign(router: router)
+    route.appliedRouter?.update(from: new.router)
   }
 
   // MARK: Internal

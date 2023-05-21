@@ -54,6 +54,25 @@ extension UninitializedNode {
   }
 
   @TreeActor
+  func renitializeRoot<N: Node>(
+    asType _: N.Type,
+    from record: NodeRecord,
+    dependencies: DependencyValues
+  ) throws -> InitializedNode<N> {
+    try reinitializeNode(
+      asType: N.self,
+      from: record,
+      at: .init(
+        fieldID: .system,
+        identity: nil,
+        type: .single,
+        depth: 0
+      ),
+      dependencies: dependencies
+    )
+  }
+
+  @TreeActor
   func reinitializeNode<N: Node>(
     asType _: N.Type,
     from record: NodeRecord,
@@ -74,6 +93,7 @@ extension UninitializedNode {
 
     for (capture, record) in zip(capture.fields, record.records) {
       assert(capture.fieldType == record.fieldType)
+
       switch capture {
       case .dependency(let field):
         field.value.inner.dependencies = dependencies
@@ -102,6 +122,7 @@ extension UninitializedNode {
               dependencies: dependencies
             )
           )
+
       case .value(let field, _):
         field.value.access.treeValue = .init(
           runtime: runtime,
