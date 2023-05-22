@@ -4,9 +4,9 @@ import TreeActor
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
-// MARK: - RoutingTests
+// MARK: - SingleRouterTests
 
-final class RoutingTests: XCTestCase {
+final class SingleRouterTests: XCTestCase {
 
   let stage = DisposableStage()
 
@@ -17,7 +17,7 @@ final class RoutingTests: XCTestCase {
 
   @TreeActor
   func test_defaultSingleRoute() async throws {
-    let tree = Tree(root: TestSingleDefault())
+    let tree = Tree(root: TestDefault())
     let root = try tree.start()
     root
       .autostop()
@@ -28,7 +28,7 @@ final class RoutingTests: XCTestCase {
 
   @TreeActor
   func test_nonDefaultSingleRoute() async throws {
-    let tree = Tree(root: TestSingleOverride())
+    let tree = Tree(root: TestOverride())
     let root = try tree.start()
     root
       .autostop()
@@ -40,49 +40,61 @@ final class RoutingTests: XCTestCase {
 
   @TreeActor
   func test_DynamicSingleRoute() async throws {
-    let tree = Tree(root: TestSingleDynamicOverride())
+    let tree = Tree(root: TestDynamicOverride())
     let root = try tree.start()
     root
       .autostop()
       .stage(on: stage)
     XCTAssertEqual(try tree.assume.info.nodeCount, 2)
     XCTAssert(try tree.assume.info.isConsistent)
-    let update1 = try tree.assume.info.flushUpdateStats()
+    let update1 = try tree.assume.info.flushUpdateStats().counts
     XCTAssertEqual(root.node.next.derived, "Default++")
+    XCTAssertEqual(update1.nodeStarts, 2)
+    XCTAssertEqual(update1.nodeUpdates, 2)
+    XCTAssertEqual(update1.nodeStops, 0)
 
     root.node.shouldOverride = true
     XCTAssertEqual(try tree.assume.info.nodeCount, 2)
     XCTAssert(try tree.assume.info.isConsistent)
-    let update2 = try tree.assume.info.flushUpdateStats()
+    let update2 = try tree.assume.info.flushUpdateStats().counts
     XCTAssertEqual(root.node.next.derived, "Override++")
+    XCTAssertEqual(update2.nodeStarts, 1)
+    XCTAssertEqual(update2.nodeUpdates, 2)
+    XCTAssertEqual(update2.nodeStops, 1)
 
     root.node.shouldOverride = false
     XCTAssertEqual(try tree.assume.info.nodeCount, 2)
     XCTAssert(try tree.assume.info.isConsistent)
-    let update3 = try tree.assume.info.flushUpdateStats()
+    let update3 = try tree.assume.info.flushUpdateStats().counts
     XCTAssertEqual(root.node.next.derived, "Default++")
+    XCTAssertEqual(update3.nodeStarts, 1)
+    XCTAssertEqual(update3.nodeUpdates, 2)
+    XCTAssertEqual(update3.nodeStops, 1)
 
     root.node.otherValue = "Non-Router-Triggering"
     XCTAssertEqual(try tree.assume.info.nodeCount, 2)
     XCTAssert(try tree.assume.info.isConsistent)
-    let update4 = try tree.assume.info.flushUpdateStats()
+    let update4 = try tree.assume.info.flushUpdateStats().counts
     XCTAssertEqual(root.node.next.derived, "Default++")
+    XCTAssertEqual(update4.nodeStarts, 0)
+    XCTAssertEqual(update4.nodeUpdates, 1)
+    XCTAssertEqual(update4.nodeStops, 0)
   }
 
 }
 
-// MARK: RoutingTests.TestSingleDefault
+// MARK: SingleRouterTests.TestDefault
 
-extension RoutingTests {
+extension SingleRouterTests {
 
-  struct TestSingleDefault: Node {
+  struct TestDefault: Node {
     @Route var next = ChildRouteNode(name: "Default")
     var rules: some Rules {
       .none
     }
   }
 
-  struct TestSingleOverride: Node {
+  struct TestOverride: Node {
     @Route var next = ChildRouteNode(name: "Default")
     var rules: some Rules {
       $next.route {
@@ -91,7 +103,7 @@ extension RoutingTests {
     }
   }
 
-  struct TestSingleDynamicOverride: Node {
+  struct TestDynamicOverride: Node {
     @Route var next = ChildRouteNode(name: "Default")
     @Value var shouldOverride = false
     @Value var otherValue = "Other"
