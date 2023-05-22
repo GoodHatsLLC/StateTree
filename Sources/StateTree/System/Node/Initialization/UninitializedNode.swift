@@ -212,7 +212,7 @@ extension UninitializedNode {
             )
           )
         routerSet.routers.append(field.value.handle)
-        let routeRecord = field.value.handle.makeDefaultRecord()
+        let routeRecord = field.value.handle.defaultRecord
         fieldRecords.append(.init(
           id: fieldID,
           payload: .route(routeRecord)

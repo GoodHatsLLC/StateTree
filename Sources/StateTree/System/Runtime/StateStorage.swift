@@ -94,7 +94,7 @@ extension StateStorage {
       )
     }
     let swappedOut = try state.swapRoutedNodeSet(at: field, to: nodeIDs)
-    let originals = Set(swappedOut?.ids ?? [])
+    let originals = Set(swappedOut?.ids ?? []).subtracting([.invalid])
     let new = Set(nodeIDs.ids)
     return TreeChanges(
       addedScopes: Array(new.subtracting(originals)),

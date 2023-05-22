@@ -22,17 +22,15 @@ public protocol RouterType<Value> {
   associatedtype Value
   static var type: RouteType { get }
   var fallback: Value { get }
-  var fallbackRecord: RouteRecord { get }
+  var defaultRecord: RouteRecord { get }
   @TreeActor var current: Value { get throws }
   @TreeActor
-  func connectDefault() throws -> RouteRecord
-  @TreeActor
-  func apply(
+  mutating func apply(
     connection: RouteConnection,
     writeContext: RouterWriteContext
   ) throws
   @TreeActor
-  func update(from: Self)
+  mutating func update(from: Self)
 }
 
 // MARK: - OneRouterType

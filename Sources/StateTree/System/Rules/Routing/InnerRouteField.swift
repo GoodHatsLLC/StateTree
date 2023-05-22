@@ -7,7 +7,7 @@ import TreeActor
 @TreeActor
 protocol RouteHandle: AnyObject {
   func apply() throws
-  func makeDefaultRecord() -> RouteRecord
+  var defaultRecord: RouteRecord { get }
 }
 
 // MARK: - InnerRouteField
@@ -21,16 +21,32 @@ final class InnerRouteField<Router: RouterType> {
     defaultRouter: Router
   ) {
     self.defaultRouter = defaultRouter
+    self.activeDefault = defaultRouter
   }
 
   // MARK: Internal
 
-  var appliedRouter: Router?
+  var appliedRouter: Router? {
+    willSet {
+      // if setting or unsetting the router override
+      // the stored state of the default router should
+      // be removed so that it can re-apply.
+      switch (appliedRouter, newValue) {
+      case (.none, .some):
+        activeDefault = defaultRouter
+      case (.some, .none):
+        activeDefault = defaultRouter
+      default:
+        break
+      }
+    }
+  }
 
   // MARK: Private
 
   private var connection: RouteConnection?
   private var writeContext: RouterWriteContext?
+  private var activeDefault: Router
   private let defaultRouter: Router
 
 }
@@ -40,7 +56,18 @@ final class InnerRouteField<Router: RouterType> {
 extension InnerRouteField: RouteHandle {
 
   var activeRouter: Router {
-    appliedRouter ?? defaultRouter
+    get {
+      appliedRouter ?? activeDefault
+    }
+    set {
+      // work out the underlying router
+      // and update only it
+      if appliedRouter != nil {
+        appliedRouter = newValue
+      } else {
+        activeDefault = newValue
+      }
+    }
   }
 
   var value: Router.Value {
@@ -48,13 +75,8 @@ extension InnerRouteField: RouteHandle {
     return (try? router.current) ?? router.fallback
   }
 
-  func makeDefaultRecord() -> RouteRecord {
-    do {
-      return try defaultRouter.connectDefault()
-    } catch {
-      assertionFailure()
-      return defaultRouter.fallbackRecord
-    }
+  var defaultRecord: RouteRecord {
+    defaultRouter.defaultRecord
   }
 
   func connect(

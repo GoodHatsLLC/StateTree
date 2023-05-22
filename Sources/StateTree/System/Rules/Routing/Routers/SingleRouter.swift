@@ -5,7 +5,7 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
   // MARK: Lifecycle
 
   init(builder: () -> NodeType) {
-    self.fallback = builder()
+    self.capturedNode = builder()
   }
 
   // MARK: Public
@@ -14,8 +14,11 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
 
   public static var type: RouteType { .single }
 
-  public let fallback: NodeType
-  public let fallbackRecord: RouteRecord = .single(.invalid)
+  public let defaultRecord: RouteRecord = .single(.invalid)
+
+  public var fallback: NodeType {
+    capturedNode
+  }
 
   public var current: NodeType {
     guard
@@ -24,21 +27,18 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
         .getScopes(at: connection.fieldID).first,
       let node = scope.node as? NodeType
     else {
-      return fallback
+      return capturedNode
     }
     return node
   }
 
-  @TreeActor
-  public func connectDefault() throws -> RouteRecord {
-    guard
-      let connection,
-      let writeContext
+  public mutating func apply(connection: RouteConnection, writeContext: RouterWriteContext) throws {
+    guard !hasApplied
     else {
-      assertionFailure()
-      return .single(.invalid)
+      return
     }
-    let capture = NodeCapture(fallback)
+    hasApplied = true
+    let capture = NodeCapture(capturedNode)
     let uninitialized = UninitializedNode(
       capture: capture,
       runtime: connection.runtime
@@ -54,22 +54,25 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
         depth: writeContext.depth
       )
     )
-    guard
-      let initialized,
-      let scope = try? initialized.connect()
-    else {
+    if let node = try? initialized?.connect() {
+      connection.runtime.updateRouteRecord(at: connection.fieldID, to: .single(node.nid))
+    } else {
       assertionFailure()
-      return .single(.invalid)
     }
-    return .single(scope.nid)
   }
 
-  public func apply(connection _: RouteConnection, writeContext _: RouterWriteContext) throws { }
-
-  public func update(from _: SingleRouter<NodeType>) { }
+  public mutating func update(from other: SingleRouter<NodeType>) {
+    var other = other
+    other.connection = connection
+    other.writeContext = writeContext
+    other.hasApplied = false
+    self = other
+  }
 
   // MARK: Private
 
+  private let capturedNode: NodeType
+  private var hasApplied = false
   private var connection: RouteConnection?
   private var writeContext: RouterWriteContext?
 
