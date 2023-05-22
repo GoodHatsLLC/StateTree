@@ -1,5 +1,7 @@
 import TreeActor
 
+// MARK: - SingleRouter
+
 public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
 
   // MARK: Lifecycle
@@ -61,12 +63,8 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
     }
   }
 
-  public mutating func update(from other: SingleRouter<NodeType>) {
-    var other = other
-    other.connection = connection
-    other.writeContext = writeContext
-    other.hasApplied = false
-    self = other
+  public mutating func update(from _: SingleRouter<NodeType>) {
+    // Update is called when the route call has structural equality.
   }
 
   // MARK: Private
@@ -77,3 +75,16 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
   private var writeContext: RouterWriteContext?
 
 }
+
+// This would be confusing. Rethink.
+// extension SingleRouter where NodeType: Identifiable {
+//  public mutating func update(from other: Self) {
+//    if capturedNode.id != other.capturedNode.id {
+//      var other = other
+//      other.hasApplied = false
+//      other.connection = connection
+//      other.writeContext = writeContext
+//      self = other
+//    }
+//  }
+// }

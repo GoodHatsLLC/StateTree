@@ -3,9 +3,13 @@ import Utilities
 
 // MARK: - TreeHandle
 
-public struct TreeHandle<N: Node> {
+public struct TreeHandle<NodeType: Node> {
   public struct StopHandle {
     let autoDisposable: AutoDisposable
+  }
+
+  public var node: NodeType {
+    root.node
   }
 
   let asyncValue: Async.Value<Result<TreeStateRecord, TreeError>>
@@ -16,7 +20,7 @@ public struct TreeHandle<N: Node> {
 
   public func stop() throws -> Result<TreeStateRecord, TreeError> { try stopFunc() }
   public func autostop() -> StopHandle { .init(autoDisposable: AutoDisposable { _ = try? stop() }) }
-  @_spi(Implementation) public let root: NodeScope<N>
+  @_spi(Implementation) public let root: NodeScope<NodeType>
 }
 
 // MARK: - TreeHandle.StopHandle + Disposable

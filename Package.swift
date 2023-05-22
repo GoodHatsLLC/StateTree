@@ -201,6 +201,15 @@ let package = Package(
       swiftSettings: Build.globalSwiftSettings
     ),
     .testTarget(
+      name: "ActiveTests",
+      dependencies: [
+        "StateTree",
+        "Disposable",
+        .product(name: "HeapModule", package: "swift-collections"),
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .testTarget(
       name: "StateTreeTests",
       dependencies: [
         "StateTree",
