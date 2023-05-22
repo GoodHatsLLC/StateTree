@@ -21,18 +21,20 @@ public struct Attach<Router: RouterType>: Rules {
   }
 
   public mutating func applyRule(with _: RuleContext) throws {
-    route.appliedRouter = router
+    route.inner.appliedRouter = router
   }
 
   public mutating func removeRule(with _: RuleContext) throws {
-    route.appliedRouter = nil
+    route.inner.appliedRouter = nil
   }
 
   public mutating func updateRule(
     from new: Self,
     with _: RuleContext
   ) throws {
+    assert(route.inner.appliedRouter != nil)
     router = new.router
+    route.inner.appliedRouter?.update(from: new.router)
   }
 
   // MARK: Internal

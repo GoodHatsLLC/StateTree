@@ -44,8 +44,6 @@ public final class NodeScope<N: Node>: Equatable {
 
   // MARK: Private
 
-  private let instanceUUID = UUID()
-
   private let stage = DisposableStage()
   private var activeRules: N.NodeRules?
   private var state: ScopeLifecycle = .shouldStart
@@ -67,7 +65,7 @@ public final class NodeScope<N: Node>: Equatable {
 
 extension NodeScope: Hashable {
   public nonisolated static func == (lhs: NodeScope<N>, rhs: NodeScope<N>) -> Bool {
-    lhs.instanceUUID == rhs.instanceUUID
+    lhs.nid == rhs.nid
   }
 
   public nonisolated func hash(into hasher: inout Hasher) {
@@ -123,6 +121,7 @@ extension NodeScope: ScopeType {
   private func stopSubtree() throws {
     assert(activeRules != nil)
     try activeRules?.removeRule(with: context)
+    try routerSet.apply()
   }
 
   @TreeActor
@@ -130,6 +129,7 @@ extension NodeScope: ScopeType {
     assert(activeRules == nil)
     activeRules = node.rules
     try activeRules?.applyRule(with: context)
+    try routerSet.apply()
   }
 
   @TreeActor
@@ -148,6 +148,7 @@ extension NodeScope: ScopeType {
       from: node.rules,
       with: context
     )
+    try routerSet.apply()
   }
 
   @TreeActor

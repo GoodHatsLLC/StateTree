@@ -1,3 +1,12 @@
+import TreeActor
+
 struct RouterSet {
-  var routers: [FieldID: any RouterHandle] = [:]
+  var routers: [any RouteHandle] = []
+
+  @TreeActor
+  func apply() throws {
+    for router in routers {
+      try router.apply()
+    }
+  }
 }

@@ -125,7 +125,7 @@ extension UninitializedNode {
               dependencies: dependencies
             )
           )
-        routerSet.routers[record.id] = field.value.handle
+        routerSet.routers.append(field.value.handle)
 
       case .value(let field, _):
         field.value.access.treeValue = .init(
@@ -211,10 +211,11 @@ extension UninitializedNode {
               dependencies: dependencies
             )
           )
-        routerSet.routers[fieldID] = field.value.handle
+        routerSet.routers.append(field.value.handle)
+        let routeRecord = field.value.handle.makeDefaultRecord()
         fieldRecords.append(.init(
           id: fieldID,
-          payload: .route(field.value.initialRecord)
+          payload: .route(routeRecord)
         ))
       case .scope(let field):
         let fieldID = FieldID(

@@ -1,3 +1,4 @@
+import Foundation
 import OrderedCollections
 import TreeActor
 
@@ -21,12 +22,17 @@ public protocol RouterType<Value> {
   associatedtype Value
   static var type: RouteType { get }
   var fallback: Value { get }
-  var current: Value { get throws }
-  var initialRecord: RouteRecord { get }
+  var fallbackRecord: RouteRecord { get }
+  @TreeActor var current: Value { get throws }
+  @TreeActor
+  func connectDefault() throws -> RouteRecord
+  @TreeActor
   func apply(
     connection: RouteConnection,
     writeContext: RouterWriteContext
   ) throws
+  @TreeActor
+  func update(from: Self)
 }
 
 // MARK: - OneRouterType

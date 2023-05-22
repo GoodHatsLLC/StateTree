@@ -1,8 +1,6 @@
 import Disposable
-import Foundation
 import OrderedCollections
 import TreeActor
-@_spi(Implementation) import Utilities
 
 // MARK: - RouteField
 
@@ -13,15 +11,7 @@ protocol RouteField<Router> {
     _ connection: RouteConnection,
     writeContext: RouterWriteContext
   )
-  @TreeActor var initialRecord: RouteRecord { get }
-  var handle: any RouterHandle { get }
-}
-
-// MARK: - RouterHandle
-
-@TreeActor
-protocol RouterHandle: AnyObject {
-  func apply() throws
+  var handle: any RouteHandle { get }
 }
 
 // MARK: - Route
@@ -49,77 +39,10 @@ public struct Route<Router: RouterType>: RouteField {
 
   // MARK: Internal
 
-  @TreeActor final class Inner: RouterHandle {
+  let inner: InnerRouteField<Router>
 
-    // MARK: Lifecycle
-
-    nonisolated init(
-      defaultRouter: Router
-    ) {
-      self.defaultRouter = defaultRouter
-    }
-
-    // MARK: Internal
-
-    var appliedRouter: Router?
-
-    var initialRecord: RouteRecord {
-      activeRouter.initialRecord
-    }
-
-    var activeRouter: Router {
-      appliedRouter ?? defaultRouter
-    }
-
-    var value: Router.Value {
-      let router = activeRouter
-      return (try? router.current) ?? router.fallback
-    }
-
-    func connect(
-      _ connection: RouteConnection,
-      writeContext: RouterWriteContext
-    ) {
-      self.connection = connection
-      self.writeContext = writeContext
-    }
-
-    func apply() throws {
-      guard
-        let connection,
-        let writeContext
-      else {
-        throw UnconnectedNodeError()
-      }
-      try activeRouter.apply(
-        connection: connection,
-        writeContext: writeContext
-      )
-    }
-
-    // MARK: Private
-
-    private var connection: RouteConnection?
-    private var writeContext: RouterWriteContext?
-    private let defaultRouter: Router
-
-  }
-
-  @TreeActor var initialRecord: RouteRecord {
-    inner.initialRecord
-  }
-
-  var handle: any RouterHandle {
+  var handle: any RouteHandle {
     inner
-  }
-
-  @TreeActor var appliedRouter: Router? {
-    get {
-      inner.appliedRouter
-    }
-    nonmutating set {
-      inner.appliedRouter = newValue
-    }
   }
 
   @TreeActor
@@ -132,13 +55,4 @@ public struct Route<Router: RouterType>: RouteField {
       writeContext: writeContext
     )
   }
-
-  // MARK: Private
-
-  private let inner: Inner
-
 }
-
-// MARK: - UnconnectedNodeError
-
-struct UnconnectedNodeError: Error { }

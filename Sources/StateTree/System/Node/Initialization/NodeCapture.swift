@@ -25,7 +25,7 @@ public struct NodeCapture: Equatable {
   let anyNode: any Node
   let fields: [FieldCapture]
 
-  var routerHandles: [any RouterHandle] {
+  var RouteHandles: [any RouteHandle] {
     fields.compactMap { field in
       switch field {
       case .route(let capture):
