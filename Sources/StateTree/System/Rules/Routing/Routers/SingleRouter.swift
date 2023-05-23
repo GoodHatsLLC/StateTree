@@ -45,7 +45,7 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
       capture: capture,
       runtime: connection.runtime
     )
-    let initialized = try? uninitialized.initializeNode(
+    let initialized = try uninitialized.initializeNode(
       asType: NodeType.self,
       id: NodeID(),
       dependencies: writeContext.dependencies,
@@ -56,11 +56,11 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
         depth: writeContext.depth
       )
     )
-    if let node = try? initialized?.connect() {
-      connection.runtime.updateRouteRecord(at: connection.fieldID, to: .single(node.nid))
-    } else {
-      assertionFailure()
-    }
+    let node = try initialized.connect()
+    connection.runtime.updateRouteRecord(
+      at: connection.fieldID,
+      to: .single(node.nid)
+    )
   }
 
   public mutating func update(from _: SingleRouter<NodeType>) {
@@ -76,15 +76,23 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
 
 }
 
-// This would be confusing. Rethink.
-// extension SingleRouter where NodeType: Identifiable {
-//  public mutating func update(from other: Self) {
-//    if capturedNode.id != other.capturedNode.id {
-//      var other = other
-//      other.hasApplied = false
-//      other.connection = connection
-//      other.writeContext = writeContext
-//      self = other
-//    }
-//  }
-// }
+// MARK: - Route
+extension Route {
+
+  // MARK: Lifecycle
+
+  public init<NodeType>(wrappedValue: @autoclosure () -> NodeType)
+    where Router == SingleRouter<NodeType>
+  {
+    self.init(defaultRouter: SingleRouter(builder: wrappedValue))
+  }
+
+  // MARK: Public
+
+  @TreeActor
+  public func route<Value>(builder: () -> Value) -> Attach<Router>
+    where Router == SingleRouter<Value>
+  {
+    Attach<Router>(router: SingleRouter(builder: builder), to: self)
+  }
+}

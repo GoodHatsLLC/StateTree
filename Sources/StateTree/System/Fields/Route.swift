@@ -56,23 +56,3 @@ public struct Route<Router: RouterType>: RouteField {
     )
   }
 }
-
-extension Route {
-
-  // MARK: Lifecycle
-
-  public init<NodeType>(wrappedValue: @autoclosure () -> NodeType)
-    where Router == SingleRouter<NodeType>
-  {
-    self.init(defaultRouter: SingleRouter(builder: wrappedValue))
-  }
-
-  // MARK: Public
-
-  @TreeActor
-  public func route<Value>(builder: () -> Value) -> Attach<Router>
-    where Router == SingleRouter<Value>
-  {
-    Attach<Router>(router: SingleRouter(builder: builder), to: self)
-  }
-}

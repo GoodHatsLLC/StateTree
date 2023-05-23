@@ -107,6 +107,7 @@ extension SingleRouterTests {
     @Route var next = ChildRouteNode(name: "Default")
     @Value var shouldOverride = false
     @Value var otherValue = "Other"
+
     var rules: some Rules {
       if shouldOverride {
         $next.route {
