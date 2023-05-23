@@ -5,33 +5,17 @@ public enum Union { }
 // MARK: - UnionType
 
 public protocol UnionType {
-  var cardinality: Union.Cardinality { get }
-  init?(payload: some Any, asCase: Union.Case)
   func caseMatches(_ other: Self) -> Bool
   var any: Any { get }
 }
 
+// MARK: - UnionCardinality
+
+public protocol UnionCardinality { }
+
 extension UnionType {
   public static func ~= (lhs: Self, rhs: Self) -> Bool {
     lhs.caseMatches(rhs)
-  }
-}
-
-// MARK: - Union.Cardinality
-
-extension Union {
-  public enum Cardinality: Int {
-    case one = 1
-    case two = 2
-    case three = 3
-    case four = 4
-  }
-
-  public enum Case {
-    case a
-    case b
-    case c
-    case d
   }
 }
 
@@ -41,24 +25,7 @@ extension Union {
   public enum One<A>: UnionType {
     case a(A)
 
-    // MARK: Lifecycle
-
-    public init?(payload: some Any, asCase unionCase: Union.Case) {
-      if
-        unionCase == .a,
-        let a = payload as? A
-      {
-        self = .a(a)
-      } else {
-        return nil
-      }
-    }
-
     // MARK: Public
-
-    public var cardinality: Union.Cardinality {
-      .one
-    }
 
     public var a: A? {
       value
@@ -90,23 +57,7 @@ extension Union {
     case a(A)
     case b(B)
 
-    // MARK: Lifecycle
-
-    public init?(payload: some Any, asCase unionCase: Union.Case) {
-      if unionCase == .a, let a = payload as? A {
-        self = .a(a)
-      } else if unionCase == .b, let b = payload as? B {
-        self = .b(b)
-      } else {
-        return nil
-      }
-    }
-
     // MARK: Public
-
-    public var cardinality: Union.Cardinality {
-      .two
-    }
 
     public var a: A? {
       switch self {
@@ -148,25 +99,7 @@ extension Union {
     case b(B)
     case c(C)
 
-    // MARK: Lifecycle
-
-    public init?(payload: some Any, asCase unionCase: Union.Case) {
-      if unionCase == .a, let a = payload as? A {
-        self = .a(a)
-      } else if unionCase == .b, let b = payload as? B {
-        self = .b(b)
-      } else if unionCase == .c, let c = payload as? C {
-        self = .c(c)
-      } else {
-        return nil
-      }
-    }
-
     // MARK: Public
-
-    public var cardinality: Union.Cardinality {
-      .three
-    }
 
     public var a: A? {
       switch self {
@@ -221,27 +154,7 @@ extension Union {
     case c(C)
     case d(D)
 
-    // MARK: Lifecycle
-
-    public init?(payload: some Any, asCase unionCase: Union.Case) {
-      if unionCase == .a, let a = payload as? A {
-        self = .a(a)
-      } else if unionCase == .b, let b = payload as? B {
-        self = .b(b)
-      } else if unionCase == .c, let c = payload as? C {
-        self = .c(c)
-      } else if unionCase == .d, let d = payload as? D {
-        self = .d(d)
-      } else {
-        return nil
-      }
-    }
-
     // MARK: Public
-
-    public var cardinality: Union.Cardinality {
-      .four
-    }
 
     public var a: A? {
       switch self {

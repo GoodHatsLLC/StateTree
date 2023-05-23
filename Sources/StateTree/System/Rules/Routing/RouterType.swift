@@ -32,21 +32,3 @@ public protocol RouterType<Value> {
   @TreeActor
   mutating func update(from: Self)
 }
-
-// MARK: - OneRouterType
-
-protocol OneRouterType<Value>: RouterType {
-  init(
-    builder: @escaping () -> Value
-  )
-}
-
-// MARK: - NRouterType
-
-protocol NRouterType<Element>: RouterType where Value == [Element] {
-  associatedtype Element
-  init(
-    buildKeys: OrderedSet<LSID>,
-    builder: @escaping (LSID) throws -> Element
-  )
-}

@@ -2,7 +2,7 @@ import TreeActor
 
 // MARK: - MaybeSingleRouter
 
-public struct MaybeSingleRouter<NodeType: Node>: RouterType, OneRouterType {
+public struct MaybeSingleRouter<NodeType: Node>: RouterType {
 
   // MARK: Lifecycle
 
@@ -40,6 +40,10 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType, OneRouterType {
       return
     }
     hasApplied = true
+
+    self.connection = connection
+    self.writeContext = writeContext
+
     guard let capturedNode
     else {
       connection.runtime.updateRouteRecord(

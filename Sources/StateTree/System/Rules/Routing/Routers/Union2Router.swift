@@ -2,13 +2,12 @@ import TreeActor
 
 // MARK: - Union2Router
 
-public struct Union2Router<A: Node, B: Node>: RouterType, OneRouterType {
+public struct Union2Router<A: Node, B: Node>: RouterType {
 
   // MARK: Lifecycle
 
-  init(builder: () -> Union.Two<A, B>) {
-    let capturedUnion = builder()
-    self.capturedUnion = capturedUnion
+  init(union: Union.Two<A, B>) {
+    self.capturedUnion = union
     let nodeCapture: NodeCapture
     switch capturedUnion {
     case .a(let a):
@@ -33,7 +32,7 @@ public struct Union2Router<A: Node, B: Node>: RouterType, OneRouterType {
 
   public var current: Value {
     guard
-      let connection = connection,
+      let connection = try? assumeConnection,
       let record = connection.runtime.getRouteRecord(at: connection.fieldID),
       let scope = try? connection.runtime
         .getScopes(at: connection.fieldID).first
@@ -78,6 +77,10 @@ public struct Union2Router<A: Node, B: Node>: RouterType, OneRouterType {
       return
     }
     hasApplied = true
+
+    self.connection = connection
+    self.writeContext = writeContext
+
     switch capturedUnion {
     case .a:
       let scope = try connect(
@@ -122,6 +125,17 @@ public struct Union2Router<A: Node, B: Node>: RouterType, OneRouterType {
   private var connection: RouteConnection?
   private var writeContext: RouterWriteContext?
 
+  private var assumeConnection: RouteConnection {
+    get throws {
+      guard let connection
+      else {
+        assertionFailure()
+        throw UnconnectedNodeError()
+      }
+      return connection
+    }
+  }
+
   @TreeActor
   private func connect<T: Node>(
     _: T.Type,
@@ -152,21 +166,10 @@ public struct Union2Router<A: Node, B: Node>: RouterType, OneRouterType {
 // MARK: - Route
 extension Route {
 
-  // MARK: Lifecycle
-
-  public init<A: Node, B: Node>(wrappedValue: @autoclosure () -> Union.Two<A, B>)
+  public init<A: Node, B: Node>(wrappedValue union: Union.Two<A, B>)
     where Router == Union2Router<A, B>
   {
-    self.init(defaultRouter: Union2Router<A, B>(builder: wrappedValue))
-  }
-
-  // MARK: Public
-
-  @TreeActor
-  public func route<A: Node, B: Node>(builder: () -> Union.Two<A, B>) -> Attach<Router>
-    where Router == Union2Router<A, B>
-  {
-    Attach<Router>(router: Union2Router(builder: builder), to: self)
+    self.init(defaultRouter: Union2Router<A, B>(union: union))
   }
 }
 
@@ -174,6 +177,6 @@ extension Attach {
   public init<A: Node, B: Node>(_ route: Route<Router>, to union: Union.Two<A, B>)
     where Router == Union2Router<A, B>
   {
-    self.init(router: Router(builder: { union }), to: route)
+    self.init(router: Router(union: union), to: route)
   }
 }

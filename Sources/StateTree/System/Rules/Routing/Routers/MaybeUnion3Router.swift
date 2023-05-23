@@ -2,7 +2,7 @@ import TreeActor
 
 // MARK: - MaybeUnion3Router
 
-public struct MaybeUnion3Router<A: Node, B: Node, C: Node>: RouterType, OneRouterType {
+public struct MaybeUnion3Router<A: Node, B: Node, C: Node>: RouterType {
 
   // MARK: Lifecycle
 
@@ -89,6 +89,10 @@ public struct MaybeUnion3Router<A: Node, B: Node, C: Node>: RouterType, OneRoute
       return
     }
     hasApplied = true
+
+    self.connection = connection
+    self.writeContext = writeContext
+
     guard let capturedNode, let capturedUnion
     else {
       connection.runtime.updateRouteRecord(

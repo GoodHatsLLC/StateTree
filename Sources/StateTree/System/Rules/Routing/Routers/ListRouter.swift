@@ -4,7 +4,7 @@ import TreeActor
 
 // MARK: - ListRouter
 
-public struct ListRouter<Element: Node>: RouterType, NRouterType {
+public struct ListRouter<Element: Node>: RouterType {
 
   // MARK: Lifecycle
 

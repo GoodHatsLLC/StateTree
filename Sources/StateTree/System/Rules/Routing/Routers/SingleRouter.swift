@@ -2,7 +2,7 @@ import TreeActor
 
 // MARK: - SingleRouter
 
-public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
+public struct SingleRouter<NodeType: Node>: RouterType {
 
   // MARK: Lifecycle
 
@@ -40,6 +40,10 @@ public struct SingleRouter<NodeType: Node>: RouterType, OneRouterType {
       return
     }
     hasApplied = true
+
+    self.connection = connection
+    self.writeContext = writeContext
+
     let capture = NodeCapture(capturedNode)
     let uninitialized = UninitializedNode(
       capture: capture,
@@ -81,7 +85,7 @@ extension Route {
 
   // MARK: Lifecycle
 
-  public init<NodeType>(wrappedValue: @autoclosure () -> NodeType)
+  public init<NodeType: Node>(wrappedValue: @autoclosure () -> NodeType)
     where Router == SingleRouter<NodeType>
   {
     self.init(defaultRouter: SingleRouter(builder: wrappedValue))

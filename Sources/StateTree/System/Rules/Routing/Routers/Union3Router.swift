@@ -2,7 +2,7 @@ import TreeActor
 
 // MARK: - Union3Router
 
-public struct Union3Router<A: Node, B: Node, C: Node>: RouterType, OneRouterType {
+public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
 
   // MARK: Lifecycle
 
@@ -85,6 +85,10 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType, OneRouterType
       return
     }
     hasApplied = true
+
+    self.connection = connection
+    self.writeContext = writeContext
+
     switch capturedUnion {
     case .a:
       let scope = try connect(

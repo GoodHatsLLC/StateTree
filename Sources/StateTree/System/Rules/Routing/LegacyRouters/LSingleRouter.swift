@@ -7,7 +7,7 @@
 //
 //// MARK: - SingleRouter
 //
-// public struct SingleRouter<N: Node>: SingleRouterType, OneRouterType {
+// public struct SingleRouter<N: Node>: SingleRouterType {
 //
 //  public static var type: RouteType { .single }
 //

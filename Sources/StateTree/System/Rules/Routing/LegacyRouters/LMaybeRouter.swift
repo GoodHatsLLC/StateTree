@@ -7,7 +7,7 @@
 //
 //// MARK: - MaybeSingleRouter
 //
-// public struct MaybeSingleRouter<N: Node>: MaybeSingleRouterType, OneRouterType {
+// public struct MaybeSingleRouter<N: Node>: MaybeSingleRouterType {
 //
 //  public static var type: RouteType { .maybeSingle }
 //

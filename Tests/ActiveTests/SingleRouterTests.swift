@@ -1,8 +1,6 @@
 import Disposable
-import Emitter
-import TreeActor
+import StateTree
 import XCTest
-@_spi(Implementation) @testable import StateTree
 
 // MARK: - SingleRouterTests
 
