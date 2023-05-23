@@ -96,3 +96,11 @@ extension Route {
     Attach<Router>(router: SingleRouter(builder: builder), to: self)
   }
 }
+
+extension Attach {
+  public init<Value>(_ route: Route<Router>, to node: Value) where Value: Node,
+    Router == SingleRouter<Value>
+  {
+    self.init(router: Router(builder: { node }), to: route)
+  }
+}
