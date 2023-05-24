@@ -36,40 +36,40 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
   public var current: Value {
     guard
       let connection = connection,
-      let record = connection.runtime.getRouteRecord(at: connection.fieldID),
-      let scope = try? connection.runtime
-        .getScopes(at: connection.fieldID).first
+      let record = connection.runtime.getRouteRecord(at: connection.fieldID)
     else {
       assertionFailure()
       return capturedUnion
     }
     switch record {
-    case .single:
-      break
-    case .union2:
-      break
-    case .union3:
-      break
-    case .maybeSingle:
-      break
     case .maybeUnion2(let union2):
       switch union2 {
       case nil:
         return nil
       case .a(let nodeID):
+        guard
+          let scope = try? connection.runtime
+            .getScopes(at: connection.fieldID).first
+        else {
+          break
+        }
         assert(scope.nid == nodeID)
         if let node = scope.node as? A {
           return .a(node)
         }
       case .b(let nodeID):
+        guard
+          let scope = try? connection.runtime
+            .getScopes(at: connection.fieldID).first
+        else {
+          break
+        }
         assert(scope.nid == nodeID)
         if let node = scope.node as? B {
           return .b(node)
         }
       }
-    case .maybeUnion3:
-      break
-    case .list:
+    default:
       break
     }
     assertionFailure()
