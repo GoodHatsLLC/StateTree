@@ -152,6 +152,23 @@ extension Route {
 }
 
 extension Attach {
+
+  public init<NodeType: Node>(_ route: Route<Router>, to nodes: [NodeType])
+    where Router == ListRouter<NodeType>
+  {
+    let nodes = nodes.enumerated()
+      .reduce(into: OrderedDictionary<LSID, NodeType>()) { partialResult, pair in
+        partialResult[LSID(hashable: pair.offset)] = pair.element
+      }
+    self.init(
+      router: ListRouter(
+        buildKeys: nodes.keys,
+        builder: { try nodes[$0].orThrow(MissingNodeKeyError()) }
+      ),
+      to: route
+    )
+  }
+
   public init<Data: Collection, NodeType: Node>(
     _ route: Route<Router>,
     data: Data,

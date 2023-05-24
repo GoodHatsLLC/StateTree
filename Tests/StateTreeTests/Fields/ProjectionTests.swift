@@ -55,11 +55,11 @@ extension ProjectionTests {
     var rules: some Rules {
       switch val {
       case 1:
-        $route.route { .a(SubnodeA()) }
+        Attach($route, to: .a(.init()))
       case 2:
-        $route.route { .b(SubnodeB()) }
+        Attach($route, to: .b(.init()))
       case 3:
-        $route.route { .c(SubnodeC(value: $val)) }
+        Attach($route, to: .c(SubnodeC(value: $val)))
       default:
         ()
       }
@@ -110,7 +110,7 @@ extension ProjectionTests {
     @Value var intVal: Int
     @Route var displayed: DisplayedReference? = nil
     var rules: some Rules {
-      $displayed.route { DisplayedReference(intVal: $intVal) }
+      Attach($displayed, to: DisplayedReference(intVal: $intVal))
     }
   }
 

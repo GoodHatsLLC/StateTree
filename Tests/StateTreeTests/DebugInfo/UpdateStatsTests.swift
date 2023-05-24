@@ -78,9 +78,11 @@ extension UpdateStatsTests {
 
     var rules: some Rules {
       if height > 1 {
-        $next.route {
+        Attach(
+          $next,
+          to:
           BNode(parentHeight: $height)
-        }
+        )
       }
     }
   }
@@ -98,12 +100,16 @@ extension UpdateStatsTests {
         height = parentHeight - 1
       }
       if height > 1 {
-        $next.route {
-          BNode(parentHeight: $height)
-        }
+        Attach(
+          $next,
+          to: BNode(parentHeight: $height)
+        )
       }
       if height == 11 {
-        $sideChain.route { .init(parentHeight: $sideChainHeight) }
+        Attach(
+          $sideChain,
+          to: .init(parentHeight: $sideChainHeight)
+        )
       }
     }
   }

@@ -174,21 +174,10 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
 // MARK: - Route
 extension Route {
 
-  // MARK: Lifecycle
-
   public init<A: Node, B: Node>(wrappedValue: @autoclosure () -> Union.Two<A, B>?)
     where Router == MaybeUnion2Router<A, B>
   {
     self.init(defaultRouter: MaybeUnion2Router<A, B>(builder: wrappedValue))
-  }
-
-  // MARK: Public
-
-  @TreeActor
-  public func route<A: Node, B: Node>(builder: () -> Union.Two<A, B>?) -> Attach<Router>
-    where Router == MaybeUnion2Router<A, B>
-  {
-    Attach<Router>(router: MaybeUnion2Router(builder: builder), to: self)
   }
 }
 

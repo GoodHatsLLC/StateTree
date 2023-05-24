@@ -51,8 +51,7 @@ extension DependencyTests {
 
     var rules: some Rules {
       Inject(\.myCustomValue, "Some Other Value") {
-        $hosted
-          .route { DependencyUserOne() }
+        Attach($hosted, to: DependencyUserOne())
       }
     }
   }
@@ -65,8 +64,7 @@ extension DependencyTests {
     @Route var hosted: DependencyUserTwo? = nil
     var rules: some Rules {
       Inject(\.myCustomValue, "Another Other Value") {
-        $hosted
-          .route { DependencyUserTwo() }
+        Attach($hosted, to: DependencyUserTwo())
       }
     }
   }

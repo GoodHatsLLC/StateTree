@@ -1,8 +1,6 @@
 import Disposable
 import TreeActor
 
-public typealias Routing = Attach
-
 // MARK: - Attach
 
 public struct Attach<Router: RouterType>: Rules {

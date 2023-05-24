@@ -162,14 +162,14 @@ extension MaybeSingleRouterTests {
   struct TestOverrideSome: Node {
     @Route var child: ChildRouteNode? = nil
     var rules: some Rules {
-      Routing($child, to: ChildRouteNode(name: "Override"))
+      Attach($child, to: ChildRouteNode(name: "Override"))
     }
   }
 
   struct TestOverrideNone: Node {
     @Route var child: ChildRouteNode? = ChildRouteNode(name: "Default")
     var rules: some Rules {
-      Routing($child, to: nil)
+      Attach($child, to: nil)
     }
   }
 
@@ -189,12 +189,12 @@ extension MaybeSingleRouterTests {
       case .noOverride:
         .none
       case .overrideNone:
-        Routing(
+        Attach(
           $child,
           to: nil
         )
       case .overrideSome:
-        Routing(
+        Attach(
           $child,
           to: ChildRouteNode(name: "Override")
         )
@@ -206,7 +206,7 @@ extension MaybeSingleRouterTests {
     @Value var shouldSome = 0
     @Route var child: ChildRouteNode? = nil
     var rules: some Rules {
-      Routing(
+      Attach(
         $child,
         to: shouldSome > 0 ? ChildRouteNode(name: "Default") : nil
       )

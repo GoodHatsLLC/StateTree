@@ -101,21 +101,10 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
 
 extension Route {
 
-  // MARK: Lifecycle
-
   public init<NodeType>(wrappedValue: @autoclosure () -> NodeType? = nil)
     where Router == MaybeSingleRouter<NodeType>
   {
     self.init(defaultRouter: MaybeSingleRouter(builder: wrappedValue))
-  }
-
-  // MARK: Public
-
-  @TreeActor
-  public func route<Value>(builder: () -> Value?) -> Attach<Router>
-    where Router == MaybeSingleRouter<Value>
-  {
-    Attach<Router>(router: MaybeSingleRouter(builder: builder), to: self)
   }
 }
 

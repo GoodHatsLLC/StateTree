@@ -56,10 +56,8 @@ extension ListRouteTests {
     @Route var route: [NodeA] = []
     var rules: some Rules {
       if let numbers {
-        $route.route {
-          numbers.map { id in
-            NodeA(id: id)
-          }
+        Attach($route, data: numbers) { datum in
+          NodeA(id: datum)
         }
       }
     }

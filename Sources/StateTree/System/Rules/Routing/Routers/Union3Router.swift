@@ -174,25 +174,12 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
 // MARK: - Route
 extension Route {
 
-  // MARK: Lifecycle
-
   public init<A: Node, B: Node, C: Node>(wrappedValue: @autoclosure () -> Union.Three<A, B, C>)
     where Router == Union3Router<A, B, C>
   {
     self.init(defaultRouter: Union3Router<A, B, C>(builder: wrappedValue))
   }
 
-  // MARK: Public
-
-  @TreeActor
-  public func route<A: Node, B: Node, C: Node>(
-    builder: () -> Union
-      .Three<A, B, C>
-  ) -> Attach<Router>
-    where Router == Union3Router<A, B, C>
-  {
-    Attach<Router>(router: Union3Router(builder: builder), to: self)
-  }
 }
 
 extension Attach {

@@ -51,11 +51,9 @@ extension UnionRouteWithoutEnumTests {
     var rules: some Rules {
       switch select {
       case "a":
-        $route.route { .a(NodeA()) }
+        Attach($route, to: .a(.init()))
       case "b":
-        $route.route {
-          .b(NodeB())
-        }
+        Attach($route, to: .b(.init()))
       default:
         .none
       }
@@ -67,15 +65,13 @@ extension UnionRouteWithoutEnumTests {
     @Route var route: Union.Three<NodeA, NodeB, NodeC>? = nil
     var rules: some Rules {
       if select == "a" {
-        $route.route { .a(NodeA()) }
+        Attach($route, to: .a(.init()))
       } else if select == "b" {
-        $route.route {
-          .b(NodeB())
-        }
+        Attach($route, to: .b(.init()))
       }
 
       if select == "c" {
-        $route.route { .c(NodeC()) }
+        Attach($route, to: .c(.init()))
       } else if select == "bad" {
         .none
       }

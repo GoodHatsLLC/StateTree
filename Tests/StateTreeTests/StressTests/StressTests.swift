@@ -74,7 +74,7 @@ extension StressTests {
 
     var rules: some Rules {
       if depth > 1 {
-        $next.route { DeepNode(depth: depth - 1) }
+        Attach($next, to: DeepNode(depth: depth - 1))
       }
     }
   }

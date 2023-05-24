@@ -103,11 +103,9 @@ extension Union2RouteTests {
       if let routeTo {
         switch routeTo {
         case .a:
-          $hosted
-            .route { .a(AModel()) }
+          Attach($hosted, to: .a(.init()))
         case .b:
-          $hosted
-            .route { .b(BModel()) }
+          Attach($hosted, to: .b(.init()))
         }
       }
     }

@@ -183,23 +183,25 @@ extension SerializationTests {
 
     var rules: some Rules {
       if isPrime(potentialPrime) {
-        $primeSquared.route {
-          Square(value: $potentialPrime)
-        }
-
-        $commentaries.route {
-          [
+        Attach(
+          $primeSquared,
+          to: Square(value: $potentialPrime)
+        )
+        Attach(
+          $commentaries,
+          to: [
             Commentary(id: "yes1", note: "It's a prime!"),
             Commentary(id: "yes2", note: "really!"),
           ]
-        }
+        )
       } else {
-        $commentaries.route {
-          [
+        Attach(
+          $commentaries,
+          to: [
             Commentary(id: "no1", note: "Not a prime :("),
             Commentary(id: "no2", note: "srsly"),
           ]
-        }
+        )
       }
       OnIntent(SomeIntentStep.self) { _ in
         // keep the intent pending to keep it present in the state.
@@ -239,6 +241,7 @@ extension SerializationTests {
         {
           "id" : "00000000-1111-1111-1111-111111111111",
           "origin" : {
+            "depth" : 0,
             "fieldID" : "r:0:00000000-0000-0000-0000-000000000000",
             "type" : "single"
           },
@@ -256,7 +259,7 @@ extension SerializationTests {
               "payload" : {
                 "route" : {
                   "_0" : {
-                    "single" : {
+                    "maybeSingle" : {
                       "_0" : "00000000-FFFF-0000-0000-000000000003"
                     }
                   }
@@ -274,10 +277,10 @@ extension SerializationTests {
                     "list" : {
                       "_0" : {
                         "idMap" : [
-                          "yes1",
-                          "00000000-FFFF-0000-0000-000000000004",
-                          "yes2",
-                          "00000000-FFFF-0000-0000-000000000005"
+                          "0",
+                          "00000000-FFFF-0000-0000-000000000001",
+                          "1",
+                          "00000000-FFFF-0000-0000-000000000002"
                         ]
                       }
                     }
@@ -288,10 +291,59 @@ extension SerializationTests {
           ]
         },
         {
+          "id" : "00000000-FFFF-0000-0000-000000000001",
+          "origin" : {
+            "depth" : 0,
+            "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
+            "type" : "union2"
+          },
+          "records" : [
+            {
+              "id" : "u:0:00000000-FFFF-0000-0000-000000000001"
+            },
+            {
+              "id" : "v:1:00000000-FFFF-0000-0000-000000000001",
+              "payload" : {
+                "value" : {
+                  "_0" : "\\"Not a prime :(\\""
+                }
+              }
+            },
+            {
+              "id" : "d:2:00000000-FFFF-0000-0000-000000000001"
+            }
+          ]
+        },
+        {
+          "id" : "00000000-FFFF-0000-0000-000000000002",
+          "origin" : {
+            "depth" : 0,
+            "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
+            "type" : "union2"
+          },
+          "records" : [
+            {
+              "id" : "u:0:00000000-FFFF-0000-0000-000000000002"
+            },
+            {
+              "id" : "v:1:00000000-FFFF-0000-0000-000000000002",
+              "payload" : {
+                "value" : {
+                  "_0" : "\\"srsly\\""
+                }
+              }
+            },
+            {
+              "id" : "d:2:00000000-FFFF-0000-0000-000000000002"
+            }
+          ]
+        },
+        {
           "id" : "00000000-FFFF-0000-0000-000000000003",
           "origin" : {
+            "depth" : 0,
             "fieldID" : "r:1:00000000-1111-1111-1111-111111111111",
-            "type" : "single"
+            "type" : "maybeSingle"
           },
           "records" : [
             {
@@ -313,54 +365,6 @@ extension SerializationTests {
                   }
                 }
               }
-            }
-          ]
-        },
-        {
-          "id" : "00000000-FFFF-0000-0000-000000000004",
-          "origin" : {
-            "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "identity" : "yes1",
-            "type" : "list"
-          },
-          "records" : [
-            {
-              "id" : "u:0:00000000-FFFF-0000-0000-000000000004"
-            },
-            {
-              "id" : "v:1:00000000-FFFF-0000-0000-000000000004",
-              "payload" : {
-                "value" : {
-                  "_0" : "\\"It's a prime!\\""
-                }
-              }
-            },
-            {
-              "id" : "d:2:00000000-FFFF-0000-0000-000000000004"
-            }
-          ]
-        },
-        {
-          "id" : "00000000-FFFF-0000-0000-000000000005",
-          "origin" : {
-            "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "identity" : "yes2",
-            "type" : "list"
-          },
-          "records" : [
-            {
-              "id" : "u:0:00000000-FFFF-0000-0000-000000000005"
-            },
-            {
-              "id" : "v:1:00000000-FFFF-0000-0000-000000000005",
-              "payload" : {
-                "value" : {
-                  "_0" : "\\"really!\\""
-                }
-              }
-            },
-            {
-              "id" : "d:2:00000000-FFFF-0000-0000-000000000005"
             }
           ]
         }
@@ -399,6 +403,7 @@ extension SerializationTests {
         {
           "id" : "00000000-1111-1111-1111-111111111111",
           "origin" : {
+            "depth" : 0,
             "fieldID" : "r:0:00000000-0000-0000-0000-000000000000",
             "type" : "single"
           },
@@ -416,7 +421,7 @@ extension SerializationTests {
               "payload" : {
                 "route" : {
                   "_0" : {
-                    "single" : {
+                    "maybeSingle" : {
 
                     }
                   }
@@ -434,9 +439,9 @@ extension SerializationTests {
                     "list" : {
                       "_0" : {
                         "idMap" : [
-                          "no1",
+                          "0",
                           "00000000-FFFF-0000-0000-000000000001",
-                          "no2",
+                          "1",
                           "00000000-FFFF-0000-0000-000000000002"
                         ]
                       }
@@ -450,9 +455,9 @@ extension SerializationTests {
         {
           "id" : "00000000-FFFF-0000-0000-000000000001",
           "origin" : {
+            "depth" : 0,
             "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "identity" : "no1",
-            "type" : "list"
+            "type" : "union2"
           },
           "records" : [
             {
@@ -474,9 +479,9 @@ extension SerializationTests {
         {
           "id" : "00000000-FFFF-0000-0000-000000000002",
           "origin" : {
+            "depth" : 0,
             "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "identity" : "no2",
-            "type" : "list"
+            "type" : "union2"
           },
           "records" : [
             {
