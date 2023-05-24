@@ -8,11 +8,11 @@ public struct ListRouter<Element: Node>: RouterType {
 
   // MARK: Lifecycle
 
-  init<IDCollection: Collection>(
-    buildKeys ids: IDCollection,
+  init(
+    buildKeys ids: some Collection<LSID>,
     builder: @escaping (LSID) throws -> Element
-  ) where IDCollection.Element: Hashable {
-    self.ids = OrderedSet(ids.map { LSID(hashable: $0) })
+  ) {
+    self.ids = OrderedSet(ids)
     self.elementBuilder = builder
   }
 
@@ -46,34 +46,40 @@ public struct ListRouter<Element: Node>: RouterType {
     }
     hasApplied = true
 
+    self.connection = connection
+    self.writeContext = writeContext
+
     let record = connection.runtime.getRouteRecord(at: connection.fieldID)
     guard case .list(let listRecord) = record
     else {
       assertionFailure()
       return
     }
-    var idMap = listRecord.idMap
+    let idMap = listRecord.idMap
+    var newIDMap = OrderedDictionary<LSID, NodeID>()
 
     let newIDs = ids.subtracting(idMap.keys)
-    idMap.removeAll { pair in
-      !ids.contains(pair.key)
-    }
+    let removedIDs = idMap.keys.subtracting(ids)
 
-    for lsid in newIDs {
-      let node = try elementBuilder(lsid)
-      let capture = NodeCapture(node)
-      let scope = try connect(
-        Element.self,
-        from: capture,
-        connection: connection,
-        writeContext: writeContext
-      )
-      idMap[lsid] = scope.nid
+    for lsid in ids {
+      if newIDs.contains(lsid) {
+        let node = try elementBuilder(lsid)
+        let capture = NodeCapture(node)
+        let scope = try connect(
+          Element.self,
+          from: capture,
+          connection: connection,
+          writeContext: writeContext
+        )
+        newIDMap[lsid] = scope.nid
+      } else if let nid = idMap[lsid], !removedIDs.contains(lsid) {
+        newIDMap[lsid] = nid
+      }
     }
 
     connection.runtime.updateRouteRecord(
       at: connection.fieldID,
-      to: .list(.init(idMap: idMap))
+      to: .list(.init(idMap: newIDMap))
     )
   }
 
@@ -132,12 +138,13 @@ extension Route {
   public init<NodeType: Node>(wrappedValue: [NodeType])
     where Router == ListRouter<NodeType>
   {
-    let nodes = wrappedValue.enumerated().reduce(into: [LSID: NodeType]()) { partialResult, pair in
-      partialResult[LSID(hashable: pair.offset)] = pair.element
-    }
+    let nodes = wrappedValue.enumerated()
+      .reduce(into: OrderedDictionary<LSID, NodeType>()) { partialResult, pair in
+        partialResult[LSID(hashable: pair.offset)] = pair.element
+      }
     self.init(
       defaultRouter: ListRouter(
-        buildKeys: Array([0 ..< wrappedValue.count]),
+        buildKeys: nodes.keys,
         builder: { try nodes[$0].orThrow(MissingNodeKeyError()) }
       )
     )
@@ -145,18 +152,20 @@ extension Route {
 }
 
 extension Attach {
-  public init<Data: Collection>(
+  public init<Data: Collection, NodeType: Node>(
     _ route: Route<Router>,
     data: Data,
-    builder _: @escaping (Data.Element) -> some Node
+    builder: @escaping (_ datum: Data.Element) -> NodeType
   ) where Data.Element: Hashable,
-    Router == ListRouter<Data.Element>
+    Router == ListRouter<NodeType>
   {
-    let mapping = data.reduce(into: [LSID: Data.Element]()) { partialResult, value in
-      partialResult[LSID(hashable: value)] = value
-    }
-    self.init(router: .init(buildKeys: data, builder: { (lsid: LSID) in
-      try mapping[lsid].orThrow(MissingNodeKeyError())
+    let mapping = data
+      .reduce(into: OrderedDictionary<LSID, Data.Element>()) { partialResult, value in
+        partialResult[LSID(hashable: value)] = value
+      }
+    self.init(router: .init(buildKeys: mapping.keys, builder: { (lsid: LSID) in
+      let datum = try mapping[lsid].orThrow(MissingNodeKeyError())
+      return builder(datum)
     }), to: route)
   }
 }
@@ -170,10 +179,11 @@ extension Attach {
   ) where Data.Element: Hashable,
     Router == ListRouter<Data.Element>
   {
-    let mapping = data.reduce(into: [LSID: Data.Element]()) { partialResult, value in
-      partialResult[LSID(hashable: value[keyPath: idPath])] = value
-    }
-    self.init(router: .init(buildKeys: data, builder: { (lsid: LSID) in
+    let mapping = data
+      .reduce(into: OrderedDictionary<LSID, Data.Element>()) { partialResult, value in
+        partialResult[LSID(hashable: value[keyPath: idPath])] = value
+      }
+    self.init(router: .init(buildKeys: mapping.keys, builder: { (lsid: LSID) in
       try mapping[lsid].orThrow(MissingNodeKeyError())
     }), to: route)
   }
