@@ -114,17 +114,11 @@ extension UninitializedNode {
         )
 
       case .route(let field):
-        field.value
-          .connect(
-            .init(
-              runtime: runtime,
-              fieldID: record.id
-            ),
-            writeContext: .init(
-              depth: route.depth,
-              dependencies: dependencies
-            )
-          )
+        field.value.handle.setField(
+          id: record.id,
+          in: runtime,
+          rules: .init(depth: route.depth, dependencies: dependencies)
+        )
         routerSet.routers.append(field.value.handle)
 
       case .value(let field, _):
@@ -200,17 +194,11 @@ extension UninitializedNode {
           nodeID: nodeID,
           offset: offset
         )
-        field.value
-          .connect(
-            .init(
-              runtime: runtime,
-              fieldID: fieldID
-            ),
-            writeContext: .init(
-              depth: route.depth,
-              dependencies: dependencies
-            )
-          )
+        field.value.handle.setField(
+          id: fieldID,
+          in: runtime,
+          rules: .init(depth: route.depth, dependencies: dependencies)
+        )
         routerSet.routers.append(field.value.handle)
         let routeRecord = field.value.handle.defaultRecord
         fieldRecords.append(.init(

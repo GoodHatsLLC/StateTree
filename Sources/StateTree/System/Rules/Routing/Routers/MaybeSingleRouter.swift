@@ -6,8 +6,8 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
 
   // MARK: Lifecycle
 
-  init(builder: () -> NodeType?) {
-    self.capturedNode = builder()
+  init(node: NodeType?) {
+    self.capturedNode = node
   }
 
   // MARK: Public
@@ -22,11 +22,12 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
     capturedNode
   }
 
-  public var current: NodeType? {
+  @_spi(Implementation)
+  @TreeActor
+  public func current(at fieldID: FieldID, in runtime: Runtime) throws -> Value {
     guard
-      let connection = connection,
-      let scope = try? connection.runtime
-        .getScopes(at: connection.fieldID).first,
+      let scope = try? runtime
+        .getScopes(at: fieldID).first,
       let node = scope.node as? NodeType
     else {
       return capturedNode
@@ -34,20 +35,27 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
     return node
   }
 
-  public mutating func apply(connection: RouteConnection, writeContext: RouterWriteContext) throws {
+  public mutating func assign(_ context: RouterRuleContext) {
+    self.context = context
+  }
+
+  @_spi(Implementation)
+  public mutating func apply(at fieldID: FieldID, in runtime: Runtime) throws {
     guard !hasApplied
     else {
       return
     }
     hasApplied = true
 
-    self.connection = connection
-    self.writeContext = writeContext
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
 
     guard let capturedNode
     else {
-      connection.runtime.updateRouteRecord(
-        at: connection.fieldID,
+      runtime.updateRouteRecord(
+        at: fieldID,
         to: .maybeSingle(nil)
       )
       return
@@ -55,22 +63,22 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
     let capture = NodeCapture(capturedNode)
     let uninitialized = UninitializedNode(
       capture: capture,
-      runtime: connection.runtime
+      runtime: runtime
     )
     let initialized = try uninitialized.initializeNode(
       asType: NodeType.self,
       id: NodeID(),
-      dependencies: writeContext.dependencies,
+      dependencies: context.dependencies,
       on: .init(
-        fieldID: connection.fieldID,
+        fieldID: fieldID,
         identity: nil,
         type: .maybeSingle,
-        depth: writeContext.depth
+        depth: context.depth
       )
     )
     let node = try initialized.connect()
-    connection.runtime.updateRouteRecord(
-      at: connection.fieldID,
+    runtime.updateRouteRecord(
+      at: fieldID,
       to: .maybeSingle(node.nid)
     )
   }
@@ -80,10 +88,6 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
     case
       (.none, .some),
       (.some, .none):
-      var other = other
-      other.connection = connection
-      other.writeContext = writeContext
-      other.hasApplied = false
       self = other
     default:
       break
@@ -94,17 +98,16 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
 
   private let capturedNode: NodeType?
   private var hasApplied = false
-  private var connection: RouteConnection?
-  private var writeContext: RouterWriteContext?
+  private var context: RouterRuleContext?
 
 }
 
 extension Route {
 
-  public init<NodeType>(wrappedValue: @autoclosure () -> NodeType? = nil)
+  public init<NodeType>(wrappedValue: NodeType?)
     where Router == MaybeSingleRouter<NodeType>
   {
-    self.init(defaultRouter: MaybeSingleRouter(builder: wrappedValue))
+    self.init(defaultRouter: MaybeSingleRouter(node: wrappedValue))
   }
 }
 
@@ -112,6 +115,6 @@ extension Attach {
   public init<Value>(_ route: Route<Router>, to node: Value?) where Value: Node,
     Router == MaybeSingleRouter<Value>
   {
-    self.init(router: Router(builder: { node }), to: route)
+    self.init(router: Router(node: node), to: route)
   }
 }

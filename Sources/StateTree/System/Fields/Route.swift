@@ -6,11 +6,6 @@ import TreeActor
 
 protocol RouteField<Router> {
   associatedtype Router: RouterType
-  @TreeActor
-  func connect(
-    _ connection: RouteConnection,
-    writeContext: RouterWriteContext
-  )
   var handle: any RouteHandle { get }
 }
 
@@ -43,16 +38,5 @@ public struct Route<Router: RouterType>: RouteField {
 
   var handle: any RouteHandle {
     inner
-  }
-
-  @TreeActor
-  func connect(
-    _ connection: RouteConnection,
-    writeContext: RouterWriteContext
-  ) {
-    inner.connect(
-      connection,
-      writeContext: writeContext
-    )
   }
 }

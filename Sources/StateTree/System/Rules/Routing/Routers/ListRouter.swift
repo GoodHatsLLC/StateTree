@@ -28,28 +28,36 @@ public struct ListRouter<Element: Node>: RouterType {
     []
   }
 
-  public var current: [Element] {
+  @_spi(Implementation)
+  @TreeActor
+  public func current(at fieldID: FieldID, in runtime: Runtime) throws -> Value {
     guard
-      let connection = connection,
-      let scopes = try? connection.runtime
-        .getScopes(at: connection.fieldID)
+      let scopes = try? runtime
+        .getScopes(at: fieldID)
     else {
-      return fallback
+      throw UnassignedRouterError()
     }
     return scopes.compactMap { $0.node as? Element }
   }
 
-  public mutating func apply(connection: RouteConnection, writeContext: RouterWriteContext) throws {
+  public mutating func assign(_ context: RouterRuleContext) {
+    self.context = context
+  }
+
+  @_spi(Implementation)
+  public mutating func apply(at fieldID: FieldID, in runtime: Runtime) throws {
     guard !hasApplied
     else {
       return
     }
     hasApplied = true
 
-    self.connection = connection
-    self.writeContext = writeContext
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
 
-    let record = connection.runtime.getRouteRecord(at: connection.fieldID)
+    let record = runtime.getRouteRecord(at: fieldID)
     guard case .list(let listRecord) = record
     else {
       assertionFailure()
@@ -68,8 +76,9 @@ public struct ListRouter<Element: Node>: RouterType {
         let scope = try connect(
           Element.self,
           from: capture,
-          connection: connection,
-          writeContext: writeContext
+          context: context,
+          at: fieldID,
+          in: runtime
         )
         newIDMap[lsid] = scope.nid
       } else if let nid = idMap[lsid], !removedIDs.contains(lsid) {
@@ -77,18 +86,14 @@ public struct ListRouter<Element: Node>: RouterType {
       }
     }
 
-    connection.runtime.updateRouteRecord(
-      at: connection.fieldID,
+    runtime.updateRouteRecord(
+      at: fieldID,
       to: .list(.init(idMap: newIDMap))
     )
   }
 
   public mutating func update(from other: ListRouter<Element>) {
     if other.ids != ids {
-      var other = other
-      other.hasApplied = false
-      other.connection = connection
-      other.writeContext = writeContext
       self = other
     }
   }
@@ -98,29 +103,29 @@ public struct ListRouter<Element: Node>: RouterType {
   private let elementBuilder: (LSID) throws -> Element
   private let ids: OrderedSet<LSID>
   private var hasApplied = false
-  private var connection: RouteConnection?
-  private var writeContext: RouterWriteContext?
+  private var context: RouterRuleContext?
 
   @TreeActor
   private func connect<T: Node>(
     _: T.Type,
     from capture: NodeCapture,
-    connection: RouteConnection,
-    writeContext: RouterWriteContext
+    context: RouterRuleContext,
+    at fieldID: FieldID,
+    in runtime: Runtime
   ) throws -> NodeScope<T> {
     let uninitialized = UninitializedNode(
       capture: capture,
-      runtime: connection.runtime
+      runtime: runtime
     )
     let initialized = try uninitialized.initializeNode(
       asType: T.self,
       id: NodeID(),
-      dependencies: writeContext.dependencies,
+      dependencies: context.dependencies,
       on: .init(
-        fieldID: connection.fieldID,
+        fieldID: fieldID,
         identity: nil,
         type: .union2,
-        depth: writeContext.depth
+        depth: context.depth
       )
     )
     return try initialized.connect()

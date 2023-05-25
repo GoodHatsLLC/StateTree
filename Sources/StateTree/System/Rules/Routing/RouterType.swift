@@ -2,16 +2,9 @@ import Foundation
 import OrderedCollections
 import TreeActor
 
-// MARK: - RouteConnection
+// MARK: - RouterRuleContext
 
-public struct RouteConnection {
-  let runtime: Runtime
-  let fieldID: FieldID
-}
-
-// MARK: - RouterWriteContext
-
-public struct RouterWriteContext {
+public struct RouterRuleContext {
   let depth: Int
   let dependencies: DependencyValues
 }
@@ -23,12 +16,21 @@ public protocol RouterType<Value> {
   static var type: RouteType { get }
   var fallback: Value { get }
   var defaultRecord: RouteRecord { get }
-  @TreeActor var current: Value { get throws }
+
+  @_spi(Implementation)
   @TreeActor
-  mutating func apply(
-    connection: RouteConnection,
-    writeContext: RouterWriteContext
-  ) throws
+  func current(at fieldID: FieldID, in: Runtime) throws -> Value
+  @_spi(Implementation)
+  @TreeActor
+  mutating func apply(at fieldID: FieldID, in: Runtime) throws
   @TreeActor
   mutating func update(from: Self)
+  @TreeActor
+  mutating func assign(
+    _ context: RouterRuleContext
+  )
 }
+
+// MARK: - UnassignedRouterError
+
+struct UnassignedRouterError: Error { }

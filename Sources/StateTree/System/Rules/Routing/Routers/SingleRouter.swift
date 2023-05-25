@@ -22,11 +22,12 @@ public struct SingleRouter<NodeType: Node>: RouterType {
     capturedNode
   }
 
-  public var current: NodeType {
+  @_spi(Implementation)
+  @TreeActor
+  public func current(at fieldID: FieldID, in runtime: Runtime) throws -> Value {
     guard
-      let connection = connection,
-      let scope = try? connection.runtime
-        .getScopes(at: connection.fieldID).first,
+      let scope = try? runtime
+        .getScopes(at: fieldID).first,
       let node = scope.node as? NodeType
     else {
       return capturedNode
@@ -34,35 +35,41 @@ public struct SingleRouter<NodeType: Node>: RouterType {
     return node
   }
 
-  public mutating func apply(connection: RouteConnection, writeContext: RouterWriteContext) throws {
+  public mutating func assign(_ context: RouterRuleContext) {
+    self.context = context
+  }
+
+  @_spi(Implementation)
+  public mutating func apply(at fieldID: FieldID, in runtime: Runtime) throws {
     guard !hasApplied
     else {
       return
     }
     hasApplied = true
 
-    self.connection = connection
-    self.writeContext = writeContext
-
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
     let capture = NodeCapture(capturedNode)
     let uninitialized = UninitializedNode(
       capture: capture,
-      runtime: connection.runtime
+      runtime: runtime
     )
     let initialized = try uninitialized.initializeNode(
       asType: NodeType.self,
       id: NodeID(),
-      dependencies: writeContext.dependencies,
+      dependencies: context.dependencies,
       on: .init(
-        fieldID: connection.fieldID,
+        fieldID: fieldID,
         identity: nil,
         type: .single,
-        depth: writeContext.depth
+        depth: context.depth
       )
     )
     let node = try initialized.connect()
-    connection.runtime.updateRouteRecord(
-      at: connection.fieldID,
+    runtime.updateRouteRecord(
+      at: fieldID,
       to: .single(node.nid)
     )
   }
@@ -75,8 +82,7 @@ public struct SingleRouter<NodeType: Node>: RouterType {
 
   private let capturedNode: NodeType
   private var hasApplied = false
-  private var connection: RouteConnection?
-  private var writeContext: RouterWriteContext?
+  private var context: RouterRuleContext?
 
 }
 

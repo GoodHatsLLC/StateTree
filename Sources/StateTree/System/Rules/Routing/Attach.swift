@@ -21,7 +21,14 @@ public struct Attach<Router: RouterType>: Rules {
     .init()
   }
 
-  public mutating func applyRule(with _: RuleContext) throws {
+  public mutating func applyRule(with context: RuleContext) throws {
+    var router = router
+    router.assign(
+      .init(
+        depth: context.depth,
+        dependencies: context.dependencies
+      )
+    )
     route.inner.appliedRouter = router
   }
 
@@ -31,11 +38,18 @@ public struct Attach<Router: RouterType>: Rules {
 
   public mutating func updateRule(
     from new: Self,
-    with _: RuleContext
+    with context: RuleContext
   ) throws {
     assert(route.inner.appliedRouter != nil)
-    router = new.router
-    route.inner.appliedRouter?.update(from: new.router)
+    var newRouter = new.router
+    newRouter.assign(
+      .init(
+        depth: context.depth,
+        dependencies: context.dependencies
+      )
+    )
+    router = newRouter
+    route.inner.appliedRouter?.update(from: newRouter)
   }
 
   // MARK: Internal

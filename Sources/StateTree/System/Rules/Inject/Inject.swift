@@ -80,7 +80,7 @@ public struct Inject<R: Rules>: Rules {
 }
 
 extension Rules {
-  public func inject<Value>(
+  public func injecting<Value>(
     _ path: WritableKeyPath<DependencyValues, Value>,
     _ value: Value
   ) -> Inject<some Rules> {

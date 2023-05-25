@@ -7,6 +7,7 @@ import TreeActor
 @TreeActor
 protocol RouteHandle: AnyObject {
   func apply() throws
+  func setField(id: FieldID, in runtime: Runtime, rules: RouterRuleContext)
   var defaultRecord: RouteRecord { get }
 }
 
@@ -21,7 +22,6 @@ final class InnerRouteField<Router: RouterType> {
     defaultRouter: Router
   ) {
     self.defaultRouter = defaultRouter
-    self.activeDefault = defaultRouter
   }
 
   // MARK: Internal
@@ -33,9 +33,9 @@ final class InnerRouteField<Router: RouterType> {
       // be removed so that it can re-apply.
       switch (appliedRouter, newValue) {
       case (.none, .some):
-        activeDefault = defaultRouter
+        activeDefault = defaultWithContext()
       case (.some, .none):
-        activeDefault = defaultRouter
+        activeDefault = defaultWithContext()
       default:
         break
       }
@@ -44,9 +44,10 @@ final class InnerRouteField<Router: RouterType> {
 
   // MARK: Private
 
-  private var connection: RouteConnection?
-  private var writeContext: RouterWriteContext?
-  private var activeDefault: Router
+  private var runtime: Runtime?
+  private var fieldID: FieldID?
+  private var rules: RouterRuleContext?
+  private var activeDefault: Router?
   private let defaultRouter: Router
 
 }
@@ -55,9 +56,14 @@ final class InnerRouteField<Router: RouterType> {
 
 extension InnerRouteField: RouteHandle {
 
+  // MARK: Internal
+
   var activeRouter: Router {
     get {
-      appliedRouter ?? activeDefault
+      appliedRouter ?? activeDefault ?? {
+        assertionFailure()
+        return defaultRouter
+      }()
     }
     set {
       // work out the underlying router
@@ -71,37 +77,53 @@ extension InnerRouteField: RouteHandle {
   }
 
   var value: Router.Value {
-    let router = activeRouter
-    return (try? router.current) ?? router.fallback
+    guard
+      let fieldID,
+      let runtime,
+      let value = try? activeRouter.current(at: fieldID, in: runtime)
+    else {
+      assertionFailure()
+      return activeRouter.fallback
+    }
+    return value
   }
 
   var defaultRecord: RouteRecord {
     defaultRouter.defaultRecord
   }
 
-  func connect(
-    _ connection: RouteConnection,
-    writeContext: RouterWriteContext
-  ) {
-    self.connection = connection
-    self.writeContext = writeContext
+  func setField(id: FieldID, in runtime: Runtime, rules: RouterRuleContext) {
+    fieldID = id
+    self.runtime = runtime
+    self.rules = rules
+    activeDefault = defaultWithContext()
   }
 
   func apply() throws {
     guard
-      let connection,
-      let writeContext
+      let fieldID,
+      let runtime
     else {
-      throw UnconnectedNodeError()
+      throw UnknownRouteFieldError()
     }
-    try activeRouter.apply(
-      connection: connection,
-      writeContext: writeContext
-    )
+    try activeRouter.apply(at: fieldID, in: runtime)
+  }
+
+  // MARK: Private
+
+  private func defaultWithContext() -> Router {
+    if let rules {
+      var defaultRouter = defaultRouter
+      defaultRouter.assign(rules)
+      return defaultRouter
+    } else {
+      assertionFailure()
+      return defaultRouter
+    }
   }
 
 }
 
-// MARK: - UnconnectedNodeError
+// MARK: - UnknownRouteFieldError
 
-struct UnconnectedNodeError: Error { }
+struct UnknownRouteFieldError: Error { }

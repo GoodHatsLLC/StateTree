@@ -33,10 +33,10 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
     capturedUnion
   }
 
-  public var current: Value {
-    guard
-      let connection = connection,
-      let record = connection.runtime.getRouteRecord(at: connection.fieldID)
+  @_spi(Implementation)
+  @TreeActor
+  public func current(at fieldID: FieldID, in runtime: Runtime) throws -> Value {
+    guard let record = runtime.getRouteRecord(at: fieldID)
     else {
       assertionFailure()
       return capturedUnion
@@ -48,8 +48,8 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
         return nil
       case .a(let nodeID):
         guard
-          let scope = try? connection.runtime
-            .getScopes(at: connection.fieldID).first
+          let scope = try? runtime
+            .getScopes(at: fieldID).first
         else {
           break
         }
@@ -59,8 +59,8 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
         }
       case .b(let nodeID):
         guard
-          let scope = try? connection.runtime
-            .getScopes(at: connection.fieldID).first
+          let scope = try? runtime
+            .getScopes(at: fieldID).first
         else {
           break
         }
@@ -76,20 +76,26 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
     return capturedUnion
   }
 
-  public mutating func apply(connection: RouteConnection, writeContext: RouterWriteContext) throws {
+  public mutating func assign(_ context: RouterRuleContext) {
+    self.context = context
+  }
+
+  @_spi(Implementation)
+  public mutating func apply(at fieldID: FieldID, in runtime: Runtime) throws {
     guard !hasApplied
     else {
       return
     }
     hasApplied = true
 
-    self.connection = connection
-    self.writeContext = writeContext
-
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
     guard let capturedNode, let capturedUnion
     else {
-      connection.runtime.updateRouteRecord(
-        at: connection.fieldID,
+      runtime.updateRouteRecord(
+        at: fieldID,
         to: .maybeUnion2(nil)
       )
       return
@@ -99,22 +105,24 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
       let scope = try connect(
         A.self,
         from: capturedNode,
-        connection: connection,
-        writeContext: writeContext
+        context: context,
+        at: fieldID,
+        in: runtime
       )
-      connection.runtime.updateRouteRecord(
-        at: connection.fieldID,
+      runtime.updateRouteRecord(
+        at: fieldID,
         to: .maybeUnion2(.a(scope.nid))
       )
     case .b:
       let scope = try connect(
         B.self,
         from: capturedNode,
-        connection: connection,
-        writeContext: writeContext
+        context: context,
+        at: fieldID,
+        in: runtime
       )
-      connection.runtime.updateRouteRecord(
-        at: connection.fieldID,
+      runtime.updateRouteRecord(
+        at: fieldID,
         to: .maybeUnion2(.b(scope.nid))
       )
     }
@@ -128,10 +136,6 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
       shouldUpdate = true
     }
     if shouldUpdate {
-      var other = other
-      other.hasApplied = false
-      other.connection = connection
-      other.writeContext = writeContext
       self = other
     }
   }
@@ -141,29 +145,29 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
   private let capturedUnion: Union.Two<A, B>?
   private let capturedNode: NodeCapture?
   private var hasApplied = false
-  private var connection: RouteConnection?
-  private var writeContext: RouterWriteContext?
+  private var context: RouterRuleContext?
 
   @TreeActor
   private func connect<T: Node>(
     _: T.Type,
     from capture: NodeCapture,
-    connection: RouteConnection,
-    writeContext: RouterWriteContext
+    context: RouterRuleContext,
+    at fieldID: FieldID,
+    in runtime: Runtime
   ) throws -> NodeScope<T> {
     let uninitialized = UninitializedNode(
       capture: capture,
-      runtime: connection.runtime
+      runtime: runtime
     )
     let initialized = try uninitialized.initializeNode(
       asType: T.self,
       id: NodeID(),
-      dependencies: writeContext.dependencies,
+      dependencies: context.dependencies,
       on: .init(
-        fieldID: connection.fieldID,
+        fieldID: fieldID,
         identity: nil,
         type: .maybeUnion2,
-        depth: writeContext.depth
+        depth: context.depth
       )
     )
     return try initialized.connect()
@@ -179,6 +183,7 @@ extension Route {
   {
     self.init(defaultRouter: MaybeUnion2Router<A, B>(builder: wrappedValue))
   }
+
 }
 
 extension Attach {

@@ -33,21 +33,18 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
     capturedUnion
   }
 
-  public var current: Value {
+  @_spi(Implementation)
+  @TreeActor
+  public func current(at fieldID: FieldID, in runtime: Runtime) throws -> Value {
     guard
-      let connection = connection,
-      let record = connection.runtime.getRouteRecord(at: connection.fieldID),
-      let scope = try? connection.runtime
-        .getScopes(at: connection.fieldID).first
+      let record = runtime.getRouteRecord(at: fieldID),
+      let scope = try? runtime
+        .getScopes(at: fieldID).first
     else {
       assertionFailure()
       return capturedUnion
     }
     switch record {
-    case .single:
-      break
-    case .union2:
-      break
     case .union3(let union3):
       switch union3 {
       case .a(let nodeID):
@@ -66,61 +63,65 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
           return .c(node)
         }
       }
-    case .maybeSingle:
-      break
-    case .maybeUnion2:
-      break
-    case .maybeUnion3:
-      break
-    case .list:
+    default:
       break
     }
     assertionFailure()
     return capturedUnion
   }
 
-  public mutating func apply(connection: RouteConnection, writeContext: RouterWriteContext) throws {
+  public mutating func assign(_ context: RouterRuleContext) {
+    self.context = context
+  }
+
+  @_spi(Implementation)
+  public mutating func apply(at fieldID: FieldID, in runtime: Runtime) throws {
     guard !hasApplied
     else {
       return
     }
     hasApplied = true
 
-    self.connection = connection
-    self.writeContext = writeContext
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
 
     switch capturedUnion {
     case .a:
       let scope = try connect(
         A.self,
         from: capturedNode,
-        connection: connection,
-        writeContext: writeContext
+        context: context,
+        at: fieldID,
+        in: runtime
       )
-      connection.runtime.updateRouteRecord(
-        at: connection.fieldID,
+      runtime.updateRouteRecord(
+        at: fieldID,
         to: .union3(.a(scope.nid))
       )
     case .b:
       let scope = try connect(
         B.self,
         from: capturedNode,
-        connection: connection,
-        writeContext: writeContext
+        context: context,
+        at: fieldID,
+        in: runtime
       )
-      connection.runtime.updateRouteRecord(
-        at: connection.fieldID,
+      runtime.updateRouteRecord(
+        at: fieldID,
         to: .union3(.b(scope.nid))
       )
     case .c:
       let scope = try connect(
         C.self,
         from: capturedNode,
-        connection: connection,
-        writeContext: writeContext
+        context: context,
+        at: fieldID,
+        in: runtime
       )
-      connection.runtime.updateRouteRecord(
-        at: connection.fieldID,
+      runtime.updateRouteRecord(
+        at: fieldID,
         to: .union3(.c(scope.nid))
       )
     }
@@ -128,10 +129,6 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
 
   public mutating func update(from other: Union3Router<A, B, C>) {
     if !(capturedUnion ~= other.capturedUnion) {
-      var other = other
-      other.hasApplied = false
-      other.connection = connection
-      other.writeContext = writeContext
       self = other
     }
   }
@@ -141,29 +138,29 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
   private let capturedUnion: Union.Three<A, B, C>
   private let capturedNode: NodeCapture
   private var hasApplied = false
-  private var connection: RouteConnection?
-  private var writeContext: RouterWriteContext?
+  private var context: RouterRuleContext?
 
   @TreeActor
   private func connect<T: Node>(
     _: T.Type,
     from capture: NodeCapture,
-    connection: RouteConnection,
-    writeContext: RouterWriteContext
+    context: RouterRuleContext,
+    at fieldID: FieldID,
+    in runtime: Runtime
   ) throws -> NodeScope<T> {
     let uninitialized = UninitializedNode(
       capture: capture,
-      runtime: connection.runtime
+      runtime: runtime
     )
     let initialized = try uninitialized.initializeNode(
       asType: T.self,
       id: NodeID(),
-      dependencies: writeContext.dependencies,
+      dependencies: context.dependencies,
       on: .init(
-        fieldID: connection.fieldID,
+        fieldID: fieldID,
         identity: nil,
         type: .union3,
-        depth: writeContext.depth
+        depth: context.depth
       )
     )
     return try initialized.connect()
