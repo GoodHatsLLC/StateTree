@@ -37,6 +37,10 @@ public struct MaybeRule<R: Rules>: Rules {
     }
   }
 
+  public mutating func syncRuntime(with context: RuleContext) throws {
+    try optionalRules?.syncRuntime(with: context)
+  }
+
   // MARK: Internal
 
   var optionalRules: R?

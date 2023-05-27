@@ -139,6 +139,8 @@ public struct OnChange<Value: Equatable, B: Behavior>: Rules where B.Input == (V
     }
   }
 
+  public mutating func syncRuntime(with _: RuleContext) throws { }
+
   // MARK: Private
 
   private var value: Value

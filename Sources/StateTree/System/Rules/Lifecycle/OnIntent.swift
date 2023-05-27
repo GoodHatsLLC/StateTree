@@ -76,6 +76,8 @@ public struct OnIntent: Rules {
     with _: RuleContext
   ) throws { }
 
+  public mutating func syncRuntime(with _: RuleContext) throws { }
+
   // MARK: Private
 
   private let resolver: IntentStepResolver

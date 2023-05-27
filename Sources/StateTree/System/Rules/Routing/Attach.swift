@@ -52,6 +52,8 @@ public struct Attach<Router: RouterType>: Rules {
     route.inner.appliedRouter?.update(from: newRouter)
   }
 
+  public mutating func syncRuntime(with _: RuleContext) throws { }
+
   // MARK: Internal
 
   var router: Router

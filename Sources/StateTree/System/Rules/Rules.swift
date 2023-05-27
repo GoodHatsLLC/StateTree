@@ -49,4 +49,17 @@ public protocol Rules {
   mutating func removeRule(with: RuleContext) throws
   /// Update a rule from a new version of itself
   mutating func updateRule(from: Self, with: RuleContext) throws
+  /// Sync the runtime representation with the current state.
+  ///
+  /// - Assume that if the current state was reached naturally this rule would be triggered
+  /// as either a start or an update.
+  /// - Throw an ``InvalidSyncFailure`` if this assumption fails.
+  /// - Start any side effects which would be started when reaching this rule naturally.
+  /// - Cancel active side effects invalidated by the new state.
+  /// - The current state may not change during this sync.
+  mutating func syncRuntime(with: RuleContext) throws
 }
+
+// MARK: - InvalidSyncFailure
+
+struct InvalidSyncFailure: Error { }

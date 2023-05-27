@@ -72,6 +72,8 @@ public struct Inject<R: Rules>: Rules {
     return try containedRules.updateRule(from: new.containedRules, with: newContext)
   }
 
+  public mutating func syncRuntime(with _: RuleContext) throws { }
+
   // MARK: Private
 
   private let dependenciesUpdateFunc: (DependencyValues) -> DependencyValues

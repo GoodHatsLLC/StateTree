@@ -91,6 +91,8 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
     with _: RuleContext
   ) throws { }
 
+  public mutating func syncRuntime(with _: RuleContext) throws { }
+
   // MARK: Private
 
   private let callback: (any BehaviorScoping, BehaviorTracker) -> Void
