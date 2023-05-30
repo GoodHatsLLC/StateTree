@@ -111,9 +111,9 @@ extension MaybeUnion2RouterTests {
 
     var rules: some Rules {
       if routeCase == .aRoute {
-        Attach($child, to: .a(ChildA()))
+        Serve(.a(ChildA()), at: $child)
       } else if routeCase == .bRoute {
-        Attach($child, to: .b(ChildB()))
+        Serve(.b(ChildB()), at: $child)
       }
     }
   }

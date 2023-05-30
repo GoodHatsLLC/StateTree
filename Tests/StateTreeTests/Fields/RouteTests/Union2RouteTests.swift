@@ -103,9 +103,9 @@ extension Union2RouteTests {
       if let routeTo {
         switch routeTo {
         case .a:
-          Attach($hosted, to: .a(.init()))
+          Serve(.a(.init()), at: $hosted)
         case .b:
-          Attach($hosted, to: .b(.init()))
+          Serve(.b(.init()), at: $hosted)
         }
       }
     }

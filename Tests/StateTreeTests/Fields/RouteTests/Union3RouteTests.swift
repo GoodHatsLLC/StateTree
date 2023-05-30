@@ -139,11 +139,11 @@ extension Union3RouteTests {
       if let routeTo {
         switch routeTo {
         case .a:
-          Attach($hosted, to: .a(.init()))
+          Serve(.a(AModel()), at: $hosted)
         case .b:
-          Attach($hosted, to: .b(.init()))
+          Serve(.b(BModel()), at: $hosted)
         case .c:
-          Attach($hosted, to: .c(.init()))
+          Serve(.c(CModel()), at: $hosted)
         }
       }
     }

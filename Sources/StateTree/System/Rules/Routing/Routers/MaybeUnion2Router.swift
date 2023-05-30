@@ -242,10 +242,10 @@ extension Route {
 
 }
 
-extension Attach {
-  public init<A: Node, B: Node>(_ route: Route<Router>, to union: Union.Two<A, B>?)
+extension Serve {
+  public init<A: Node, B: Node>(_ union: Union.Two<A, B>?, at route: Route<Router>)
     where Router == MaybeUnion2Router<A, B>
   {
-    self.init(router: Router(builder: { union }), to: route)
+    self.init(router: MaybeUnion2Router(builder: { union }), at: route)
   }
 }

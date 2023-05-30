@@ -95,10 +95,7 @@ extension SingleRouterTests {
   struct TestOverride: Node {
     @Route var next = ChildRouteNode(name: "Default")
     var rules: some Rules {
-      Attach(
-        $next,
-        to: ChildRouteNode(name: "Override")
-      )
+      Serve(ChildRouteNode(name: "Override"), at: $next)
     }
   }
 
@@ -109,10 +106,7 @@ extension SingleRouterTests {
 
     var rules: some Rules {
       if shouldOverride {
-        Attach(
-          $next,
-          to: ChildRouteNode(name: "Override")
-        )
+        Serve(ChildRouteNode(name: "Override"), at: $next)
       }
     }
   }

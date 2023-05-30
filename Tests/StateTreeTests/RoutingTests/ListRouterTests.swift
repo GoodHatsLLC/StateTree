@@ -131,10 +131,7 @@ extension ListRouterTests {
     @Value var ids: [Int] = []
     @Value var other: String = ""
     var rules: some Rules {
-      Attach(
-        $children,
-        data: ids
-      ) { _ in
+      Serve(data: ids, at: $children) { _ in
         ChildA()
       }
     }

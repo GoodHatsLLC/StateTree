@@ -221,11 +221,11 @@ extension Route {
   }
 }
 
-extension Attach {
+extension Serve {
 
   public init<NodeType: Node>(
-    _ route: Route<Router>,
-    to nodes: [NodeType],
+    nodes: [NodeType],
+    at route: Route<Router>,
     line: Int = #line,
     col: Int = #column
   )
@@ -240,13 +240,13 @@ extension Attach {
         buildKeys: nodes.keys,
         builder: { try nodes[$0].orThrow(MissingNodeKeyError()) }
       ),
-      to: route
+      at: route
     )
   }
 
   public init<Data: Collection, NodeType: Node>(
-    _ route: Route<Router>,
     data: Data,
+    at route: Route<Router>,
     builder: @escaping (_ datum: Data.Element) -> NodeType
   ) where Data.Element: Identifiable,
     Router == ListRouter<NodeType>
@@ -258,12 +258,12 @@ extension Attach {
     self.init(router: .init(buildKeys: mapping.keys, builder: { (lsid: LSID) in
       let datum = try mapping[lsid].orThrow(MissingNodeKeyError())
       return builder(datum)
-    }), to: route)
+    }), at: route)
   }
 
   public init<Data: Collection, NodeType: Node>(
-    _ route: Route<Router>,
     data: Data,
+    at route: Route<Router>,
     builder: @escaping (_ datum: Data.Element) -> NodeType
   ) where Data.Element: Hashable,
     Router == ListRouter<NodeType>
@@ -275,15 +275,15 @@ extension Attach {
     self.init(router: .init(buildKeys: mapping.keys, builder: { (lsid: LSID) in
       let datum = try mapping[lsid].orThrow(MissingNodeKeyError())
       return builder(datum)
-    }), to: route)
+    }), at: route)
   }
 }
 
-extension Attach {
+extension Serve {
   public init<Data: Collection>(
-    _ route: Route<Router>,
     data: Data,
-    identifiedBy idPath: KeyPath<Data.Element, some Hashable>
+    identifiedBy idPath: KeyPath<Data.Element, some Hashable>,
+    at route: Route<Router>
   ) where Data.Element: Hashable,
     Router == ListRouter<Data.Element>
   {
@@ -293,6 +293,6 @@ extension Attach {
       }
     self.init(router: .init(buildKeys: mapping.keys, builder: { (lsid: LSID) in
       try mapping[lsid].orThrow(MissingNodeKeyError())
-    }), to: route)
+    }), at: route)
   }
 }

@@ -155,24 +155,21 @@ extension SerializationTests {
 
     var rules: some Rules {
       if isPrime(potentialPrime) {
-        Attach(
-          $primeSquared,
-          to: Square(value: $potentialPrime)
-        )
-        Attach(
-          $commentaries,
-          to: [
+        Serve(Square(value: $potentialPrime), at: $primeSquared)
+        Serve(
+          nodes: [
             Commentary(id: "yes1", note: "It's a prime!"),
             Commentary(id: "yes2", note: "really!"),
-          ]
+          ],
+          at: $commentaries
         )
       } else {
-        Attach(
-          $commentaries,
-          to: [
+        Serve(
+          nodes: [
             Commentary(id: "no1", note: "Not a prime :("),
             Commentary(id: "no2", note: "srsly"),
-          ]
+          ],
+          at: $commentaries
         )
       }
       OnIntent(SomeIntentStep.self) { _ in

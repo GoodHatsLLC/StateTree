@@ -56,7 +56,7 @@ extension ListRouteTests {
     @Route var route: [NodeA] = []
     var rules: some Rules {
       if let numbers {
-        Attach($route, data: numbers) { datum in
+        Serve(data: numbers, at: $route) { datum in
           NodeA(id: datum)
         }
       }

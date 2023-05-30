@@ -1,15 +1,15 @@
 import Disposable
 import TreeActor
 
-// MARK: - Attach
+// MARK: - Serve
 
-public struct Attach<Router: RouterType>: Rules {
+public struct Serve<Router: RouterType>: Rules {
 
   // MARK: Lifecycle
 
-  public init(
+  init(
     router: Router,
-    to route: Route<Router>
+    at route: Route<Router>
   ) {
     self.route = route
     self.router = router

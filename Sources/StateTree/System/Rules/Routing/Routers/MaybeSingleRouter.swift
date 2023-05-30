@@ -149,10 +149,10 @@ extension Route {
   }
 }
 
-extension Attach {
-  public init<Value>(_ route: Route<Router>, to node: Value?) where Value: Node,
+extension Serve {
+  public init<Value>(_ node: Value?, at route: Route<Router>) where Value: Node,
     Router == MaybeSingleRouter<Value>
   {
-    self.init(router: Router(node: node), to: route)
+    self.init(router: Router(node: node), at: route)
   }
 }

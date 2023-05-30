@@ -79,11 +79,7 @@ extension UpdateStatsTests {
 
     var rules: some Rules {
       if height > 1 {
-        Attach(
-          $next,
-          to:
-          BNode(parentHeight: $height)
-        )
+        Serve(BNode(parentHeight: $height), at: $next)
       }
     }
   }
@@ -101,16 +97,10 @@ extension UpdateStatsTests {
         height = parentHeight - 1
       }
       if height > 1 {
-        Attach(
-          $next,
-          to: BNode(parentHeight: $height)
-        )
+        Serve(BNode(parentHeight: $height), at: $next)
       }
       if height == 11 {
-        Attach(
-          $sideChain,
-          to: .init(parentHeight: $sideChainHeight)
-        )
+        Serve(BNode(parentHeight: $sideChainHeight), at: $sideChain)
       }
     }
   }

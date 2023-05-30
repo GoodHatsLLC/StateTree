@@ -66,7 +66,7 @@ extension SingleRouteTests {
 
     var rules: some Rules {
       if route {
-        Attach($hosted, to: AModel())
+        Serve(AModel(), at: $hosted)
       }
     }
   }

@@ -70,7 +70,7 @@ extension StartStopTests {
 
     @Route var startStop: StartStop? = nil
     var rules: some Rules {
-      Attach($startStop, to: StartStop(start: start, stop: stop))
+      Serve(StartStop(start: start, stop: stop), at: $startStop)
     }
   }
 

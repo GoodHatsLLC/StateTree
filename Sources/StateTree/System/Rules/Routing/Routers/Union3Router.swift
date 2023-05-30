@@ -240,10 +240,10 @@ extension Route {
 
 }
 
-extension Attach {
-  public init<A: Node, B: Node, C: Node>(_ route: Route<Router>, to union: Union.Three<A, B, C>)
+extension Serve {
+  public init<A: Node, B: Node, C: Node>(_ union: Union.Three<A, B, C>, at route: Route<Router>)
     where Router == Union3Router<A, B, C>
   {
-    self.init(router: Router(builder: { union }), to: route)
+    self.init(router: Router(builder: { union }), at: route)
   }
 }

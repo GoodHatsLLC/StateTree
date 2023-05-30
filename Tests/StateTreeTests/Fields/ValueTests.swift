@@ -38,13 +38,13 @@ extension ValueTests {
     var rules: some Rules {
       switch val {
       case 1:
-        Attach($route, to: .a(SubnodeA()))
+        Serve(.a(SubnodeA()), at: $route)
       case 2:
-        Attach($route, to: .b(SubnodeB()))
+        Serve(.b(SubnodeB()), at: $route)
       case 3:
-        Attach($route, to: .c(SubnodeC(value: $val)))
+        Serve(.c(SubnodeC(value: $val)), at: $route)
       default:
-        Attach($otherRoute, to: SubnodeA())
+        Serve(SubnodeA(), at: $otherRoute)
       }
     }
   }
