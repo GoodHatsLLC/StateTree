@@ -42,15 +42,19 @@ public final class NodeScope<N: Node>: Equatable {
 
   @_spi(Implementation) public var runtime: Runtime
 
-  // MARK: Private
+  public nonisolated func erase() -> AnyScope {
+    AnyScope(scope: self)
+  }
 
-  private let stage = DisposableStage()
-  private var activeRules: N.NodeRules?
-  private var state: ScopeLifecycle = .shouldStart
-  private let routerSet: RouterSet
-  private let didUpdateSubject = PublishSubject<Void, Never>()
+  // MARK: Internal
 
-  private var context: RuleContext {
+  let stage = DisposableStage()
+  var activeRules: N.NodeRules?
+  var state: ScopeUpdateLifecycle = .shouldStart
+  let routerSet: RouterSet
+  let didUpdateSubject = PublishSubject<Void, Never>()
+
+  var context: RuleContext {
     .init(
       runtime: runtime,
       scope: erase(),
@@ -77,11 +81,24 @@ extension NodeScope: Hashable {
 
 extension NodeScope: ScopeType {
 
-  // MARK: Public
-
   public var didUpdateEmitter: AnyEmitter<Void, Never> { didUpdateSubject.erase() }
   public var isActive: Bool { activeRules != nil }
   public var childScopes: [AnyScope] { runtime.childScopes(of: nid) }
+
+  @TreeActor public var ancestors: [NodeID] {
+    runtime.ancestors(of: nid) ?? []
+  }
+
+  @TreeActor public var record: NodeRecord {
+    runtime
+      .getRecord(nid) ?? initialRecord
+  }
+
+}
+
+// MARK: BehaviorScoping
+
+extension NodeScope: BehaviorScoping {
 
   @TreeActor
   public func own(_ disposable: some Disposable) {
@@ -95,372 +112,6 @@ extension NodeScope: ScopeType {
   @TreeActor
   public func canOwn() -> Bool {
     isActive
-  }
-
-  public nonisolated func erase() -> AnyScope {
-    AnyScope(scope: self)
-  }
-
-  @TreeActor
-  public func stop() throws {
-    assert(activeRules != nil)
-    activeRules = nil
-    stage.dispose()
-    // NOTE: The scope must still disconnect
-  }
-
-  @TreeActor
-  public func disconnectSendingNotification() {
-    runtime.disconnect(scopeID: nid)
-    sendFinishEvent()
-  }
-
-  // MARK: Private
-
-  @TreeActor
-  private func stopSubtree() throws {
-    assert(activeRules != nil)
-    try activeRules?.removeRule(with: context)
-    try routerSet.apply()
-  }
-
-  @TreeActor
-  private func start() throws {
-    assert(activeRules == nil)
-    activeRules = node.rules
-    try activeRules?.applyRule(with: context)
-    try routerSet.apply()
-  }
-
-  @TreeActor
-  private func update() throws {
-    assert(activeRules != nil)
-    try activeRules?.updateRule(
-      from: node.rules,
-      with: context
-    )
-    try routerSet.apply()
-  }
-
-  @TreeActor
-  private func didUpdate() {
-    assert(activeRules != nil)
-    _ = activeRules?.act(
-      for: .didUpdate,
-      with: context
-    )
-  }
-
-  @TreeActor
-  private func willStop() {
-    assert(activeRules != nil)
-    _ = activeRules?.act(
-      for: .willStop,
-      with: context
-    )
-  }
-
-  @TreeActor
-  private func didStart() {
-    assert(activeRules != nil)
-    _ = activeRules?.act(
-      for: .didStart,
-      with: context
-    )
-  }
-
-  @TreeActor
-  private func handleIntents() {
-    guard
-      let intent = runtime.activeIntent,
-      nid == intent.lastConsumerID || ancestors.contains(intent.lastConsumerID)
-    else {
-      return
-    }
-    assert(activeRules != nil)
-    if
-      let applicableResolutions = activeRules?
-        .act(for: .handleIntent(intent.intent), with: context)
-        .intentResolutions
-        .filter(\.isApplicable),
-      let firstResolution = applicableResolutions.first
-    {
-      if applicableResolutions.count > 1 {
-        runtimeWarning("multiple applicable OnIntent handlers were found for an intent")
-      }
-
-      switch firstResolution {
-      case .application(let act):
-        runtime.recordIntentScopeDependency(nid)
-        runtime.popIntentStep()
-        act()
-      case .pending:
-        runtime.recordIntentScopeDependency(nid)
-      case .inapplicable:
-        assertionFailure("this state should be filtered out")
-      }
-    }
-  }
-
-}
-
-extension NodeScope {
-
-  // MARK: Public
-
-  @TreeActor public var requiresReadying: Bool {
-    state.requiresReadying
-  }
-
-  @TreeActor public var requiresFinishing: Bool {
-    state.requiresFinishing
-  }
-
-  @TreeActor public var isStable: Bool {
-    state.isStable
-  }
-
-  @TreeActor public var ancestors: [NodeID] {
-    runtime.ancestors(of: nid) ?? []
-  }
-
-  @TreeActor
-  public func applyIntent(_ intent: Intent) -> IntentStepResolution {
-    let resolutions = activeRules?
-      .act(for: .handleIntent(intent), with: context)
-      .intentResolutions ?? []
-    let applicableResolutions = resolutions.filter(\.isApplicable)
-    if applicableResolutions.count > 1 {
-      runtimeWarning(
-        "multiple intent handlers were applicable to the intent step. the first was used."
-      )
-    }
-    let first = applicableResolutions.first ?? .inapplicable
-    return first
-  }
-
-  @TreeActor
-  public func stepTowardsReady() throws -> Bool {
-    if let act = state.forward(scope: self) {
-      return try act()
-    } else {
-      assertionFailure()
-      return false
-    }
-  }
-
-  @TreeActor
-  public func stepTowardsFinished() throws -> Bool {
-    if let act = state.finalize(scope: self) {
-      return try act()
-    } else {
-      assertionFailure()
-      return false
-    }
-  }
-
-  @TreeActor
-  public func markDirty(
-    pending requirement: ExternalRequirement
-  ) {
-    switch requirement {
-    case .stop:
-      state.markRequiresStopping()
-    case .update:
-      state.markRequiresUpdating()
-    }
-  }
-
-  public func sendUpdateEvent() {
-    didUpdateSubject.emit(value: ())
-  }
-
-  // MARK: Internal
-
-  func sendFinishEvent() {
-    didUpdateSubject.finish()
-  }
-
-  // MARK: Private
-
-  @TreeActor
-  private enum ScopeLifecycle {
-
-    // # Regular lifecycle stages
-
-    // ## Stable cases.
-
-    /// The scope is stable and does not need to be tracked.
-    /// (Terminal 'readying' case.)
-    case clean
-    /// The scope has ended and does not need to be tracked.
-    /// (Terminal 'finishing' case.)
-    case finished
-
-    // ## 'forwarding' cases resolved min-depth-first.
-
-    /// The scope must start its lifecycle and then fire ``didStart`` events.
-    case shouldStart
-    /// The scope has started but must fire ``didStart`` events before transitioning to
-    /// ``shouldHandleIntents``.
-    case didStart
-
-    /// The scope is dirty and must update.
-    case shouldUpdate
-
-    /// The scope must finally handle any pending applicable ``Intent`` before transitioning to
-    /// ``shouldHandleIntents``.
-    case shouldHandleIntents
-
-    // ## 'finalizing' cases resolved max-depth-first.
-
-    /// The scope must stop its sub-scopes and then continue stopping.
-    case shouldPrepareStop
-    /// The scope must fire ``willStop`` events and stop.
-    case shouldNotifyStop
-    /// The scope must stop.
-    case shouldStop
-
-    // MARK: Public
-
-    public mutating func forward(
-      scope: NodeScope<N>
-    ) -> (() throws -> Bool)? {
-      assert(requiresReadying)
-      switch self {
-      case .shouldStart:
-        self = .shouldHandleIntents
-        return {
-          try scope.start()
-          scope.didStart()
-          return false
-        }
-      case .shouldUpdate:
-        self = .shouldHandleIntents
-        return {
-          try scope.update()
-          scope.didUpdate()
-          return false
-        }
-      case .shouldHandleIntents:
-        self = .clean
-        return {
-          scope.handleIntents()
-          return true
-        }
-      default: return nil
-      }
-    }
-
-    public mutating func finalize(scope: NodeScope<N>) -> (() throws -> Bool)? {
-      assert(requiresFinishing)
-      switch self {
-      case .shouldPrepareStop:
-        self = .shouldNotifyStop
-        return {
-          try scope.stopSubtree()
-          return false
-        }
-      case .shouldNotifyStop:
-        self = .shouldStop
-        return {
-          scope.willStop()
-          return false
-        }
-      case .shouldStop:
-        self = .finished
-        return {
-          try scope.stop()
-          return true
-        }
-      default: return nil
-      }
-    }
-
-    // MARK: Internal
-
-    var requiresReadying: Bool {
-      switch self {
-      case .shouldStart: return true
-      case .shouldUpdate: return true
-      case .shouldHandleIntents: return true
-      default: return false
-      }
-    }
-
-    var requiresFinishing: Bool {
-      switch self {
-      case .shouldStop: return true
-      case .shouldPrepareStop: return true
-      case .shouldNotifyStop: return true
-      case .finished: return true
-      default: return false
-      }
-    }
-
-    var isStable: Bool {
-      switch self {
-      case .clean: return true
-      case .finished: return true
-      default: return false
-      }
-    }
-
-    mutating func markRequiresUpdating() {
-      switch self {
-      case .clean:
-        self = .shouldUpdate
-      case .finished:
-        self = .shouldUpdate
-      case .shouldStart:
-        return
-      case .didStart:
-        self = .shouldUpdate
-      case .shouldUpdate:
-        return
-      case .shouldHandleIntents:
-        self = .shouldUpdate
-      case .shouldPrepareStop:
-        return
-      case .shouldNotifyStop:
-        return
-      case .shouldStop:
-        return
-      }
-    }
-
-    mutating func markRequiresStopping() {
-      switch self {
-      case .clean:
-        self = .shouldPrepareStop
-      case .finished:
-        return
-      case .shouldStart:
-        self = .finished
-      case .didStart:
-        self = .shouldPrepareStop
-      case .shouldUpdate:
-        self = .shouldPrepareStop
-      case .shouldHandleIntents:
-        self = .shouldPrepareStop
-      case .shouldPrepareStop:
-        return
-      case .shouldNotifyStop:
-        return
-      case .shouldStop:
-        return
-      }
-    }
-
-  }
-
-}
-
-extension NodeScope {
-
-  @TreeActor public var record: NodeRecord {
-    runtime
-      .getRecord(nid) ?? initialRecord
   }
 
 }

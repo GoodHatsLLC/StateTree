@@ -23,8 +23,6 @@ public struct AnyScope: Hashable {
 
   // MARK: Public
 
-  public let underlying: any ScopeType
-
   public nonisolated static func == (lhs: AnyScope, rhs: AnyScope) -> Bool {
     lhs.nid == rhs.nid
   }
@@ -37,6 +35,8 @@ public struct AnyScope: Hashable {
   public func canOwn() -> Bool { underlying.canOwn() }
 
   // MARK: Internal
+
+  let underlying: any ScopeType
 
   let nid: NodeID
   let depth: Int

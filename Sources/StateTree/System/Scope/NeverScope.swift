@@ -156,6 +156,34 @@ struct NeverScope: ScopeType {
     return AnyScope(scope: self)
   }
 
+  func stopSubtree() throws {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func start() throws {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func update() throws {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func didUpdate() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func willStop() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func didStart() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func handleIntents() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
   // MARK: Private
 
   private let _node: N
