@@ -18,15 +18,6 @@ extension TreeStateRecord {
 
 // MARK: Focus
 extension TreeStateRecord {
-
-  func parent(of nodeID: NodeID) -> NodeID? {
-    guard let record = getRecord(nodeID)
-    else {
-      return nil
-    }
-    return record.origin.nodeID
-  }
-
   func ancestors(of nodeID: NodeID) -> [NodeID]? {
     guard let record = getRecord(nodeID)
     else {
@@ -44,10 +35,6 @@ extension TreeStateRecord {
       lastRecord = record
     }
     return ancestors.reversed()
-  }
-
-  func contains(nodeID: NodeID) -> Bool {
-    nodes[nodeID] != nil
   }
 
   mutating func popIntentStep() {

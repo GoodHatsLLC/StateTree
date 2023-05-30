@@ -27,8 +27,10 @@ extension NodeScope: StateSyncableScope {
 
   @TreeActor
   func syncToStateReportingCreatedScopes() throws -> [AnyScope] {
-    activeRules = activeRules ?? node.rules
-    try activeRules?.syncToState(with: context)
+    routerSet.reset()
+    var rules = node.rules
+    try rules.syncToState(with: context)
+    activeRules = rules
     return try routerSet.syncToState()
   }
 }

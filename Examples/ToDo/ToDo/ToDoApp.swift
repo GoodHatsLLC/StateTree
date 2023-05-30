@@ -34,7 +34,7 @@ enum DefaultState {
     if let filePath = Bundle.main.path(forResource: "payload", ofType: "json") {
       do {
         let contents = try String(contentsOfFile: filePath)
-        let state = try TreeStateRecord(formattedJSON: contents)
+        let state = try TreeStateRecord(jsonString: contents)
         return state
       } catch {
         fatalError(error.localizedDescription)

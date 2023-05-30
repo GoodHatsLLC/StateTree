@@ -52,7 +52,16 @@ public struct Attach<Router: RouterType>: Rules {
     route.inner.appliedRouter?.update(from: newRouter)
   }
 
-  public mutating func syncToState(with _: RuleContext) throws { }
+  public mutating func syncToState(with context: RuleContext) throws {
+    var router = router
+    router.assign(
+      .init(
+        depth: context.depth,
+        dependencies: context.dependencies
+      )
+    )
+    route.inner.appliedRouter = router
+  }
 
   // MARK: Internal
 

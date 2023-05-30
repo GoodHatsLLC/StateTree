@@ -124,12 +124,4 @@ extension StateStorage {
     state.ancestors(of: nodeID)
   }
 
-  func parent(of nodeID: NodeID) -> NodeID? {
-    state.parent(of: nodeID)
-  }
-
-  func contains(nodeID: NodeID) -> Bool {
-    state.contains(nodeID: nodeID)
-  }
-
 }

@@ -90,6 +90,7 @@ final class PlaybackTests: XCTestCase {
 
     let recapture = try tree.assume.snapshot()
     XCTAssertEqual(laterState.formattedJSON, recapture.formattedJSON)
+    XCTAssert(try tree.assume.info.isConsistent == true)
 
     try tree.assume.rootNode.routeIfNegative = -3
     let finalRecapture = try tree.assume.snapshot()

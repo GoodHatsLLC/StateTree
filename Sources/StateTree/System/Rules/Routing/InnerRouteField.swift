@@ -6,6 +6,7 @@ import TreeActor
 
 @TreeActor
 protocol RouteHandle: AnyObject {
+  func reset()
   func apply() throws
   func syncToState() throws -> [AnyScope]
   func setField(id: FieldID, in runtime: Runtime, rules: RouterRuleContext)
@@ -93,7 +94,13 @@ extension InnerRouteField: RouteHandle {
     defaultRouter.defaultRecord
   }
 
+  func reset() {
+    appliedRouter = nil
+  }
+
   func setField(id: FieldID, in runtime: Runtime, rules: RouterRuleContext) {
+    assert(self.runtime == nil)
+    assert(self.rules == nil)
     fieldID = id
     self.runtime = runtime
     self.rules = rules

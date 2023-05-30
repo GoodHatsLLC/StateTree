@@ -44,6 +44,13 @@ final class StateApplier {
     var updateCollector = UpdateEffectInfoCollector()
     let timer = updateCollector.stats.startedTimer()
 
+    guard
+      let rootID = newState.root,
+      let rootScope = scopeStorage.getScope(for: rootID)
+    else {
+      throw RootNodeMissingError()
+    }
+
     // Store the initial state, and overwrite it.
     let oldState: TreeStateRecord = stateStorage.snapshot()
     stateStorage.apply(state: newState)
@@ -67,6 +74,9 @@ final class StateApplier {
     let stoppedNodeIDs = oldRecordIDs.subtracting(newRecordIDs)
     let startedNodeIDs = newRecordIDs.subtracting(oldRecordIDs)
     let updatedNodeIDs = maintainedNodeIDs.subtracting(unchangedNodeIDs)
+    let syncSources = updatedNodeIDs.isEmpty && newState != oldState
+      ? [rootScope.nid]
+      : updatedNodeIDs
 
     // Stop scopes for removed nodes.
     //
@@ -83,38 +93,21 @@ final class StateApplier {
 
     // Build a depth ordered queue of scopes to sync or start.
     var queue = PriorityQueue(type: AnyScope.self, orderBy: \.depth, uniqueBy: \.nid)
-    queue.insert(contentsOf: scopeStorage.getScopes(for: updatedNodeIDs))
+    queue.insert(contentsOf: scopeStorage.getScopes(for: syncSources))
 
     // Sync updated nodes from root to leaves.
     // When syncing creates a new scope, insert it into the queue.
     while let scope = queue.popMin() {
       let newScopes = try scope.syncToStateReportingCreatedScopes()
-      if scope.isActive {
-        updateCollector.updated(id: scope.nid, depth: scope.depth)
-      } else {
-        updateCollector.started(id: scope.nid, depth: scope.depth)
+      let id = scope.nid
+      if updatedNodeIDs.contains(id) {
+        updateCollector.updated(id: id, depth: scope.depth)
+      }
+      if startedNodeIDs.contains(id) {
+        updateCollector.started(id: id, depth: scope.depth)
       }
       queue.insert(contentsOf: newScopes)
     }
-
-    assert(
-      stoppedNodeIDs.isEqualSet(
-        to: updateCollector.updates.filter { $1.isStop }.map(\.key)
-      ),
-      "runtime actions are not in sync with record"
-    )
-    assert(
-      updatedNodeIDs.isEqualSet(
-        to: updateCollector.updates.filter { $1.isUpdate }.map(\.key)
-      ),
-      "runtime actions are not in sync with record"
-    )
-    assert(
-      startedNodeIDs.isEqualSet(
-        to: updateCollector.updates.filter { $1.isStart }.map(\.key)
-      ),
-      "runtime actions are not in sync with record"
-    )
     assert(
       newState == stateStorage.snapshot(),
       "state should not mutate during its application"

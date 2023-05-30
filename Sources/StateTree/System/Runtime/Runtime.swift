@@ -203,7 +203,8 @@ extension Runtime {
       ).description)
     }
     assert(
-      isConsistent || isPerformingStateChange
+      isConsistent || isPerformingStateChange,
+      "The runtime state is not consistent with the current state record."
     )
     return isConsistent || isPerformingStateChange
     #else

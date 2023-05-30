@@ -64,7 +64,7 @@ final class SerializationTests: XCTestCase {
   @TreeActor
   func testDecoding() async throws {
     let tree1 = Tree(root: PrimeSquare())
-    let state = try TreeStateRecord(formattedJSON: primeStateString)
+    let state = try TreeStateRecord(jsonString: primeStateString)
     try tree1.start(from: state)
       .autostop()
       .stage(on: stage)
@@ -114,7 +114,7 @@ final class SerializationTests: XCTestCase {
 
   @TreeActor
   func testAlternateState() async throws {
-    let state = try TreeStateRecord(formattedJSON: compositeStateString)
+    let state = try TreeStateRecord(jsonString: compositeStateString)
     let tree = Tree(
       root: PrimeSquare()
     )

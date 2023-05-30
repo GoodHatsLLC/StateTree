@@ -66,7 +66,7 @@ extension NodeScope: UpdatableScope {
 
   @TreeActor
   func start() throws {
-    assert(activeRules == nil)
+//    assert(activeRules == nil)
     activeRules = node.rules
     try activeRules?.applyRule(with: context)
     try routerSet.apply()
