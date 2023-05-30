@@ -89,7 +89,7 @@ extension TreeStateRecord {
 // MARK: Values
 extension TreeStateRecord {
 
-  mutating func getValue<T: Codable & Hashable>(_ fieldID: FieldID, as _: T.Type) -> T? {
+  mutating func getValue<T: TreeState>(_ fieldID: FieldID, as _: T.Type) -> T? {
     if
       let node = nodes[fieldID.nodeID],
       node.records.count > fieldID.offset,
@@ -103,7 +103,7 @@ extension TreeStateRecord {
     return nil
   }
 
-  mutating func setValue(_ fieldID: FieldID, to newValue: some Codable & Hashable) -> Bool? {
+  mutating func setValue(_ fieldID: FieldID, to newValue: some TreeState) -> Bool? {
     if
       let node = nodes[fieldID.nodeID],
       node.records.count > fieldID.offset,

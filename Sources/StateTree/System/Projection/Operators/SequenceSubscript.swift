@@ -1,7 +1,7 @@
 // MARK: - Projection + Sequence
 
 extension Projection: Sequence
-  where Value: MutableCollection, Value.Element: Equatable & Hashable & Codable
+  where Value: MutableCollection, Value.Element: Equatable & TreeState
 {
   public typealias Element = Projection<Value.Element>
   public typealias Iterator = IndexingIterator<Projection<Value>>
@@ -11,7 +11,7 @@ extension Projection: Sequence
 // MARK: - Projection + Collection
 
 extension Projection: Collection
-  where Value: MutableCollection, Value.Element: Equatable & Hashable & Codable
+  where Value: MutableCollection, Value.Element: Equatable & TreeState
 {
   public typealias Index = Value.Index
   public typealias Indices = Value.Indices
@@ -53,7 +53,7 @@ extension Projection: BidirectionalCollection
   where
   Value: BidirectionalCollection,
   Value: MutableCollection,
-  Value.Element: Equatable & Hashable & Codable
+  Value.Element: Equatable & TreeState
 {
 
   public func index(
@@ -75,5 +75,5 @@ extension Projection: RandomAccessCollection
   where
   Value: MutableCollection,
   Value: RandomAccessCollection,
-  Value.Element: Equatable & Hashable & Codable
+  Value.Element: Equatable & TreeState
 { }

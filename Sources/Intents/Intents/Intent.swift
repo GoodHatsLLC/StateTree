@@ -7,7 +7,7 @@ public protocol URLCodable {
 
 // MARK: - Intent
 
-public struct Intent: Hashable, Codable, Sendable, URLCodable {
+public struct Intent: Hashable & Codable, Sendable, URLCodable {
 
   // MARK: Lifecycle
 

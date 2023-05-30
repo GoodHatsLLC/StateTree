@@ -369,11 +369,11 @@ extension Runtime {
       }
   }
 
-  func getValue<T: Codable & Hashable>(field: FieldID, as type: T.Type) -> T? {
+  func getValue<T: TreeState>(field: FieldID, as type: T.Type) -> T? {
     state.getValue(field, as: type)
   }
 
-  func setValue(field: FieldID, to newValue: some Codable & Hashable) {
+  func setValue(field: FieldID, to newValue: some TreeState) {
     transaction {
       if
         state.setValue(
@@ -394,6 +394,9 @@ extension Runtime {
     state.ancestors(of: nodeID)
   }
 
+  /// Apply a pre-determined new state to the tree, syncing
+  /// the state of the runtime NodeScopes to match it.
+  /// (i.e. time-travel debugging)
   func apply(
     state newState: TreeStateRecord
   ) throws {

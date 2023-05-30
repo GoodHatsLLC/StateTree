@@ -67,11 +67,11 @@ extension StateStorage {
       .removeValue(forKey: nodeID)
   }
 
-  func getValue<T: Codable & Hashable>(_ fieldID: FieldID, as type: T.Type) -> T? {
+  func getValue<T: TreeState>(_ fieldID: FieldID, as type: T.Type) -> T? {
     state.getValue(fieldID, as: type)
   }
 
-  func setValue(_ fieldID: FieldID, to newValue: some Codable & Hashable) -> Bool? {
+  func setValue(_ fieldID: FieldID, to newValue: some TreeState) -> Bool? {
     state.setValue(fieldID, to: newValue)
   }
 

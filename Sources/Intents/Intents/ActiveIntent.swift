@@ -1,4 +1,4 @@
-public struct ActiveIntent<ID: Sendable & Hashable & Codable>: Sendable, Hashable, Codable {
+public struct ActiveIntent<ID: Sendable & Hashable & Codable>: Sendable, Hashable & Codable {
   public init(intent: Intent, from stepID: ID) {
     self.lastConsumerID = stepID
     self.intentPayload = intent

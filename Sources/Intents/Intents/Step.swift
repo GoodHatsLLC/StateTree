@@ -10,7 +10,7 @@ public protocol StepConvertible {
 
 // MARK: - Step
 
-public struct Step: Hashable, Codable, Sendable, StepConvertible, URLCodable {
+public struct Step: Hashable & Codable, Sendable, StepConvertible, URLCodable {
 
   // MARK: Lifecycle
 

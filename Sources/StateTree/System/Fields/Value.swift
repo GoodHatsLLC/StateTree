@@ -17,11 +17,11 @@ struct TreeValue {
     try? runtime.getScope(for: id.nodeID)
   }
 
-  func getValue<T: Codable & Hashable>(as t: T.Type) -> T? {
+  func getValue<T: TreeState>(as t: T.Type) -> T? {
     runtime.getValue(field: id, as: t)
   }
 
-  func setValue(to newValue: some Codable & Hashable) {
+  func setValue(to newValue: some TreeState) {
     runtime.setValue(field: id, to: newValue)
   }
 }
@@ -29,16 +29,16 @@ struct TreeValue {
 // MARK: - ValueField
 
 protocol ValueField<WrappedValue> {
-  associatedtype WrappedValue: Codable & Hashable
+  associatedtype WrappedValue: TreeState
   var access: any TreeValueAccess { get }
-  var anyInitial: any Codable & Hashable { get }
+  var anyInitial: any TreeState { get }
   var initial: WrappedValue { get }
 }
 
 // MARK: - Value
 
 @propertyWrapper
-public struct Value<WrappedValue: Codable & Hashable>: ValueField, Accessor {
+public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
 
   // MARK: Lifecycle
 
@@ -116,7 +116,7 @@ public struct Value<WrappedValue: Codable & Hashable>: ValueField, Accessor {
   let initial: WrappedValue
 
   var access: any TreeValueAccess { inner }
-  var anyInitial: any Codable & Hashable {
+  var anyInitial: any TreeState {
     initial
   }
 

@@ -12,9 +12,7 @@ import Utilities
 ///
 /// > Warning: An auto-generated `BehaviorID` will be stable only as long as the code around
 /// it remains unchanged. Prefer custom identifiers when testing `Behavior` identity.
-public struct BehaviorID: Sendable & Equatable & Hashable & Codable & Comparable,
-  CustomStringConvertible
-{
+public struct BehaviorID: Sendable, Hashable, Codable, Comparable, CustomStringConvertible {
 
   // MARK: Lifecycle
 

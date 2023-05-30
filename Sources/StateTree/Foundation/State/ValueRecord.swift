@@ -6,12 +6,12 @@ import Utilities
 /// Value types aren't known at decoding time, so we store them as encoded strings
 /// and use that string for comparison and hashing.
 public enum ValuePayload: TreeState {
-  case runtime(known: any Codable & Hashable, stringPayload: String)
+  case runtime(known: any TreeState, stringPayload: String)
   case decoded(stringPayload: String)
 
   // MARK: Lifecycle
 
-  public init(_ value: some Codable & Hashable) throws {
+  public init(_ value: some TreeState) throws {
     let payload = try Self.encodedString(from: value)
     self = .runtime(known: value, stringPayload: payload)
   }
@@ -51,7 +51,7 @@ public enum ValuePayload: TreeState {
     try container.encode(payload)
   }
 
-  public mutating func extract<T: Codable & Hashable>(as _: T.Type) throws -> T {
+  public mutating func extract<T: TreeState>(as _: T.Type) throws -> T {
     switch self {
     case .runtime(let known, _):
       if let known = known as? T {
@@ -74,7 +74,7 @@ public enum ValuePayload: TreeState {
     }
   }
 
-  public mutating func embed<T: Codable & Hashable>(value: T) throws {
+  public mutating func embed<T: TreeState>(value: T) throws {
     assert(
       (try? extract(as: T.self)) != nil,
       "DEBUG assert: attempted to embed a different or non-extractable value type"
@@ -111,7 +111,7 @@ public enum ValuePayload: TreeState {
     }
   }
 
-  private static func encodedString(from value: some Hashable & Codable) throws -> String {
+  private static func encodedString(from value: some TreeState) throws -> String {
     let data = try Self.encoder.encode(value)
     guard let stringPayload = String(data: data, encoding: .utf8)
     else {
