@@ -1,6 +1,7 @@
 import Disposable
 import Emitter
 import TreeActor
+import Utilities
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
@@ -29,7 +30,7 @@ final class RetentionTests: XCTestCase {
       let rootScope = try tree.assume.root
       var maybeScope: NodeScope<DeepNode>? = rootScope
       while let scope = maybeScope {
-        scopes.append(.init(ref: scope))
+        scopes.append(.init(scope))
         maybeScope = scope.childScopes.filter { $0.nid != scope.nid }.first?
           .underlying as? NodeScope<DeepNode>
       }

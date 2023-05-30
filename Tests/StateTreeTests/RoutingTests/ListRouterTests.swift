@@ -101,11 +101,63 @@ final class ListRouterTests: XCTestCase {
     XCTAssertEqual(root.node.children[1].state, "Two")
     XCTAssertNil(root.node.children[0].state)
   }
+
+  @TreeActor
+  func test_removalRoute() async throws {
+    let tree = Tree(
+      root: ListNode()
+    )
+    try tree.start()
+    let rootNode = try tree.assume.rootNode
+
+    var sorted: [String] = []
+    var nodes: [NodeA] = []
+
+    func assertAfter(_ nums: [Int]) {
+      sorted = nums.map { String($0) }
+      rootNode.numbers = nums
+      nodes = rootNode.route
+      XCTAssertEqual(nodes.map(\.idStr), sorted)
+    }
+
+    assertAfter(Array(0 ..< 100))
+    assertAfter(Array(0 ..< 20))
+    assertAfter(Array(5 ..< 15))
+    try tree.assume.rootNode.numbers = (Array(10 ..< 15) + Array(20 ..< 30))
+    nodes = try XCTUnwrap(try tree.assume.rootNode.route)
+    XCTAssertEqual(
+      nodes.map(\.idStr),
+      ["10", "11", "12", "13", "14", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29"]
+    )
+    XCTAssertEqual(nodes.count, 15)
+    try tree.assume.rootNode.numbers! += Array(1000 ..< 2000)
+    XCTAssertEqual(try tree.assume.rootNode.numbers?.count, 1015)
+  }
 }
 
-// MARK: ListRouterTests.TestDefault
-
 extension ListRouterTests {
+
+  // MARK: - ListNode
+
+  struct ListNode: Node {
+    @Value var numbers: [Int]? = nil
+    @Route var route: [NodeA] = []
+    var rules: some Rules {
+      if let numbers {
+        Serve(data: numbers, at: $route) { datum in
+          NodeA(id: datum)
+        }
+      }
+    }
+  }
+
+  // MARK: - NodeA
+
+  struct NodeA: Node, Identifiable {
+    let id: Int
+    var idStr: String { String(id) }
+    var rules: some Rules { .none }
+  }
 
   struct ChildA: Node {
     @Value var state: String?
