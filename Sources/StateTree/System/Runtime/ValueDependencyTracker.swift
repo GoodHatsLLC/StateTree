@@ -1,3 +1,4 @@
+import OrderedCollections
 import TreeActor
 
 struct ValueDependencyTracker {
@@ -16,7 +17,7 @@ struct ValueDependencyTracker {
     nodeToValueDependency[nodeID] = valueFieldDependencies
     for valueDependency in valueFieldDependencies {
       valueDependencyToNodes[valueDependency, default: []]
-        .insert(nodeID)
+        .updateOrAppend(nodeID)
     }
   }
 
@@ -38,7 +39,7 @@ struct ValueDependencyTracker {
 
   // MARK: Private
 
-  private var nodeToValueDependency: [NodeID: Set<FieldID>] = [:]
-  private var valueDependencyToNodes: [FieldID: Set<NodeID>] = [:]
+  private var nodeToValueDependency: [NodeID: OrderedSet<FieldID>] = [:]
+  private var valueDependencyToNodes: [FieldID: OrderedSet<NodeID>] = [:]
 
 }

@@ -3,6 +3,7 @@ import Disposable
 import Emitter
 import Foundation
 import Intents
+import OrderedCollections
 
 // MARK: - NeverScope
 
@@ -81,7 +82,7 @@ struct NeverScope: ScopeType {
     return .defaults
   }
 
-  var valueFieldDependencies: Set<FieldID> {
+  var valueFieldDependencies: OrderedSet<FieldID> {
     assertionFailure("NeverScope should never be invoked")
     return []
   }

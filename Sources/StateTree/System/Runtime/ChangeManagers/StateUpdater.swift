@@ -152,7 +152,11 @@ final class StateUpdater {
       // To find downstream changes caused by dirtying these scopes
       // we mark them as needing updates and track progress in the
       // priority queue.
-      for scope in Set(valueChangeDirtiedScopes + knownDirtyScopes) {
+      for scope in valueChangeDirtiedScopes {
+        scope.markDirty(pending: .update)
+        _ = priorityQueue.insert(scope)
+      }
+      for scope in knownDirtyScopes {
         scope.markDirty(pending: .update)
         _ = priorityQueue.insert(scope)
       }

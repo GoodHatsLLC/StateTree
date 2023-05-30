@@ -1,3 +1,4 @@
+import OrderedCollections
 import TreeActor
 
 // MARK: - AnyInitializedNode
@@ -22,7 +23,7 @@ struct AnyInitializedNode {
   let node: any Node
 
   private let connectFunc: @TreeActor () throws -> AnyScope
-  private let valueFieldDependenciesFunc: () -> Set<FieldID>
+  private let valueFieldDependenciesFunc: () -> OrderedSet<FieldID>
 }
 
 extension AnyInitializedNode {
@@ -32,7 +33,7 @@ extension AnyInitializedNode {
     try connectFunc()
   }
 
-  func getValueDependencies() -> Set<FieldID> {
+  func getValueDependencies() -> OrderedSet<FieldID> {
     valueFieldDependenciesFunc()
   }
 

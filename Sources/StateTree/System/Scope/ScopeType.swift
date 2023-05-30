@@ -2,6 +2,7 @@ import Behavior
 import Disposable
 import Emitter
 import Intents
+import OrderedCollections
 import TreeActor
 
 // MARK: - ExternalRequirement
@@ -25,7 +26,7 @@ protocol ScopeType<N>: UpdatableScope, StateSyncableScope, BehaviorScoping, Hash
   var initialCapture: NodeCapture { get }
   var record: NodeRecord { get }
   var dependencies: DependencyValues { get }
-  var valueFieldDependencies: Set<FieldID> { get }
+  var valueFieldDependencies: OrderedSet<FieldID> { get }
   var didUpdateEmitter: AnyEmitter<Void, Never> { get }
   func erase() -> AnyScope
 }

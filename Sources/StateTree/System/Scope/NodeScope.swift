@@ -3,6 +3,7 @@ import Disposable
 import Emitter
 import Foundation
 import Intents
+import OrderedCollections
 import TreeActor
 import Utilities
 
@@ -44,7 +45,7 @@ public final class NodeScope<N: Node>: Equatable {
   // MARK: Internal
 
   let dependencies: DependencyValues
-  let valueFieldDependencies: Set<FieldID>
+  let valueFieldDependencies: OrderedSet<FieldID>
   let initialRecord: NodeRecord
   let initialCapture: NodeCapture
 

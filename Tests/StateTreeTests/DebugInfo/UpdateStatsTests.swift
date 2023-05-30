@@ -58,13 +58,12 @@ final class UpdateStatsTests: XCTestCase {
     try tree.assume.rootNode.height = 1
 
     let postUpdateStops = try tree.assume.info.flushUpdateStats()
+    print(postUpdateStops.nodeMap.filter { $0.value.updates >= 1 })
     XCTAssertEqual(postUpdateStops.counts.allNodeEvents, 32)
     XCTAssertEqual(postUpdateStops.counts.nodeStarts, 0)
     XCTAssertEqual(postUpdateStops.counts.nodeUpdates, 1)
     XCTAssertEqual(postUpdateStops.counts.nodeStops, 31)
     XCTAssertGreaterThan(postUpdateStops.durations.nodeUpdates, 0)
-
-    print(postUpdateStops)
   }
 
 }

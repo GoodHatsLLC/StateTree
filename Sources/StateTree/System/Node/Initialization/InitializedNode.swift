@@ -1,3 +1,4 @@
+import OrderedCollections
 import TreeActor
 
 // MARK: - InitializedNode
@@ -30,8 +31,8 @@ extension InitializedNode {
     return scope
   }
 
-  func getValueDependencies() -> Set<FieldID> {
-    Set(
+  func getValueDependencies() -> OrderedSet<FieldID> {
+    OrderedSet(
       nodeRecord
         .records
         .compactMap { record in

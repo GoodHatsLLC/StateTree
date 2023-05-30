@@ -2,6 +2,7 @@ import Behavior
 import Disposable
 import Emitter
 import Intents
+import OrderedCollections
 import TreeActor
 
 // MARK: - AnyScope
@@ -49,7 +50,7 @@ extension AnyScope: StateSyncableScope, BehaviorScoping {
 
   // MARK: Public
 
-  public var valueFieldDependencies: Set<FieldID> { underlying.valueFieldDependencies }
+  public var valueFieldDependencies: OrderedSet<FieldID> { underlying.valueFieldDependencies }
 
   public func applyIntent(_ intent: Intent) -> IntentStepResolution { underlying
     .applyIntent(intent)

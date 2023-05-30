@@ -55,6 +55,7 @@ final class SerializationTests: XCTestCase {
     )
     try tree.start()
     try tree.assume.rootNode.potentialPrime = 7
+    XCTAssertNotNil(try tree.assume.rootNode.primeSquared)
     let snapshot = try tree.assume.snapshot()
     let string = snapshot.formattedJSON
     XCTAssertEqual(string, primeStateString)
