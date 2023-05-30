@@ -51,7 +51,8 @@ public struct Scope: ScopeField {
 
   // MARK: Internal
 
-  @TreeActor final class Inner {
+  @TreeActor
+  final class Inner {
 
     // MARK: Lifecycle
 

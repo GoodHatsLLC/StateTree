@@ -133,15 +133,6 @@ extension NodeScope: ScopeType {
   }
 
   @TreeActor
-  private func rebuild() throws {
-    if activeRules == nil {
-      try start()
-    } else {
-      try update()
-    }
-  }
-
-  @TreeActor
   private func update() throws {
     assert(activeRules != nil)
     try activeRules?.updateRule(
@@ -272,7 +263,12 @@ extension NodeScope {
   public func markDirty(
     pending requirement: ExternalRequirement
   ) {
-    state.mark(requirement: requirement)
+    switch requirement {
+    case .stop:
+      state.markRequiresStopping()
+    case .update:
+      state.markRequiresUpdating()
+    }
   }
 
   public func sendUpdateEvent() {
@@ -325,16 +321,6 @@ extension NodeScope {
     /// The scope must stop.
     case shouldStop
 
-    /// # Marker case for full tree rebuilds
-    ///
-    /// 'rebuild' is triggered only by apply(state:) as part of time-travel.
-    /// The case is resolved min-depth-first as a 'forwarding' case.
-    ///
-    /// Scopes in 'rebuild' have 'clean' or 'shouldStart' underlying state but:
-    /// - may not yet have routed based on it
-    /// - may not yet exist as their parents have not routed to them.
-    case rebuild
-
     // MARK: Public
 
     public mutating func forward(
@@ -360,12 +346,6 @@ extension NodeScope {
         self = .clean
         return {
           scope.handleIntents()
-          return true
-        }
-      case .rebuild:
-        self = .clean
-        return {
-          try scope.rebuild()
           return true
         }
       default: return nil
@@ -404,7 +384,6 @@ extension NodeScope {
       case .shouldStart: return true
       case .shouldUpdate: return true
       case .shouldHandleIntents: return true
-      case .rebuild: return true
       default: return false
       }
     }
@@ -427,7 +406,7 @@ extension NodeScope {
       }
     }
 
-    mutating func triggerUpdate() {
+    mutating func markRequiresUpdating() {
       switch self {
       case .clean:
         self = .shouldUpdate
@@ -447,12 +426,10 @@ extension NodeScope {
         return
       case .shouldStop:
         return
-      case .rebuild:
-        return
       }
     }
 
-    mutating func triggerFinalization() {
+    mutating func markRequiresStopping() {
       switch self {
       case .clean:
         self = .shouldPrepareStop
@@ -472,24 +449,6 @@ extension NodeScope {
         return
       case .shouldStop:
         return
-      case .rebuild:
-        self = .shouldPrepareStop
-      }
-    }
-
-    mutating func triggerRebuild() {
-      self = .rebuild
-    }
-
-    mutating func mark(requirement: ExternalRequirement) {
-      if requirement == .stop {
-        triggerFinalization()
-      } else if requirement == .update {
-        triggerUpdate()
-      } else if requirement == .rebuild {
-        triggerRebuild()
-      } else {
-        assertionFailure("scope-dirtying logic failure")
       }
     }
 

@@ -96,7 +96,8 @@ public struct Value<WrappedValue: Codable & Hashable>: ValueField, Accessor {
 
   // MARK: Internal
 
-  @TreeActor final class InnerValue: TreeValueAccess {
+  @TreeActor
+  final class InnerValue: TreeValueAccess {
 
     // MARK: Lifecycle
 

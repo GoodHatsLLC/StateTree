@@ -39,7 +39,7 @@ public struct Locked<T> {
   ///
   /// > Note: Use ``withLock(action:)-7qgic`` for atomic
   /// read-evaluate-write access to the underlying variable.
-  @inline(__always)  public var value: T {
+  @inline(__always) public var value: T {
     get {
       withLock { $0 }
     }
@@ -136,7 +136,7 @@ private protocol LockType<T>: AnyObject {
   func lock()
   @inline(__always)
   func unlock()
-  @inline(__always)  var unsafe_wrapped: T { get set }
+  @inline(__always) var unsafe_wrapped: T { get set }
 }
 
 #if canImport(Foundation)

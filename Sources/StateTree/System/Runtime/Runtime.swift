@@ -50,7 +50,8 @@ public final class Runtime: Equatable {
   private let updateSubject = PublishSubject<[TreeEvent], Never>()
   private var transactionCount: Int = 0
   private var updates: TreeChanges = .none
-  private var changeManager: (any ChangeManager)?
+  private var changeManager: StateUpdater?
+  private var stateApplier: StateApplier?
   private var nodeCache: [NodeID: any Node] = [:]
   private var updateStats = UpdateStats()
 }
@@ -290,7 +291,7 @@ extension Runtime {
       transactionCount -= 1
     }
     do {
-      let nodeUpdates = try updateScopes()
+      let nodeUpdates = try syncScopesToChanges(updates.take())
       emitUpdates(events: nodeUpdates)
     } catch {
       runtimeWarning(
@@ -403,22 +404,12 @@ extension Runtime {
       throw InTransactionError()
     }
     transactionCount += 1
-    let applier = StateApplier(
-      state: state,
-      scopes: scopes
-    )
-    changeManager = applier
     defer {
       assert(updates == .none)
       assert(checkConsistency())
       transactionCount -= 1
-      changeManager = nil
     }
-    let updateInfo = try applier.apply(
-      state: newState
-    )
-    updateStats = updateStats.merged(with: updateInfo.stats)
-    let changes: [TreeEvent] = updateInfo.events.map { .node(event: $0) }
+    let changes = try rebuildScopesForNewState(newState)
     emitUpdates(events: changes)
   }
 
@@ -436,7 +427,7 @@ extension Runtime {
       "node events in an update batch should be sorted by ascending depth"
     )
 
-    // First emit just node events through nodes
+    // Emit node events through nodes.
     //
     // This allows ui layer consumers to subscribe to only
     // the node they're representing, without having to filter -
@@ -458,13 +449,13 @@ extension Runtime {
           /// The scope has been stopped but not disconnected.
           /// External consumers have not yet been notified.
           let scope = scopes.getScope(for: id)
-          assert(scope != nil || changeManager is StateApplier)
+          assert(scope != nil)
           scope?.disconnectSendingNotification()
         }
       }
     }
 
-    // Then emit the update batch to the tree level information stream.
+    // Finally, emit the update batch to the tree level information stream.
     updateSubject.emit(value: events)
   }
 
@@ -481,18 +472,61 @@ extension Runtime {
     }
   }
 
-  private func updateScopes(
+  private func syncScopesToChanges(
+    _ treeChanges: TreeChanges
   ) throws
     -> [TreeEvent]
   {
+    assert(stateApplier == nil)
     let updater = StateUpdater(
-      changes: updates.take(),
+      changes: treeChanges,
       state: state,
       scopes: scopes
     )
     changeManager = updater
     defer { changeManager = nil }
     let updateInfo = try updater.flush()
+    updateStats = updateStats.merged(with: updateInfo.stats)
+    return updateInfo.events.map { .node(event: $0) }
+  }
+
+  private func rebuildScopesForNewState(
+    _ newState: TreeStateRecord
+  ) throws
+    -> [TreeEvent]
+  {
+    let applier = StateApplier(
+      newState: newState,
+      stateStorage: state,
+      scopeStorage: scopes
+    )
+
+    // Assert invariants.
+    // - Regular changes should not be able to happen while a new state is applied to the runtime.
+    // - Applying a state to the runtime should not itself change state.
+    assert(
+      changeManager == nil,
+      "a state application should not be able to happen during a change"
+    )
+    let preApplicationUpdates = updates.take()
+    assert(
+      preApplicationUpdates.isEmpty,
+      "a state application should not be able to happen when there are staged updates"
+    )
+    defer {
+      let postApplicationUpdates = updates.take()
+      assert(
+        postApplicationUpdates.isEmpty,
+        "state application should not lead to staged updates"
+      )
+    }
+
+    stateApplier = applier
+    defer {
+      self.stateApplier = nil
+    }
+
+    let updateInfo = try applier.flush()
     updateStats = updateStats.merged(with: updateInfo.stats)
     return updateInfo.events.map { .node(event: $0) }
   }

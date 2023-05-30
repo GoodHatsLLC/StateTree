@@ -8,7 +8,6 @@ import TreeActor
 
 @_spi(Implementation)
 public enum ExternalRequirement {
-  case rebuild
   case update
   case stop
 }

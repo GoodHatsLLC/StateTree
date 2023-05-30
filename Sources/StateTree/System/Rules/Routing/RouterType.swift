@@ -29,6 +29,9 @@ public protocol RouterType<Value> {
   mutating func assign(
     _ context: RouterRuleContext
   )
+  @_spi(Implementation)
+  @TreeActor
+  mutating func sync(as fieldID: FieldID, in: Runtime) throws
 }
 
 // MARK: - UnassignedRouterError

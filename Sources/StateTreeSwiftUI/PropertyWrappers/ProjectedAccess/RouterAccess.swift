@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - SingleRouterAccess
 
-/// FIXME: dedupe RouterAccess & NodeAccess. Move common into StateTreeAccess.
+// FIXME: dedupe RouterAccess & NodeAccess. Move common into StateTreeAccess.
 @MainActor
 struct SingleRouterAccess<R: SingleRouterType, Child: Node> where R.Value == Child {
   init(route: Route<R>) {

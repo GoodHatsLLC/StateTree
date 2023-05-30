@@ -62,9 +62,9 @@ public final class BehaviorTracker {
 
     public static var defaults: Tracking {
       #if DEBUG
-        .indefinitely
+      .indefinitely
       #else
-        .untilComplete
+      .untilComplete
       #endif
     }
 

@@ -226,6 +226,8 @@ extension PlaybackTests {
 
   struct PrimeSquare: Node {
 
+    // MARK: Internal
+
     @Value var potentialPrime = 0
     @Route var primeSquared: Square? = nil
 
@@ -238,6 +240,8 @@ extension PlaybackTests {
         )
       }
     }
+
+    // MARK: Private
 
     private func isPrime(_ num: Int) -> Bool {
       guard num >= 2 else {

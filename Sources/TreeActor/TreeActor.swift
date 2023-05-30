@@ -20,9 +20,9 @@ extension TreeActor {
 
   public static var type: TreeActorType {
     #if CUSTOM_ACTOR
-      .custom
+    .custom
     #else
-      .main
+    .main
     #endif
   }
 

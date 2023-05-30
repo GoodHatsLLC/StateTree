@@ -34,6 +34,9 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
   }
 
   @_spi(Implementation)
+  public mutating func sync(as _: FieldID, in _: Runtime) throws { }
+
+  @_spi(Implementation)
   @TreeActor
   public func current(at fieldID: FieldID, in runtime: Runtime) throws -> Value {
     guard
