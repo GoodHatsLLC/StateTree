@@ -21,6 +21,10 @@ protocol StateSyncableScope {
 
 struct MissingNodeRecordError: Error { }
 
+// MARK: - MissingRuntimeScopeError
+
+struct MissingRuntimeScopeError: Error { }
+
 // MARK: - NodeScope + StateSyncableScope
 
 extension NodeScope: StateSyncableScope {

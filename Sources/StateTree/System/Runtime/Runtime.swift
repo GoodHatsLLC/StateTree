@@ -212,6 +212,37 @@ extension Runtime {
     #endif
   }
 
+  func hackHandlePotentialPostApplicationStateErrors() throws {
+    let stateIDs = Set(state.nodeIDs)
+    let scopeKeys = Set(scopes.scopeIDs)
+    if stateIDs == scopeKeys {
+      return
+    }
+    runtimeWarning("A state application left the tree in a bad state. Attempting cleanup.")
+    assertionFailure("This should never happen.")
+    let orphanedScopes = scopeKeys.subtracting(stateIDs)
+    let strayRecords = stateIDs.subtracting(scopeKeys)
+
+    for scope in orphanedScopes.compactMap({ scopes.getScope(for: $0) }) {
+      try? scope.stop()
+      scope.disconnectSendingNotification()
+    }
+    if !orphanedScopes.isEmpty {
+      runtimeWarning(
+        "The following orphaned scopes were stopped: $@",
+        ["\(orphanedScopes.reduce("") { curr, acc in "\(curr) \(acc)" })"]
+      )
+    }
+    if !strayRecords.isEmpty {
+      runtimeWarning(
+        "The following state records have no runtime scopes: $@",
+        ["\(strayRecords.reduce("") { curr, acc in "\(curr) \(acc)" })"]
+      )
+      assertionFailure("There is no easy fix for this state. Scope syncing has failed critically.")
+      throw MissingRuntimeScopeError()
+    }
+  }
+
   func recordIntentScopeDependency(_ scopeID: NodeID) {
     state.recordIntentNodeDependency(scopeID)
   }
@@ -429,6 +460,7 @@ extension Runtime {
     }
     let changes = try syncScopesToNewState(newState)
     emitUpdates(events: changes)
+    try hackHandlePotentialPostApplicationStateErrors()
   }
 
   // MARK: Private
