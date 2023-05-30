@@ -34,7 +34,7 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func syncToState(field _: FieldID, in _: Runtime) throws { }
+  public mutating func syncToState(field _: FieldID, in _: Runtime) throws -> [AnyScope] { [] }
 
   @_spi(Implementation)
   @TreeActor

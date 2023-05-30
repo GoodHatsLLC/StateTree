@@ -25,7 +25,6 @@ extension NodeScope: StateSyncableScope {
   func syncToStateReportingCreatedScopes() throws -> [AnyScope] {
     activeRules = activeRules ?? node.rules
     try activeRules?.syncToState(with: context)
-    try routerSet.apply()
-    return []
+    return try routerSet.syncToState()
   }
 }

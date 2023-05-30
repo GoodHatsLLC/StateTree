@@ -23,7 +23,7 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func syncToState(field _: FieldID, in _: Runtime) throws { }
+  public mutating func syncToState(field _: FieldID, in _: Runtime) throws -> [AnyScope] { [] }
 
   @_spi(Implementation)
   @TreeActor

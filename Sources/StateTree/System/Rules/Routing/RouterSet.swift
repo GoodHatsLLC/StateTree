@@ -11,9 +11,9 @@ struct RouterSet {
   }
 
   @TreeActor
-  func syncToState() throws {
-    for router in routers {
-      try router.syncToState()
+  func syncToState() throws -> [AnyScope] {
+    try routers.reduce(into: [AnyScope]()) { partialResult, handle in
+      try partialResult.append(contentsOf: handle.syncToState())
     }
   }
 }

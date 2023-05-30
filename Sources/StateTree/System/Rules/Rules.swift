@@ -13,6 +13,7 @@ public struct RuleContext {
 
 // MARK: - RuleLifecycle
 
+// FIXME: remove unnecessary lifecycle stages
 public enum RuleLifecycle {
   case didStart
   case didUpdate

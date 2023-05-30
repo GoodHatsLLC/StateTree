@@ -31,7 +31,7 @@ public protocol RouterType<Value> {
   )
   @_spi(Implementation)
   @TreeActor
-  mutating func syncToState(field fieldID: FieldID, in: Runtime) throws
+  mutating func syncToState(field fieldID: FieldID, in: Runtime) throws -> [AnyScope]
 }
 
 // MARK: - UnassignedRouterError
