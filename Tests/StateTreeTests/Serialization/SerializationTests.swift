@@ -20,36 +20,7 @@ final class SerializationTests: XCTestCase {
   }
 
   @TreeActor
-  func _test_dump_prime() async throws {
-    let tree = Tree(root: PrimeSquare())
-    try tree.start()
-      .autostop()
-      .stage(on: stage)
-    try tree.assume.rootNode.potentialPrime = 7
-    print("<prime>")
-    print(try tree.assume.snapshot().formattedJSON)
-    print("</prime>")
-  }
-
-  @TreeActor
-  func _test_dump_composite() async throws {
-    let tree = Tree(root: PrimeSquare())
-    try tree.start()
-      .autostop()
-      .stage(on: stage)
-    try tree.assume.rootNode.potentialPrime = 8
-    let someIntent = try Intent(
-      PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
-      try Step(name: "invalid-pending-step", fields: ["field": "abc"])
-    )
-    try tree.assume.signal(intent: XCTUnwrap(someIntent))
-    print("<composite>")
-    print(try tree.assume.snapshot().formattedJSON)
-    print("</composite>")
-  }
-
-  @TreeActor
-  func testEncoding() async throws {
+  func test_stateEncoding_primePayload() async throws {
     let tree = Tree(
       root: PrimeSquare()
     )
@@ -63,7 +34,7 @@ final class SerializationTests: XCTestCase {
   }
 
   @TreeActor
-  func testDecoding() async throws {
+  func test_stateDecoding_primePayload() async throws {
     let tree1 = Tree(root: PrimeSquare())
     let state = try TreeStateRecord(jsonString: primeStateString)
     try tree1.start(from: state)
@@ -97,24 +68,24 @@ final class SerializationTests: XCTestCase {
   }
 
   @TreeActor
-  func testAlternateEncoding() async throws {
-    let tree = Tree(
-      root: PrimeSquare()
-    )
+  func test_stateEncoding_compositePayload() async throws {
+    let tree = Tree(root: PrimeSquare())
     try tree.start()
+      .autostop()
+      .stage(on: stage)
+    try tree.assume.rootNode.potentialPrime = 8
     let someIntent = try Intent(
       PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
       try Step(name: "invalid-pending-step", fields: ["field": "abc"])
     )
     try tree.assume.signal(intent: XCTUnwrap(someIntent))
-    try tree.assume.rootNode.potentialPrime = 8
     let snapshot = try tree.assume.snapshot()
     let string = snapshot.formattedJSON
     XCTAssertEqual(string, compositeStateString)
   }
 
   @TreeActor
-  func testAlternateState() async throws {
+  func test_stateDecoding_compositePayload() async throws {
     let state = try TreeStateRecord(jsonString: compositeStateString)
     let tree = Tree(
       root: PrimeSquare()
@@ -234,6 +205,7 @@ extension SerializationTests {
 }
 
 extension SerializationTests {
+
   var primeStateString: String {
     """
     {
@@ -278,66 +250,16 @@ extension SerializationTests {
                     "list" : {
                       "_0" : {
                         "idMap" : [
-                          "0",
-                          "00000000-FFFF-0000-0000-000000000001",
-                          "1",
-                          "00000000-FFFF-0000-0000-000000000002"
+                          "static-162:15-0",
+                          "00000000-FFFF-0000-0000-000000000004",
+                          "static-162:15-1",
+                          "00000000-FFFF-0000-0000-000000000005"
                         ]
                       }
                     }
                   }
                 }
               }
-            }
-          ]
-        },
-        {
-          "id" : "00000000-FFFF-0000-0000-000000000001",
-          "origin" : {
-            "depth" : 0,
-            "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "identity" : "0",
-            "type" : "list"
-          },
-          "records" : [
-            {
-              "id" : "u:0:00000000-FFFF-0000-0000-000000000001"
-            },
-            {
-              "id" : "v:1:00000000-FFFF-0000-0000-000000000001",
-              "payload" : {
-                "value" : {
-                  "_0" : "\\"Not a prime :(\\""
-                }
-              }
-            },
-            {
-              "id" : "d:2:00000000-FFFF-0000-0000-000000000001"
-            }
-          ]
-        },
-        {
-          "id" : "00000000-FFFF-0000-0000-000000000002",
-          "origin" : {
-            "depth" : 0,
-            "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "identity" : "1",
-            "type" : "list"
-          },
-          "records" : [
-            {
-              "id" : "u:0:00000000-FFFF-0000-0000-000000000002"
-            },
-            {
-              "id" : "v:1:00000000-FFFF-0000-0000-000000000002",
-              "payload" : {
-                "value" : {
-                  "_0" : "\\"srsly\\""
-                }
-              }
-            },
-            {
-              "id" : "d:2:00000000-FFFF-0000-0000-000000000002"
             }
           ]
         },
@@ -368,6 +290,56 @@ extension SerializationTests {
                   }
                 }
               }
+            }
+          ]
+        },
+        {
+          "id" : "00000000-FFFF-0000-0000-000000000004",
+          "origin" : {
+            "depth" : 0,
+            "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
+            "identity" : "static-162:15-0",
+            "type" : "list"
+          },
+          "records" : [
+            {
+              "id" : "u:0:00000000-FFFF-0000-0000-000000000004"
+            },
+            {
+              "id" : "v:1:00000000-FFFF-0000-0000-000000000004",
+              "payload" : {
+                "value" : {
+                  "_0" : "\\"It's a prime!\\""
+                }
+              }
+            },
+            {
+              "id" : "d:2:00000000-FFFF-0000-0000-000000000004"
+            }
+          ]
+        },
+        {
+          "id" : "00000000-FFFF-0000-0000-000000000005",
+          "origin" : {
+            "depth" : 0,
+            "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
+            "identity" : "static-162:15-1",
+            "type" : "list"
+          },
+          "records" : [
+            {
+              "id" : "u:0:00000000-FFFF-0000-0000-000000000005"
+            },
+            {
+              "id" : "v:1:00000000-FFFF-0000-0000-000000000005",
+              "payload" : {
+                "value" : {
+                  "_0" : "\\"really!\\""
+                }
+              }
+            },
+            {
+              "id" : "d:2:00000000-FFFF-0000-0000-000000000005"
             }
           ]
         }
@@ -442,9 +414,9 @@ extension SerializationTests {
                     "list" : {
                       "_0" : {
                         "idMap" : [
-                          "0",
+                          "static-170:15-0",
                           "00000000-FFFF-0000-0000-000000000001",
-                          "1",
+                          "static-170:15-1",
                           "00000000-FFFF-0000-0000-000000000002"
                         ]
                       }
@@ -460,7 +432,7 @@ extension SerializationTests {
           "origin" : {
             "depth" : 0,
             "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "identity" : "0",
+            "identity" : "static-170:15-0",
             "type" : "list"
           },
           "records" : [
@@ -485,7 +457,7 @@ extension SerializationTests {
           "origin" : {
             "depth" : 0,
             "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "identity" : "1",
+            "identity" : "static-170:15-1",
             "type" : "list"
           },
           "records" : [
@@ -509,4 +481,34 @@ extension SerializationTests {
     }
     """
   }
+
+  @TreeActor
+  func test_dump_prime() async throws {
+    let tree = Tree(root: PrimeSquare())
+    try tree.start()
+      .autostop()
+      .stage(on: stage)
+    try tree.assume.rootNode.potentialPrime = 7
+    print("<prime>")
+    print(try tree.assume.snapshot().formattedJSON)
+    print("</prime>")
+  }
+
+  @TreeActor
+  func test_dump_composite() async throws {
+    let tree = Tree(root: PrimeSquare())
+    try tree.start()
+      .autostop()
+      .stage(on: stage)
+    try tree.assume.rootNode.potentialPrime = 8
+    let someIntent = try Intent(
+      PrimeSquare.SomeIntentStep(someField: 123, someOtherField: "321"),
+      try Step(name: "invalid-pending-step", fields: ["field": "abc"])
+    )
+    try tree.assume.signal(intent: XCTUnwrap(someIntent))
+    print("<composite>")
+    print(try tree.assume.snapshot().formattedJSON)
+    print("</composite>")
+  }
+
 }

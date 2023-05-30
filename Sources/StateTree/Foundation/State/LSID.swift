@@ -20,24 +20,24 @@ public struct LSID: LosslessStringConvertible, TreeState {
     self.description = description
   }
 
-  public init(hashable: some Hashable) {
+  public init(prefix: String = "", hashable: some Hashable) {
     if let codable = hashable as? any Codable {
-      self.init(id: codable)
+      self.init(prefix: prefix, id: codable)
     } else {
-      self.init(id: "\(hashable)")
+      self.init(prefix: prefix, id: "\(prefix)-\(hashable)")
     }
   }
 
-  public init(id: some Codable) {
+  public init(prefix: String = "", id: some Codable) {
     if let id = id as? any LosslessStringConvertible {
-      self.description = String(id)
+      self.description = "\(prefix)-\(id)"
     } else if
       let data = try? Self.encoder.encode(id),
       let string = String(data: data, encoding: .utf8)
     {
-      self.description = string
+      self.description = "\(prefix)-\(string)"
     } else {
-      self.description = String(describing: id)
+      self.description = "\(prefix)-\(id)"
     }
   }
 

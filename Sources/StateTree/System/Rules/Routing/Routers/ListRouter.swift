@@ -205,12 +205,12 @@ struct MissingNodeKeyError: Error { }
 // MARK: - Route
 extension Route {
 
-  public init<NodeType: Node>(wrappedValue: [NodeType])
+  public init<NodeType: Node>(wrappedValue: [NodeType], line: Int = #line, col: Int = #column)
     where Router == ListRouter<NodeType>
   {
     let nodes = wrappedValue.enumerated()
       .reduce(into: OrderedDictionary<LSID, NodeType>()) { partialResult, pair in
-        partialResult[LSID(hashable: pair.offset)] = pair.element
+        partialResult[LSID(prefix: "static-\(line):\(col)", hashable: pair.offset)] = pair.element
       }
     self.init(
       defaultRouter: ListRouter(
@@ -223,12 +223,17 @@ extension Route {
 
 extension Attach {
 
-  public init<NodeType: Node>(_ route: Route<Router>, to nodes: [NodeType])
+  public init<NodeType: Node>(
+    _ route: Route<Router>,
+    to nodes: [NodeType],
+    line: Int = #line,
+    col: Int = #column
+  )
     where Router == ListRouter<NodeType>
   {
     let nodes = nodes.enumerated()
       .reduce(into: OrderedDictionary<LSID, NodeType>()) { partialResult, pair in
-        partialResult[LSID(hashable: pair.offset)] = pair.element
+        partialResult[LSID(prefix: "static-\(line):\(col)", hashable: pair.offset)] = pair.element
       }
     self.init(
       router: ListRouter(
@@ -237,6 +242,23 @@ extension Attach {
       ),
       to: route
     )
+  }
+
+  public init<Data: Collection, NodeType: Node>(
+    _ route: Route<Router>,
+    data: Data,
+    builder: @escaping (_ datum: Data.Element) -> NodeType
+  ) where Data.Element: Identifiable,
+    Router == ListRouter<NodeType>
+  {
+    let mapping = data
+      .reduce(into: OrderedDictionary<LSID, Data.Element>()) { partialResult, value in
+        partialResult[LSID(hashable: value.id)] = value
+      }
+    self.init(router: .init(buildKeys: mapping.keys, builder: { (lsid: LSID) in
+      let datum = try mapping[lsid].orThrow(MissingNodeKeyError())
+      return builder(datum)
+    }), to: route)
   }
 
   public init<Data: Collection, NodeType: Node>(
@@ -261,8 +283,7 @@ extension Attach {
   public init<Data: Collection>(
     _ route: Route<Router>,
     data: Data,
-    identifiedBy idPath: KeyPath<Data.Element, some Hashable>,
-    builder _: @escaping (Data.Element) -> some Node
+    identifiedBy idPath: KeyPath<Data.Element, some Hashable>
   ) where Data.Element: Hashable,
     Router == ListRouter<Data.Element>
   {
