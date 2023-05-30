@@ -31,6 +31,7 @@ extension NodeScope: StateSyncableScope {
     var rules = node.rules
     try rules.syncToState(with: context)
     activeRules = rules
+    state = .clean
     return try routerSet.syncToState()
   }
 }

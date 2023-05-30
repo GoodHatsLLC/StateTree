@@ -423,9 +423,9 @@ extension Runtime {
     }
     transactionCount += 1
     defer {
+      transactionCount -= 1
       assert(updates == .none)
       assert(checkConsistency())
-      transactionCount -= 1
     }
     let changes = try syncScopesToNewState(newState)
     emitUpdates(events: changes)
