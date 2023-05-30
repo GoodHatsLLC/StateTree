@@ -1,6 +1,6 @@
 // MARK: - TreeChanges
 
-struct TreeChanges: Codable, Hashable {
+struct TreeChanges: TreeState {
 
   // MARK: Lifecycle
 

@@ -50,10 +50,11 @@ final class ScopeStorage {
     scopeMap[id]
   }
 
-  func getScopes(for ids: [NodeID]) -> [AnyScope] {
+  func getScopes(for ids: some Collection<NodeID>) -> [AnyScope] {
     let scopes = ids.compactMap { id in
       getScope(for: id)
     }
+    // FIXME: enable
 //    assert(ids.count == scopes.count)
     return scopes
   }

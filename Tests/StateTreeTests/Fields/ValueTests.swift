@@ -71,7 +71,7 @@ extension ValueTests {
   // MARK: - SubnodeC
 
   struct SubnodeC: Node {
-    struct State: Codable, Hashable {
+    struct State: TreeState {
       var value = "👀"
     }
 

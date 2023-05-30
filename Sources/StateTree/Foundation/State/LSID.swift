@@ -9,7 +9,7 @@ import Foundation
 /// changed, but it has maintained its identity).
 ///
 /// `LSID` serves the same purpose as `Identifiable's` `ID`.
-public struct LSID: LosslessStringConvertible, Codable, Hashable {
+public struct LSID: LosslessStringConvertible, TreeState {
 
   // MARK: Lifecycle
 

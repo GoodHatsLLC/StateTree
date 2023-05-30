@@ -5,7 +5,7 @@ import OrderedCollections
 // MARK: - TreeStateRecord
 
 /// The full StateTree state at a moment in time.
-public struct TreeStateRecord: Codable {
+public struct TreeStateRecord: TreeState {
 
   // MARK: Lifecycle
 
@@ -25,9 +25,9 @@ public struct TreeStateRecord: Codable {
   }
 
   /// Deserialize state from a JSON string representation like that created with ``formattedJSON``.
-  public init(formattedJSON: String) throws {
+  public init(jsonString: String) throws {
     let decoder = JSONDecoder()
-    guard let data = formattedJSON.data(using: .utf8)
+    guard let data = jsonString.data(using: .utf8)
     else {
       throw StateJSONDecodingError()
     }
@@ -38,7 +38,7 @@ public struct TreeStateRecord: Codable {
 
   /// Serialize state into readable JSON
   ///
-  /// The state can be deserialised with the ``init(formattedJSON:)`` initializer.
+  /// The returned string can be deserialised with the ``init(jsonString:)`` initializer.
   ///
   /// > Tip: The root node will always be first in the state output.
   public var formattedJSON: String {

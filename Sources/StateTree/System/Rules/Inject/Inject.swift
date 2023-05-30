@@ -72,7 +72,7 @@ public struct Inject<R: Rules>: Rules {
     return try containedRules.updateRule(from: new.containedRules, with: newContext)
   }
 
-  public mutating func syncRuntime(with _: RuleContext) throws { }
+  public mutating func syncToState(with _: RuleContext) throws { }
 
   // MARK: Private
 

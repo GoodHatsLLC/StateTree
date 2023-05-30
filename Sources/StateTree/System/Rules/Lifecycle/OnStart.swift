@@ -143,7 +143,7 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     with _: RuleContext
   ) throws { }
 
-  public mutating func syncRuntime(with _: RuleContext) throws { }
+  public mutating func syncToState(with _: RuleContext) throws { }
 
   // MARK: Private
 

@@ -57,7 +57,7 @@ public protocol Rules {
   /// - Start any side effects which would be started when reaching this rule naturally.
   /// - Cancel active side effects invalidated by the new state.
   /// - The current state may not change during this sync.
-  mutating func syncRuntime(with: RuleContext) throws
+  mutating func syncToState(with: RuleContext) throws
 }
 
 // MARK: - InvalidSyncFailure

@@ -43,9 +43,9 @@ public struct AnyScope: Hashable {
   let getNodeFunc: @TreeActor () -> any Node
 }
 
-// MARK: BehaviorScoping
+// MARK: StateSyncableScope, BehaviorScoping
 
-extension AnyScope: BehaviorScoping {
+extension AnyScope: StateSyncableScope, BehaviorScoping {
 
   // MARK: Public
 
@@ -80,6 +80,16 @@ extension AnyScope: BehaviorScoping {
 
   func markDirty(pending requirement: ExternalRequirement) {
     underlying.markDirty(pending: requirement)
+  }
+
+  @TreeActor
+  func stop() throws {
+    try underlying.stop()
+  }
+
+  @TreeActor
+  func syncToStateReportingCreatedScopes() throws -> [AnyScope] {
+    try underlying.syncToStateReportingCreatedScopes()
   }
 
   func sendUpdateEvent() {

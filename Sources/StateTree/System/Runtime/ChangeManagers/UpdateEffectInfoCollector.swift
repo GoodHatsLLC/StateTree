@@ -1,13 +1,13 @@
 import TreeActor
 
-// MARK: - UpdateCollector
+// MARK: - UpdateEffectInfoCollector
 
-struct UpdateCollector {
+struct UpdateEffectInfoCollector {
   var updates: [NodeID: NodeEvent] = [:]
   var stats = UpdateStats()
 }
 
-extension UpdateCollector {
+extension UpdateEffectInfoCollector {
   func collectChanges() -> (events: [NodeEvent], stats: UpdateStats) {
     let events = updates
       .sorted { lhs, rhs in

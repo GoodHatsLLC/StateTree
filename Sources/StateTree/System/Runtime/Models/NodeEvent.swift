@@ -44,6 +44,27 @@ public enum NodeEvent: Codable, CustomStringConvertible {
 
   // MARK: Internal
 
+  var isStart: Bool {
+    if case .start = self {
+      return true
+    }
+    return false
+  }
+
+  var isUpdate: Bool {
+    if case .update = self {
+      return true
+    }
+    return false
+  }
+
+  var isStop: Bool {
+    if case .stop = self {
+      return true
+    }
+    return false
+  }
+
   func addingDepthIfNeeded(_ depth: Int) -> NodeEvent {
     switch self {
     case .start(id: let id, depth: .none):

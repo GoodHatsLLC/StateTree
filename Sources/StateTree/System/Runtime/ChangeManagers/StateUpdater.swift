@@ -5,7 +5,7 @@ import Utilities
 // MARK: - StateUpdater
 
 @TreeActor
-final class StateUpdater: ChangeManager {
+final class StateUpdater {
 
   // MARK: Lifecycle
 
@@ -52,7 +52,7 @@ final class StateUpdater: ChangeManager {
   private var stagedChanges: TreeChanges = .none
 
   private func updateScopes() throws -> (events: [NodeEvent], stats: UpdateStats) {
-    var updateCollector = UpdateCollector()
+    var updateCollector = UpdateEffectInfoCollector()
     let timer = updateCollector.stats.startedTimer()
 
     // Create a priority queue to hold the scopes that require updates.
@@ -76,7 +76,7 @@ final class StateUpdater: ChangeManager {
     //   (i.e. min() is FIFO within a same-depth group and max() is FILO.)
     var priorityQueue = PriorityQueue(
       type: AnyScope.self,
-      prioritizeBy: \.depth,
+      orderBy: \.depth,
       uniqueBy: \.nid
     )
 
@@ -230,3 +230,7 @@ final class StateUpdater: ChangeManager {
   }
 
 }
+
+// MARK: - UnfinishedFlushError
+
+struct UnfinishedFlushError: Error { }

@@ -7,6 +7,7 @@ import TreeActor
 @TreeActor
 protocol RouteHandle: AnyObject {
   func apply() throws
+  func syncToState() throws
   func setField(id: FieldID, in runtime: Runtime, rules: RouterRuleContext)
   var defaultRecord: RouteRecord { get }
 }
@@ -107,6 +108,16 @@ extension InnerRouteField: RouteHandle {
       throw UnknownRouteFieldError()
     }
     try activeRouter.apply(at: fieldID, in: runtime)
+  }
+
+  func syncToState() throws {
+    guard
+      let fieldID,
+      let runtime
+    else {
+      throw UnknownRouteFieldError()
+    }
+    try activeRouter.syncToState(field: fieldID, in: runtime)
   }
 
   // MARK: Private

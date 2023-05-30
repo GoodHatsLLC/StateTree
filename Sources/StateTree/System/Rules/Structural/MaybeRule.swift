@@ -37,8 +37,8 @@ public struct MaybeRule<R: Rules>: Rules {
     }
   }
 
-  public mutating func syncRuntime(with context: RuleContext) throws {
-    try optionalRules?.syncRuntime(with: context)
+  public mutating func syncToState(with context: RuleContext) throws {
+    try optionalRules?.syncToState(with: context)
   }
 
   // MARK: Internal

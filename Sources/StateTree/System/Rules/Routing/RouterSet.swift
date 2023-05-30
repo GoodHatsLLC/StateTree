@@ -9,4 +9,11 @@ struct RouterSet {
       try router.apply()
     }
   }
+
+  @TreeActor
+  func syncToState() throws {
+    for router in routers {
+      try router.syncToState()
+    }
+  }
 }

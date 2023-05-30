@@ -2,6 +2,7 @@ import Foundation
 
 // MARK: - UpdateStats
 
+/// Statistics and metadata about an update or set of updates intended for testing and debugging.
 public struct UpdateStats: Codable {
 
   // MARK: Public

@@ -2,7 +2,7 @@ import Utilities
 
 // MARK: - FieldRecord
 
-struct FieldRecord: Codable {
+struct FieldRecord: TreeState {
 
   let id: FieldID
   var payload: FieldRecordPayload?
@@ -15,7 +15,7 @@ struct FieldRecord: Codable {
 // MARK: - FieldRecordPayload
 
 /// The underlying representation of a ``Node`` field managed by StateTree.
-enum FieldRecordPayload: Codable {
+enum FieldRecordPayload: TreeState {
 
   /// `@Projection` (``Projection``) field on ``Node``.
   case projection(ProjectionSource)
@@ -30,13 +30,13 @@ enum FieldRecordPayload: Codable {
 
 // MARK: - TypeDescription
 
-struct TypeDescription: Codable, Hashable {
+struct TypeDescription: TreeState {
   let description: String
 }
 
 // MARK: - ValueRecord
 
-struct ValueRecord: Codable, Hashable {
+struct ValueRecord: TreeState {
   let id: FieldID
   let value: ValuePayload
 }
@@ -44,7 +44,7 @@ struct ValueRecord: Codable, Hashable {
 // MARK: - ProjectionSource
 
 /// The source of a `Projection` — used for dependency analysis.
-public enum ProjectionSource: Codable, Hashable {
+public enum ProjectionSource: TreeState {
   case valueField(FieldID)
   case programmatic
   case invalid

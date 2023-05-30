@@ -15,7 +15,7 @@ enum ExternalRequirement {
 
 /// `Scopes` are the runtime representation of ``Node``s.
 @TreeActor
-protocol ScopeType<N>: UpdatableScope, BehaviorScoping, Hashable {
+protocol ScopeType<N>: UpdatableScope, StateSyncableScope, BehaviorScoping, Hashable {
   associatedtype N: Node
   nonisolated var nid: NodeID { get }
   nonisolated var depth: Int { get }

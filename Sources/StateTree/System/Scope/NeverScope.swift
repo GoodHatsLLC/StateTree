@@ -184,6 +184,11 @@ struct NeverScope: ScopeType {
     assertionFailure("NeverScope should never be invoked")
   }
 
+  func syncToStateReportingCreatedScopes() throws -> [AnyScope] {
+    assertionFailure("NeverScope should never be invoked")
+    throw NeverScopeError()
+  }
+
   // MARK: Private
 
   private let _node: N

@@ -29,7 +29,7 @@ public struct ListRouter<Element: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func sync(as _: FieldID, in _: Runtime) throws { }
+  public mutating func syncToState(field _: FieldID, in _: Runtime) throws { }
 
   @_spi(Implementation)
   @TreeActor

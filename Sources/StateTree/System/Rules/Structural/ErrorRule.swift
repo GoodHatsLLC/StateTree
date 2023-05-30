@@ -21,7 +21,7 @@ public struct ErrorRule: Rules {
     with _: RuleContext
   ) throws { }
 
-  public mutating func syncRuntime(with _: RuleContext) throws {
+  public mutating func syncToState(with _: RuleContext) throws {
     runtimeWarning("A rule threw an error when parsed")
   }
 

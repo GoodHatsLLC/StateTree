@@ -8,7 +8,7 @@ import Utilities
 /// The runtime identifier  representing a ``Node``.
 ///
 /// String serialised `NodeIDs` are formatted as `<UUID>`
-public struct NodeID: Codable, Hashable, LosslessStringConvertible, Comparable {
+public struct NodeID: TreeState, LosslessStringConvertible, Comparable {
 
   // MARK: Lifecycle
 

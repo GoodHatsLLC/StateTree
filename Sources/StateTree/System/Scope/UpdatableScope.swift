@@ -8,7 +8,7 @@ import Utilities
 /// its ``ScopeUpdateLifecycle`` in response to a state change made
 /// in the ``Node`` tree.
 ///
-/// A `scope's` progression through its change lifecycle is managed by a ``ChangeManager``
+/// A `scope's` progression through its change lifecycle is managed by a ``StateUpdater``
 /// instance created to manage the runtime effects of a state change.
 ///
 /// ``NodeScope``s representing ``Node``s are updated when:
@@ -65,27 +65,20 @@ extension NodeScope: UpdatableScope {
   // MARK: Internal
 
   @TreeActor
-  func stop() throws {
-    assert(activeRules != nil)
-    activeRules = nil
-    stage.dispose()
-    // NOTE: The scope is still present in the runtime and
-    // must disconnect and notify consumers.
-  }
-
-  @TreeActor
-  func stopSubtree() throws {
-    assert(activeRules != nil)
-    try activeRules?.removeRule(with: context)
-    try routerSet.apply()
-  }
-
-  @TreeActor
   func start() throws {
     assert(activeRules == nil)
     activeRules = node.rules
     try activeRules?.applyRule(with: context)
     try routerSet.apply()
+  }
+
+  @TreeActor
+  func didStart() {
+    assert(activeRules != nil)
+    _ = activeRules?.act(
+      for: .didStart,
+      with: context
+    )
   }
 
   @TreeActor
@@ -108,6 +101,13 @@ extension NodeScope: UpdatableScope {
   }
 
   @TreeActor
+  func stopSubtree() throws {
+    assert(activeRules != nil)
+    try activeRules?.removeRule(with: context)
+    try routerSet.apply()
+  }
+
+  @TreeActor
   func willStop() {
     assert(activeRules != nil)
     _ = activeRules?.act(
@@ -117,12 +117,12 @@ extension NodeScope: UpdatableScope {
   }
 
   @TreeActor
-  func didStart() {
+  func stop() throws {
     assert(activeRules != nil)
-    _ = activeRules?.act(
-      for: .didStart,
-      with: context
-    )
+    activeRules = nil
+    stage.dispose()
+    // NOTE: The scope is still present in the runtime and
+    // must disconnect and notify consumers.
   }
 
   @TreeActor

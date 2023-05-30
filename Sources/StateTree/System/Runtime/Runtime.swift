@@ -409,7 +409,7 @@ extension Runtime {
       assert(checkConsistency())
       transactionCount -= 1
     }
-    let changes = try rebuildScopesForNewState(newState)
+    let changes = try syncScopesToNewState(newState)
     emitUpdates(events: changes)
   }
 
@@ -490,7 +490,7 @@ extension Runtime {
     return updateInfo.events.map { .node(event: $0) }
   }
 
-  private func rebuildScopesForNewState(
+  private func syncScopesToNewState(
     _ newState: TreeStateRecord
   ) throws
     -> [TreeEvent]

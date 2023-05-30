@@ -1,7 +1,7 @@
 // MARK: - FieldID
 
 /// The unique identifier of each ``Node`` field tracked by StateTree.
-public struct FieldID: Codable, Hashable, LosslessStringConvertible {
+public struct FieldID: TreeState, LosslessStringConvertible {
 
   // MARK: Lifecycle
 

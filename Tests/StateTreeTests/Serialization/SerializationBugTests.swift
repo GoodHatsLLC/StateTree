@@ -138,8 +138,8 @@ extension Wrapper: Hashable where T: Hashable { }
 
 extension SerializationBugTests {
 
-  struct ToDoRecord: Identifiable, Codable, Hashable {
-    struct SubStruct: Codable, Hashable {
+  struct ToDoRecord: Identifiable, TreeState {
+    struct SubStruct: TreeState {
       var text: String = "hello"
       var dict: [UUID: String] = [
         UUID(): "one",

@@ -28,9 +28,9 @@ public struct TupleRule<M1: Rules, M2: Rules>: Rules {
     try rule2.updateRule(from: new.rule2, with: context)
   }
 
-  public mutating func syncRuntime(with context: RuleContext) throws {
-    try rule1.syncRuntime(with: context)
-    try rule2.syncRuntime(with: context)
+  public mutating func syncToState(with context: RuleContext) throws {
+    try rule1.syncToState(with: context)
+    try rule2.syncToState(with: context)
   }
 
   // MARK: Internal

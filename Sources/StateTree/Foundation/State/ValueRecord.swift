@@ -5,7 +5,7 @@ import Utilities
 
 /// Value types aren't known at decoding time, so we store them as encoded strings
 /// and use that string for comparison and hashing.
-public enum ValuePayload: Codable, Hashable {
+public enum ValuePayload: TreeState {
   case runtime(known: any Codable & Hashable, stringPayload: String)
   case decoded(stringPayload: String)
 

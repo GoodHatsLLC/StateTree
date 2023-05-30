@@ -5,7 +5,7 @@ import Utilities
 // MARK: - StateApplier
 
 @TreeActor
-final class StateApplier: ApplicationManager {
+final class StateApplier {
 
   // MARK: Lifecycle
 
@@ -25,6 +25,9 @@ final class StateApplier: ApplicationManager {
 
   func flush() throws -> (events: [NodeEvent], stats: UpdateStats) {
     assert(!isFlushing, "flush should never be called when another flush is in progress")
+    if isFlushing {
+      throw UnfinishedFlushError()
+    }
     isFlushing = true
     defer { isFlushing = false }
     return try updateScopes()
@@ -37,73 +40,90 @@ final class StateApplier: ApplicationManager {
   private let newState: TreeStateRecord
 
   private func updateScopes() throws -> (events: [NodeEvent], stats: UpdateStats) {
-    var updateCollector = UpdateCollector()
+    // Prepare event & stats collection.
+    var updateCollector = UpdateEffectInfoCollector()
     let timer = updateCollector.stats.startedTimer()
 
-    var priorityQueue = PriorityQueue(
-      type: AnyScope.self,
-      prioritizeBy: \.depth,
-      uniqueBy: \.nid
-    )
+    // Store the initial state, and overwrite it.
+    let oldState: TreeStateRecord = stateStorage.snapshot()
+    stateStorage.apply(state: newState)
 
-    while !priorityQueue.isEmpty {
-      // Forward the root-most node.
-      if
-        let scope = priorityQueue.min,
-        scope.requiresReadying
-      {
-        // if true, the node is now clean
-        if
-          try scope.stepTowardsReady(),
-          let scope = priorityQueue.popMin()
-        {
-          updateCollector.updated(id: scope.nid, depth: scope.depth)
+    // Find the state changes: started, stopped, and updated nodes.
+    let oldRecordIDs = oldState.nodes.keys
+    let newRecordIDs = newState.nodes.keys
+    let maintainedNodeIDs = oldRecordIDs.intersection(newRecordIDs)
+    let potentiallyUnchangedRecords = maintainedNodeIDs
+      .reduce(into: Set<NodeRecord>()) { partialResult, nodeID in
+        let oldRecord: NodeRecord = oldState.nodes[nodeID]!
+        partialResult.insert(oldRecord)
+      }
+    let unchangedNodeIDs = maintainedNodeIDs
+      .reduce(into: Set<NodeID>()) { partialResult, nodeID in
+        let newRecord: NodeRecord = newState.nodes[nodeID]!
+        if potentiallyUnchangedRecords.contains(newRecord) {
+          partialResult.insert(nodeID)
         }
       }
-      // Check if the deepest scope requires 'finalization'
-      // actions to progress it further towards stopping.
-      else if
-        let scope = priorityQueue.max,
-        scope.requiresFinishing
-      {
-        // Act, and remove the scope if fully finished.
-        if
-          try scope.stepTowardsFinished(),
-          let scope = priorityQueue.popMax()
-        {
-          updateCollector.stopped(id: scope.nid, depth: scope.depth)
-          continue
-        }
-      }
-      // When the deepest changed scope needs to be forwarded and
-      // the changed scope closest to the root needs to be finished
-      // neither scope has yet been removed from the queue.
-      //
-      // Since a scope can only be in the queue if it still needs progress
-      // towards either being fully updated or removed we can finalize
-      // the root-most scope to avoid an impasse.
-      else if
-        let scope = priorityQueue.min,
-        scope.requiresFinishing
-      {
-        // if true, the node is now clean
-        if
-          try scope.stepTowardsFinished(),
-          let scope = priorityQueue.popMin()
-        {
-          updateCollector.stopped(id: scope.nid, depth: scope.depth)
-        }
-      }
-      // If no change to the queue are possible the queue must be empty.
-      else {
-        assert(priorityQueue.isEmpty)
+    let stoppedNodeIDs = oldRecordIDs.subtracting(newRecordIDs)
+    let startedNodeIDs = newRecordIDs.subtracting(oldRecordIDs)
+    let updatedNodeIDs = maintainedNodeIDs.subtracting(unchangedNodeIDs)
+
+    // Stop scopes for removed nodes.
+    //
+    // N.B.: Updates sent to the UI layer should be ordered by depth, so
+    // we can't yet disconnect these scopes from the runtime or notify consumers.
+    for id in stoppedNodeIDs {
+      if let scope = scopeStorage.getScope(for: id) {
+        try scope.underlying.stop()
+        updateCollector.stopped(id: id, depth: scope.depth)
+      } else {
+        assertionFailure("scopes to stop should be present in runtime")
       }
     }
 
-    updateCollector.stats.recordTimeElapsed(from: timer)
+    // Build a depth ordered queue of scopes to sync or start.
+    var queue = PriorityQueue(type: AnyScope.self, orderBy: \.depth, uniqueBy: \.nid)
+    queue.insert(contentsOf: scopeStorage.getScopes(for: updatedNodeIDs))
 
-    // Return the list of updated nodes to fire notifications
-    // to the UI layer for.
+    // Sync updated nodes from root to leaves.
+    // When syncing creates a new scope, insert it into the queue.
+    while let scope = queue.popMin() {
+      let newScopes = try scope.syncToStateReportingCreatedScopes()
+      if scope.isActive {
+        updateCollector.updated(id: scope.nid, depth: scope.depth)
+      } else {
+        updateCollector.started(id: scope.nid, depth: scope.depth)
+      }
+      queue.insert(contentsOf: newScopes)
+    }
+
+    assert(
+      stoppedNodeIDs.isEqualSet(
+        to: updateCollector.updates.filter { $1.isStop }.map(\.key)
+      ),
+      "runtime actions are not in sync with record"
+    )
+    assert(
+      updatedNodeIDs.isEqualSet(
+        to: updateCollector.updates.filter { $1.isUpdate }.map(\.key)
+      ),
+      "runtime actions are not in sync with record"
+    )
+    assert(
+      startedNodeIDs.isEqualSet(
+        to: updateCollector.updates.filter { $1.isStart }.map(\.key)
+      ),
+      "runtime actions are not in sync with record"
+    )
+    assert(
+      newState == stateStorage.snapshot(),
+      "state should not mutate during its application"
+    )
+
+    // Return node update details and stats, allowing our consumer
+    // to message the UI layer and to disconnect any stopped scopes
+    // from the runtime.
+    updateCollector.stats.recordTimeElapsed(from: timer)
     return updateCollector.collectChanges()
   }
 

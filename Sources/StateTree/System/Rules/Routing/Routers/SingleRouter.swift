@@ -40,7 +40,7 @@ public struct SingleRouter<NodeType: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func sync(as _: FieldID, in _: Runtime) throws { }
+  public mutating func syncToState(field _: FieldID, in _: Runtime) throws { }
 
   @_spi(Implementation)
   public mutating func apply(at fieldID: FieldID, in runtime: Runtime) throws {

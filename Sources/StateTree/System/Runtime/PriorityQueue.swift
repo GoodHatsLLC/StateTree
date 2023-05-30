@@ -41,31 +41,31 @@ struct PriorityQueue<Key: Comparable, Element> {
 
   init(
     type _: Element.Type,
-    prioritizeBy priority: KeyPath<Element, Key>,
+    orderBy priority: KeyPath<Element, Key>,
     uniqueBy hashability: KeyPath<Element, some Hashable>? = nil
   ) {
     self.init(
       [Element](),
-      prioritizeBy: { $0[keyPath: priority] },
+      orderBy: { $0[keyPath: priority] },
       uniqueBy: hashability.map { hashPath in { AnyHashable($0[keyPath: hashPath]) } }
     )
   }
 
   init(
     _: some Sequence<Element>,
-    prioritizeBy priority: KeyPath<Element, Key>,
+    orderBy priority: KeyPath<Element, Key>,
     uniqueBy hashability: KeyPath<Element, some Hashable>? = nil
   ) {
     self.init(
       [Element](),
-      prioritizeBy: { $0[keyPath: priority] },
+      orderBy: { $0[keyPath: priority] },
       uniqueBy: hashability.map { hashPath in { AnyHashable($0[keyPath: hashPath]) } }
     )
   }
 
   private init(
     _ sequence: some Sequence<Element>,
-    prioritizeBy priority: @escaping (Element) -> Key,
+    orderBy priority: @escaping (Element) -> Key,
     uniqueBy hashability: ((Element) -> AnyHashable)?
   ) {
     var differentiator: UInt32 = 0
@@ -103,6 +103,18 @@ struct PriorityQueue<Key: Comparable, Element> {
       self.removeTrackingFunc = { _ in }
       self.heap = Heap(sequence.map(make))
     }
+  }
+
+  // MARK: Public
+
+  @inlinable
+  public mutating func insert(
+    contentsOf newElements: some Sequence<Element>
+  ) {
+    let newElements = newElements
+      .filter { !isTrackedFunc($0) }
+      .map(make)
+    heap.insert(contentsOf: newElements)
   }
 
   // MARK: Internal

@@ -57,13 +57,13 @@ public enum EitherRule<RA: Rules, RB: Rules>: Rules {
     }
   }
 
-  public mutating func syncRuntime(with context: RuleContext) throws {
+  public mutating func syncToState(with context: RuleContext) throws {
     switch self {
     case .ruleA(var rA):
-      try rA.syncRuntime(with: context)
+      try rA.syncToState(with: context)
       self = .ruleA(rA)
     case .ruleB(var rB):
-      try rB.syncRuntime(with: context)
+      try rB.syncToState(with: context)
       self = .ruleB(rB)
     }
   }

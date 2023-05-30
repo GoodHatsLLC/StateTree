@@ -1,6 +1,6 @@
 // MARK: - RouteType
 
-public enum RouteType: String, Codable, Hashable {
+public enum RouteType: String, TreeState {
   case single
   case union2
   case union3
@@ -12,7 +12,7 @@ public enum RouteType: String, Codable, Hashable {
 
 // MARK: - RouteSource
 
-public struct RouteSource: Codable, Hashable, CustomStringConvertible {
+public struct RouteSource: TreeState, CustomStringConvertible {
 
   static let system: RouteSource = .init(
     fieldID: .system,

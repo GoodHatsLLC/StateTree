@@ -27,8 +27,8 @@ public struct RuleSet<R: Rules>: Rules {
     try rules.updateRule(from: new.rules, with: context)
   }
 
-  public mutating func syncRuntime(with context: RuleContext) throws {
-    try rules.syncRuntime(with: context)
+  public mutating func syncToState(with context: RuleContext) throws {
+    try rules.syncToState(with: context)
   }
 
   var rules: R

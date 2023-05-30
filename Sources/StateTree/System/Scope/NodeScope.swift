@@ -35,11 +35,6 @@ public final class NodeScope<N: Node>: Equatable {
   public let node: N
   public let nid: NodeID
   public let depth: Int
-  public let dependencies: DependencyValues
-  public let valueFieldDependencies: Set<FieldID>
-  public let initialRecord: NodeRecord
-  public let initialCapture: NodeCapture
-
   @_spi(Implementation) public var runtime: Runtime
 
   public nonisolated func erase() -> AnyScope {
@@ -47,6 +42,11 @@ public final class NodeScope<N: Node>: Equatable {
   }
 
   // MARK: Internal
+
+  let dependencies: DependencyValues
+  let valueFieldDependencies: Set<FieldID>
+  let initialRecord: NodeRecord
+  let initialCapture: NodeCapture
 
   let stage = DisposableStage()
   var activeRules: N.NodeRules?
@@ -81,15 +81,19 @@ extension NodeScope: Hashable {
 
 extension NodeScope: ScopeType {
 
+  // MARK: Public
+
   public var didUpdateEmitter: AnyEmitter<Void, Never> { didUpdateSubject.erase() }
   public var isActive: Bool { activeRules != nil }
   public var childScopes: [AnyScope] { runtime.childScopes(of: nid) }
 
-  @TreeActor public var ancestors: [NodeID] {
+  // MARK: Internal
+
+  @TreeActor var ancestors: [NodeID] {
     runtime.ancestors(of: nid) ?? []
   }
 
-  @TreeActor public var record: NodeRecord {
+  @TreeActor var record: NodeRecord {
     runtime
       .getRecord(nid) ?? initialRecord
   }
