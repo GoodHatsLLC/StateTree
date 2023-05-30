@@ -135,13 +135,23 @@ public struct OnUpdate<B: Behavior>: Rules where B.Input: Equatable,
     }
   }
 
-  public mutating func syncToState(with _: RuleContext) throws { }
+  public mutating func syncToState(with _: RuleContext) throws {
+    scope.reset()
+  }
 
   // MARK: Private
 
   private var value: B.Input
   private let callback: (any BehaviorScoping, BehaviorTracker, B.Input) -> Void
   private let scope: BehaviorStage = .init()
+}
+
+extension OnUpdate where B.Handler.SubscribeType == Asynchronous {
+  public mutating func syncToState(with context: RuleContext) {
+    scope.reset()
+    // TODO: we would require the old state record in order to properly decide whether to fire this.
+    callback(scope, context.runtime.behaviorTracker, value)
+  }
 }
 
 extension OnUpdate {

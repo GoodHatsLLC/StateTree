@@ -139,7 +139,10 @@ public struct OnChange<Value: Equatable, B: Behavior>: Rules where B.Input == (V
     }
   }
 
-  public mutating func syncToState(with _: RuleContext) throws { }
+  public mutating func syncToState(with _: RuleContext) throws {
+    scope.reset()
+    // TODO: we would require the old state record in order to fire this.
+  }
 
   // MARK: Private
 

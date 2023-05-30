@@ -34,7 +34,65 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func syncToState(field _: FieldID, in _: Runtime) throws -> [AnyScope] { [] }
+  public mutating func syncToState(
+    field fieldID: FieldID,
+    in runtime: Runtime
+  ) throws -> [AnyScope] {
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
+    hasApplied = true
+    let record = runtime.getRouteRecord(at: fieldID)
+    guard case .union3(let union3Record) = record
+    else {
+      assertionFailure()
+      throw IncorrectRouterTypeError()
+    }
+    guard let record = runtime.getRecord(union3Record.id)
+    else {
+      throw InvalidSyncFailure()
+    }
+    let uninitialized = UninitializedNode(capture: capturedNode, runtime: runtime)
+    switch union3Record {
+    case .a:
+      return [
+        try uninitialized
+          .reinitializeNode(
+            asType: A.self,
+            from: record,
+            dependencies: context.dependencies,
+            on: .init(fieldID: fieldID, identity: nil, type: .union3, depth: context.depth)
+          )
+          .connect()
+          .erase(),
+      ]
+    case .b:
+      return [
+        try uninitialized
+          .reinitializeNode(
+            asType: B.self,
+            from: record,
+            dependencies: context.dependencies,
+            on: .init(fieldID: fieldID, identity: nil, type: .union3, depth: context.depth)
+          )
+          .connect()
+          .erase(),
+      ]
+    case .c:
+      return [
+        try uninitialized
+          .reinitializeNode(
+            asType: C.self,
+            from: record,
+            dependencies: context.dependencies,
+            on: .init(fieldID: fieldID, identity: nil, type: .union3, depth: context.depth)
+          )
+          .connect()
+          .erase(),
+      ]
+    }
+  }
 
   @_spi(Implementation)
   @TreeActor

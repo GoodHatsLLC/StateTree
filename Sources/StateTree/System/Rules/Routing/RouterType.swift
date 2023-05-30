@@ -37,3 +37,7 @@ public protocol RouterType<Value> {
 // MARK: - UnassignedRouterError
 
 struct UnassignedRouterError: Error { }
+
+// MARK: - IncorrectRouterTypeError
+
+struct IncorrectRouterTypeError: Error { }

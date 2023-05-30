@@ -77,7 +77,10 @@ public struct OnReceive<Value: Sendable>: Rules {
     with _: RuleContext
   ) throws { }
 
-  public mutating func syncToState(with _: RuleContext) throws { }
+  public mutating func syncToState(with context: RuleContext) throws {
+    scope.reset()
+    callback(scope, context.runtime.behaviorTracker)
+  }
 
   // MARK: Private
 

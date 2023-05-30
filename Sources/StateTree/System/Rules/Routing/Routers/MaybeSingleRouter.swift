@@ -23,7 +23,42 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func syncToState(field _: FieldID, in _: Runtime) throws -> [AnyScope] { [] }
+  public mutating func syncToState(
+    field fieldID: FieldID,
+    in runtime: Runtime
+  ) throws -> [AnyScope] {
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
+    hasApplied = true
+    let record = runtime.getRouteRecord(at: fieldID)
+    guard case .maybeSingle(let maybeSingleRecord) = record
+    else {
+      assertionFailure()
+      throw IncorrectRouterTypeError()
+    }
+    guard let requiredID = maybeSingleRecord
+    else {
+      assert(capturedNode == nil)
+      return []
+    }
+    guard
+      let node = capturedNode,
+      let record = runtime.getRecord(requiredID)
+    else {
+      throw InvalidSyncFailure()
+    }
+    let capture = NodeCapture(node)
+    let uninitialized = UninitializedNode(capture: capture, runtime: runtime)
+    let initialized = try uninitialized.reinitializeNode(
+      asType: NodeType.self,
+      from: record,
+      dependencies: context.dependencies,
+      on: .init(fieldID: fieldID, identity: nil, type: .maybeSingle, depth: context.depth)
+    )
+    return [try initialized.connect().erase()]
+  }
 
   @_spi(Implementation)
   @TreeActor

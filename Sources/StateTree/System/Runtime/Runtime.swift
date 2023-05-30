@@ -80,22 +80,36 @@ extension Runtime {
       capture: capture,
       runtime: self
     )
-    let initialized = try uninitialized
-      .initializeRoot(
-        asType: N.self,
-        dependencies: dependencies
-      )
-    let scope = try initialized.connect()
     emitUpdates(events: [.tree(event: .started(treeID: treeID))])
     if let initialState {
+      guard
+        let rootID = initialState.root,
+        let rootRecord = initialState.nodes[rootID]
+      else {
+        throw RootNodeMissingError()
+      }
+      let root = try uninitialized
+        .renitializeRoot(
+          asType: N.self,
+          from: rootRecord,
+          dependencies: dependencies
+        )
+      let rootScope = try root.connect()
       try apply(state: initialState)
+      return rootScope
     } else {
+      let root = try uninitialized
+        .initializeRoot(
+          asType: N.self,
+          dependencies: dependencies
+        )
+      let rootScope = try root.connect()
       updateRouteRecord(
         at: .system,
-        to: .single(scope.nid)
+        to: .single(rootScope.nid)
       )
+      return rootScope
     }
-    return scope
   }
 
   func stop() {

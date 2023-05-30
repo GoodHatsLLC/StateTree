@@ -34,7 +34,60 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func syncToState(field _: FieldID, in _: Runtime) throws -> [AnyScope] { [] }
+  public mutating func syncToState(
+    field fieldID: FieldID,
+    in runtime: Runtime
+  ) throws -> [AnyScope] {
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
+    hasApplied = true
+    let record = runtime.getRouteRecord(at: fieldID)
+    guard case .maybeUnion2(let maybeUnion2Record) = record
+    else {
+      assertionFailure()
+      throw IncorrectRouterTypeError()
+    }
+    guard let requiredCase = maybeUnion2Record
+    else {
+      assert(capturedNode == nil)
+      return []
+    }
+    guard
+      let capture = capturedNode,
+      let record = runtime.getRecord(requiredCase.id)
+    else {
+      throw InvalidSyncFailure()
+    }
+    let uninitialized = UninitializedNode(capture: capture, runtime: runtime)
+    switch requiredCase {
+    case .a:
+      return [
+        try uninitialized
+          .reinitializeNode(
+            asType: A.self,
+            from: record,
+            dependencies: context.dependencies,
+            on: .init(fieldID: fieldID, identity: nil, type: .maybeUnion2, depth: context.depth)
+          )
+          .connect()
+          .erase(),
+      ]
+    case .b:
+      return [
+        try uninitialized
+          .reinitializeNode(
+            asType: B.self,
+            from: record,
+            dependencies: context.dependencies,
+            on: .init(fieldID: fieldID, identity: nil, type: .maybeUnion2, depth: context.depth)
+          )
+          .connect()
+          .erase(),
+      ]
+    }
+  }
 
   @_spi(Implementation)
   @TreeActor

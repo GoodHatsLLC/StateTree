@@ -40,7 +40,35 @@ public struct SingleRouter<NodeType: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func syncToState(field _: FieldID, in _: Runtime) throws -> [AnyScope] { [] }
+  public mutating func syncToState(
+    field fieldID: FieldID,
+    in runtime: Runtime
+  ) throws -> [AnyScope] {
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
+    hasApplied = true
+    let record = runtime.getRouteRecord(at: fieldID)
+    guard case .single(let singleRecord) = record
+    else {
+      assertionFailure()
+      throw IncorrectRouterTypeError()
+    }
+    guard let record = runtime.getRecord(singleRecord)
+    else {
+      throw InvalidSyncFailure()
+    }
+    let capture = NodeCapture(capturedNode)
+    let uninitialized = UninitializedNode(capture: capture, runtime: runtime)
+    let initialized = try uninitialized.reinitializeNode(
+      asType: NodeType.self,
+      from: record,
+      dependencies: context.dependencies,
+      on: .init(fieldID: fieldID, identity: nil, type: .single, depth: context.depth)
+    )
+    return [try initialized.connect().erase()]
+  }
 
   @_spi(Implementation)
   public mutating func apply(at fieldID: FieldID, in runtime: Runtime) throws {

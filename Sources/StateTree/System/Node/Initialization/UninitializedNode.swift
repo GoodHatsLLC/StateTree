@@ -63,13 +63,13 @@ extension UninitializedNode {
     try reinitializeNode(
       asType: N.self,
       from: record,
-      at: .init(
+      dependencies: dependencies,
+      on: .init(
         fieldID: .system,
         identity: nil,
         type: .single,
         depth: 0
-      ),
-      dependencies: dependencies
+      )
     )
   }
 
@@ -77,8 +77,8 @@ extension UninitializedNode {
   func reinitializeNode<N: Node>(
     asType _: N.Type,
     from record: NodeRecord,
-    at route: RouteSource,
-    dependencies: DependencyValues
+    dependencies: DependencyValues,
+    on route: RouteSource
   ) throws -> InitializedNode<N> {
     let nodeID = record.id
     guard let node = capture.anyNode as? N

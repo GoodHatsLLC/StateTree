@@ -29,7 +29,45 @@ public struct ListRouter<Element: Node>: RouterType {
   }
 
   @_spi(Implementation)
-  public mutating func syncToState(field _: FieldID, in _: Runtime) throws -> [AnyScope] { [] }
+  public mutating func syncToState(
+    field fieldID: FieldID,
+    in runtime: Runtime
+  ) throws -> [AnyScope] {
+    guard let context
+    else {
+      throw UnassignedRouterError()
+    }
+    hasApplied = true
+    let record = runtime.getRouteRecord(at: fieldID)
+    guard case .list(let listRecord) = record
+    else {
+      assertionFailure()
+      throw IncorrectRouterTypeError()
+    }
+    let missingScopeDetails: [(LSID, NodeID, NodeRecord)] = try listRecord.idMap.filter { pair in
+      (try? runtime.getScope(for: pair.value)) == nil
+    }.map { lsid, nid in
+      guard let record = runtime.getRecord(nid)
+      else {
+        assertionFailure("missing expected record")
+        throw NodeReinitializationError()
+      }
+      return (lsid, nid, record)
+    }
+    let newScopes = try missingScopeDetails.map { lsid, _, record in
+      let node = try elementBuilder(lsid)
+      let capture = NodeCapture(node)
+      let scope = try recreateConnected(
+        Element.self,
+        from: capture,
+        record: record,
+        context: context,
+        in: runtime
+      )
+      return scope.erase()
+    }
+    return newScopes
+  }
 
   @_spi(Implementation)
   @TreeActor
@@ -64,7 +102,7 @@ public struct ListRouter<Element: Node>: RouterType {
     guard case .list(let listRecord) = record
     else {
       assertionFailure()
-      return
+      throw IncorrectRouterTypeError()
     }
     let idMap = listRecord.idMap
     var newIDMap = OrderedDictionary<LSID, NodeID>()
@@ -76,8 +114,9 @@ public struct ListRouter<Element: Node>: RouterType {
       if newIDs.contains(lsid) {
         let node = try elementBuilder(lsid)
         let capture = NodeCapture(node)
-        let scope = try connect(
+        let scope = try createConnected(
           Element.self,
+          lsid: lsid,
           from: capture,
           context: context,
           at: fieldID,
@@ -109,8 +148,30 @@ public struct ListRouter<Element: Node>: RouterType {
   private var context: RouterRuleContext?
 
   @TreeActor
-  private func connect<T: Node>(
+  private func recreateConnected<T: Node>(
     _: T.Type,
+    from capture: NodeCapture,
+    record: NodeRecord,
+    context: RouterRuleContext,
+    in runtime: Runtime
+  ) throws -> NodeScope<T> {
+    let uninitialized = UninitializedNode(
+      capture: capture,
+      runtime: runtime
+    )
+    let initialized = try uninitialized.reinitializeNode(
+      asType: T.self,
+      from: record,
+      dependencies: context.dependencies,
+      on: record.origin
+    )
+    return try initialized.connect()
+  }
+
+  @TreeActor
+  private func createConnected<T: Node>(
+    _: T.Type,
+    lsid: LSID,
     from capture: NodeCapture,
     context: RouterRuleContext,
     at fieldID: FieldID,
@@ -126,8 +187,8 @@ public struct ListRouter<Element: Node>: RouterType {
       dependencies: context.dependencies,
       on: .init(
         fieldID: fieldID,
-        identity: nil,
-        type: .union2,
+        identity: lsid,
+        type: .list,
         depth: context.depth
       )
     )

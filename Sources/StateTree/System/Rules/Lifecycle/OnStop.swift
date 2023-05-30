@@ -82,6 +82,7 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
   public mutating func applyRule(with _: RuleContext) throws { }
 
   public mutating func removeRule(with context: RuleContext) throws {
+    let scope: BehaviorStage = .init()
     callback(scope, context.runtime.behaviorTracker)
     scope.dispose()
   }
@@ -96,5 +97,4 @@ public struct OnStop<B: Behavior>: Rules where B.Input == Void,
   // MARK: Private
 
   private let callback: (any BehaviorScoping, BehaviorTracker) -> Void
-  private let scope: BehaviorStage = .init()
 }

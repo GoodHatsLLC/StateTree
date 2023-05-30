@@ -143,10 +143,19 @@ public struct OnStart<B: Behavior>: Rules where B.Input == Void,
     with _: RuleContext
   ) throws { }
 
-  public mutating func syncToState(with _: RuleContext) throws { }
+  public mutating func syncToState(with _: RuleContext) throws {
+    scope.reset()
+  }
 
   // MARK: Private
 
   private let callback: (any BehaviorScoping, BehaviorTracker) -> Void
   private let scope: BehaviorStage = .init()
+}
+
+extension OnStart where B.Handler.SubscribeType == Asynchronous {
+  public mutating func syncToState(with context: RuleContext) {
+    scope.reset()
+    callback(scope, context.runtime.behaviorTracker)
+  }
 }

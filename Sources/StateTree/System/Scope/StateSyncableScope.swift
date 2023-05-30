@@ -17,6 +17,10 @@ protocol StateSyncableScope {
   func disconnectSendingNotification()
 }
 
+// MARK: - MissingNodeRecordError
+
+struct MissingNodeRecordError: Error { }
+
 // MARK: - NodeScope + StateSyncableScope
 
 extension NodeScope: StateSyncableScope {
