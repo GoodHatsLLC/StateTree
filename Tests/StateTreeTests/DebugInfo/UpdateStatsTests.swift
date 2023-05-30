@@ -63,6 +63,8 @@ final class UpdateStatsTests: XCTestCase {
     XCTAssertEqual(postUpdateStops.counts.nodeUpdates, 1)
     XCTAssertEqual(postUpdateStops.counts.nodeStops, 31)
     XCTAssertGreaterThan(postUpdateStops.durations.nodeUpdates, 0)
+
+    print(postUpdateStops)
   }
 
 }

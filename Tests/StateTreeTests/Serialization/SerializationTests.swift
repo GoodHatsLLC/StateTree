@@ -295,7 +295,8 @@ extension SerializationTests {
           "origin" : {
             "depth" : 0,
             "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "type" : "union2"
+            "identity" : "0",
+            "type" : "list"
           },
           "records" : [
             {
@@ -319,7 +320,8 @@ extension SerializationTests {
           "origin" : {
             "depth" : 0,
             "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "type" : "union2"
+            "identity" : "1",
+            "type" : "list"
           },
           "records" : [
             {
@@ -457,7 +459,8 @@ extension SerializationTests {
           "origin" : {
             "depth" : 0,
             "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "type" : "union2"
+            "identity" : "0",
+            "type" : "list"
           },
           "records" : [
             {
@@ -481,7 +484,8 @@ extension SerializationTests {
           "origin" : {
             "depth" : 0,
             "fieldID" : "r:3:00000000-1111-1111-1111-111111111111",
-            "type" : "union2"
+            "identity" : "1",
+            "type" : "list"
           },
           "records" : [
             {
