@@ -152,6 +152,13 @@ let package = Package(
     .target(
       name: "StateTree",
       dependencies: [
+        "StateTreeBase",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "StateTreeBase",
+      dependencies: [
         "Behavior",
         "Disposable",
         "Emitter",
@@ -196,14 +203,14 @@ let package = Package(
     .target(
       name: "StateTreePlayback",
       dependencies: [
-        "StateTree",
+        "StateTreeBase",
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
     .testTarget(
-      name: "StateTreeTests",
+      name: "StateTreeBaseTests",
       dependencies: [
-        "StateTree",
+        "StateTreeBase",
         "Disposable",
         .product(name: "HeapModule", package: "swift-collections"),
       ]

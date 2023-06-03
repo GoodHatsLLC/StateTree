@@ -1,5 +1,5 @@
 import Foundation
-import StateTree
+import StateTreeBase
 
 // MARK: - StateFrame
 

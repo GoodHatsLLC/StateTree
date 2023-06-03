@@ -1,6 +1,6 @@
 import Disposable
 import Emitter
-import StateTree
+import StateTreeBase
 import TreeActor
 
 // MARK: - Player
