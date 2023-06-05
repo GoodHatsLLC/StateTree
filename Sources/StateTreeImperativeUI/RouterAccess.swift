@@ -74,11 +74,15 @@ extension RouterAccess {
 
   public subscript<SubNode: Node>(
     dynamicMember dynamicMember: KeyPath<NodeType, Route<ListRouter<SubNode>>>
-  ) -> DeferredList<Int, Reporter<SubNode>?> {
+  ) -> DeferredList<Int, Reporter<SubNode>, Error> {
     let list = try! access.access(via: dynamicMember)
-    return DeferredList {
-      try list.get(at: $0)
-        .map { Reporter(scope: $0) }
+    return DeferredList(indices: list.startIndex ..< list.endIndex) { index in
+      (try? list.element(at: index))
+        .unwrappingResult()
+        .map { scope in
+          Reporter(scope: scope)
+        }
+        .mapError { $0 }
     }
   }
 }

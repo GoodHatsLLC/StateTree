@@ -24,6 +24,10 @@ public final class ReportedTree<N: Node> {
     Reporter(scope: handle.root)
   }
 
+  public func stop() throws {
+    try tree.stop()
+  }
+
   // MARK: Private
 
   private let tree: Tree<N>

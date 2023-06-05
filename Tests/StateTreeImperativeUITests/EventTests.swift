@@ -1,9 +1,8 @@
 import Disposable
+import StateTreeImperativeUI
 import SwiftUI
 import TreeActor
 import XCTest
-@_spi(Implementation) import StateTreeBase
-@_spi(Implementation) @testable import StateTreeImperativeUI
 
 // MARK: - EventTests
 
@@ -11,11 +10,10 @@ import XCTest
 final class EventTests: XCTestCase {
 
   func test_startStop() async throws {
-    let tree = Tree(root: Parent())
-    let handle = try tree.start()
-    @Reported(handle.root) var root
+    let tree = try ReportedTree(tree: Tree(root: Parent()))
+    let root = tree.root
     var rootDidStopCount = 0
-    $root.onStop(subscriber: self) {
+    root.onStop(subscriber: self) {
       rootDidStopCount += 1
     }
     XCTAssertEqual(rootDidStopCount, 0)
@@ -24,11 +22,10 @@ final class EventTests: XCTestCase {
   }
 
   func test_update() async throws {
-    let tree = Tree(root: Parent())
-    let handle = try tree.start()
-    @Reported(handle.root) var root
+    let tree = try ReportedTree(tree: Tree(root: Parent()))
+    let root = tree.root
     var rootFireCount = 0
-    $root.onChange(subscriber: self) {
+    root.onChange(subscriber: self) {
       rootFireCount += 1
     }
     XCTAssert(rootFireCount == 0)
@@ -41,47 +38,40 @@ final class EventTests: XCTestCase {
   func test_childUpdates() async throws {
     let tree = try ReportedTree(tree: Tree(root: Parent()))
 
-    @Reported(projectedValue: tree.root) var root
-    let reporter = $root
+    let root = tree.root
+
     var emitCount = 0
 
-//    let bad1 = $root.single
-    let bad2 = reporter.single
+    let single = root.$single
+    single.onChange(subscriber: self) {
+      emitCount += 1
+    }
 
-    let scope1: Reporter<ChildOne> = $root.single
-    let scope2: Reporter<ChildOne> = reporter.single
-//
-//    if let single = $root.single {
-//      single.onChange(subscriber: self) {
-//        emitCount += 1
-//      }
-//    }
-//
-//    $root.$union2.b?.onChange(subscriber: self) {
-//      emitCount += 1
-//    }
-//
-//    $root.$union3.c?.onChange(subscriber: self) {
-//      emitCount += 1
-//    }
-//
-//    for node in $root.$list {
-//      node.onChange(subscriber: self) {
-//        emitCount += 1
-//      }
-//    }
-//
-//    XCTAssertEqual(emitCount, 0)
-//
-//    let count = 3 + $root.$list.count
-//
-//    root.v1 = 1
-//
-//    XCTAssertEqual(emitCount, count)
-//
-//    root.v1 = 3
-//
-//    XCTAssertEqual(emitCount, count * 2)
+    root.$union2?.b?.onChange(subscriber: self) {
+      emitCount += 1
+    }
+
+    root.$union3?.c?.onChange(subscriber: self) {
+      emitCount += 1
+    }
+
+    for node in root.$list {
+      node.onChange(subscriber: self) {
+        emitCount += 1
+      }
+    }
+
+    XCTAssertEqual(emitCount, 0)
+
+    let count = 3 + root.$list.count
+
+    root.v1 = 1
+
+    XCTAssertEqual(emitCount, count)
+
+    root.v1 = 3
+
+    XCTAssertEqual(emitCount, count * 2)
   }
 }
 

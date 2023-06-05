@@ -9,19 +9,6 @@ public protocol ScopeAccess {
   @_spi(Implementation) var scope: NodeScope<NodeType> { get }
 }
 
-// MARK: - DeferredList
-
-public struct DeferredList<Index, T> {
-  public init(_ producer: @escaping (Index) throws -> T) {
-    self.producer = producer
-  }
-
-  let producer: (Index) throws -> T
-  public func get(at index: Index) throws -> T {
-    try producer(index)
-  }
-}
-
 // MARK: - ScopeAccessor
 
 @TreeActor
@@ -176,7 +163,7 @@ extension ScopeAccess {
 
   public func access<SubNode: Node>(
     via path: KeyPath<NodeType, Route<ListRouter<SubNode>>>
-  ) throws -> DeferredList<Int, NodeScope<SubNode>?> {
+  ) throws -> DeferredList<Int, NodeScope<SubNode>, Error> {
     let accessor = try ScopeAccessor(
       field: scope.node[keyPath: path],
       runtime: scope.runtime
@@ -187,14 +174,19 @@ extension ScopeAccess {
       throw BadRecordError()
     }
     let nodeIDs = record.ids
-    return DeferredList { index in
+    return DeferredList(indices: nodeIDs.indices) { index in
       guard nodeIDs.count > index, index >= 0
       else {
-        return nil
+        return .failure(BadRecordError())
       }
-      return try accessor
-        .knownScope(id: nodeIDs[index])
-        .containing(SubNode.self)
+      do {
+        let value = try accessor
+          .knownScope(id: nodeIDs[index])
+          .containing(SubNode.self)
+        return .success(value)
+      } catch {
+        return .failure(error)
+      }
     }
   }
 }
