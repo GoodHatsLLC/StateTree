@@ -19,19 +19,32 @@ public protocol RouterType<Value> {
 
   @_spi(Implementation)
   @TreeActor
-  func current(at fieldID: FieldID, in: Runtime) throws -> Value
+  func current(
+    at fieldID: FieldID,
+    in: Runtime
+  ) throws -> Value
+
   @_spi(Implementation)
   @TreeActor
-  mutating func apply(at fieldID: FieldID, in: Runtime) throws
+  mutating func apply(
+    at fieldID: FieldID,
+    in: Runtime
+  ) throws
+
   @TreeActor
   mutating func update(from: Self)
+
   @TreeActor
   mutating func assign(
     _ context: RouterRuleContext
   )
+
   @_spi(Implementation)
   @TreeActor
-  mutating func syncToState(field fieldID: FieldID, in: Runtime) throws -> [AnyScope]
+  mutating func syncToState(
+    field fieldID: FieldID,
+    in: Runtime
+  ) throws -> [AnyScope]
 }
 
 // MARK: - UnassignedRouterError

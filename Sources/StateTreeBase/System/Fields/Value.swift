@@ -51,6 +51,8 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
 
   public typealias WrappedValue = WrappedValue
 
+  @_spi(Implementation) public let initial: WrappedValue
+
   @TreeActor public var wrappedValue: WrappedValue {
     get {
       let value = inner
@@ -64,13 +66,6 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
         .treeValue?
         .setValue(to: newValue)
     }
-  }
-
-  public var projectedValue: Projection<WrappedValue> {
-    .init(
-      self,
-      initial: initial
-    )
   }
 
   public var value: WrappedValue {
@@ -112,8 +107,6 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
   }
 
   let inner: InnerValue
-
-  let initial: WrappedValue
 
   var access: any TreeValueAccess { inner }
   var anyInitial: any TreeState {

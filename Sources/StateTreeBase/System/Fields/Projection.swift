@@ -82,13 +82,6 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
     }
   }
 
-  public var projectedValue: Projection<Value> {
-    get {
-      .init(self, initial: value)
-    }
-    nonmutating set { }
-  }
-
   public var source: ProjectionSource {
     access.source
   }

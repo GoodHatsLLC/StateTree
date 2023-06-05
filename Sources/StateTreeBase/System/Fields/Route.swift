@@ -28,10 +28,6 @@ public struct Route<Router: RouterType>: RouteField {
     inner.value
   }
 
-  public var projectedValue: Route<Router> {
-    self
-  }
-
   // MARK: Internal
 
   let inner: InnerRouteField<Router>
