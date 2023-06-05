@@ -53,6 +53,15 @@ extension Union {
       }
     }
 
+    public func map<NewA, NewB>(
+      a aMap: (A) -> NewA,
+      b bMap: (B) -> NewB
+    ) -> Union.Two<NewA, NewB> {
+      switch self {
+      case .a(let a): return Union.Two<NewA, NewB>.a(aMap(a))
+      case .b(let b): return Union.Two<NewA, NewB>.b(bMap(b))
+      }
+    }
   }
 }
 
@@ -104,6 +113,18 @@ extension Union {
       case (.b, .b): return true
       case (.c, .c): return true
       default: return false
+      }
+    }
+
+    public func map<NewA, NewB, NewC>(
+      a aMap: (A) -> NewA,
+      b bMap: (B) -> NewB,
+      c cMap: (C) -> NewC
+    ) -> Union.Three<NewA, NewB, NewC> {
+      switch self {
+      case .a(let a): return Union.Three<NewA, NewB, NewC>.a(aMap(a))
+      case .b(let b): return Union.Three<NewA, NewB, NewC>.b(bMap(b))
+      case .c(let c): return Union.Three<NewA, NewB, NewC>.c(cMap(c))
       }
     }
 

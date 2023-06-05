@@ -267,12 +267,12 @@ extension Runtime {
   }
 
   @_spi(Implementation)
-  public func getScope(at routeID: RouteSource) throws -> AnyScope {
+  public func getScope(at routeID: RouteID) throws -> AnyScope {
     guard
       let nodeID = try state
         .getRoutedNodeID(at: routeID)
     else {
-      throw NodeNotFoundError(id: routeID.nodeID)
+      throw RouteNotFoundError(id: routeID)
     }
     return try getScope(for: nodeID)
   }
@@ -303,6 +303,16 @@ extension Runtime {
 
   public func snapshot() -> TreeStateRecord {
     state.snapshot()
+  }
+
+  @_spi(Implementation)
+  public func getRouteRecord(at fieldID: FieldID) -> RouteRecord? {
+    do {
+      return try state.getRouteRecord(at: fieldID)
+    } catch {
+      assertionFailure(error.localizedDescription)
+      return nil
+    }
   }
 
   // MARK: Internal
@@ -378,21 +388,12 @@ extension Runtime {
     }
   }
 
-  func getRouteRecord(at fieldID: FieldID) -> RouteRecord? {
-    do {
-      return try state.getRouteRecord(at: fieldID)
-    } catch {
-      assertionFailure(error.localizedDescription)
-      return nil
-    }
-  }
-
   @TreeActor
   func getRecord(_ nodeID: NodeID) -> NodeRecord? {
     state.getRecord(nodeID)
   }
 
-  func getRoutedRecord(at routeID: RouteSource) -> NodeRecord? {
+  func getRoutedRecord(at routeID: RouteID) -> NodeRecord? {
     if
       let nodeID = try? state.getRoutedNodeID(at: routeID),
       let record = state.getRecord(nodeID)

@@ -53,6 +53,13 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
 
   @_spi(Implementation) public let initial: WrappedValue
 
+  public var projectedValue: Projection<WrappedValue> {
+    .init(
+      self,
+      initial: initial
+    )
+  }
+
   @TreeActor public var wrappedValue: WrappedValue {
     get {
       let value = inner

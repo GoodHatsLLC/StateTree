@@ -112,7 +112,7 @@ extension StateStorage {
     return try state.getRouteRecord(at: route)
   }
 
-  func getRoutedNodeID(at routeID: RouteSource) throws -> NodeID? {
+  func getRoutedNodeID(at routeID: RouteID) throws -> NodeID? {
     try state.getRoutedNodeID(at: routeID)
   }
 

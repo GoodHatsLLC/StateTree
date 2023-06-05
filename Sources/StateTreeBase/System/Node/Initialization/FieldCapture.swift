@@ -4,7 +4,7 @@ enum FieldCapture: Equatable {
 
   case dependency(Structure<any DependencyField>)
   case projection(Structure<any ProjectionField>)
-  case route(Structure<any RouteField>)
+  case route(Structure<any RouteFieldInternal>)
   case scope(Structure<any ScopeField>)
   case value(Structure<any ValueField>, InitialValue)
   case unmanaged(Structure<Any>)
@@ -34,7 +34,7 @@ enum FieldCapture: Equatable {
           typeDescription: typeDescription
         )
       )
-    case let field as any RouteField:
+    case let field as any RouteFieldInternal:
       self = .route(
         Structure(
           offset: offset,

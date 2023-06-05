@@ -88,12 +88,12 @@ let package = Package(
 //        "StateTreeSwiftUI",
 //      ]
 //    ),
-//    .library(
-//      name: "StateTreeCallbacks",
-//      targets: [
-//        "StateTreeCallbacks",
-//      ]
-//    ),
+    .library(
+      name: "StateTreeImperativeUI",
+      targets: [
+        "StateTreeImperativeUI",
+      ]
+    ),
 //    .library(
 //      name: "StateTreeTesting",
 //      targets: [
@@ -192,14 +192,14 @@ let package = Package(
 //      ],
 //      swiftSettings: Build.globalSwiftSettings
 //    ),
-//    .target(
-//      name: "StateTreeCallbacks",
-//      dependencies: [
-//        "StateTree",
-//        "TreeActor",
-//      ],
-//      swiftSettings: Build.globalSwiftSettings
-//    ),
+    .target(
+      name: "StateTreeImperativeUI",
+      dependencies: [
+        "StateTreeBase",
+        "TreeActor",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
     .target(
       name: "StateTreePlayback",
       dependencies: [
@@ -210,17 +210,19 @@ let package = Package(
     .testTarget(
       name: "StateTreeBaseTests",
       dependencies: [
+        "StateTree",
         "StateTreeBase",
         "Disposable",
         .product(name: "HeapModule", package: "swift-collections"),
       ]
     ),
-//    .testTarget(
-//      name: "StateTreeCallbacksTests",
-//      dependencies: [
-//        "StateTreeCallbacks",
-//      ]
-//    ),
+    .testTarget(
+      name: "StateTreeImperativeUITests",
+      dependencies: [
+        "StateTree",
+        "StateTreeImperativeUI",
+      ]
+    ),
 //    .testTarget(
 //      name: "StateTreePlaybackTests",
 //      dependencies: [

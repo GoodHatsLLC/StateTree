@@ -1,5 +1,5 @@
 import Disposable
-import StateTreeBase
+import StateTree
 import XCTest
 
 // MARK: - Union3RouterTests

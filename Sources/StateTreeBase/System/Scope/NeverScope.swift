@@ -7,7 +7,7 @@ import OrderedCollections
 
 // MARK: - NeverScope
 
-struct NeverScope: ScopeType {
+struct NeverScope: ScopeTypeInternal {
 
   // MARK: Lifecycle
 

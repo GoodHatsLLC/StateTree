@@ -185,7 +185,7 @@ extension TreeStateRecord {
     }
   }
 
-  func getRoutedNodeID(at routeID: RouteSource) throws -> NodeID? {
+  func getRoutedNodeID(at routeID: RouteID) throws -> NodeID? {
     if
       let root = root,
       routeID.fieldID == .system
@@ -194,7 +194,7 @@ extension TreeStateRecord {
     }
 
     guard
-      let hostRecord = nodes[routeID.nodeID],
+      let hostRecord = nodes[routeID.fieldID.nodeID],
       hostRecord.records.count > routeID.fieldID.offset
     else {
       return nil

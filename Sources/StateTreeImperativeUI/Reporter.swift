@@ -1,12 +1,16 @@
 import Disposable
 import Emitter
-@_spi(Implementation) import StateTree
+@_spi(Implementation) import StateTreeBase
 import TreeActor
 
-// MARK: - ObservableNode
+// MARK: - Reporter + ScopeAccess
+
+extension Reporter: ScopeAccess { }
+
+// MARK: - Reporter
 
 @TreeActor
-final class Reporter<N: Node> {
+public final class Reporter<N: Node> {
 
   // MARK: Lifecycle
 
@@ -16,25 +20,29 @@ final class Reporter<N: Node> {
     self.disposable = start()
   }
 
+  // MARK: Public
+
+  public typealias NodeType = N
+
+  @_spi(Implementation) public let scope: NodeScope<N>
+
   // MARK: Internal
 
-  let scope: NodeScope<N>
-
   func onChange(
-    owner: ObjectIdentifier,
+    subscriber: some Hashable,
     _ callback: @escaping @Sendable @TreeActor () -> Void
   ) {
-    onChangeSubscribers[owner, default: []].append(callback)
+    onChangeSubscribers[AnyHashable(subscriber), default: []].append(callback)
   }
 
   func onStop(
-    owner: ObjectIdentifier,
+    subscriber: some Hashable,
     _ callback: @escaping @Sendable @TreeActor () -> Void
   ) {
-    onStopSubscribers[owner, default: []].append(callback)
+    onStopSubscribers[AnyHashable(subscriber), default: []].append(callback)
   }
 
-  func unregister(subscriber: ObjectIdentifier) {
+  func unregister(subscriber: some Hashable) {
     onChangeSubscribers.removeValue(forKey: subscriber)
     onStopSubscribers.removeValue(forKey: subscriber)
   }
@@ -66,8 +74,8 @@ final class Reporter<N: Node> {
   // MARK: Private
 
   private let id: NodeID
-  private var onChangeSubscribers: [ObjectIdentifier: [@Sendable @TreeActor () -> Void]] = [:]
-  private var onStopSubscribers: [ObjectIdentifier: [@Sendable @TreeActor () -> Void]] = [:]
+  private var onChangeSubscribers: [AnyHashable: [@Sendable @TreeActor () -> Void]] = [:]
+  private var onStopSubscribers: [AnyHashable: [@Sendable @TreeActor () -> Void]] = [:]
   private var disposable: AutoDisposable?
   private var runtime: Runtime?
 

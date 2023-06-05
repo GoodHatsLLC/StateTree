@@ -32,28 +32,6 @@ public struct InternalStateInconsistency: Error, CustomStringConvertible {
   }
 }
 
-// MARK: - CycleError
-
-/// A `CycleError` indicates  a cyclical dependency between ``Node`` ``Rules`` in the tree.
-///
-/// When a cycle is detected this error is thrown and emitted to ``RuntimeConfiguration``
-/// subscribers.
-/// The cycle triggering change is reverted in order to keep the tree's state stable.
-///
-/// > Important:
-///  A cycle is defined as any state update which triggers more than two updates to any node's
-/// values.
-public struct CycleError: Error, CustomStringConvertible {
-  let cycle: [StateChangeMetadata]
-  public var description: String {
-    (
-      ["🔄 Cycle Found:"]
-        + cycle
-        .map { "  - \($0)" }
-    ).joined(separator: "\n")
-  }
-}
-
 // MARK: - UnexpectedMemberTypeError
 
 struct UnexpectedMemberTypeError: Error { }
@@ -62,6 +40,12 @@ struct UnexpectedMemberTypeError: Error { }
 
 struct NodeNotFoundError: Error {
   let id: NodeID
+}
+
+// MARK: - RouteNotFoundError
+
+struct RouteNotFoundError: Error {
+  let id: RouteID
 }
 
 // MARK: - NodesNotFoundError

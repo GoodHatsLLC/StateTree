@@ -1,4 +1,4 @@
-@_spi(Implementation)
+
 extension Optional {
   public func orThrow(_ error: Error) throws -> Wrapped {
     switch self {

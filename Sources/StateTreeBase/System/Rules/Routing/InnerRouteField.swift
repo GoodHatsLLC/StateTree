@@ -28,6 +28,8 @@ final class InnerRouteField<Router: RouterType> {
 
   // MARK: Internal
 
+  private(set) var fieldID: FieldID?
+
   var appliedRouter: Router? {
     willSet {
       // if setting or unsetting the router override
@@ -47,7 +49,6 @@ final class InnerRouteField<Router: RouterType> {
   // MARK: Private
 
   private var runtime: Runtime?
-  private var fieldID: FieldID?
   private var rules: RouterRuleContext?
   private var activeDefault: Router?
   private let defaultRouter: Router

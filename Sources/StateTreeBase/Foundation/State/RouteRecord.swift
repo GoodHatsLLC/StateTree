@@ -64,7 +64,7 @@ public enum RouteRecord: TreeState {
       Array(idMap.values)
     }
 
-    func nodeID(matching route: RouteSource) -> NodeID? {
+    func nodeID(matching route: RouteID) -> NodeID? {
       route.identity.flatMap { idMap[$0] }
     }
 
@@ -104,7 +104,7 @@ public enum RouteRecord: TreeState {
 
   // MARK: Internal
 
-  func nodeID(matching route: RouteSource) -> NodeID? {
+  func nodeID(matching route: RouteID) -> NodeID? {
     switch self {
     case .single(let nodeID):
       return nodeID

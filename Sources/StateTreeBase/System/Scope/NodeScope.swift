@@ -78,9 +78,9 @@ extension NodeScope: Hashable {
   }
 }
 
-// MARK: ScopeType
+// MARK: ScopeTypeInternal
 
-extension NodeScope: ScopeType {
+extension NodeScope: ScopeTypeInternal {
 
   // MARK: Public
 

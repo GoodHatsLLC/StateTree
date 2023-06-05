@@ -82,6 +82,10 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
     }
   }
 
+  public var projectedValue: Projection<Value> {
+    .init(self, initial: value)
+  }
+
   public var source: ProjectionSource {
     access.source
   }

@@ -135,7 +135,6 @@ public struct ListRouter<Element: Node>: RouterType {
   }
 
   public mutating func update(from other: ListRouter<Element>) {
-    // FIXME: two different attachment points can have the same LSID values
     if other.ids != ids {
       self = other
     }

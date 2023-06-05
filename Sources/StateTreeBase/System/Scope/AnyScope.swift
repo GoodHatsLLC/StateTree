@@ -13,7 +13,7 @@ public struct AnyScope: Hashable {
 
   // MARK: Lifecycle
 
-  nonisolated init(scope: some ScopeType<some Node>) {
+  nonisolated init(scope: some ScopeTypeInternal<some Node>) {
     self.nid = scope.nid
     self.depth = scope.depth
     self.underlying = scope
@@ -23,6 +23,10 @@ public struct AnyScope: Hashable {
   }
 
   // MARK: Public
+
+  @_spi(Implementation) public var underlyingScopeType: any ScopeType {
+    underlying
+  }
 
   public nonisolated static func == (lhs: AnyScope, rhs: AnyScope) -> Bool {
     lhs.nid == rhs.nid
@@ -37,7 +41,7 @@ public struct AnyScope: Hashable {
 
   // MARK: Internal
 
-  let underlying: any ScopeType
+  let underlying: any ScopeTypeInternal
 
   let nid: NodeID
   let depth: Int

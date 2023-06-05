@@ -1,5 +1,6 @@
 import Disposable
 import Emitter
+import StateTree
 import XCTest
 @_spi(Implementation) @testable import StateTreeBase
 
