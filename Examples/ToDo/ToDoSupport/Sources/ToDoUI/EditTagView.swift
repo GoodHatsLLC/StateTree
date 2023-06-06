@@ -41,7 +41,7 @@ struct EditTagView: View {
       }
     }.padding(0.5.su)
       .popover(isPresented: $showColorPicker, attachmentAnchor: .point(.top)) {
-        ColorPicker("Tag Color", selection: $tagEditor.editingTag.colour.swiftUI)
+        ColorPicker("Tag Color", selection: $tagEditor.$editingTag.colour.swiftUI)
           .padding(1.su)
       }
   }

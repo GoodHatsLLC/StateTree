@@ -11,7 +11,9 @@ extension TreeNode: ScopeAccess { }
 
 @propertyWrapper
 @dynamicMemberLookup
-public struct TreeNode<NodeType: Node>: DynamicProperty, RouterAccess, ProjectionAccess {
+public struct TreeNode<NodeType: Node>: DynamicProperty, RouterAccess, ProjectionAccess,
+  BindingAccess
+{
 
   // MARK: Lifecycle
 

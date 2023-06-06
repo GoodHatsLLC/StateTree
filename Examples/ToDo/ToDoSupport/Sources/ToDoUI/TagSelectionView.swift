@@ -9,13 +9,13 @@ struct TagSelectionView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      TextField("Filter", text: tagSelector.$searchText.binding())
+      TextField("Filter", text: $tagSelector.$searchText)
         .textFieldStyle(.roundedBorder)
         .padding(0.5.su)
       List(
         tagSelector.matchingTags,
         id: \.id,
-        selection: $tagSelector.selectedMatchingTags
+        selection: $tagSelector.$selectedMatchingTags
       ) { tag in
         Text(tag.name)
           .padding([.horizontal], 1.su)

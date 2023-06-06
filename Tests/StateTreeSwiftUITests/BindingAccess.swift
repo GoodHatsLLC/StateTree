@@ -32,7 +32,10 @@ final class BindingAccess: XCTestCase {
     @TreeNode var subNode: Child
     _subNode = $root.$single
     XCTAssertNotNil($subNode.$v0 as Binding<Int>)
+    XCTAssertNotNil($subNode.v0 as Binding<Int>)
     XCTAssertNotNil($subNode.$v1 as Binding<Int>)
+    XCTAssertNotNil($subNode.v1 as Binding<Int>)
+    XCTAssertNotNil($subNode.proxy as Binding<Int>)
   }
 }
 
@@ -41,6 +44,15 @@ extension BindingAccess {
   struct Child: Node {
     @Value var v0: Int = 0
     @Projection var v1: Int
+    var proxy: Int {
+      get {
+        v0
+      }
+      set {
+        v0 = newValue
+      }
+    }
+
     var rules: some Rules { () }
   }
 

@@ -13,9 +13,9 @@ public struct ToDoManager: Node {
 
   // MARK: Public
 
-  @Route([ListedToDo].self) public var todoList
-  @Route(SelectedToDo.self) public var selectedToDo
-  @Route(TagEditor.self) public var tagEditor
+  @Route public var todoList: [ListedToDo] = []
+  @Route public var selectedToDo: SelectedToDo? = nil
+  @Route public var tagEditor: TagEditor? = nil
 
   @Value public var selectedRecord: UUID? = nil
   @Value public var selectedTag: UUID? = nil
@@ -25,30 +25,27 @@ public struct ToDoManager: Node {
       let id = selectedRecord,
       let selected = $records[id].compact()
     {
-      $selectedToDo
-        .route(
-          to: SelectedToDo(
-            record: selected,
-            allTags: $allTags
-          )
-        )
-    }
-    $todoList.route {
-      $records
-        .values
-        .map { record in
-          ListedToDo(record: record)
-        }
-    }
-
-    if showEditor {
-      $tagEditor.route(
-        to: TagEditor(
-          selected: $selectedTag,
-          allTags: $allTags,
-          isActive: $showEditor
-        )
+      Serve(
+        SelectedToDo(
+          record: selected,
+          allTags: $allTags
+        ),
+        at: $selectedToDo
       )
+      Serve(data: $records.values, at: $todoList) { datum in
+        ListedToDo(record: datum)
+      }
+
+      if showEditor {
+        Serve(
+          TagEditor(
+            selected: $selectedTag,
+            allTags: $allTags,
+            isActive: $showEditor
+          ),
+          at: $tagEditor
+        )
+      }
     }
   }
 

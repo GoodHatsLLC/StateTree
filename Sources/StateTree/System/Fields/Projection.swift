@@ -122,3 +122,9 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
   private let access: any Accessor<Value>
 
 }
+
+// MARK: Identifiable
+
+extension Projection: Identifiable where Value: Identifiable {
+  public var id: Value.ID { value.id }
+}

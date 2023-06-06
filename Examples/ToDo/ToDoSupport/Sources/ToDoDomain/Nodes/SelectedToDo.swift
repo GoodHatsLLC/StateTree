@@ -7,7 +7,7 @@ public struct SelectedToDo: Node, Identifiable {
 
   // MARK: Public
 
-  @Route(TagSelector.self) public var tagSelector
+  @Route public var tagSelector: TagSelector? = nil
 
   public var id: UUID {
     record.id
@@ -38,8 +38,10 @@ public struct SelectedToDo: Node, Identifiable {
   }
 
   public var rules: some Rules {
-    $tagSelector
-      .route(to: TagSelector(allTags: $allTags, todo: $record))
+    Serve(
+      TagSelector(allTags: $allTags, todo: $record),
+      at: $tagSelector
+    )
   }
 
   // MARK: Internal
