@@ -20,26 +20,17 @@ public struct Counter: Node, Identifiable {
   }
 
   public var rules: some Rules {
-    ()
-    // We could also enforce the count with a rule set.
-    //
-    // if count > 10 {
-    //   count = 10
-    // } else if count < -10 {
-    //   count = -10
-    // }
+    OnUpdate(count) { _ in
+      count = max(min(10, count), -10)
+    }
   }
 
   public func increment() {
-    if count < 10 {
-      count += 1
-    }
+    count += 1
   }
 
   public func decrement() {
-    if count > -10 {
-      count -= 1
-    }
+    count -= 1
   }
 
   public func delete() {

@@ -1,107 +1,123 @@
-// @_spi(Implementation) import StateTree
-// import TreeActor
-//
-// @propertyWrapper
-// public struct Reported<N: Node>: RouterAccess {
-//  public typealias NodeType = N
-//
-//
-//  // MARK: Lifecycle
-//
-//  public init(projectedValue: Reporter<N>) {
-//    self.reporter = projectedValue
-//    self.nodeID = projectedValue.scope.nid
-//  }
-//
-//  @_spi(Implementation)
-//  @TreeActor
-//  public init(_ tree: NodeScope<N>) {
-//    let reporter = Reporter(scope: tree)
-//    self.reporter = reporter
-//    self.nodeID = reporter.scope.nid
-//  }
-//
-//  // MARK: Public
-//
-//  @_spi(Implementation) public var scope: NodeScope<N> {
-//    reporter.scope
-//  }
-//
-//  @_spi(Implementation) public var access: Reporter<N> {
-//    reporter
-//  }
-//
-//  public var wrappedValue: N {
-//    scope.node
-//  }
-//
-//  public var projectedValue: Reporter<N> {
-//    reporter
-//  }
-//
-//  @TreeActor
-//  public func onChange(
-//    subscriber: AnyObject,
-//    _ callback: @escaping @Sendable @TreeActor () -> Void
-//  ) {
-//    reporter
-//      .onChange(
-//        subscriber: ObjectIdentifier(subscriber),
-//        callback
-//      )
-//  }
-//
-//  @TreeActor
-//  public func onChange(
-//    subscriber: some Hashable,
-//    _ callback: @escaping @Sendable @TreeActor () -> Void
-//  ) {
-//    reporter
-//      .onChange(
-//        subscriber: subscriber,
-//        callback
-//      )
-//  }
-//
-//  @TreeActor
-//  public func onStop(
-//    subscriber: AnyObject,
-//    _ callback: @escaping @Sendable @TreeActor () -> Void
-//  ) {
-//    reporter.onStop(
-//      subscriber: ObjectIdentifier(subscriber),
-//      callback
-//    )
-//  }
-//
-//  @TreeActor
-//  public func onStop(
-//    subscriber: some Hashable,
-//    _ callback: @escaping @Sendable @TreeActor () -> Void
-//  ) {
-//    reporter.onStop(
-//      subscriber: subscriber,
-//      callback
-//    )
-//  }
-//
-//  @TreeActor
-//  public func unregister(subscriber: AnyObject) {
-//    reporter.unregister(
-//      subscriber: ObjectIdentifier(subscriber)
-//    )
-//  }
-//
-//  @TreeActor
-//  public func unregister(subscriber: some Hashable) {
-//    reporter.unregister(
-//      subscriber: subscriber
-//    )
-//  }
-//
-//  // MARK: Private
-//
-//  private let reporter: Reporter<N>
-//  private let nodeID: NodeID
-//
-// }
+import Disposable
+import Emitter
+@_spi(Implementation) import StateTree
+import TreeActor
+import Utilities
+
+// MARK: - Reported + ScopeAccess
+
+extension Reported: ScopeAccess { }
+
+// MARK: - Reported
+
+@propertyWrapper
+@TreeActor
+public final class Reported<NodeType: Node>: RouterAccess {
+
+  // MARK: Lifecycle
+
+  init(scope: NodeScope<NodeType>) {
+    self.scope = scope
+    self.id = scope.nid
+  }
+
+  // MARK: Public
+
+  public typealias Accessor = Reported<NodeType>
+
+  @_spi(Implementation) public let scope: NodeScope<NodeType>
+
+  @_spi(Implementation) public var access: Reported<NodeType> { self }
+
+  public var wrappedValue: NodeType {
+    get { scope.node }
+    set {
+      runtimeWarning(
+        "attempting to write to unmanaged node components. this won't be reflected. %@",
+        [String(describing: scope.node)]
+      )
+    }
+  }
+
+  public var projectedValue: Reported<NodeType> {
+    self
+  }
+
+  public func onChange(
+    subscriber: some Hashable,
+    _ callback: @escaping @Sendable @TreeActor () -> Void
+  ) {
+    startIfNeeded()
+    onChangeSubscribers[AnyHashable(subscriber), default: []].append(callback)
+  }
+
+  public func onChange(
+    subscriber: AnyObject,
+    _ callback: @escaping @Sendable @TreeActor () -> Void
+  ) {
+    onChange(subscriber: ObjectIdentifier(subscriber), callback)
+  }
+
+  public func onStop(
+    subscriber: some Hashable,
+    _ callback: @escaping @Sendable @TreeActor () -> Void
+  ) {
+    startIfNeeded()
+    onStopSubscribers[AnyHashable(subscriber), default: []].append(callback)
+  }
+
+  public func onStop(
+    subscriber: AnyObject,
+    _ callback: @escaping @Sendable @TreeActor () -> Void
+  ) {
+    onStop(subscriber: ObjectIdentifier(subscriber), callback)
+  }
+
+  public func unregister(subscriber: some Hashable) {
+    onChangeSubscribers.removeValue(forKey: subscriber)
+    onStopSubscribers.removeValue(forKey: subscriber)
+  }
+
+  public func unregister(subscriber: AnyObject) {
+    unregister(subscriber: ObjectIdentifier(subscriber))
+  }
+
+  // MARK: Private
+
+  private let id: NodeID
+  private var onChangeSubscribers: [AnyHashable: [@Sendable @TreeActor () -> Void]] = [:]
+  private var onStopSubscribers: [AnyHashable: [@Sendable @TreeActor () -> Void]] = [:]
+  private var disposable: AutoDisposable?
+  private var runtime: Runtime?
+
+  private func startIfNeeded() {
+    disposable = disposable ?? start()
+  }
+
+  private func start() -> AutoDisposable {
+    scope
+      .didUpdateEmitter
+      .subscribe {
+        if Task.isCancelled {
+          for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
+            sub()
+          }
+          self.disposable?.dispose()
+          self.disposable = nil
+          return
+        }
+        for sub in self.onChangeSubscribers.values.flatMap({ $0 }) {
+          sub()
+        }
+      } finished: {
+        for sub in self.onStopSubscribers.values.flatMap({ $0 }) {
+          sub()
+        }
+        self.onStopSubscribers = [:]
+        self.onChangeSubscribers = [:]
+        self.disposable?.dispose()
+        self.disposable = nil
+      }
+  }
+
+}

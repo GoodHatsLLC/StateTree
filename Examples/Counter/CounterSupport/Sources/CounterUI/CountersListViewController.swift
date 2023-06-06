@@ -22,7 +22,7 @@ public final class CountersListViewController: UIViewController {
 
   // MARK: Private
 
-  /// The `@Updating` property wrapper provides callback allowing
+  /// The `@Reported` property wrapper provides callback allowing
   /// us to update values in UIKit based on changes to the model's
   /// underlying data.
   @Reported private var model: CountersList
@@ -80,10 +80,7 @@ extension CountersListViewController: UITableViewDelegate {
   )
     -> UISwipeActionsConfiguration?
   {
-    guard let counter = model.counters?[indexPath.row]
-    else {
-      return nil
-    }
+    let counter = model.counters[indexPath.row]
     return .init(
       actions: [
         UIContextualAction(
@@ -109,7 +106,7 @@ extension CountersListViewController: UITableViewDataSource {
   )
     -> Int
   {
-    model.counters?.count ?? 0
+    model.counters.count
   }
 
   public func numberOfSections(
@@ -135,9 +132,9 @@ extension CountersListViewController: UITableViewDataSource {
     forRowAt indexPath: IndexPath
   ) {
     if
-      let cell = cell as? IconCell,
-      let counter = model.counters?[indexPath.row]
+      let cell = cell as? IconCell
     {
+      let counter = model.counters[indexPath.row]
       cell.icon = counter.emoji.image(size: 30)
       cell.count = counter.count
     }

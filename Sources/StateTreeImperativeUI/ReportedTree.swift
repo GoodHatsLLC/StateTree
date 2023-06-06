@@ -20,8 +20,8 @@ public final class ReportedTree<N: Node> {
 
   // MARK: Public
 
-  public var root: Reporter<N> {
-    Reporter(scope: handle.root)
+  public var root: Reported<N> {
+    Reported(scope: handle.root)
   }
 
   public func stop() throws {

@@ -14,33 +14,33 @@ public protocol RouterAccess {
 extension RouterAccess {
   public subscript<SubNode: Node>(
     dynamicMember dynamicMember: KeyPath<NodeType, Route<SingleRouter<SubNode>>>
-  ) -> Reporter<SubNode> {
-    try! Reporter(scope: access.access(via: dynamicMember))
+  ) -> Reported<SubNode> {
+    try! Reported(scope: access.access(via: dynamicMember))
   }
 
   public subscript<SubNode: Node>(
     dynamicMember dynamicMember: KeyPath<NodeType, Route<MaybeSingleRouter<SubNode>>>
-  ) -> Reporter<SubNode>? {
-    try! access.access(via: dynamicMember).map { Reporter(scope: $0) }
+  ) -> Reported<SubNode>? {
+    try! access.access(via: dynamicMember).map { Reported(scope: $0) }
   }
 
   public subscript<SubNodeA: Node, SubNodeB: Node>(
     dynamicMember dynamicMember: KeyPath<NodeType, Route<Union2Router<SubNodeA, SubNodeB>>>
-  ) -> Union.Two<Reporter<SubNodeA>, Reporter<SubNodeB>> {
+  ) -> Union.Two<Reported<SubNodeA>, Reported<SubNodeB>> {
     try! access.access(via: dynamicMember)
       .map(
-        a: { Reporter(scope: $0) },
-        b: { Reporter(scope: $0) }
+        a: { Reported(scope: $0) },
+        b: { Reported(scope: $0) }
       )
   }
 
   public subscript<SubNodeA: Node, SubNodeB: Node>(
     dynamicMember dynamicMember: KeyPath<NodeType, Route<MaybeUnion2Router<SubNodeA, SubNodeB>>>
-  ) -> Union.Two<Reporter<SubNodeA>, Reporter<SubNodeB>>? {
+  ) -> Union.Two<Reported<SubNodeA>, Reported<SubNodeB>>? {
     try! access.access(via: dynamicMember)?
       .map(
-        a: { Reporter(scope: $0) },
-        b: { Reporter(scope: $0) }
+        a: { Reported(scope: $0) },
+        b: { Reported(scope: $0) }
       )
   }
 
@@ -49,12 +49,12 @@ extension RouterAccess {
       NodeType,
       Route<Union3Router<SubNodeA, SubNodeB, SubNodeC>>
     >
-  ) -> Union.Three<Reporter<SubNodeA>, Reporter<SubNodeB>, Reporter<SubNodeC>> {
+  ) -> Union.Three<Reported<SubNodeA>, Reported<SubNodeB>, Reported<SubNodeC>> {
     try! access.access(via: dynamicMember)
       .map(
-        a: { Reporter(scope: $0) },
-        b: { Reporter(scope: $0) },
-        c: { Reporter(scope: $0) }
+        a: { Reported(scope: $0) },
+        b: { Reported(scope: $0) },
+        c: { Reported(scope: $0) }
       )
   }
 
@@ -63,24 +63,24 @@ extension RouterAccess {
       NodeType,
       Route<MaybeUnion3Router<SubNodeA, SubNodeB, SubNodeC>>
     >
-  ) -> Union.Three<Reporter<SubNodeA>, Reporter<SubNodeB>, Reporter<SubNodeC>>? {
+  ) -> Union.Three<Reported<SubNodeA>, Reported<SubNodeB>, Reported<SubNodeC>>? {
     try! access.access(via: dynamicMember)?
       .map(
-        a: { Reporter(scope: $0) },
-        b: { Reporter(scope: $0) },
-        c: { Reporter(scope: $0) }
+        a: { Reported(scope: $0) },
+        b: { Reported(scope: $0) },
+        c: { Reported(scope: $0) }
       )
   }
 
   public subscript<SubNode: Node>(
     dynamicMember dynamicMember: KeyPath<NodeType, Route<ListRouter<SubNode>>>
-  ) -> DeferredList<Int, Reporter<SubNode>, Error> {
+  ) -> DeferredList<Int, Reported<SubNode>, Error> {
     let list = try! access.access(via: dynamicMember)
     return DeferredList(indices: list.startIndex ..< list.endIndex) { index in
       (try? list.element(at: index))
         .unwrappingResult()
         .map { scope in
-          Reporter(scope: scope)
+          Reported(scope: scope)
         }
         .mapError { $0 }
     }

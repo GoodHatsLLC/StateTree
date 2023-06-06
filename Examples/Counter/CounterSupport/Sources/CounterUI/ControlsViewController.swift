@@ -8,7 +8,7 @@ final class ControlsViewController: UIViewController {
 
   // MARK: Lifecycle
 
-  init(model: Reporter<Counter>) {
+  init(model: Reported<Counter>) {
     _model = model
     super.init(nibName: nil, bundle: nil)
   }

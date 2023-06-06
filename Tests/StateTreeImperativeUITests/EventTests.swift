@@ -11,7 +11,7 @@ final class EventTests: XCTestCase {
 
   func test_startStop() async throws {
     let tree = try ReportedTree(tree: Tree(root: Parent()))
-    @Reporter var root: Parent
+    @Reported var root: Parent
     _root = tree.root
     var rootDidStopCount = 0
     $root.onStop(subscriber: self) {
@@ -28,7 +28,7 @@ final class EventTests: XCTestCase {
         root: Parent()
       )
     )
-    @Reporter var root: Parent
+    @Reported var root: Parent
     _root = tree.root
     var rootFireCount = 0
     $root.onChange(subscriber: self) {
@@ -43,7 +43,7 @@ final class EventTests: XCTestCase {
 
   func test_childUpdates() async throws {
     let tree = try ReportedTree(tree: Tree(root: Parent()))
-    @Reporter var root: Parent
+    @Reported var root: Parent
     _root = tree.root
 
     var emitCount = 0

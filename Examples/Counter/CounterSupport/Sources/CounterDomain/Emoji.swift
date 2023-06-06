@@ -1,11 +1,6 @@
 import UIKit
 
 /// A utility which hashes values into an emoji representation.
-///
-/// The code here is unrelated to StateTree but makes for a
-/// nice way to show that collection models (the counters) can
-/// contain data that must remains stable when their owning
-/// collection is modified.
 public struct Emoji: Hashable {
 
   // MARK: Lifecycle
