@@ -53,6 +53,9 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
     else {
       throw InvalidSyncFailure()
     }
+    if (try? runtime.getScope(for: union3Record.id)) != nil {
+      return []
+    }
     let uninitialized = UninitializedNode(capture: capturedNode, runtime: runtime)
     switch union3Record {
     case .a:

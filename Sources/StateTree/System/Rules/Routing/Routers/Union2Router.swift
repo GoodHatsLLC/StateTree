@@ -51,6 +51,9 @@ public struct Union2Router<A: Node, B: Node>: RouterType {
     else {
       throw InvalidSyncFailure()
     }
+    if (try? runtime.getScope(for: union2Record.id)) != nil {
+      return []
+    }
     let uninitialized = UninitializedNode(capture: capturedNode, runtime: runtime)
     switch union2Record {
     case .a:

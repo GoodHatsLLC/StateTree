@@ -62,6 +62,9 @@ public struct MaybeUnion3Router<A: Node, B: Node, C: Node>: RouterType {
     else {
       throw InvalidSyncFailure()
     }
+    if (try? runtime.getScope(for: requiredCase.id)) != nil {
+      return []
+    }
     let uninitialized = UninitializedNode(capture: capture, runtime: runtime)
     switch requiredCase {
     case .a:

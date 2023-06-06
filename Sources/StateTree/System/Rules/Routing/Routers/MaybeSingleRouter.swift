@@ -49,6 +49,9 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
     else {
       throw InvalidSyncFailure()
     }
+    if (try? runtime.getScope(for: requiredID)) != nil {
+      return []
+    }
     let capture = NodeCapture(node)
     let uninitialized = UninitializedNode(capture: capture, runtime: runtime)
     let initialized = try uninitialized.reinitializeNode(

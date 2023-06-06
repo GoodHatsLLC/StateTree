@@ -59,6 +59,9 @@ public struct SingleRouter<NodeType: Node>: RouterType {
     else {
       throw InvalidSyncFailure()
     }
+    if (try? runtime.getScope(for: singleRecord)) != nil {
+      return []
+    }
     let capture = NodeCapture(capturedNode)
     let uninitialized = UninitializedNode(capture: capture, runtime: runtime)
     let initialized = try uninitialized.reinitializeNode(
