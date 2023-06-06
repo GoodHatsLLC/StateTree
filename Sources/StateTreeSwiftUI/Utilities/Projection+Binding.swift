@@ -12,9 +12,9 @@ extension Projection {
     )
   }
 
-  // MARK: Public
+  // MARK: Internal
 
-  public func binding() -> Binding<Value> {
+  func binding() -> Binding<Value> {
     Binding {
       self.wrappedValue
     } set: { newValue in

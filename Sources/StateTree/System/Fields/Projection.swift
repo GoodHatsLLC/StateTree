@@ -82,7 +82,7 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
     }
   }
 
-  public var projectedValue: Projection<Value> {
+  @_disfavoredOverload public var projectedValue: Projection<Value> {
     .init(self, initial: value)
   }
 

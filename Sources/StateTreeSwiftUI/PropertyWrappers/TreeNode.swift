@@ -3,11 +3,15 @@ import Disposable
 @_spi(Implementation) import StateTree
 import SwiftUI
 
+// MARK: - TreeNode + ScopeAccess
+
+extension TreeNode: ScopeAccess { }
+
 // MARK: - TreeNode
 
 @propertyWrapper
 @dynamicMemberLookup
-public struct TreeNode<NodeType: Node>: DynamicProperty, ScopeAccess, RouterAccess {
+public struct TreeNode<NodeType: Node>: DynamicProperty, RouterAccess, ProjectionAccess {
 
   // MARK: Lifecycle
 

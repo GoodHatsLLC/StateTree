@@ -3,12 +3,10 @@ import Disposable
 import SwiftUI
 import XCTest
 @_spi(Implementation) import StateTree
-@_spi(Implementation) @testable import StateTreeSwiftUI
-
-// MARK: - NodeContextAccess
+@testable import StateTreeSwiftUI
 
 @MainActor
-final class NodeContextAccess: XCTestCase {
+final class RouteAccess: XCTestCase {
 
   let stage = DisposableStage()
   var tree: Tree<Parent> = .init(root: Parent())
@@ -27,24 +25,24 @@ final class NodeContextAccess: XCTestCase {
   }
 
   func test_routeAccess() async throws {
-    await tree.once.behaviorsStarted()
-    let root = try tree.assume.rootNode
-
+    let scope = try tree.assume.root
+    @TreeNode var root: Parent
+    _root = TreeNode(scope: scope)
     XCTAssertEqual(55, root.single?.v1)
     XCTAssertEqual(nil, root.union2?.a?.v1)
-    XCTAssertEqual(55, try tree.assume.rootNode.union2?.b?.v1)
-    XCTAssertEqual(nil, try tree.assume.rootNode.union3?.a?.v1)
-    XCTAssertEqual(nil, try tree.assume.rootNode.union3?.b?.v1)
-    XCTAssertEqual(55, try tree.assume.rootNode.union3?.c?.v1)
-    XCTAssertEqual(55, try tree.assume.rootNode.list[1].v1)
-    XCTAssertEqual(nil, try tree.assume.rootNode.list.at(index: 100)?.v1)
-    XCTAssertNotNil(try tree.assume.rootNode.union3?.c?.$v1 is Binding<Int>)
+    XCTAssertEqual(55, root.union2?.b?.v1)
+    XCTAssertEqual(nil, root.union3?.a?.v1)
+    XCTAssertEqual(nil, root.union3?.b?.v1)
+    XCTAssertEqual(55, root.union3?.c?.v1)
+    XCTAssertEqual(55, root.list[1].v1)
+    XCTAssertEqual(nil, root.list.at(index: 100)?.v1)
   }
 }
 
-extension NodeContextAccess {
+extension RouteAccess {
 
   struct ChildOne: Node {
+    @Value var v0: Int = 0
     @Projection var v1: Int
     var rules: some Rules { () }
   }
@@ -57,6 +55,7 @@ extension NodeContextAccess {
 
   struct ChildThree: Node {
     @Projection var v1: Int
+    @Value var v2: Int = 22
     var rules: some Rules { () }
   }
 

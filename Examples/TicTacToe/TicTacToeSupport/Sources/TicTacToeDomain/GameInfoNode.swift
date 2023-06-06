@@ -17,17 +17,18 @@ public struct GameInfoNode: Node {
 
   // MARK: Public
 
-  @Route(GameNode.self) public var game
+  @Route public var game: GameNode? = nil
   @Value public private(set) var lastResult: GameResult? = nil
 
   public var rules: some Rules {
     if let player = $activePlayer.compact() {
-      $game.route {
+      Serve(
         GameNode(
           currentPlayer: player,
           finishHandler: finishHandler(result:)
-        )
-      }
+        ),
+        at: $game
+      )
     }
   }
 

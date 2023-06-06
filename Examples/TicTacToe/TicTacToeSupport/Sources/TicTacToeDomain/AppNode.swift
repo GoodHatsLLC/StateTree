@@ -6,19 +6,22 @@ public struct AppNode: Node {
   public nonisolated init() { }
 
   @Value var authentication: Authentication?
-  @Route(GameInfoNode.self, UnauthenticatedNode.self) public var gameOrSignIn
+  @Route public var gameOrSignIn: Union
+    .Two<GameInfoNode, UnauthenticatedNode> = .b(.init(authentication: .constant(nil)))
 
   public var rules: some Rules {
     if let auth = $authentication.compact() {
-      try $gameOrSignIn.route {
-        GameInfoNode(authentication: auth) {
+      Serve(
+        .a(GameInfoNode(authentication: auth) {
           authentication = nil
-        }
-      }
+        }),
+        at: $gameOrSignIn
+      )
     } else {
-      try $gameOrSignIn.route {
-        UnauthenticatedNode(authentication: $authentication)
-      }
+      Serve(
+        .b(UnauthenticatedNode(authentication: $authentication)),
+        at: $gameOrSignIn
+      )
     }
   }
 }
