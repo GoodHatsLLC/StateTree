@@ -1,5 +1,5 @@
 import CounterDomain
-import StateTreeCallbacks
+import StateTreeImperativeUI
 import UIKit
 
 // MARK: - ControlsViewController
@@ -8,7 +8,7 @@ final class ControlsViewController: UIViewController {
 
   // MARK: Lifecycle
 
-  init(model: Reported<Counter>) {
+  init(model: Reporter<Counter>) {
     _model = model
     super.init(nibName: nil, bundle: nil)
   }

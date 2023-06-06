@@ -9,19 +9,16 @@ public struct CountersList: Node {
 
   // MARK: Public
 
-  @Route([Counter].self) public var counters
+  @Route public var counters: [Counter] = []
 
   public var rules: some Rules {
-    $counters.route {
-      counterIDs
-        .map { id in
-          Counter(
-            id: id,
-            shouldDelete: {
-              delete(counter: id)
-            }
-          )
+    Serve(data: counterIDs, at: $counters) { datum in
+      Counter(
+        id: datum,
+        shouldDelete: {
+          delete(counter: datum)
         }
+      )
     }
   }
 

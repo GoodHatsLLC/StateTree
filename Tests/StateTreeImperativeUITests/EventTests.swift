@@ -11,9 +11,10 @@ final class EventTests: XCTestCase {
 
   func test_startStop() async throws {
     let tree = try ReportedTree(tree: Tree(root: Parent()))
-    let root = tree.root
+    @Reporter var root: Parent
+    _root = tree.root
     var rootDidStopCount = 0
-    root.onStop(subscriber: self) {
+    $root.onStop(subscriber: self) {
       rootDidStopCount += 1
     }
     XCTAssertEqual(rootDidStopCount, 0)
@@ -22,10 +23,15 @@ final class EventTests: XCTestCase {
   }
 
   func test_update() async throws {
-    let tree = try ReportedTree(tree: Tree(root: Parent()))
-    let root = tree.root
+    let tree = try ReportedTree(
+      tree: Tree(
+        root: Parent()
+      )
+    )
+    @Reporter var root: Parent
+    _root = tree.root
     var rootFireCount = 0
-    root.onChange(subscriber: self) {
+    $root.onChange(subscriber: self) {
       rootFireCount += 1
     }
     XCTAssert(rootFireCount == 0)
@@ -37,25 +43,24 @@ final class EventTests: XCTestCase {
 
   func test_childUpdates() async throws {
     let tree = try ReportedTree(tree: Tree(root: Parent()))
-
-    let root = tree.root
+    @Reporter var root: Parent
+    _root = tree.root
 
     var emitCount = 0
 
-    let single = root.$single
-    single.onChange(subscriber: self) {
+    $root.$single.onChange(subscriber: self) {
       emitCount += 1
     }
 
-    root.$union2?.b?.onChange(subscriber: self) {
+    $root.$union2?.b?.onChange(subscriber: self) {
       emitCount += 1
     }
 
-    root.$union3?.c?.onChange(subscriber: self) {
+    $root.$union3?.c?.onChange(subscriber: self) {
       emitCount += 1
     }
 
-    for node in root.$list {
+    for node in $root.$list {
       node.onChange(subscriber: self) {
         emitCount += 1
       }
@@ -63,7 +68,7 @@ final class EventTests: XCTestCase {
 
     XCTAssertEqual(emitCount, 0)
 
-    let count = 3 + root.$list.count
+    let count = 3 + $root.$list.count
 
     root.v1 = 1
 

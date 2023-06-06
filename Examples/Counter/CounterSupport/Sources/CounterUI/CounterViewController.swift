@@ -1,5 +1,5 @@
 import CounterDomain
-import StateTreeCallbacks
+import StateTreeImperativeUI
 import UIKit
 
 // MARK: - CounterViewController
