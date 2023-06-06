@@ -2,7 +2,7 @@ import Combine
 import Disposable
 import Emitter
 import Foundation
-@_spi(Implementation) import StateTree
+@_spi(Implementation) import StateTreeBase
 import SwiftUI
 
 // MARK: - ObservableNode

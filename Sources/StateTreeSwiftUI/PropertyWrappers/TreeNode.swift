@@ -1,13 +1,13 @@
 import Combine
 import Disposable
-@_spi(Implementation) import StateTree
+@_spi(Implementation) import StateTreeBase
 import SwiftUI
 
 // MARK: - TreeNode
 
 @propertyWrapper
 @dynamicMemberLookup
-public struct TreeNode<NodeType: Node>: DynamicProperty, NodeAccess {
+public struct TreeNode<NodeType: Node>: DynamicProperty, ScopeAccess, RouterAccess {
 
   // MARK: Lifecycle
 
@@ -27,13 +27,10 @@ public struct TreeNode<NodeType: Node>: DynamicProperty, NodeAccess {
 
   @_spi(Implementation) public let scope: NodeScope<NodeType>
 
+  @_spi(Implementation) public var access: TreeNode<NodeType> { self }
+
   public var wrappedValue: NodeType {
-    get {
-      scope.node
-    }
-    nonmutating set {
-      scope.node = node
-    }
+    scope.node
   }
 
   public var projectedValue: TreeNode<NodeType> {
@@ -50,7 +47,7 @@ public struct TreeNode<NodeType: Node>: DynamicProperty, NodeAccess {
     scope.runtime
   }
 
-  var node: N {
+  var node: NodeType {
     scope.node
   }
 

@@ -82,12 +82,12 @@ let package = Package(
         "StateTree",
       ]
     ),
-//    .library(
-//      name: "StateTreeSwiftUI",
-//      targets: [
-//        "StateTreeSwiftUI",
-//      ]
-//    ),
+    .library(
+      name: "StateTreeSwiftUI",
+      targets: [
+        "StateTreeSwiftUI",
+      ]
+    ),
     .library(
       name: "StateTreeImperativeUI",
       targets: [
@@ -170,20 +170,21 @@ let package = Package(
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
-//    .target(
-//      name: "StateTreeSwiftUI",
-//      dependencies: [
-//        "Behavior",
-//        "Disposable",
-//        "Emitter",
-//        "Intents",
-//        "StateTree",
-//        "StateTreePlayback",
-//        "TreeActor",
-//        "Utilities",
-//      ],
-//      swiftSettings: Build.globalSwiftSettings
-//    ),
+    .target(
+      name: "StateTreeSwiftUI",
+      dependencies: [
+        "Behavior",
+        "Disposable",
+        "Emitter",
+        "Intents",
+        "StateTree",
+        "StateTreeBase",
+        "StateTreePlayback",
+        "TreeActor",
+        "Utilities",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
 //    .target(
 //      name: "StateTreeTesting",
 //      dependencies: [
@@ -229,12 +230,12 @@ let package = Package(
 //        "StateTreePlayback",
 //      ]
 //    ),
-//    .testTarget(
-//      name: "StateTreeSwiftUITests",
-//      dependencies: [
-//        "StateTreeSwiftUI",
-//      ]
-//    ),
+    .testTarget(
+      name: "StateTreeSwiftUITests",
+      dependencies: [
+        "StateTreeSwiftUI",
+      ]
+    ),
     .testTarget(
       name: "BehaviorTests",
       dependencies: ["Behavior"]

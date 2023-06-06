@@ -2,7 +2,7 @@
 import Disposable
 import SwiftUI
 import XCTest
-@_spi(Implementation) @testable import StateTree
+@_spi(Implementation) import StateTreeBase
 @_spi(Implementation) @testable import StateTreeSwiftUI
 
 // MARK: - NodeContextAccess
@@ -36,8 +36,8 @@ final class NodeContextAccess: XCTestCase {
     XCTAssertEqual(nil, try tree.assume.rootNode.union3?.a?.v1)
     XCTAssertEqual(nil, try tree.assume.rootNode.union3?.b?.v1)
     XCTAssertEqual(55, try tree.assume.rootNode.union3?.c?.v1)
-    XCTAssertEqual(55, try tree.assume.rootNode.list?[1].v1)
-    XCTAssertEqual(nil, try tree.assume.rootNode.list?.at(index: 100)?.v1)
+    XCTAssertEqual(55, try tree.assume.rootNode.list[1].v1)
+    XCTAssertEqual(nil, try tree.assume.rootNode.list.at(index: 100)?.v1)
     XCTAssertNotNil(try tree.assume.rootNode.union3?.c?.$v1 is Binding<Int>)
   }
 }
@@ -62,27 +62,21 @@ extension NodeContextAccess {
 
   struct Parent: Node {
     @Value var v1: Int = 55
-    @Route(ChildOne.self) var single
-    @Route(ChildOne.self, ChildTwo.self) var union2
-    @Route(ChildOne.self, ChildTwo.self, ChildThree.self) var union3
-    @Route([ChildTwo].self) var list
+    @Route var single: ChildOne? = nil
+    @Route var union2: Union.Two<ChildOne, ChildTwo>? = nil
+    @Route var union3: Union.Three<ChildOne, ChildTwo, ChildThree>? = nil
+    @Route var list: [ChildTwo] = []
 
     var rules: some Rules {
-      $single.route {
-        ChildOne(v1: $v1)
-      }
-      try $union2.route { ChildTwo(id: 1, v1: $v1) }
-      try $union3.route {
-        ChildThree(v1: $v1)
-      }
-      $list.route(
-        to: [
-          .init(id: 1, v1: $v1),
-          .init(id: 2, v1: $v1),
-          .init(id: 3, v1: $v1),
-          .init(id: 4, v1: $v1),
-        ]
+      Serve(
+        ChildOne(v1: $v1),
+        at: $single
       )
+      Serve(.b(ChildTwo(id: 1, v1: $v1)), at: $union2)
+      Serve(.c(ChildThree(v1: $v1)), at: $union3)
+      Serve(data: Array(0 ..< 5), at: $list) {
+        .init(id: $0, v1: $v1)
+      }
     }
   }
 
