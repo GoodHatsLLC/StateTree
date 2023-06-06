@@ -80,7 +80,18 @@ extension Colour {
   // MARK: Lifecycle
 
   public init(_ nativeColour: NativeColor) {
-    self = nativeColour.colour
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    nativeColour.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+
+    self.init(
+      red: red,
+      green: green,
+      blue: blue,
+      alpha: alpha
+    )
   }
 
   // MARK: Public
