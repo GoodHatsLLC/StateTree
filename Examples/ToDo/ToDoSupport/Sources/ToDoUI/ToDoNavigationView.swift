@@ -25,9 +25,9 @@ public struct ToDoNavigationView: View {
       }
     } content: {
       List(
-        todoManager.todoList ?? [],
+        todoManager.todoList,
         id: \.id,
-        selection: todoManager.$selectedRecord.binding()
+        selection: $todoManager.selectedRecord
       ) { todo in
         NavigationLink(todo.title, value: todo.id)
           .strikethrough(todo.isCompleted)

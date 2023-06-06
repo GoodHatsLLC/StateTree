@@ -11,11 +11,11 @@ struct ToDoApp: App {
 
   // MARK: Internal
 
-  /// Uncomment to use default data
-  @TreeRoot(state: DefaultState.state, rootNode: ToDoManager()) var root
+  // Uncomment to use default data
+  // @TreeRoot(state: DefaultState.state, rootNode: ToDoManager()) var root
 
-  // Uncomment to run the demo from a blank state:
-//   @TreeRoot var root = ToDoManager()
+  /// Uncomment to run the demo from a blank state:
+  @TreeRoot var root = ToDoManager()
 
   var body: some Scene {
     WindowGroup {
@@ -37,10 +37,10 @@ enum DefaultState {
         let state = try TreeStateRecord(jsonString: contents)
         return state
       } catch {
-        fatalError(error.localizedDescription)
+        fatalError("Could not deserialize initial state: \(error)")
       }
     } else {
-      fatalError("bad")
+      fatalError("could not open payload file")
     }
   }
 

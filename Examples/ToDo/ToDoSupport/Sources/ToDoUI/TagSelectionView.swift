@@ -15,7 +15,7 @@ struct TagSelectionView: View {
       List(
         tagSelector.matchingTags,
         id: \.id,
-        selection: $tagSelector.$selectedMatchingTags
+        selection: $tagSelector.selectedMatchingTags
       ) { tag in
         Text(tag.name)
           .padding([.horizontal], 1.su)

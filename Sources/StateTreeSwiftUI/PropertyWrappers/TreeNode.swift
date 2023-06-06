@@ -2,6 +2,7 @@ import Combine
 import Disposable
 @_spi(Implementation) import StateTree
 import SwiftUI
+import Utilities
 
 // MARK: - TreeNode + ScopeAccess
 
@@ -36,7 +37,12 @@ public struct TreeNode<NodeType: Node>: DynamicProperty, RouterAccess, Projectio
   @_spi(Implementation) public var access: TreeNode<NodeType> { self }
 
   public var wrappedValue: NodeType {
-    scope.node
+    get {
+      scope.node
+    }
+    nonmutating set {
+      runtimeWarning("A tree node's node can not be changed.")
+    }
   }
 
   public var projectedValue: TreeNode<NodeType> {
