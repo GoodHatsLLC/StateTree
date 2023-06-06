@@ -1,4 +1,4 @@
-@_spi(Implementation) import StateTreeBase
+@_spi(Implementation) import StateTree
 @_spi(Implementation) import Disposable
 import StateTreePlayback
 import SwiftUI

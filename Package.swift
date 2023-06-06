@@ -152,13 +152,6 @@ let package = Package(
     .target(
       name: "StateTree",
       dependencies: [
-        "StateTreeBase",
-      ],
-      swiftSettings: Build.globalSwiftSettings
-    ),
-    .target(
-      name: "StateTreeBase",
-      dependencies: [
         "Behavior",
         "Disposable",
         "Emitter",
@@ -178,7 +171,6 @@ let package = Package(
         "Emitter",
         "Intents",
         "StateTree",
-        "StateTreeBase",
         "StateTreePlayback",
         "TreeActor",
         "Utilities",
@@ -196,7 +188,7 @@ let package = Package(
     .target(
       name: "StateTreeImperativeUI",
       dependencies: [
-        "StateTreeBase",
+        "StateTree",
         "TreeActor",
       ],
       swiftSettings: Build.globalSwiftSettings
@@ -204,15 +196,14 @@ let package = Package(
     .target(
       name: "StateTreePlayback",
       dependencies: [
-        "StateTreeBase",
+        "StateTree",
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
     .testTarget(
-      name: "StateTreeBaseTests",
+      name: "StateTreeTests",
       dependencies: [
         "StateTree",
-        "StateTreeBase",
         "Disposable",
         .product(name: "HeapModule", package: "swift-collections"),
       ]

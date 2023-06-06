@@ -1,7 +1,7 @@
 import Disposable
 import Emitter
 import Foundation
-@_spi(Implementation) import StateTreeBase
+@_spi(Implementation) import StateTree
 import SwiftUI
 import TreeActor
 import Utilities

@@ -1,6 +1,6 @@
 import Disposable
 import Emitter
-@_spi(Implementation) import StateTreeBase
+@_spi(Implementation) import StateTree
 import TreeActor
 
 // MARK: - Reporter + ScopeAccess

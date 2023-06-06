@@ -1,4 +1,4 @@
-// @_spi(Implementation) import StateTreeBase
+// @_spi(Implementation) import StateTree
 // import TreeActor
 //
 // @propertyWrapper

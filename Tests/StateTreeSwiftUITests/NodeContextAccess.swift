@@ -2,7 +2,7 @@
 import Disposable
 import SwiftUI
 import XCTest
-@_spi(Implementation) import StateTreeBase
+@_spi(Implementation) import StateTree
 @_spi(Implementation) @testable import StateTreeSwiftUI
 
 // MARK: - NodeContextAccess

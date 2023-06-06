@@ -1,6 +1,6 @@
 import Combine
 import Disposable
-@_spi(Implementation) import StateTreeBase
+@_spi(Implementation) import StateTree
 import SwiftUI
 
 /// `@PublishedNode` is a property wrapper which allows a StateTree `Node`
