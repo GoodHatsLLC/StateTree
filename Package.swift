@@ -94,12 +94,12 @@ let package = Package(
         "StateTreeImperativeUI",
       ]
     ),
-//    .library(
-//      name: "StateTreeTesting",
-//      targets: [
-//        "StateTreeTesting",
-//      ]
-//    ),
+    .library(
+      name: "StateTreeTesting",
+      targets: [
+        "StateTreeTesting",
+      ]
+    ),
   ],
   dependencies: [
     .package(
@@ -185,14 +185,14 @@ let package = Package(
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
-//    .target(
-//      name: "StateTreeTesting",
-//      dependencies: [
-//        "StateTree",
-//        "StateTreePlayback",
-//      ],
-//      swiftSettings: Build.globalSwiftSettings
-//    ),
+    .target(
+      name: "StateTreeTesting",
+      dependencies: [
+        "StateTree",
+        "StateTreePlayback",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
     .target(
       name: "StateTreeImperativeUI",
       dependencies: [
@@ -224,12 +224,12 @@ let package = Package(
         "StateTreeImperativeUI",
       ]
     ),
-//    .testTarget(
-//      name: "StateTreePlaybackTests",
-//      dependencies: [
-//        "StateTreePlayback",
-//      ]
-//    ),
+    .testTarget(
+      name: "StateTreePlaybackTests",
+      dependencies: [
+        "StateTreePlayback",
+      ]
+    ),
     .testTarget(
       name: "StateTreeSwiftUITests",
       dependencies: [
