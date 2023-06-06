@@ -218,6 +218,22 @@ extension Route {
       )
     )
   }
+
+  public init<NodeType: Node>(wrappedValue: [NodeType]) where NodeType: Identifiable,
+    Router == ListRouter<NodeType>
+  {
+    let nodes = wrappedValue
+      .reduce(into: OrderedDictionary<LSID, NodeType>()) { partialResult, node in
+        partialResult[LSID.from(node)] = node
+      }
+    self.init(
+      defaultRouter: ListRouter(
+        buildKeys: nodes.keys,
+        builder: { try nodes[$0].orThrow(MissingNodeKeyError()) }
+      )
+    )
+  }
+
 }
 
 extension Serve {
@@ -241,6 +257,21 @@ extension Serve {
       ),
       at: route
     )
+  }
+
+  public init<NodeType: Node>(
+    _ nodes: [NodeType],
+    at route: Route<Router>
+  ) where NodeType: Identifiable,
+    Router == ListRouter<NodeType>
+  {
+    let mapping = nodes
+      .reduce(into: OrderedDictionary<LSID, NodeType>()) { partialResult, node in
+        partialResult[LSID.from(node)] = node
+      }
+    self.init(router: .init(buildKeys: mapping.keys, builder: { (lsid: LSID) in
+      return try mapping[lsid].orThrow(MissingNodeKeyError())
+    }), at: route)
   }
 
   public init<Data: Collection, NodeType: Node>(

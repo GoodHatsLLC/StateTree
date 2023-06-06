@@ -108,8 +108,14 @@ public struct SingleRouter<NodeType: Node>: RouterType {
     )
   }
 
-  public mutating func update(from _: SingleRouter<NodeType>) {
-    // Update is called when the route call has structural equality.
+  public mutating func update(from other: SingleRouter<NodeType>) {
+    if
+      let lhsID = capturedNode.identity,
+      let rhsID = other.capturedNode.identity,
+      lhsID != rhsID
+    {
+      self = other
+    }
   }
 
   // MARK: Private

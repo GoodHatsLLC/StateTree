@@ -59,6 +59,10 @@ public struct LSID: LosslessStringConvertible, TreeState {
 
   public let description: String
 
+  public static func from(_ thing: some Identifiable) -> LSID {
+    LSID(hashable: thing.id)
+  }
+
   public func encode(to encoder: Encoder) throws {
     var container = encoder.singleValueContainer()
     try container.encode(description)

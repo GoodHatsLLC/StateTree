@@ -194,6 +194,12 @@ public struct Union3Router<A: Node, B: Node, C: Node>: RouterType {
   public mutating func update(from other: Union3Router<A, B, C>) {
     if !(capturedUnion ~= other.capturedUnion) {
       self = other
+    } else if
+      let lhs = (capturedNode as? any Identifiable),
+      let rhs = (other.capturedNode as? any Identifiable),
+      LSID.from(lhs) != LSID.from(rhs)
+    {
+      self = other
     }
   }
 

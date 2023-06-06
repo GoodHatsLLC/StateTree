@@ -130,6 +130,14 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
       (.none, .some),
       (.some, .none):
       self = other
+    case (.some(let lhs), .some(let rhs)):
+      if
+        let lhsID = lhs.identity,
+        let rhsID = rhs.identity,
+        lhsID != rhsID
+      {
+        self = other
+      }
     default:
       break
     }

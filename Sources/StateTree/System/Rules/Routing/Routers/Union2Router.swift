@@ -163,6 +163,12 @@ public struct Union2Router<A: Node, B: Node>: RouterType {
   public mutating func update(from other: Union2Router<A, B>) {
     if !(capturedUnion ~= other.capturedUnion) {
       self = other
+    } else if
+      let lhs = (capturedNode as? any Identifiable),
+      let rhs = (other.capturedNode as? any Identifiable),
+      LSID.from(lhs) != LSID.from(rhs)
+    {
+      self = other
     }
   }
 

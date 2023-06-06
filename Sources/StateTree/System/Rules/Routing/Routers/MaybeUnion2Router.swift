@@ -189,8 +189,16 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
 
   public mutating func update(from other: MaybeUnion2Router<A, B>) {
     var shouldUpdate = false
-    if let capturedUnion, let otherUnion = other.capturedUnion, !(capturedUnion ~= otherUnion) {
-      shouldUpdate = true
+    if let capturedUnion, let otherUnion = other.capturedUnion {
+      if !(capturedUnion ~= otherUnion) {
+        shouldUpdate = true
+      } else if
+        let lhs = (capturedNode as? any Identifiable),
+        let rhs = (other.capturedNode as? any Identifiable),
+        LSID.from(lhs) != LSID.from(rhs)
+      {
+        shouldUpdate = true
+      }
     } else if (capturedUnion == nil) != (other.capturedUnion == nil) {
       shouldUpdate = true
     }

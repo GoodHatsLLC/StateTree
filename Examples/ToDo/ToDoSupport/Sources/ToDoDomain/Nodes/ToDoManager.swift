@@ -21,10 +21,14 @@ public struct ToDoManager: Node {
   @Value public var selectedTag: UUID? = nil
 
   public var rules: some Rules {
-    if
-      let id = selectedRecord,
-      let selected = $records[id].compact()
-    {
+    // always serve the list of todos.
+    Serve(data: $records.values, at: $todoList) { datum in
+      ListedToDo(record: datum)
+    }
+
+    // if we can get a projection of the selected record, serve it
+    // as the selected todo node.
+    if let selected = selectedRecord.flatMap({ $records[$0].compact() }) {
       Serve(
         SelectedToDo(
           record: selected,
@@ -32,20 +36,18 @@ public struct ToDoManager: Node {
         ),
         at: $selectedToDo
       )
-      Serve(data: $records.values, at: $todoList) { datum in
-        ListedToDo(record: datum)
-      }
+    }
 
-      if showEditor {
-        Serve(
-          TagEditor(
-            selected: $selectedTag,
-            allTags: $allTags,
-            isActive: $showEditor
-          ),
-          at: $tagEditor
-        )
-      }
+    // show the tag editor only if desired.
+    if showTagEditor {
+      Serve(
+        TagEditor(
+          selected: $selectedTag,
+          allTags: $allTags,
+          isActive: $showTagEditor
+        ),
+        at: $tagEditor
+      )
     }
   }
 
@@ -56,14 +58,14 @@ public struct ToDoManager: Node {
   public func addTag() {
     scope.transaction {
       selectedTag = nil
-      showEditor = true
+      showTagEditor = true
     }
   }
 
   public func editTag(id tagID: UUID) {
     scope.transaction {
       selectedTag = tagID
-      showEditor = true
+      showTagEditor = true
     }
   }
 
@@ -88,7 +90,7 @@ public struct ToDoManager: Node {
   @Value private var allTags: OrderedDictionary<UUID, TagRecord> = [:]
   @Value private var records: OrderedDictionary<UUID, ToDoRecord> = [:]
   @Value private var modifiedToDoIDs: Set<UUID> = []
-  @Value private var showEditor: Bool = false
+  @Value private var showTagEditor: Bool = false
 
   private func getToDo(id: UUID) -> ToDoRecord? {
     return records[id]
