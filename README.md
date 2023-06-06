@@ -1,3 +1,7 @@
+- [ ] **TODO: rewrite `README` for `v0.1.0`**
+
+----
+
 # StateTree 🌳
 
 StateTree brings reactive tools to the domain layer of an application.
