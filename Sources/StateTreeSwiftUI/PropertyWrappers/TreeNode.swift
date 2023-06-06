@@ -40,9 +40,7 @@ public struct TreeNode<NodeType: Node>: DynamicProperty, RouterAccess, Projectio
     get {
       scope.node
     }
-    nonmutating set {
-      runtimeWarning("A tree node's node can not be changed.")
-    }
+    nonmutating set { }
   }
 
   public var projectedValue: TreeNode<NodeType> {
