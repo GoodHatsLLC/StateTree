@@ -1,4 +1,5 @@
 import Disposable
+import TreeActor
 
 // MARK: - Node
 
@@ -9,13 +10,11 @@ public protocol Node {
 }
 
 extension Node {
-  nonisolated var uniqueIdentity: String? {
-    guard let identifiableNode = self as? any Identifiable
-    else {
+  internal var identity: LSID? {
+    if let self = self as? (any Node & Identifiable) {
+      return LSID.from(self)
+    } else {
       return nil
     }
-    let id = identifiableNode.id
-    let hashID = AnyHashable(id)
-    return hashID.description
   }
 }

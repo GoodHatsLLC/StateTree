@@ -1,4 +1,5 @@
-import TreeState
+import Intents
+import TreeActor
 
 // MARK: - StateStorage
 
@@ -24,7 +25,7 @@ extension StateStorage {
     state.nodeIDs
   }
 
-  var activeIntent: ActiveIntent? {
+  var activeIntent: ActiveIntent<NodeID>? {
     state.activeIntent
   }
 
@@ -46,10 +47,6 @@ extension StateStorage {
 
   func apply(state newState: TreeStateRecord) {
     state = newState
-  }
-
-  func valueRecords() -> [ValueRecord] {
-    state.valueRecords()
   }
 
   func getRecord(_ nodeID: NodeID) -> NodeRecord? {
@@ -87,9 +84,9 @@ extension StateStorage {
     if field == .system {
       let oldRoot = state.root
       if case .single(let single) = nodeIDs {
-        state.root = single?.id
+        state.root = single
       } else {
-        throw NodeNotFoundError()
+        throw NodesNotFoundError(ids: nodeIDs.ids)
       }
       return .init(
         addedScopes: [state.root].compactMap { $0 },
@@ -97,7 +94,7 @@ extension StateStorage {
       )
     }
     let swappedOut = try state.swapRoutedNodeSet(at: field, to: nodeIDs)
-    let originals = Set(swappedOut?.ids ?? [])
+    let originals = Set(swappedOut?.ids ?? []).subtracting([.invalid])
     let new = Set(nodeIDs.ids)
     return TreeChanges(
       addedScopes: Array(new.subtracting(originals)),
@@ -105,17 +102,17 @@ extension StateStorage {
     )
   }
 
-  func getRoutedNodeSet(at route: FieldID) throws -> RouteRecord? {
+  func getRouteRecord(at route: FieldID) throws -> RouteRecord? {
     if
       let root = state.root,
       route == .system
     {
-      return .single(.init(id: root))
+      return .single(root)
     }
-    return try state.getRoutedNodeSet(at: route)
+    return try state.getRouteRecord(at: route)
   }
 
-  func getRoutedNodeID(at routeID: RouteSource) throws -> NodeID? {
+  func getRoutedNodeID(at routeID: RouteID) throws -> NodeID? {
     try state.getRoutedNodeID(at: routeID)
   }
 
@@ -125,14 +122,6 @@ extension StateStorage {
 
   func ancestors(of nodeID: NodeID) -> [NodeID]? {
     state.ancestors(of: nodeID)
-  }
-
-  func parent(of nodeID: NodeID) -> NodeID? {
-    state.parent(of: nodeID)
-  }
-
-  func contains(nodeID: NodeID) -> Bool {
-    state.contains(nodeID: nodeID)
   }
 
 }

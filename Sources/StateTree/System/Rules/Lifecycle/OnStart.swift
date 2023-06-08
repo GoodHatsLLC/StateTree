@@ -1,49 +1,161 @@
+@_spi(Implementation) import Behavior
+import Disposable
+import Emitter
+import TreeActor
+import Utilities
+
 // MARK: - OnStart
 
-@TreeActor
-public struct OnStart: Rules {
+/// Register an action to run as a Node is being stopped.
+///
+/// ```swift
+/// OnStart {
+///   // ...
+/// }
+/// ```
+public struct OnStart<B: Behavior>: Rules where B.Input == Void,
+  B.Output: Sendable
+{
 
   // MARK: Lifecycle
 
+  /// Register a synchronous action to run as a Node is started.
+  ///
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when the node is started.
   public init(
-    action: @escaping () -> Void
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    _ id: BehaviorID? = nil,
+    _ action: @TreeActor @escaping () -> Void
+  ) where B == Behaviors.SyncSingle<Void, Void, Never> {
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.SyncSingle<Void, Void, Never> = Behaviors
+      .make(id, input: Void.self) { action() }
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: ())
+    }
+  }
+
+  /// Register an asynchronous action to run as a Node is started.
+  ///
+  /// - Parameter id: Optional:  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter action: The action run when the node is started.
+  public init(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    _ id: BehaviorID? = nil,
+    _ action: @TreeActor @escaping () async -> Void
+  ) where B == Behaviors.AsyncSingle<Void, Void, Never> {
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.AsyncSingle<Void, Void, Never> = Behaviors
+      .make(id, input: Void.self) { await action() }
+    self.callback = { scope, tracker in
+      behavior.run(tracker: tracker, scope: scope, input: ())
+    }
+  }
+
+  /// Register a stream action to run when a node is started
+  ///
+  /// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter maker: The action run to create the `AsyncSequence`.
+  /// - Parameter onValue: A callback fired with values emitted by the `AsyncSequence`.
+  /// - Parameter onFinish: A callback run if the `AsyncSequence` completes successfully.
+  /// - Parameter onFailure: A callback run if the `AsyncSequence` fails with an error.
+  public init<Seq: AsyncSequence>(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    _ id: BehaviorID? = nil,
+    maker behaviorFunc: @escaping () async -> Seq,
+    onValue: @escaping @TreeActor (_ value: Seq.Element) -> Void,
+    onFinish: @escaping @TreeActor () -> Void = { },
+    onFailure: @escaping @TreeActor (_ error: any Error) -> Void = { _ in }
+  ) where B == Behaviors.Stream<Void, Seq.Element, any Error> {
+    let id = id ?? .meta(moduleFile: moduleFile, line: line, column: column, meta: "")
+    let behavior: Behaviors.Stream<Void, Seq.Element, any Error> = Behaviors
+      .make(id, input: Void.self) {
+        await behaviorFunc()
+      }
+    self.callback = { scope, tracker in
+      behavior.run(
+        tracker: tracker,
+        scope: scope,
+        input: (),
+        handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
+      )
+    }
+  }
+
+  /// Register a pre-existing ``Behavior`` to be run when a node is started.
+  ///
+  /// - Parameter id: *Optional*:  A *overriding* ``BehaviorID`` representing the ``Behavior``
+  /// created to run the action.
+  /// - Parameter runBehavior: The ``Behavior`` run as the node is started.
+  /// - Parameter handler: *Optional*: A handler to run with values created by the ``Behavior``.
+  public init(
+    _ value: B.Input,
+    _ id: BehaviorID? = nil,
+    runBehavior behavior: B,
+    handler: B.Handler? = nil
   ) {
-    self.action = action
+    var behavior = behavior
+    if let id {
+      behavior.setID(to: id)
+    }
+    if let handler {
+      self.callback = { scope, tracker in
+        behavior.run(tracker: tracker, scope: scope, input: value, handler: handler)
+      }
+    } else {
+      self.callback = { scope, tracker in
+        behavior.run(tracker: tracker, scope: scope, input: ())
+      }
+    }
   }
 
   // MARK: Public
 
-  public func act(for lifecycle: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
-    switch lifecycle {
-    case .didStart:
-      action()
-    case .didUpdate:
-      break
-    case .willStop:
-      break
-    case .handleIntent:
-      break
-    }
-    return .init()
+  public func act(
+    for _: RuleLifecycle,
+    with _: RuleContext
+  )
+    -> LifecycleResult
+  {
+    .init()
   }
 
-  public mutating func applyRule(with _: RuleContext) throws { }
+  public mutating func applyRule(with context: RuleContext) throws {
+    callback(scope, context.runtime.behaviorTracker)
+  }
 
-  public mutating func removeRule(with _: RuleContext) throws { }
+  public mutating func removeRule(with _: RuleContext) throws {
+    scope.dispose()
+  }
 
   public mutating func updateRule(
-    from _: OnStart,
+    from _: Self,
     with _: RuleContext
   ) throws { }
 
+  public mutating func syncToState(with _: RuleContext) throws {
+    scope.reset()
+  }
+
   // MARK: Private
 
-  private var action: () -> Void
-
+  private let callback: (any BehaviorScoping, BehaviorTracker) -> Void
+  private let scope: BehaviorStage = .init()
 }
 
-extension Rules {
-  public func onStart(action: @escaping () -> Void) -> some Rules {
-    OnStart(action: action)
+extension OnStart where B.Handler.SubscribeType == Asynchronous {
+  public mutating func syncToState(with context: RuleContext) {
+    scope.reset()
+    callback(scope, context.runtime.behaviorTracker)
   }
 }

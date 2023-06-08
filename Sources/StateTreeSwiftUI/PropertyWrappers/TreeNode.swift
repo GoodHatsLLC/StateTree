@@ -1,55 +1,67 @@
-#if !CUSTOM_ACTOR
 import Combine
 import Disposable
 @_spi(Implementation) import StateTree
 import SwiftUI
+import Utilities
+
+// MARK: - TreeNode + ScopeAccess
+
+extension TreeNode: ScopeAccess { }
 
 // MARK: - TreeNode
 
-@MainActor
 @propertyWrapper
 @dynamicMemberLookup
-public struct TreeNode<N: Node>: DynamicProperty, NodeAccess {
+public struct TreeNode<NodeType: Node>: DynamicProperty, RouterAccess, ProjectionAccess,
+  BindingAccess
+{
 
   // MARK: Lifecycle
 
-  init(scope: NodeScope<N>) {
+  init(scope: NodeScope<NodeType>) {
     self.scope = scope
     self.observed = .init(scope: scope)
+    self.nid = scope.nid
+    observed.startIfNeeded()
   }
 
-  public init(projectedValue: TreeNode<N>) {
-    self.scope = projectedValue.scope
-    self.observed = .init(scope: projectedValue.scope)
+  public init(projectedValue: TreeNode<NodeType>) {
+    self = projectedValue
+    observed.startIfNeeded()
   }
 
   // MARK: Public
 
-  @_spi(Implementation) public let scope: NodeScope<N>
+  @_spi(Implementation) public let scope: NodeScope<NodeType>
 
-  public var id: NodeID {
-    scope.id
+  @_spi(Implementation) public var access: TreeNode<NodeType> { self }
+
+  public var wrappedValue: NodeType {
+    get {
+      scope.node
+    }
+    nonmutating set { }
   }
 
-  public var wrappedValue: N {
-    scope.node
-  }
-
-  public var projectedValue: TreeNode<N> {
+  public var projectedValue: TreeNode<NodeType> {
     self
   }
 
   // MARK: Internal
 
-  @ObservedObject var observed: ObservableNode<N>
+  let nid: NodeID
+
+  @ObservedObject var observed: ObservableNode<NodeType>
 
   var runtime: Runtime {
     scope.runtime
   }
 
-  var node: N {
+  var node: NodeType {
     scope.node
   }
 
+  // MARK: Private
+
+  private var disposable: AutoDisposable?
 }
-#endif

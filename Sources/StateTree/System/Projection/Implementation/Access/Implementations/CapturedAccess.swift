@@ -1,7 +1,7 @@
 /// An ``Access`` conformer which captures its source.
 struct CapturedAccess<Value>: Accessor {
 
-  init(
+  nonisolated init(
     getter: @escaping () -> Value,
     setter: @escaping (_ value: Value) -> Void,
     isValid: @escaping () -> Bool = { true }
@@ -19,7 +19,6 @@ struct CapturedAccess<Value>: Accessor {
   }
 
   func isValid() -> Bool { isValidFunc() }
-  func erase() -> AnyAccess<Value> { AnyAccess(self) }
 
   private let getterFunc: () -> Value
   private let setterFunc: (Value) -> Void

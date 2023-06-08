@@ -1,5 +1,3 @@
-import TreeState
-
 // MARK: - FieldID
 
 /// The unique identifier of each ``Node`` field tracked by StateTree.
@@ -13,7 +11,7 @@ public struct FieldID: TreeState, LosslessStringConvertible {
     self.offset = offset
   }
 
-  public init(from decoder: Decoder) throws {
+  public init(from decoder: any Decoder) throws {
     let container = try decoder.singleValueContainer()
     let string = try container.decode(String.self)
     guard let this = FieldID(string)
@@ -48,7 +46,7 @@ public struct FieldID: TreeState, LosslessStringConvertible {
     "\(type.description):\(offset):\(nodeID.description)"
   }
 
-  public func encode(to encoder: Encoder) throws {
+  public func encode(to encoder: any Encoder) throws {
     var container = encoder.singleValueContainer()
     try container.encode(description)
   }

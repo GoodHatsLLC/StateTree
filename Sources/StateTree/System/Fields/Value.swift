@@ -1,4 +1,11 @@
-import TreeState
+import TreeActor
+
+// MARK: - TreeValueAccess
+
+@TreeActor
+protocol TreeValueAccess {
+  var treeValue: TreeValue? { get nonmutating set }
+}
 
 // MARK: - TreeValue
 
@@ -21,71 +28,94 @@ struct TreeValue {
 
 // MARK: - ValueField
 
-protocol ValueField<Wrapped> {
-  associatedtype Wrapped: TreeState
-  var access: TreeValueAccess { get }
+protocol ValueField<WrappedValue> {
+  associatedtype WrappedValue: TreeState
+  var access: any TreeValueAccess { get }
   var anyInitial: any TreeState { get }
-  var initial: Wrapped { get }
-}
-
-// MARK: - TreeValueAccess
-
-@TreeActor
-final class TreeValueAccess {
-
-  // MARK: Lifecycle
-
-  nonisolated init() { }
-
-  // MARK: Internal
-
-  var treeValue: TreeValue?
+  var initial: WrappedValue { get }
 }
 
 // MARK: - Value
 
 @propertyWrapper
-public struct Value<Wrapped: TreeState>: ValueField {
+public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
 
   // MARK: Lifecycle
 
-  @TreeActor
-  public init(wrappedValue: Wrapped) {
+  public init(wrappedValue: WrappedValue) {
     self.initial = wrappedValue
+    self.inner = .init(initialValue: wrappedValue)
   }
 
   // MARK: Public
 
-  public typealias WrappedValue = Wrapped
+  public typealias WrappedValue = WrappedValue
 
-  @TreeActor public var wrappedValue: Wrapped {
+  @_spi(Implementation) public let initial: WrappedValue
+
+  public var projectedValue: Projection<WrappedValue> {
+    .init(
+      self,
+      initial: initial
+    )
+  }
+
+  @TreeActor public var wrappedValue: WrappedValue {
     get {
-      access
+      let value = inner
         .treeValue?
-        .getValue(as: Wrapped.self) ?? initial
+        .getValue(as: WrappedValue.self) ?? inner.cache
+      return value
     }
     nonmutating set {
-      access
+      inner.cache = newValue
+      inner
         .treeValue?
         .setValue(to: newValue)
     }
   }
 
-  @TreeActor public var projectedValue: Projection<Wrapped> {
-    .init(
-      ValueFieldAccessor(
-        access: access,
-        initial: initial
-      )
-    )
+  public var value: WrappedValue {
+    get {
+      wrappedValue
+    }
+    nonmutating set {
+      wrappedValue = newValue
+    }
+  }
+
+  public var source: ProjectionSource {
+    if let id = inner.treeValue?.id {
+      return .valueField(id)
+    } else {
+      return .programmatic
+    }
+  }
+
+  public func isValid() -> Bool {
+    inner.treeValue != nil
   }
 
   // MARK: Internal
 
-  let access: TreeValueAccess = .init()
+  @TreeActor
+  final class InnerValue: TreeValueAccess {
 
-  let initial: Wrapped
+    // MARK: Lifecycle
 
+    init(initialValue: WrappedValue) {
+      self.cache = initialValue
+    }
+
+    // MARK: Internal
+
+    var treeValue: TreeValue?
+    var cache: WrappedValue
+  }
+
+  let inner: InnerValue
+
+  var access: any TreeValueAccess { inner }
   var anyInitial: any TreeState {
     initial
   }

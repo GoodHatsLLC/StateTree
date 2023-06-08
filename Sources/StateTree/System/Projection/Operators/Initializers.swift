@@ -1,3 +1,5 @@
+import TreeActor
+
 extension Projection {
 
   init(
@@ -10,7 +12,8 @@ extension Projection {
         getter: getter,
         setter: setter,
         isValid: isValid
-      )
+      ),
+      initial: getter()
     )
   }
 
@@ -20,7 +23,8 @@ extension Projection {
     map: some Transformer<Upstream, Value>
   ) {
     self.init(
-      TransformedAccess(upstream: upstream, map: map)
+      TransformedAccess(upstream: upstream, map: map),
+      initial: map.downstream(from: upstream.value)
     )
   }
 }

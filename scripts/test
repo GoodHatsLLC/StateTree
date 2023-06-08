@@ -1,0 +1,8 @@
+#!/bin/bash
+
+BUILD_ENV="VERBOSE_BUILD=1"
+if [[ "$1" == "--custom-actor" ]]; then
+  BUILD_ENV="${BUILD_ENV} CUSTOM_ACTOR=1"
+fi
+
+eval "$BUILD_ENV swift test"

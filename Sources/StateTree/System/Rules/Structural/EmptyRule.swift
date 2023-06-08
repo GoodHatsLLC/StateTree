@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - EmptyRule
 
 @TreeActor
@@ -9,6 +11,8 @@ public struct EmptyRule: Rules {
     from _: EmptyRule,
     with _: RuleContext
   ) throws { }
+
+  public mutating func syncToState(with _: RuleContext) throws { }
 
   nonisolated init() { }
 

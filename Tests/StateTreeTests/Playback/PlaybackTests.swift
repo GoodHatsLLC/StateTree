@@ -1,15 +1,14 @@
-import StateTree
+import Disposable
+@_spi(Implementation) import StateTree
 import XCTest
 
 // MARK: - PlaybackTests
 
-@TreeActor
 final class PlaybackTests: XCTestCase {
 
   let stage = DisposableStage()
 
   override func setUp() {
-    XCTAssertNil(Tree.main._info)
     NodeID
       .incrementForTesting()
       .stage(on: stage)
@@ -19,150 +18,153 @@ final class PlaybackTests: XCTestCase {
     stage.reset()
   }
 
-  func test_startFrom() throws {
-    let handle = try Tree.main
-      .start(
-        root: RootNode()
-      )
-    handle.stage(on: stage)
-    XCTAssertNil(handle.rootNode.subRoute)
-    let initialState = handle.snapshot()
+  @TreeActor
+  func test_startFrom() async throws {
+    let tree = Tree(
+      root: RootNode()
+    )
+    try tree.start()
+      .autostop()
+      .stage(on: stage)
+    XCTAssertNil(try tree.assume.rootNode.subRoute)
+    let initialState = try tree.assume.snapshot()
     // print("INITIAL")
     // dump(initialState)
-    handle.rootNode.routeIfNegative = -2
-    handle.rootNode.subRoute?.subValue = 123
-    let laterState = handle.snapshot()
+    try tree.assume.rootNode.routeIfNegative = -2
+    try tree.assume.rootNode.subRoute?.subValue = 123
+    let laterState = try tree.assume.snapshot()
     // print("LATER")
     // dump(laterState)
-    XCTAssertEqual(handle.rootNode.routeIfNegative, -2)
-    XCTAssertEqual(handle.rootNode.subRoute?.value, -2)
-    XCTAssertEqual(handle.rootNode.subRoute?.subValue, 123)
-    XCTAssertNotNil(handle.rootNode.subRoute)
-    handle.dispose()
+    XCTAssertEqual(try tree.assume.rootNode.routeIfNegative, -2)
+    XCTAssertEqual(try tree.assume.rootNode.subRoute?.value, -2)
+    XCTAssertEqual(try tree.assume.rootNode.subRoute?.subValue, 123)
+    XCTAssertNotNil(try tree.assume.rootNode.subRoute)
+    stage.reset()
 
-    let restartHandle = try Tree.main.start(
-      root: RootNode(),
-      from: laterState
+    let restartTree = Tree(
+      root: RootNode()
     )
-    handle.stage(on: stage)
+    try restartTree.start(from: laterState)
+      .autostop()
+      .stage(on: stage)
 
-    let replayedState = restartHandle.snapshot()
+    let replayedState = try restartTree.assume.snapshot()
     // print("REPLAYED")
     // dump(replayedState)
-    XCTAssertEqual(restartHandle.rootNode.routeIfNegative, -2)
-    XCTAssertNotNil(restartHandle.rootNode.subRoute)
-    XCTAssertEqual(restartHandle.rootNode.subRoute?.value, -2)
-    XCTAssertEqual(restartHandle.rootNode.subRoute?.subValue, 123)
-    XCTAssertEqual(replayedState, laterState)
-    XCTAssertNotEqual(replayedState, initialState)
-    restartHandle.dispose()
+    XCTAssertEqual(try restartTree.assume.rootNode.routeIfNegative, -2)
+    XCTAssertNotNil(try restartTree.assume.rootNode.subRoute)
+    XCTAssertEqual(try restartTree.assume.rootNode.subRoute?.value, -2)
+    XCTAssertEqual(try restartTree.assume.rootNode.subRoute?.subValue, 123)
+    XCTAssertEqual(replayedState.formattedJSON, laterState.formattedJSON)
+    XCTAssertNotEqual(replayedState.formattedJSON, initialState.formattedJSON)
+    stage.reset()
   }
 
-  func test_setState() throws {
-    let handle = try Tree.main
-      .start(
-        root: RootNode()
-      )
-    handle.stage(on: stage)
+  @TreeActor
+  func test_setState() async throws {
+    let tree = Tree(
+      root: RootNode()
+    )
+    try tree.start()
 
-    let initialState = handle.snapshot()
+    let initialState = try tree.assume.snapshot()
 
-    handle.rootNode.routeIfNegative = -2
-    handle.rootNode.subRoute?.subValue = 2
-    let laterState = handle.snapshot()
-    XCTAssert(Tree.main._info?.isConsistent == true)
+    try tree.assume.rootNode.routeIfNegative = -2
+    try tree.assume.rootNode.subRoute?.subValue = 2
+    let laterState = try tree.assume.snapshot()
+    XCTAssert(try tree.assume.info.isConsistent == true)
 
-    handle.rootNode.routeIfNegative = -3
-    let finalState = handle.snapshot()
+    try tree.assume.rootNode.routeIfNegative = -3
+    let finalState = try tree.assume.snapshot()
 
-    try handle.set(state: initialState)
-    XCTAssert(Tree.main._info?.isConsistent == true)
-    XCTAssertEqual(handle.rootNode.routeIfNegative, 0)
-    XCTAssertNil(handle.rootNode.subRoute)
+    try tree.assume.restore(state: initialState)
+    XCTAssert(try tree.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree.assume.rootNode.routeIfNegative, 0)
+    XCTAssertNil(try tree.assume.rootNode.subRoute)
 
-    try handle.set(state: laterState)
-    XCTAssert(Tree.main._info?.isConsistent == true)
-    XCTAssertEqual(handle.rootNode.routeIfNegative, -2)
-    XCTAssertEqual(handle.rootNode.subRoute?.subValue, 2)
-    XCTAssertEqual(handle.rootNode.subRoute?.subSubRoute?.value, -2)
+    try tree.assume.restore(state: laterState)
+    XCTAssert(try tree.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree.assume.rootNode.routeIfNegative, -2)
+    XCTAssertEqual(try tree.assume.rootNode.subRoute?.subValue, 2)
+    XCTAssertEqual(try tree.assume.rootNode.subRoute?.subSubRoute?.value, -2)
 
-    let recapture = handle.snapshot()
-    XCTAssertEqual(laterState, recapture)
+    let recapture = try tree.assume.snapshot()
+    XCTAssertEqual(laterState.formattedJSON, recapture.formattedJSON)
+    XCTAssert(try tree.assume.info.isConsistent == true)
 
-    handle.rootNode.routeIfNegative = -3
-    let finalRecapture = handle.snapshot()
+    try tree.assume.rootNode.routeIfNegative = -3
+    let finalRecapture = try tree.assume.snapshot()
 
-    XCTAssertEqual(finalState, finalRecapture)
-    handle.dispose()
+    XCTAssertEqual(finalState.formattedJSON, finalRecapture.formattedJSON)
+    stage.reset()
   }
 
-  func test_setState_thrash() throws {
-    let lifetime = try Tree.main
-      .start(
-        root: PrimeSquare()
-      )
-    lifetime.stage(on: stage)
-    XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
-    let snap0 = lifetime.snapshot()
-    XCTAssertEqual(Tree.main._info?.nodeCount, 1)
+  @TreeActor
+  func test_setState_thrash() async throws {
+    let tree = Tree(
+      root: PrimeSquare()
+    )
+    try tree.start()
+      .autostop()
+      .stage(on: stage)
+    XCTAssertEqual(try tree.assume.rootNode.primeSquared?.square, nil)
+    let snap0 = try tree.assume.snapshot()
+    XCTAssertEqual(try tree.assume.info.nodeCount, 1)
 
-    lifetime.rootNode.potentialPrime = 2
-    XCTAssertEqual(lifetime.rootNode.primeSquared?.square, 4)
-    XCTAssertEqual(Tree.main._info?.nodeCount, 2)
-    let snap1 = lifetime.snapshot()
+    try tree.assume.rootNode.potentialPrime = 2
+    XCTAssertEqual(try tree.assume.rootNode.primeSquared?.square, 4)
+    XCTAssertEqual(try tree.assume.info.nodeCount, 2)
+    let snap1 = try tree.assume.snapshot()
 
-    lifetime.rootNode.potentialPrime = 4
-    XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
-    let snap2 = lifetime.snapshot()
-    XCTAssertEqual(Tree.main._info?.nodeCount, 1)
+    try tree.assume.rootNode.potentialPrime = 4
+    XCTAssertEqual(try tree.assume.rootNode.primeSquared?.square, nil)
+    let snap2 = try tree.assume.snapshot()
+    XCTAssertEqual(try tree.assume.info.nodeCount, 1)
 
-    lifetime.rootNode.potentialPrime = 7
-    XCTAssertEqual(lifetime.rootNode.primeSquared?.square, 49)
-    let snap3 = lifetime.snapshot()
-    XCTAssertEqual(Tree.main._info?.nodeCount, 2)
+    try tree.assume.rootNode.potentialPrime = 7
+    XCTAssertEqual(try tree.assume.rootNode.primeSquared?.square, 49)
+    let snap3 = try tree.assume.snapshot()
+    XCTAssertEqual(try tree.assume.info.nodeCount, 2)
 
-    lifetime.dispose()
-    XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(Tree.main._info?.nodeCount ?? 0, 0)
+    stage.reset()
+    await tree.once.behaviorsFinished()
 
-    let lifetime2 = try Tree.main
-      .start(
-        root: PrimeSquare(),
-        from: snap3
-      )
-    lifetime2.stage(on: stage)
+    let tree2 = Tree(
+      root: PrimeSquare()
+    )
+    try tree2.start(from: snap3)
+      .autostop()
+      .stage(on: stage)
 
-    XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, 49)
-    XCTAssertEqual(Tree.main._info?.nodeCount, 2)
+    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, 49)
+    XCTAssertEqual(try tree2.assume.info.nodeCount, 2)
 
-    try lifetime2.set(state: snap0)
-    XCTAssert(Tree.main._info?.isConsistent == true)
-    XCTAssertEqual(lifetime.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(Tree.main._info?.nodeCount, 1)
+    try tree2.assume.restore(state: snap0)
+    XCTAssert(try tree2.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, nil)
+    XCTAssertEqual(try tree2.assume.info.nodeCount, 1)
 
-    try lifetime2.set(state: snap1)
-    XCTAssert(Tree.main._info?.isConsistent == true)
-    XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, 4)
-    XCTAssertEqual(Tree.main._info?.nodeCount, 2)
+    try tree2.assume.restore(state: snap1)
+    XCTAssert(try tree2.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, 4)
+    XCTAssertEqual(try tree2.assume.info.nodeCount, 2)
 
-    try lifetime2.set(state: snap0)
-    XCTAssert(Tree.main._info?.isConsistent == true)
-    XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(Tree.main._info?.nodeCount, 1)
+    try tree2.assume.restore(state: snap0)
+    XCTAssert(try tree2.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, nil)
+    XCTAssertEqual(try tree2.assume.info.nodeCount, 1)
 
-    try lifetime2.set(state: snap3)
-    XCTAssert(Tree.main._info?.isConsistent == true)
-    XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, 49)
-    XCTAssertEqual(Tree.main._info?.nodeCount, 2)
+    try tree2.assume.restore(state: snap3)
+    XCTAssert(try tree2.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, 49)
+    XCTAssertEqual(try tree2.assume.info.nodeCount, 2)
 
-    try lifetime2.set(state: snap2)
-    XCTAssert(Tree.main._info?.isConsistent == true)
-    XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, nil)
-    XCTAssertEqual(Tree.main._info?.nodeCount, 1)
+    try tree2.assume.restore(state: snap2)
+    XCTAssert(try tree2.assume.info.isConsistent == true)
+    XCTAssertEqual(try tree2.assume.rootNode.primeSquared?.square, nil)
+    XCTAssertEqual(try tree2.assume.info.nodeCount, 1)
 
-    lifetime2.dispose()
-    XCTAssertFalse(Tree.main._info?.isActive ?? false)
-    XCTAssertEqual(lifetime2.rootNode.primeSquared?.square, nil)
+    stage.reset()
   }
 
 }
@@ -178,15 +180,13 @@ extension PlaybackTests {
 
   struct SubNode: Node {
 
-    @Route(SubSubNode.self) var subSubRoute
+    @Route var subSubRoute: SubSubNode? = nil
     @Value var subValue = 32
     @Projection var value: Int
 
     var rules: some Rules {
       if subValue == 2 {
-        $subSubRoute.route {
-          SubSubNode(value: $value)
-        }
+        Serve(SubSubNode(value: $value), at: $subSubRoute)
       }
     }
   }
@@ -196,13 +196,11 @@ extension PlaybackTests {
   struct RootNode: Node {
 
     @Value var routeIfNegative = 0
-    @Route(SubNode.self) var subRoute
+    @Route var subRoute: SubNode? = nil
 
     var rules: some Rules {
       if routeIfNegative < 0 {
-        $subRoute.route {
-          SubNode(value: $routeIfNegative)
-        }
+        Serve(SubNode(value: $routeIfNegative), at: $subRoute)
       }
     }
   }
@@ -215,7 +213,7 @@ extension PlaybackTests {
     @Projection var value: Int
 
     var rules: some Rules {
-      OnChange(value) { value in
+      OnUpdate(value) { value in
         square = value * value
       }
     }
@@ -225,16 +223,18 @@ extension PlaybackTests {
 
   struct PrimeSquare: Node {
 
+    // MARK: Internal
+
     @Value var potentialPrime = 0
-    @Route(Square.self) var primeSquared
+    @Route var primeSquared: Square? = nil
 
     var rules: some Rules {
       if isPrime(potentialPrime) {
-        $primeSquared.route {
-          Square(value: $potentialPrime)
-        }
+        Serve(Square(value: $potentialPrime), at: $primeSquared)
       }
     }
+
+    // MARK: Private
 
     private func isPrime(_ num: Int) -> Bool {
       guard num >= 2 else {

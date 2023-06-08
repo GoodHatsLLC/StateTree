@@ -1,9 +1,7 @@
-import TreeState
-
 extension Projection
   where
   Value: MutableCollection, Value: RangeReplaceableCollection,
-  Value.Element: Identifiable, Value.Element: TreeState
+  Value.Element: Identifiable, Value.Element: Equatable
 {
   func filter(
     isIncluded: @escaping (Value.Element) -> Bool

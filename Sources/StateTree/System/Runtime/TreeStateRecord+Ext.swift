@@ -1,4 +1,5 @@
-import TreeState
+import Intents
+import Utilities
 
 // MARK: properties
 extension TreeStateRecord {
@@ -17,15 +18,6 @@ extension TreeStateRecord {
 
 // MARK: Focus
 extension TreeStateRecord {
-
-  func parent(of nodeID: NodeID) -> NodeID? {
-    guard let record = getRecord(nodeID)
-    else {
-      return nil
-    }
-    return record.origin.nodeID
-  }
-
   func ancestors(of nodeID: NodeID) -> [NodeID]? {
     guard let record = getRecord(nodeID)
     else {
@@ -45,22 +37,21 @@ extension TreeStateRecord {
     return ancestors.reversed()
   }
 
-  func contains(nodeID: NodeID) -> Bool {
-    nodes[nodeID] != nil
-  }
-
   mutating func popIntentStep() {
     if var activeIntent {
-      if activeIntent.popStepReturningPendingState() {
+      let (_, isValid) = activeIntent.popStep()
+      if isValid {
+        assert(activeIntent.isValid)
         self.activeIntent = activeIntent
       } else {
+        assert(!activeIntent.isValid)
         self.activeIntent = nil
       }
     }
   }
 
   mutating func recordIntentNodeDependency(_ nodeID: NodeID) {
-    activeIntent?.recordNodeDependency(nodeID)
+    activeIntent?.recordConsumer(nodeID)
   }
 
   mutating func register(intent: Intent) throws {
@@ -74,7 +65,7 @@ extension TreeStateRecord {
   mutating func invalidateIntentIfUsingNodeID(_ nodeID: NodeID) {
     if
       let activeIntent,
-      activeIntent.usedNodeIDs.contains(nodeID)
+      activeIntent.consumerIDs.contains(nodeID)
     {
       self.activeIntent = nil
     }
@@ -85,13 +76,16 @@ extension TreeStateRecord {
 // MARK: Values
 extension TreeStateRecord {
 
-  func getValue<T: TreeState>(_ fieldID: FieldID, as _: T.Type) -> T? {
+  mutating func getValue<T: TreeState>(_ fieldID: FieldID, as _: T.Type) -> T? {
     if
       let node = nodes[fieldID.nodeID],
       node.records.count > fieldID.offset,
-      case .value(let value) = node.records[fieldID.offset].payload
+      case .value(var value) = node.records[fieldID.offset].payload
     {
-      return value.anyValue as? T
+      if let extracted = try? value.extract(as: T.self) {
+        nodes[fieldID.nodeID]?.records[fieldID.offset].payload = .value(value)
+        return extracted
+      }
     }
     return nil
   }
@@ -102,7 +96,7 @@ extension TreeStateRecord {
       node.records.count > fieldID.offset,
       case .value(var value) = node.records[fieldID.offset].payload
     {
-      let newValue = AnyTreeState(newValue)
+      let newValue = try! ValuePayload(newValue)
       if value != newValue {
         value = newValue
         nodes[fieldID.nodeID]?.records[fieldID.offset].payload = .value(value)
@@ -132,20 +126,6 @@ extension TreeStateRecord {
 
 // MARK: Records
 extension TreeStateRecord {
-  func valueRecords() -> [ValueRecord] {
-    nodes.values
-      .flatMap { record in
-        record
-          .records
-          .compactMap { field in
-            if case .value(let valueRecord) = field.payload {
-              return .init(id: field.id, value: valueRecord)
-            } else {
-              return nil
-            }
-          }
-      }
-  }
 
   func getRecord(_ nodeID: NodeID) -> NodeRecord? {
     nodes[nodeID]
@@ -180,13 +160,13 @@ extension TreeStateRecord {
       node.records.count > field.offset,
       case .route(let original) = node.records[field.offset].payload
     else {
-      throw NodeNotFoundError()
+      throw NodeNotFoundError(id: field.nodeID)
     }
     nodes[field.nodeID]?.records[field.offset].payload = .route(nodeIDs)
     return original
   }
 
-  func getRoutedNodeSet(at route: FieldID) throws -> RouteRecord? {
+  func getRouteRecord(at route: FieldID) throws -> RouteRecord? {
     guard route.type == .route
     else {
       throw UnexpectedMemberTypeError()
@@ -205,7 +185,7 @@ extension TreeStateRecord {
     }
   }
 
-  func getRoutedNodeID(at routeID: RouteSource) throws -> NodeID? {
+  func getRoutedNodeID(at routeID: RouteID) throws -> NodeID? {
     if
       let root = root,
       routeID.fieldID == .system
@@ -214,7 +194,7 @@ extension TreeStateRecord {
     }
 
     guard
-      let hostRecord = nodes[routeID.nodeID],
+      let hostRecord = nodes[routeID.fieldID.nodeID],
       hostRecord.records.count > routeID.fieldID.offset
     else {
       return nil

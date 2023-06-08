@@ -1,11 +1,56 @@
+import Foundation
+import OrderedCollections
+import TreeActor
+
+// MARK: - RouterRuleContext
+
+public struct RouterRuleContext {
+  let depth: Int
+  let dependencies: DependencyValues
+}
+
 // MARK: - RouterType
 
-public protocol RouterType<Value>: Rules {
+public protocol RouterType<Value> {
   associatedtype Value
-  init(container: Value, fieldID: FieldID)
-  var container: Value { get }
+  static var type: RouteType { get }
+  var fallback: Value { get }
+  var defaultRecord: RouteRecord { get }
+
+  @_spi(Implementation)
+  @TreeActor
+  func current(
+    at fieldID: FieldID,
+    in: Runtime
+  ) throws -> Value
+
+  @_spi(Implementation)
+  @TreeActor
+  mutating func apply(
+    at fieldID: FieldID,
+    in: Runtime
+  ) throws
 
   @TreeActor
+  mutating func update(from: Self)
+
+  @TreeActor
+  mutating func assign(
+    _ context: RouterRuleContext
+  )
+
   @_spi(Implementation)
-  static func value(for record: RouteRecord, in runtime: Runtime) -> Value?
+  @TreeActor
+  mutating func syncToState(
+    field fieldID: FieldID,
+    in: Runtime
+  ) throws -> [AnyScope]
 }
+
+// MARK: - UnassignedRouterError
+
+struct UnassignedRouterError: Error { }
+
+// MARK: - IncorrectRouterTypeError
+
+struct IncorrectRouterTypeError: Error { }

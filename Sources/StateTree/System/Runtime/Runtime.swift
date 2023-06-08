@@ -1,52 +1,70 @@
+@_spi(Implementation) import Behavior
 import Emitter
 import Foundation
 import HeapModule
+import Intents
+import TreeActor
+import Utilities
 
 // MARK: - Runtime
 
 @TreeActor
 @_spi(Implementation)
-public final class Runtime {
+public final class Runtime: Equatable {
 
   // MARK: Lifecycle
 
   nonisolated init(
-    tree: Tree,
+    treeID: UUID,
     dependencies: DependencyValues,
     configuration: RuntimeConfiguration
   ) {
-    self.tree = tree
+    self.treeID = treeID
     self.dependencies = dependencies
     self.configuration = configuration
   }
 
   // MARK: Public
 
-  public var updateEmitter: some Emitter<NodeID> {
+  public let treeID: UUID
+
+  public nonisolated var updateEmitter: some Emitter<[TreeEvent], Never> {
     updateSubject
+      .merge(behaviorTracker.behaviorEvents.map { [.behavior(event: $0)] })
+  }
+
+  public nonisolated static func == (lhs: Runtime, rhs: Runtime) -> Bool {
+    lhs === rhs
   }
 
   // MARK: Internal
 
-  let tree: Tree
   let configuration: RuntimeConfiguration
 
   // MARK: Private
 
   private let state: StateStorage = .init()
   private let scopes: ScopeStorage = .init()
-  private let stage = DisposableStage()
   private let dependencies: DependencyValues
-  private let didStabilizeSubject = PublishSubject<Void>()
-  private let updateSubject = PublishSubject<NodeID>()
+  private let didStabilizeSubject = PublishSubject<Void, Never>()
+  private let updateSubject = PublishSubject<[TreeEvent], Never>()
   private var transactionCount: Int = 0
   private var updates: TreeChanges = .none
-  private var changeManager: (any ChangeManager)?
-
+  private var changeManager: StateUpdater?
+  private var stateApplier: StateApplier?
+  private var nodeCache: [NodeID: any Node] = [:]
+  private var updateStats = UpdateStats()
 }
 
 // MARK: Lifecycle
 extension Runtime {
+
+  func flushUpdateStats() -> UpdateStats {
+    let copy = updateStats
+    updateStats = .init()
+    return copy
+  }
+
   func start<N: Node>(
     rootNode: N,
     initialState: TreeStateRecord? = nil
@@ -62,25 +80,36 @@ extension Runtime {
       capture: capture,
       runtime: self
     )
-    let initialized = try uninitialized
-      .initialize(
-        as: N.self,
-        depth: 0,
-        dependencies: dependencies,
-        on: .system
-      )
-    let scope = try initialized.connect()
+    emitUpdates(events: [.tree(event: .started(treeID: treeID))])
     if let initialState {
-      let change = try apply(state: initialState)
-      emitUpdates(changes: change)
+      guard
+        let rootID = initialState.root,
+        let rootRecord = initialState.nodes[rootID]
+      else {
+        throw RootNodeMissingError()
+      }
+      let root = try uninitialized
+        .renitializeRoot(
+          asType: N.self,
+          from: rootRecord,
+          dependencies: dependencies
+        )
+      let rootScope = try root.connect()
+      try apply(state: initialState)
+      return rootScope
     } else {
-      updateRoutedNodes(
+      let root = try uninitialized
+        .initializeRoot(
+          asType: N.self,
+          dependencies: dependencies
+        )
+      let rootScope = try root.connect()
+      updateRouteRecord(
         at: .system,
-        to: .single(.init(id: scope.id))
+        to: .single(rootScope.nid)
       )
+      return rootScope
     }
-
-    return scope
   }
 
   func stop() {
@@ -88,19 +117,27 @@ extension Runtime {
       if let root {
         register(
           changes: .init(
-            removedScopes: [root.id]
+            removedScopes: [root.nid]
           )
         )
       }
-      stage.reset()
     }
+    emitUpdates(events: [.tree(event: .stopped(treeID: treeID))])
   }
 }
 
 // MARK: Computed properties
 extension Runtime {
 
-  var didStabilizeEmitter: some Emitter<Void> {
+  // MARK: Public
+
+  public nonisolated var behaviorEvents: some Emitter<BehaviorEvent, Never> {
+    configuration.behaviorTracker.behaviorEvents
+  }
+
+  // MARK: Internal
+
+  var didStabilizeEmitter: some Emitter<Void, Never> {
     didStabilizeSubject
   }
 
@@ -130,27 +167,6 @@ extension Runtime {
     stateEmpty && runtimeEmpty
   }
 
-  var isConsistent: Bool {
-    let stateIDs = state.nodeIDs
-    let scopeKeys = scopes.scopeIDs
-    let hasRootUnlessEmpty = (
-      state.rootNodeID != nil
-        || state.nodeIDs.isEmpty
-    )
-    let isConsistent = (
-      (stateIDs == scopeKeys)
-        && hasRootUnlessEmpty
-    )
-    assert(
-      isConsistent,
-      InternalStateInconsistency(
-        state: state.snapshot(),
-        scopes: scopes.scopes
-      ).description
-    )
-    return isConsistent
-  }
-
   var isActive: Bool {
     root?.isActive == true
   }
@@ -160,12 +176,71 @@ extension Runtime {
       || changeManager != nil
   }
 
-  var behaviorHost: BehaviorHost {
-    configuration.behaviorHost
+  nonisolated var behaviorTracker: BehaviorTracker {
+    configuration.behaviorTracker
   }
 
-  var activeIntent: ActiveIntent? {
+  var activeIntent: ActiveIntent<NodeID>? {
     state.activeIntent
+  }
+
+  func checkConsistency() -> Bool {
+    #if DEBUG
+    let stateIDs = state.nodeIDs.sorted()
+    let scopeKeys = scopes.scopeIDs.sorted()
+    let hasRootUnlessEmpty = (
+      state.rootNodeID != nil
+        || state.nodeIDs.isEmpty
+    )
+    let isConsistent = (
+      (stateIDs == scopeKeys)
+        && hasRootUnlessEmpty
+    )
+    if !(isConsistent || isPerformingStateChange) {
+      print(InternalStateInconsistency(
+        state: state.snapshot(),
+        scopes: scopes.scopes
+      ).description)
+    }
+    assert(
+      isConsistent || isPerformingStateChange,
+      "The runtime state is not consistent with the current state record."
+    )
+    return isConsistent || isPerformingStateChange
+    #else
+    return true
+    #endif
+  }
+
+  func hackHandlePotentialPostApplicationStateErrors() throws {
+    let stateIDs = Set(state.nodeIDs)
+    let scopeKeys = Set(scopes.scopeIDs)
+    if stateIDs == scopeKeys {
+      return
+    }
+    runtimeWarning("A state application left the tree in a bad state. Attempting cleanup.")
+    assertionFailure("This should never happen.")
+    let orphanedScopes = scopeKeys.subtracting(stateIDs)
+    let strayRecords = stateIDs.subtracting(scopeKeys)
+
+    for scope in orphanedScopes.compactMap({ scopes.getScope(for: $0) }) {
+      try? scope.stop()
+      scope.disconnectSendingNotification()
+    }
+    if !orphanedScopes.isEmpty {
+      runtimeWarning(
+        "The following orphaned scopes were stopped: $@",
+        ["\(orphanedScopes.reduce("") { curr, acc in "\(curr) \(acc)" })"]
+      )
+    }
+    if !strayRecords.isEmpty {
+      runtimeWarning(
+        "The following state records have no runtime scopes: $@",
+        ["\(strayRecords.reduce("") { curr, acc in "\(curr) \(acc)" })"]
+      )
+      assertionFailure("There is no easy fix for this state. Scope syncing has failed critically.")
+      throw MissingRuntimeScopeError()
+    }
   }
 
   func recordIntentScopeDependency(_ scopeID: NodeID) {
@@ -184,7 +259,7 @@ extension Runtime {
 // MARK: Public
 extension Runtime {
 
-  public var _info: StateTreeInfo {
+  public nonisolated var info: StateTreeInfo {
     StateTreeInfo(
       runtime: self,
       scopes: scopes
@@ -192,14 +267,20 @@ extension Runtime {
   }
 
   @_spi(Implementation)
-  public func getScope(at routeID: RouteSource) throws -> AnyScope {
+  public func getScope(at routeID: RouteID) throws -> AnyScope {
     guard
       let nodeID = try state
         .getRoutedNodeID(at: routeID)
     else {
-      throw NodeNotFoundError()
+      throw RouteNotFoundError(id: routeID)
     }
     return try getScope(for: nodeID)
+  }
+
+  @_spi(Implementation)
+  public func getScopes(at fieldID: FieldID) throws -> [AnyScope] {
+    let nodeIDs = try state.getRouteRecord(at: fieldID)?.ids ?? []
+    return scopes.getScopes(for: nodeIDs)
   }
 
   @_spi(Implementation)
@@ -210,14 +291,29 @@ extension Runtime {
     {
       return scope
     } else {
-      throw NodeNotFoundError()
+      throw NodeNotFoundError(id: nodeID)
     }
   }
-
 }
 
 // MARK: Internal
 extension Runtime {
+
+  // MARK: Public
+
+  public func snapshot() -> TreeStateRecord {
+    state.snapshot()
+  }
+
+  @_spi(Implementation)
+  public func getRouteRecord(at fieldID: FieldID) -> RouteRecord? {
+    do {
+      return try state.getRouteRecord(at: fieldID)
+    } catch {
+      assertionFailure(error.localizedDescription)
+      return nil
+    }
+  }
 
   // MARK: Internal
 
@@ -234,39 +330,32 @@ extension Runtime {
   }
 
   func contains(_ scopeID: NodeID) -> Bool {
-    assert(isConsistent)
+    assert(checkConsistency())
     return scopes.contains(scopeID)
   }
 
-  func snapshot() -> TreeStateRecord {
-    state.snapshot()
-  }
-
   func transaction<T>(_ action: () throws -> T) rethrows -> T {
-    let validState = state.snapshot()
-    var changes: FinalizedChange?
     assert(transactionCount >= 0)
     transactionCount += 1
     let value = try action()
-    if transactionCount == 1 {
-      do {
-        changes = try updateScopes(
-          lastValidState: validState
-        )
-      } catch {
-        runtimeWarning(
-          "An update failed and couldn't be reverted leaving the tree in an illegal state."
-        )
-        assertionFailure(
-          error.localizedDescription
-        )
-      }
+    guard transactionCount == 1
+    else {
+      transactionCount -= 1
+      return value
     }
-    assert(transactionCount > 0)
-    transactionCount -= 1
-    if let changes {
-      emitUpdates(changes: changes)
+    defer {
+      transactionCount -= 1
     }
+    do {
+      let nodeUpdates = try syncScopesToChanges(updates.take())
+      emitUpdates(events: nodeUpdates)
+    } catch {
+      runtimeWarning(
+        "An update failed leaving the tree in an illegal state."
+      )
+      assertionFailure("\(error.self)")
+    }
+    assert(checkConsistency())
     return value
   }
 
@@ -277,11 +366,12 @@ extension Runtime {
   }
 
   func disconnect(scopeID: NodeID) {
+    nodeCache.removeValue(forKey: scopeID)
     scopes.remove(id: scopeID)
     state.removeRecord(scopeID)
   }
 
-  func updateRoutedNodes(
+  func updateRouteRecord(
     at fieldID: FieldID,
     to ids: RouteRecord
   ) {
@@ -298,20 +388,12 @@ extension Runtime {
     }
   }
 
-  func getRoutedNodeSet(at fieldID: FieldID) -> RouteRecord? {
-    do {
-      return try state.getRoutedNodeSet(at: fieldID)
-    } catch {
-      assertionFailure(error.localizedDescription)
-      return nil
-    }
-  }
-
+  @TreeActor
   func getRecord(_ nodeID: NodeID) -> NodeRecord? {
     state.getRecord(nodeID)
   }
 
-  func getRoutedRecord(at routeID: RouteSource) -> NodeRecord? {
+  func getRoutedRecord(at routeID: RouteID) -> NodeRecord? {
     if
       let nodeID = try? state.getRoutedNodeID(at: routeID),
       let record = state.getRecord(nodeID)
@@ -347,11 +429,6 @@ extension Runtime {
         ) == true
       {
         register(
-          metadata: .init(
-            value: field
-          )
-        )
-        register(
           changes: .init(
             updatedValues: [field]
           )
@@ -364,27 +441,73 @@ extension Runtime {
     state.ancestors(of: nodeID)
   }
 
-  func set(state newState: TreeStateRecord) throws {
-    let changes = try apply(state: newState)
-    emitUpdates(changes: changes)
-  }
-
-  func register(metadata: StateChangeMetadata?) {
-    changeManager?.register(metadata: metadata)
+  /// Apply a pre-determined new state to the tree, syncing
+  /// the state of the runtime NodeScopes to match it.
+  /// (i.e. time-travel debugging)
+  func apply(
+    state newState: TreeStateRecord
+  ) throws {
+    guard
+      transactionCount == 0,
+      updates == .none
+    else {
+      throw InTransactionError()
+    }
+    transactionCount += 1
+    defer {
+      transactionCount -= 1
+      assert(updates == .none)
+      assert(checkConsistency())
+    }
+    let changes = try syncScopesToNewState(newState)
+    emitUpdates(events: changes)
+    try hackHandlePotentialPostApplicationStateErrors()
   }
 
   // MARK: Private
 
-  private func emitUpdates(changes: FinalizedChange) {
-    emitUpdatesExternally(nodeIDs: changes.updatedScopes)
-  }
+  private func emitUpdates(events: [TreeEvent]) {
+    assert(
+      events
+        .compactMap(\.maybeNode)
+        .map(\.depthOrder)
+        .reduce((isSorted: true, lastDepth: Int.min)) { partialResult, depth in
+          return (partialResult.isSorted && depth >= partialResult.lastDepth, depth)
+        }
+        .isSorted,
+      "node events in an update batch should be sorted by ascending depth"
+    )
 
-  private func emitUpdatesExternally(nodeIDs: [NodeID]) {
-    for nodeID in nodeIDs {
-      updateSubject.emit(
-        .value(nodeID)
-      )
+    // Emit node events through nodes.
+    //
+    // This allows ui layer consumers to subscribe to only
+    // the node they're representing, without having to filter -
+    // and so avoids an n^2 growth in work required to tell the
+    // ui layer about a node update.
+
+    for event in events {
+      if let nodeEvent = event.maybeNode {
+        switch nodeEvent {
+        case .start(let id, _):
+          let scope = scopes.getScope(for: id)
+          assert(scope?.isActive == true)
+          scope?.sendUpdateEvent()
+        case .update(let id, _):
+          let scope = scopes.getScope(for: id)
+          assert(scope?.isActive == true)
+          scope?.sendUpdateEvent()
+        case .stop(let id, _):
+          /// The scope has been stopped but not disconnected.
+          /// External consumers have not yet been notified.
+          let scope = scopes.getScope(for: id)
+          assert(scope != nil)
+          scope?.disconnectSendingNotification()
+        }
+      }
     }
+
+    // Finally, emit the update batch to the tree level information stream.
+    updateSubject.emit(value: events)
   }
 
 }
@@ -400,37 +523,63 @@ extension Runtime {
     }
   }
 
-  private func updateScopes(
-    lastValidState: TreeStateRecord
+  private func syncScopesToChanges(
+    _ treeChanges: TreeChanges
   ) throws
-    -> FinalizedChange
+    -> [TreeEvent]
   {
+    assert(stateApplier == nil)
     let updater = StateUpdater(
-      changes: updates.take(),
-      state: state,
-      scopes: scopes,
-      lastValidState: lastValidState,
-      userError: configuration.userError
-    )
-    changeManager = updater
-    defer { changeManager = nil }
-    return try updater.flush()
-  }
-
-  private func apply(
-    state newState: TreeStateRecord
-  ) throws
-    -> FinalizedChange
-  {
-    let applier = StateApplier(
+      changes: treeChanges,
       state: state,
       scopes: scopes
     )
-    changeManager = applier
+    changeManager = updater
     defer { changeManager = nil }
-    return try applier.apply(
-      state: newState
+    let updateInfo = try updater.flush()
+    updateStats = updateStats.merged(with: updateInfo.stats)
+    return updateInfo.events.map { .node(event: $0) }
+  }
+
+  private func syncScopesToNewState(
+    _ newState: TreeStateRecord
+  ) throws
+    -> [TreeEvent]
+  {
+    let applier = StateApplier(
+      newState: newState,
+      stateStorage: state,
+      scopeStorage: scopes
     )
+
+    // Assert invariants.
+    // - Regular changes should not be able to happen while a new state is applied to the runtime.
+    // - Applying a state to the runtime should not itself change state.
+    assert(
+      changeManager == nil,
+      "a state application should not be able to happen during a change"
+    )
+    let preApplicationUpdates = updates.take()
+    assert(
+      preApplicationUpdates.isEmpty,
+      "a state application should not be able to happen when there are staged updates"
+    )
+    defer {
+      let postApplicationUpdates = updates.take()
+      assert(
+        postApplicationUpdates.isEmpty,
+        "state application should not lead to staged updates"
+      )
+    }
+
+    stateApplier = applier
+    defer {
+      self.stateApplier = nil
+    }
+
+    let updateInfo = try applier.flush()
+    updateStats = updateStats.merged(with: updateInfo.stats)
+    return updateInfo.events.map { .node(event: $0) }
   }
 
 }

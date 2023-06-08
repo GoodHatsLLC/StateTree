@@ -1,9 +1,10 @@
+import Disposable
+import Intents
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - IntentSnapshotTests
 
-@TreeActor
 final class IntentSnapshotTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,16 +14,18 @@ final class IntentSnapshotTests: XCTestCase {
     stage.reset()
   }
 
-  func test_intentSnapshot_restoration() throws {
-    let life = try Tree()
-      .start(root: PendingNode<ValueSetNode>())
-
+  @TreeActor
+  func test_intentSnapshot_restoration() async throws {
+    let tree = Tree(root: PendingNode<ValueSetNode>())
+    try tree.start()
+      .autostop()
+      .stage(on: stage)
     // The node's values start as false, preventing routing
-    XCTAssertEqual(life.rootNode.shouldRoute, false)
-    XCTAssertEqual(life.rootNode.mayRoute, false)
-    XCTAssertNil(life.rootNode.child)
+    XCTAssertEqual(try tree.assume.rootNode.shouldRoute, false)
+    XCTAssertEqual(try tree.assume.rootNode.mayRoute, false)
+    XCTAssertNil(try tree.assume.rootNode.child)
     // there is no active intent
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
 
     // make the intent
     let intent = try XCTUnwrap(
@@ -32,40 +35,41 @@ final class IntentSnapshotTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.assume.signal(intent: intent)
 
     // intent has not been fully applied and is still pending
-    XCTAssertEqual(life.rootNode.shouldRoute, false)
-    XCTAssertNil(life.rootNode.child)
-    XCTAssertNotNil(life._info.pendingIntent)
+    XCTAssertEqual(try tree.assume.rootNode.shouldRoute, false)
+    XCTAssertNil(try tree.assume.rootNode.child)
+    XCTAssertNotNil(try tree.assume.info.pendingIntent)
 
     // save the current state
-    let snapshot = life.snapshot()
+    let snapshot = try tree.assume.snapshot()
     // we can poke into the implementation to verify intent exists
     XCTAssertNotNil(snapshot.activeIntent)
 
     // tear down the tree
-    life.dispose()
-    XCTAssertFalse(life._info.isActive)
-    XCTAssert(life._info.isConsistent)
-    XCTAssertNil(life._info.pendingIntent)
+    stage.reset()
+    XCTAssertThrowsError(try tree.assume.info.isActive)
 
     // create a new tree from the saved state
-    let life2 = try Tree()
-      .start(root: PendingNode<ValueSetNode>(), from: snapshot)
-    XCTAssert(life2._info.isConsistent)
+    let tree2 = Tree(root: PendingNode<ValueSetNode>())
+    try tree2.start(from: snapshot)
+      .autostop()
+      .stage(on: stage)
+
+    XCTAssert(try tree2.assume.info.isConsistent)
 
     // unblock the pending intent
-    life2.rootNode.mayRoute = true
+    try tree2.assume.rootNode.mayRoute = true
 
     // once the state changes, the intent applies
-    XCTAssertEqual(life2.rootNode.shouldRoute, true)
-    XCTAssertNotNil(life2.rootNode.child)
+    XCTAssertEqual(try tree2.assume.rootNode.shouldRoute, true)
+    XCTAssertNotNil(try tree2.assume.rootNode.child)
     // the snapshot's serialized intent steps apply
-    XCTAssertEqual(life2.rootNode.child?.value, 123)
+    XCTAssertEqual(try tree2.assume.rootNode.child?.value, 123)
 
     // and the intent finishes
-    XCTAssertNil(life2._info.pendingIntent)
+    XCTAssertNil(try tree2.assume.info.pendingIntent)
   }
 }
 
@@ -79,12 +83,12 @@ private protocol DefaultInitNode: Node {
 /// Intent definitions
 extension IntentSnapshotTests {
 
-  fileprivate struct ValueSetStep: IntentStep {
+  fileprivate struct ValueSetStep: StepPayload {
     static let name = "value-set-step"
     let value: Int
   }
 
-  fileprivate struct PendingNodeStep: IntentStep {
+  fileprivate struct PendingNodeStep: StepPayload {
     static let name = "pending-step"
     let shouldRoute: Bool
   }
@@ -99,8 +103,8 @@ extension IntentSnapshotTests {
     @Value var value: Int?
 
     var rules: some Rules {
-      OnIntent(step: ValueSetStep.self) { step in
-        .resolution {
+      OnIntent(ValueSetStep.self) { step in
+        .act {
           value = step.value
         }
       }
@@ -111,16 +115,16 @@ extension IntentSnapshotTests {
 
     @Value var mayRoute: Bool = false
     @Value var shouldRoute: Bool = false
-    @Route(Next.self) var child
+    @Route var child: Next? = nil
 
     var rules: some Rules {
       if shouldRoute {
-        $child.route(to: Next())
+        Serve(Next(), at: $child)
       }
-      OnIntent(step: PendingNodeStep.self) { step in
+      OnIntent(PendingNodeStep.self) { step in
         mayRoute
-          ? .resolution { shouldRoute = step.shouldRoute }
-          : .pending
+          ? .act { shouldRoute = step.shouldRoute }
+          : .pend
       }
     }
   }

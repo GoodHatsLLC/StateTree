@@ -1,6 +1,5 @@
 // MARK: - Inject
 
-@TreeActor
 public struct Inject<R: Rules>: Rules {
 
   // MARK: Lifecycle
@@ -11,7 +10,7 @@ public struct Inject<R: Rules>: Rules {
     @RuleBuilder into rules: () -> R
   ) {
     self.dependenciesUpdateFunc = { initial in
-      initial.inject(path, value: value)
+      initial.injecting(path, value: value)
     }
     self.containedRules = rules()
   }
@@ -73,6 +72,8 @@ public struct Inject<R: Rules>: Rules {
     return try containedRules.updateRule(from: new.containedRules, with: newContext)
   }
 
+  public mutating func syncToState(with _: RuleContext) throws { }
+
   // MARK: Private
 
   private let dependenciesUpdateFunc: (DependencyValues) -> DependencyValues
@@ -81,7 +82,7 @@ public struct Inject<R: Rules>: Rules {
 }
 
 extension Rules {
-  public func inject<Value>(
+  public func injecting<Value>(
     _ path: WritableKeyPath<DependencyValues, Value>,
     _ value: Value
   ) -> Inject<some Rules> {

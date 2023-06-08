@@ -26,7 +26,6 @@
 --rules numberFormatting
 --rules opaqueGenericParameters
 --rules organizeDeclarations
---rules preferDouble
 --rules preferKeyPath
 --rules redundantBackticks
 --rules redundantBreak
@@ -41,7 +40,6 @@
 --rules redundantParens
 --rules redundantPattern
 --rules redundantRawValues
---rules redundantReturn
 --rules redundantSelf
 --rules redundantType
 --rules redundantVoidReturnType

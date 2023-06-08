@@ -1,9 +1,9 @@
+import Disposable
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - StartStopTests
 
-@TreeActor
 final class StartStopTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,46 +13,48 @@ final class StartStopTests: XCTestCase {
     stage.reset()
   }
 
-  func test_startStop() throws {
+  @TreeActor
+  func test_startStop() async throws {
     var startCount = 0
     var stopCount = 0
-    let tree = try Tree.main
-      .start(
-        root: StartStop(
-          start: {
-            startCount += 1
-          },
-          stop: {
-            stopCount += 1
-          }
-        )
+    let tree = Tree(
+      root: StartStop(
+        start: {
+          startCount += 1
+        },
+        stop: {
+          stopCount += 1
+        }
       )
+    )
+    try tree.start()
 
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 0)
-    tree.dispose()
+    try tree.stop()
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 1)
   }
 
-  func test_subnode_startStop() throws {
+  @TreeActor
+  func test_subnode_startStop() async throws {
     var startCount = 0
     var stopCount = 0
-    let tree = try Tree.main
-      .start(
-        root: StartStopHost(
-          start: {
-            startCount += 1
-          },
-          stop: {
-            stopCount += 1
-          }
-        )
+    let tree = Tree(
+      root: StartStopHost(
+        start: {
+          startCount += 1
+        },
+        stop: {
+          stopCount += 1
+        }
       )
+    )
+    try tree.start()
 
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 0)
-    tree.dispose()
+    try tree.stop()
     XCTAssertEqual(startCount, 1)
     XCTAssertEqual(stopCount, 1)
   }
@@ -66,11 +68,9 @@ extension StartStopTests {
     let start: () -> Void
     let stop: () -> Void
 
-    @Route(StartStop.self) var startStop
+    @Route var startStop: StartStop? = nil
     var rules: some Rules {
-      $startStop.route {
-        StartStop(start: start, stop: stop)
-      }
+      Serve(StartStop(start: start, stop: stop), at: $startStop)
     }
   }
 

@@ -1,4 +1,3 @@
-#if !CUSTOM_ACTOR
 import Combine
 import Disposable
 import Emitter
@@ -15,26 +14,30 @@ final class ObservableNode<N: Node>: ObservableObject {
 
   init(scope: NodeScope<N>) {
     self.scope = scope
-    self.disposable = start()
   }
 
   // MARK: Internal
 
+  enum ChangeEvent {
+    case update
+    case stop
+  }
+
   let scope: NodeScope<N>
 
-  func start() -> AnyDisposable {
-    scope
-      .runtime
-      .updateEmitter
-      .filter { [id = scope.id] in $0 == id }
-      .subscribe { [weak self] _ in
+  func startIfNeeded() {
+    disposable = disposable ?? scope
+      .didUpdateEmitter
+      .subscribe { [weak self] in
         self?.objectWillChange.send()
+      } finished: { [weak self] in
+        self?.disposable?.dispose()
+        self?.disposable = nil
       }
   }
 
   // MARK: Private
 
-  private var disposable: AnyDisposable?
+  private var disposable: AutoDisposable?
 
 }
-#endif

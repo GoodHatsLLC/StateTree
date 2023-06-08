@@ -28,6 +28,10 @@ struct TreeChanges: TreeState {
   let dirtyScopes: [NodeID]
   let updatedValues: [FieldID]
 
+  var isEmpty: Bool {
+    self == .none
+  }
+
   static func + (lhs: TreeChanges, rhs: TreeChanges) -> TreeChanges {
     .init(
       addedScopes: lhs.addedScopes + rhs.addedScopes,

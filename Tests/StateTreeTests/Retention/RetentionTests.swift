@@ -1,10 +1,12 @@
+import Disposable
 import Emitter
+import TreeActor
+import Utilities
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - RetentionTests
 
-@TreeActor
 final class RetentionTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -14,27 +16,29 @@ final class RetentionTests: XCTestCase {
     stage.reset()
   }
 
-  func test_retention() throws {
-    let tree = Tree.main
+  @TreeActor
+  func test_retention() async throws {
     var scopes: [WeakRef<NodeScope<DeepNode>>] = []
     let count = 800
 
-    try autoreleasepool {
-      let lifetime = try tree
-        .start(root: DeepNode(depth: count))
-      let rootScope = (try? lifetime.runtime.getScope(for: lifetime.rootID))?
-        .underlying as? NodeScope<DeepNode>
+    try ({
+      let stage = DisposableStage()
+      let tree = Tree(root: DeepNode(depth: count))
+      let handle = try tree.start()
+      handle.autostop()
+        .stage(on: stage)
+      let rootScope = try tree.assume.root
       var maybeScope: NodeScope<DeepNode>? = rootScope
       while let scope = maybeScope {
-        scopes.append(.init(ref: scope))
-        maybeScope = scope.childScopes.filter { $0.id != scope.id }.first?
+        scopes.append(.init(scope))
+        maybeScope = scope.childScopes.filter { $0.nid != scope.nid }.first?
           .underlying as? NodeScope<DeepNode>
       }
 
       XCTAssertEqual(scopes.compactMap(\.ref).count, count)
 
-      lifetime.dispose()
-    }
+      stage.dispose()
+    })()
     XCTAssertEqual(scopes.compactMap(\.ref).count, 0)
   }
 }
@@ -45,12 +49,12 @@ extension RetentionTests {
 
   struct DeepNode: Node {
 
-    @Route(DeepNode.self) var next
+    @Route var next: DeepNode? = nil
     @Value var depth: Int
 
     var rules: some Rules {
       if depth > 1 {
-        $next.route { DeepNode(depth: depth - 1) }
+        Serve(DeepNode(depth: depth - 1), at: $next)
       }
     }
   }

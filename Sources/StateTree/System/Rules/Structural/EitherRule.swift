@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - EitherRule
 @TreeActor
 public enum EitherRule<RA: Rules, RB: Rules>: Rules {
@@ -52,6 +54,17 @@ public enum EitherRule<RA: Rules, RB: Rules>: Rules {
       try removeRule(with: context)
       self = new
       try applyRule(with: context)
+    }
+  }
+
+  public mutating func syncToState(with context: RuleContext) throws {
+    switch self {
+    case .ruleA(var rA):
+      try rA.syncToState(with: context)
+      self = .ruleA(rA)
+    case .ruleB(var rB):
+      try rB.syncToState(with: context)
+      self = .ruleB(rB)
     }
   }
 

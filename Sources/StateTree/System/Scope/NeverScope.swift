@@ -1,7 +1,13 @@
+import Behavior
+import Disposable
+import Emitter
 import Foundation
+import Intents
+import OrderedCollections
+
 // MARK: - NeverScope
 
-struct NeverScope: Scoped {
+struct NeverScope: ScopeTypeInternal {
 
   // MARK: Lifecycle
 
@@ -11,6 +17,8 @@ struct NeverScope: Scoped {
   }
 
   // MARK: Internal
+
+  typealias N = NeverNode
 
   struct NeverNode: Node {
     nonisolated init() {
@@ -23,10 +31,13 @@ struct NeverScope: Scoped {
     }
   }
 
-  typealias N = NeverNode
   struct NeverScopeError: Error { }
 
-  var id: NodeID {
+  var didUpdateEmitter: AnyEmitter<Void, Never> {
+    Emitters.never.erase()
+  }
+
+  var nid: NodeID {
     assertionFailure("NeverScope should never be invoked")
     return .invalid
   }
@@ -36,24 +47,9 @@ struct NeverScope: Scoped {
     return Int.max
   }
 
-  var uniqueIdentity: String? {
-    assertionFailure("NeverScope should never be invoked")
-    return .none
-  }
-
-  var behaviorResolutions: [BehaviorResolution] {
-    get async {
-      assertionFailure("NeverScope should never be invoked")
-      return []
-    }
-  }
-
   var node: N {
-    get {
-      assertionFailure("NeverScope should never be invoked")
-      return _node
-    }
-    nonmutating set { }
+    assertionFailure("NeverScope should never be invoked")
+    return _node
   }
 
   var isActive: Bool {
@@ -86,7 +82,7 @@ struct NeverScope: Scoped {
     return .defaults
   }
 
-  var valueFieldDependencies: Set<FieldID> {
+  var valueFieldDependencies: OrderedSet<FieldID> {
     assertionFailure("NeverScope should never be invoked")
     return []
   }
@@ -96,17 +92,12 @@ struct NeverScope: Scoped {
     return false
   }
 
-  var isClean: Bool {
-    assertionFailure("NeverScope should never be invoked")
-    return false
-  }
-
-  var requiresFinishing: Bool {
+  var isStable: Bool {
     assertionFailure("NeverScope should never be invoked")
     return true
   }
 
-  var isFinished: Bool {
+  var requiresFinishing: Bool {
     assertionFailure("NeverScope should never be invoked")
     return true
   }
@@ -116,15 +107,11 @@ struct NeverScope: Scoped {
     return false
   }
 
-  func focus() {
+  func sendUpdateEvent() {
     assertionFailure("NeverScope should never be invoked")
   }
 
-  func unfocus() {
-    assertionFailure("NeverScope should never be invoked")
-  }
-
-  func applyIntent(_: Intent) -> StepResolutionInternal {
+  func applyIntent(_: Intent) -> IntentStepResolution {
     assertionFailure("NeverScope should never be invoked")
     return .inapplicable
   }
@@ -133,22 +120,26 @@ struct NeverScope: Scoped {
     assertionFailure("NeverScope should never be invoked")
   }
 
-  func host<B: BehaviorType>(behavior: B, input _: B.Input) -> B.Action? {
-    assertionFailure("NeverScope should never be invoked")
-    behavior.dispose()
-    return nil
-  }
-
   func own(_ disposable: some Disposable) {
     assertionFailure("NeverScope should never be invoked")
     disposable.dispose()
   }
 
-  func stepTowardsFinished() throws {
+  func canOwn() -> Bool {
     assertionFailure("NeverScope should never be invoked")
+    return false
+  }
+
+  func stepTowardsFinished() throws -> Bool {
+    assertionFailure("NeverScope should never be invoked")
+    throw NeverScopeError()
   }
 
   func stop() throws {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func disconnectSendingNotification() {
     assertionFailure("NeverScope should never be invoked")
   }
 
@@ -156,7 +147,7 @@ struct NeverScope: Scoped {
     assertionFailure("NeverScope should never be invoked")
   }
 
-  func stepTowardsReady() throws {
+  func stepTowardsReady() throws -> Bool {
     assertionFailure("NeverScope should never be invoked")
     throw NeverScopeError()
   }
@@ -164,6 +155,39 @@ struct NeverScope: Scoped {
   func erase() -> AnyScope {
     assertionFailure("NeverScope should never be invoked")
     return AnyScope(scope: self)
+  }
+
+  func stopSubtree() throws {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func start() throws {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func update() throws {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func didUpdate() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func willStop() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func didStart() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func handleIntents() {
+    assertionFailure("NeverScope should never be invoked")
+  }
+
+  func syncToStateReportingCreatedScopes() throws -> [AnyScope] {
+    assertionFailure("NeverScope should never be invoked")
+    throw NeverScopeError()
   }
 
   // MARK: Private

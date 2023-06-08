@@ -1,9 +1,10 @@
+import Disposable
+import Intents
 import StateTree
 import XCTest
 
 // MARK: - IntentApplicationTests
 
-@TreeActor
 final class IntentApplicationTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,14 +14,14 @@ final class IntentApplicationTests: XCTestCase {
     stage.reset()
   }
 
-  func test_singleStep_intentApplication() throws {
-    let life = try Tree.main
-      .start(root: ValueSetNode())
-    life.stage(on: stage)
+  @TreeActor
+  func test_singleStep_intentApplication() async throws {
+    let tree = Tree(root: ValueSetNode())
+    try tree.start()
 
     // No value since intent has not triggered.
-    XCTAssertNil(life.rootNode.value)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.rootNode.value)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -28,51 +29,43 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.assume.signal(intent: intent)
     // intent has been applied
-    XCTAssertEqual(life.rootNode.value, 123)
+    XCTAssertEqual(try tree.assume.rootNode.value, 123)
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
   }
 
-  func test_decodedPayloadStep_intentApplication() throws {
-    let life = try Tree.main
-      .start(root: PrivateIntentNode())
-    life.stage(on: stage)
+  @TreeActor
+  func test_decodedPayloadStep_intentApplication() async throws {
+    let tree = Tree(root: PrivateIntentNode())
+    try tree.start()
 
     // No value is present since the intent has not triggered.
-    XCTAssertNil(life.rootNode.payload)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.rootNode.payload)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
-        // `PrivateStep(payload:)` is private. We can't directly instantiate it.
-        // PrivateStep(payload: "SOMETHING"),
-
-        // However we can construct a matching step with applicable values
-        // using a decodable payload passed to the 'Step' helper.
-
-        // We would usually use a model extracted from a deeplink or equivalent.
-        // Here we use the dictionary-init helper.
-        Step(name: "private-step", fields: ["payload": "PAYLOAD"])
+        PrivateStep(payload: "PAYLOAD")
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.assume.signal(intent: intent)
     // intent has been applied
-    XCTAssertEqual(life.rootNode.payload, "PAYLOAD")
+    XCTAssertEqual(try tree.assume.rootNode.payload, "PAYLOAD")
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
   }
 
-  func test_multiStep_intentApplication() throws {
-    let life = try Tree.main
-      .start(root: RoutingIntentNode<ValueSetNode>())
-    life.stage(on: stage)
+  @TreeActor
+  func test_multiStep_intentApplication() async throws {
+    let tree = Tree(root: RoutingIntentNode<ValueSetNode>())
+    try tree.start()
 
     // No routed node since intent has not triggered.
-    XCTAssertNil(life.rootNode.child)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.rootNode.child)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -81,22 +74,22 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.assume.signal(intent: intent)
     // intent has been applied
-    XCTAssertNotNil(life.rootNode.child)
-    XCTAssertEqual(life.rootNode.child?.value, 321)
+    XCTAssertNotNil(try tree.assume.rootNode.child)
+    XCTAssertEqual(try tree.assume.rootNode.child?.value, 321)
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
   }
 
-  func test_nodeSkippingIntentApplication() throws {
-    let life = try Tree.main
-      .start(root: RoutingIntentNode<IntermediateNode<ValueSetNode>>())
-    life.stage(on: stage)
+  @TreeActor
+  func test_nodeSkippingIntentApplication() async throws {
+    let tree = Tree(root: RoutingIntentNode<IntermediateNode<ValueSetNode>>())
+    try tree.start()
 
     // No routed node since intent has not triggered.
-    XCTAssertNil(life.rootNode.child)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.rootNode.child)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -110,23 +103,23 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.assume.signal(intent: intent)
     // intent has been applied
-    XCTAssertNotNil(life.rootNode.child)
-    XCTAssertEqual(life.rootNode.child?.child?.value, 321)
+    XCTAssertNotNil(try tree.assume.rootNode.child)
+    XCTAssertEqual(try tree.assume.rootNode.child?.child?.value, 321)
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
   }
 
-  func test_singleNodeRepeatedStep_intentApplication() throws {
-    let life = try Tree.main
-      .start(root: RepeatStepNode())
-    life.stage(on: stage)
+  @TreeActor
+  func test_singleNodeRepeatedStep_intentApplication() async throws {
+    let tree = Tree(root: RepeatStepNode())
+    try tree.start()
 
     // No value since intent has not triggered.
-    XCTAssertNil(life.rootNode.value1)
-    XCTAssertNil(life.rootNode.value2)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.rootNode.value1)
+    XCTAssertNil(try tree.assume.rootNode.value2)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
     // make the intent
     let intent = try XCTUnwrap(
       Intent(
@@ -135,25 +128,25 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.assume.signal(intent: intent)
     // intent has been applied
-    XCTAssertEqual(life.rootNode.value1, "stepOne")
-    XCTAssertEqual(life.rootNode.value2, "stepTwo")
+    XCTAssertEqual(try tree.assume.rootNode.value1, "stepOne")
+    XCTAssertEqual(try tree.assume.rootNode.value2, "stepTwo")
     // and the intent is finished
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
   }
 
-  func test_pendingStep_intentApplication() throws {
-    let life = try Tree.main
-      .start(root: PendingNode<ValueSetNode>())
-    life.stage(on: stage)
+  @TreeActor
+  func test_pendingStep_intentApplication() async throws {
+    let tree = Tree(root: PendingNode<ValueSetNode>())
+    try tree.start()
 
     // The node's values start as false, preventing routing
-    XCTAssertEqual(life.rootNode.shouldRoute, false)
-    XCTAssertEqual(life.rootNode.mayRoute, false)
-    XCTAssertNil(life.rootNode.child)
+    XCTAssertEqual(try tree.assume.rootNode.shouldRoute, false)
+    XCTAssertEqual(try tree.assume.rootNode.mayRoute, false)
+    XCTAssertNil(try tree.assume.rootNode.child)
     // there is no active intent
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
 
     // make the intent
     let intent = try XCTUnwrap(
@@ -162,38 +155,38 @@ final class IntentApplicationTests: XCTestCase {
       )
     )
     // signal the intent
-    life.signal(intent: intent)
+    try tree.assume.signal(intent: intent)
 
     // intent has not been fully applied and is still active
-    XCTAssertEqual(life.rootNode.shouldRoute, false)
-    XCTAssertNil(life.rootNode.child)
-    XCTAssertNotNil(life._info.pendingIntent)
+    XCTAssertEqual(try tree.assume.rootNode.shouldRoute, false)
+    XCTAssertNil(try tree.assume.rootNode.child)
+    XCTAssertNotNil(try tree.assume.info.pendingIntent)
 
-    life.rootNode.mayRoute = true
+    try tree.assume.rootNode.mayRoute = true
 
     // once the state changes, the intent applies and finishes
-    XCTAssertEqual(life.rootNode.shouldRoute, true)
-    XCTAssertNotNil(life.rootNode.child)
-    XCTAssertNil(life._info.pendingIntent)
+    XCTAssertEqual(try tree.assume.rootNode.shouldRoute, true)
+    XCTAssertNotNil(try tree.assume.rootNode.child)
+    XCTAssertNil(try tree.assume.info.pendingIntent)
   }
 
-  func test_maybeInvalidatedIntent() throws {
-    try runTest(shouldInvalidate: false)
+  @TreeActor
+  func test_maybeInvalidatedIntent() async throws {
+    try await runTest(shouldInvalidate: false)
     stage.reset()
-    try runTest(shouldInvalidate: true)
+    try await runTest(shouldInvalidate: true)
 
-    func runTest(shouldInvalidate: Bool) throws {
-      let life = try Tree.main
-        .start(root: InvalidatingNode<PendingNode<ValueSetNode>>())
-      life.stage(on: stage)
+    func runTest(shouldInvalidate: Bool) async throws {
+      let tree = Tree(root: InvalidatingNode<PendingNode<ValueSetNode>>())
+      try tree.start()
 
       // The node's values start false preventing routing
-      XCTAssertEqual(life.rootNode.shouldRoute, false)
-      XCTAssertEqual(life.rootNode.validNext, .initial)
-      XCTAssertNil(life.rootNode.initialNext)
-      XCTAssertNil(life.rootNode.laterNext)
+      XCTAssertEqual(try tree.assume.rootNode.shouldRoute, false)
+      XCTAssertEqual(try tree.assume.rootNode.validNext, .initial)
+      XCTAssertNil(try tree.assume.rootNode.initialNext)
+      XCTAssertNil(try tree.assume.rootNode.laterNext)
       // there is no active intent
-      XCTAssertNil(life._info.pendingIntent)
+      XCTAssertNil(try tree.assume.info.pendingIntent)
 
       // make the intent
       let intent = try XCTUnwrap(
@@ -204,51 +197,51 @@ final class IntentApplicationTests: XCTestCase {
         )
       )
       // signal the intent
-      life.signal(intent: intent)
+      try tree.assume.signal(intent: intent)
 
       // the first intent applies triggering a route to 'initialNext'
-      XCTAssertEqual(life.rootNode.shouldRoute, true)
-      XCTAssertNotNil(life.rootNode.initialNext)
+      XCTAssertEqual(try tree.assume.rootNode.shouldRoute, true)
+      XCTAssertNotNil(try tree.assume.rootNode.initialNext)
       // (the other route to the same node type remains disabled due to the 'validNext' state)
-      XCTAssertEqual(life.rootNode.validNext, .initial)
-      XCTAssertNil(life.rootNode.laterNext)
+      XCTAssertEqual(try tree.assume.rootNode.validNext, .initial)
+      XCTAssertNil(try tree.assume.rootNode.laterNext)
       // but the unrelated 'mayRoute' state prevents routing
-      XCTAssertEqual(life.rootNode.initialNext?.mayRoute, false)
+      XCTAssertEqual(try tree.assume.rootNode.initialNext?.mayRoute, false)
       // the second intent step can not yet apply
-      XCTAssertEqual(life.rootNode.initialNext?.shouldRoute, false)
+      XCTAssertEqual(try tree.assume.rootNode.initialNext?.shouldRoute, false)
       // and so neither can the third
-      XCTAssertNil(life.rootNode.initialNext?.child?.value)
+      XCTAssertNil(try tree.assume.rootNode.initialNext?.child?.value)
       // the intent remains active as its step is pending
-      XCTAssertNotNil(life._info.pendingIntent)
+      XCTAssertNotNil(try tree.assume.info.pendingIntent)
 
       if shouldInvalidate {
-        let initialChildType = type(of: life.rootNode.initialNext)
+        let initialChildType = type(of: try tree.assume.rootNode.initialNext)
 
         // 'mayRoute' keeps the second step pending, while root node's state changes
-        life.rootNode.validNext = .later
+        try tree.assume.rootNode.validNext = .later
 
         // the root's initial child has deallocated and and a new identically typed child is routed
-        XCTAssertNil(life.rootNode.initialNext)
-        XCTAssertNotNil(life.rootNode.laterNext)
-        let laterChildType = type(of: life.rootNode.laterNext)
+        XCTAssertNil(try tree.assume.rootNode.initialNext)
+        XCTAssertNotNil(try tree.assume.rootNode.laterNext)
+        let laterChildType = type(of: try tree.assume.rootNode.laterNext)
         XCTAssertEqual("\(initialChildType)", "\(laterChildType)")
 
         // but the intent has finished
-        XCTAssertNil(life._info.pendingIntent)
+        XCTAssertNil(try tree.assume.info.pendingIntent)
         // and the second and third steps never execute on the new node
-        XCTAssertEqual(life.rootNode.laterNext?.shouldRoute, false)
+        XCTAssertEqual(try tree.assume.rootNode.laterNext?.shouldRoute, false)
 
         // (even if the state blocking the previous node is changed in the new one)
-        life.rootNode.initialNext?.mayRoute = true
-        XCTAssertEqual(life.rootNode.laterNext?.shouldRoute, false)
+        try tree.assume.rootNode.initialNext?.mayRoute = true
+        XCTAssertEqual(try tree.assume.rootNode.laterNext?.shouldRoute, false)
 
       } else {
         // a change to the blocking mayRoute releases the second step from pending and allow
         // the third to execute and the intent to finish
-        life.rootNode.initialNext?.mayRoute = true
-        XCTAssertNotNil(life.rootNode.initialNext?.child)
-        XCTAssertEqual(life.rootNode.initialNext?.child?.value, 111)
-        XCTAssertNil(life._info.pendingIntent)
+        try tree.assume.rootNode.initialNext?.mayRoute = true
+        XCTAssertNotNil(try tree.assume.rootNode.initialNext?.child)
+        XCTAssertEqual(try tree.assume.rootNode.initialNext?.child?.value, 111)
+        XCTAssertNil(try tree.assume.info.pendingIntent)
       }
     }
   }
@@ -265,38 +258,37 @@ private protocol DefaultInitNode: Node {
 /// Intent definitions
 extension IntentApplicationTests {
 
-  fileprivate struct RepeatStep1: IntentStep {
+  fileprivate struct RepeatStep1: StepPayload {
     static let name = "repeat-1"
     let value: String
   }
 
-  fileprivate struct RepeatStep2: IntentStep {
+  fileprivate struct RepeatStep2: StepPayload {
     static let name = "repeat-2"
     let value: String
   }
 
-  fileprivate struct ValueSetStep: IntentStep {
+  fileprivate struct ValueSetStep: StepPayload {
     static let name = "value-set-step"
     let value: Int
   }
 
-  fileprivate struct RouteTriggerStep: IntentStep {
+  fileprivate struct RouteTriggerStep: StepPayload {
     static let name = "route-trigger-step"
     let shouldRoute: Bool
   }
 
-  fileprivate struct PendingNodeStep: IntentStep {
+  fileprivate struct PendingNodeStep: StepPayload {
     static let name = "pending-step"
     let shouldRoute: Bool
   }
 
-  fileprivate struct MaybeInvalidatedStep: IntentStep {
+  fileprivate struct MaybeInvalidatedStep: StepPayload {
     static let name = "maybe-invalid"
     let shouldRoute: Bool
   }
 
-  fileprivate struct PrivateStep: IntentStep {
-    private init(payload _: String) { fatalError() }
+  fileprivate struct PrivateStep: StepPayload {
     static let name = "private-step"
     let payload: String
   }
@@ -311,8 +303,8 @@ extension IntentApplicationTests {
     @Value var value: Int?
 
     var rules: some Rules {
-      OnIntent(step: ValueSetStep.self) { step in
-        .resolution {
+      OnIntent(ValueSetStep.self) { step in
+        .act {
           value = step.value
         }
       }
@@ -322,8 +314,8 @@ extension IntentApplicationTests {
   fileprivate struct PrivateIntentNode: DefaultInitNode {
     @Value var payload: String?
     var rules: some Rules {
-      OnIntent(step: PrivateStep.self) { step in
-        .resolution {
+      OnIntent(PrivateStep.self) { step in
+        .act {
           payload = step.payload
         }
       }
@@ -335,13 +327,13 @@ extension IntentApplicationTests {
     @Value var value1: String?
     @Value var value2: String?
     var rules: some Rules {
-      OnIntent(step: RepeatStep1.self) { step in
-        .resolution {
+      OnIntent(RepeatStep1.self) { step in
+        .act {
           value1 = step.value
         }
       }
-      OnIntent(step: RepeatStep2.self) { step in
-        .resolution {
+      OnIntent(RepeatStep2.self) { step in
+        .act {
           value2 = step.value
         }
       }
@@ -349,14 +341,14 @@ extension IntentApplicationTests {
   }
 
   fileprivate struct RoutingIntentNode<Next: DefaultInitNode>: DefaultInitNode {
-    @Route(Next.self) var child
+    @Route var child: Next? = nil
     @Value private var shouldRoute: Bool = false
     var rules: some Rules {
       if shouldRoute {
-        $child.route(to: Next())
+        Serve(Next(), at: $child)
       }
-      OnIntent(step: RouteTriggerStep.self) { step in
-        .resolution {
+      OnIntent(RouteTriggerStep.self) { step in
+        .act {
           shouldRoute = step.shouldRoute
         }
       }
@@ -364,9 +356,9 @@ extension IntentApplicationTests {
   }
 
   fileprivate struct IntermediateNode<Next: DefaultInitNode>: DefaultInitNode {
-    @Route(Next.self) var child
+    @Route var child: Next? = nil
     var rules: some Rules {
-      $child.route(to: Next())
+      Serve(Next(), at: $child)
     }
   }
 
@@ -374,27 +366,27 @@ extension IntentApplicationTests {
 
     @Value var mayRoute: Bool = false
     @Value var shouldRoute: Bool = false
-    @Route(Next.self) var child
+    @Route var child: Next? = nil
 
     var rules: some Rules {
       if shouldRoute {
-        $child.route(to: Next())
+        Serve(Next(), at: $child)
       }
-      OnIntent(step: PendingNodeStep.self) { step in
+      OnIntent(PendingNodeStep.self) { step in
         mayRoute
-          ? .resolution { shouldRoute = step.shouldRoute }
-          : .pending
+          ? .act { shouldRoute = step.shouldRoute }
+          : .pend
       }
     }
   }
 
   fileprivate struct InvalidatingNode<Next: DefaultInitNode>: DefaultInitNode {
-    @Route(Next.self) var initialNext
-    @Route(Next.self) var laterNext
+    @Route var initialNext: Next? = nil
+    @Route var laterNext: Next? = nil
     @Value var validNext: ValidNext = .initial
     @Value var shouldRoute: Bool = false
 
-    enum ValidNext: TreeState {
+    enum ValidNext: Codable {
       case initial
       case later
     }
@@ -402,12 +394,12 @@ extension IntentApplicationTests {
     var rules: some Rules {
       if shouldRoute {
         switch validNext {
-        case .initial: $initialNext.route(to: Next())
-        case .later: $laterNext.route(to: Next())
+        case .initial: Serve(Next(), at: $initialNext)
+        case .later: Serve(Next(), at: $laterNext)
         }
       }
-      OnIntent(step: MaybeInvalidatedStep.self) { step in
-        .resolution {
+      OnIntent(MaybeInvalidatedStep.self) { step in
+        .act {
           shouldRoute = step.shouldRoute
         }
       }

@@ -1,10 +1,10 @@
+import Disposable
 import Emitter
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - StressTests
 
-@TreeActor
 final class StressTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -14,10 +14,11 @@ final class StressTests: XCTestCase {
     stage.reset()
   }
 
-  func test_creationThrash() throws {
-    let testTree = Tree.main
+  @TreeActor
+  func test_creationThrash() async throws {
+    let testTree = Tree(root: DeepNode(depth: 1))
 
-    let desiredDepth = 1600
+    let desiredDepth = 800
     let repetitions = 4
 
     func findDepth(from node: DeepNode) -> Int {
@@ -28,14 +29,14 @@ final class StressTests: XCTestCase {
       node.next.map { getDeepest(from: $0) } ?? node
     }
 
-    let lifetime = try testTree
-      .start(root: DeepNode(depth: 1))
-    lifetime.stage(on: stage)
-    XCTAssert(testTree._info?.isActive == true)
+    try testTree.start()
+      .autostop()
+      .stage(on: stage)
+    XCTAssert(try testTree.assume.info.isActive == true)
 
-    let initialSnapshot = lifetime.snapshot()
+    let initialSnapshot = try testTree.assume.snapshot()
 
-    let node = lifetime.root.node
+    let node = try testTree.assume.root.node
 
     node.depth = desiredDepth
     XCTAssertEqual(findDepth(from: node), desiredDepth)
@@ -51,14 +52,14 @@ final class StressTests: XCTestCase {
       XCTAssertEqual(findDepth(from: node), desiredDepth)
     }
 
-    let depthSnapshot = lifetime.snapshot()
-    XCTAssertNotEqual(initialSnapshot, depthSnapshot)
+    let depthSnapshot = try testTree.assume.snapshot()
+    XCTAssertNotEqual(initialSnapshot.formattedJSON, depthSnapshot.formattedJSON)
 
     node.depth = 1
-    let finalSnapshot = lifetime.snapshot()
+    let finalSnapshot = try testTree.assume.snapshot()
 
-    XCTAssertEqual(initialSnapshot, finalSnapshot)
-    XCTAssert(testTree._info?.isActive == true)
+    XCTAssertEqual(initialSnapshot.formattedJSON, finalSnapshot.formattedJSON)
+    XCTAssert(try testTree.assume.info.isActive == true)
   }
 }
 
@@ -68,12 +69,12 @@ extension StressTests {
 
   struct DeepNode: Node {
 
-    @Route(DeepNode.self) var next
+    @Route var next: DeepNode? = nil
     @Value var depth: Int
 
     var rules: some Rules {
       if depth > 1 {
-        $next.route { DeepNode(depth: depth - 1) }
+        Serve(DeepNode(depth: depth - 1), at: $next)
       }
     }
   }

@@ -18,9 +18,11 @@
 /// ```
 public struct DependencyValues {
 
+  // MARK: Public
+
   public static let defaults: DependencyValues = .init()
 
-  public func inject<Value>(
+  public func injecting<Value>(
     _ keyPath: WritableKeyPath<DependencyValues, Value>,
     value: Value
   )
@@ -31,12 +33,25 @@ public struct DependencyValues {
     return copy
   }
 
+  @discardableResult
+  public mutating func inject<Value>(
+    _ keyPath: WritableKeyPath<DependencyValues, Value>,
+    value: Value
+  )
+    -> DependencyValues
+  {
+    self[keyPath: keyPath] = value
+    return self
+  }
+
   public subscript<Key: DependencyKey>(_: Key.Type) -> Key.Value {
     get { values[Key.hashable] as? Key.Value ?? Key.defaultValue }
     set {
       values[Key.hashable] = newValue
     }
   }
+
+  // MARK: Internal
 
   private(set) var values: [AnyHashable: Any] = [:]
 

@@ -1,58 +1,84 @@
-#if !CUSTOM_ACTOR
+import Disposable
 @_spi(Implementation) import StateTree
+import StateTreePlayback
 import SwiftUI
-import TimeTravel
 
-@MainActor
 @propertyWrapper
-@dynamicMemberLookup
-public struct TreeRoot<N: Node>: DynamicProperty, NodeAccess {
+public struct TreeRoot<NodeType: Node>: DynamicProperty {
 
   // MARK: Lifecycle
 
   public init(
-    wrappedValue: N
+    state: TreeStateRecord,
+    rootNode: NodeType,
+    dependencies: DependencyValues = .defaults
   ) {
-    _state = .init(wrappedValue: RootNodeObject(root: wrappedValue))
+    let tree = Tree(root: rootNode, dependencies: dependencies)
+    do {
+      let handle = try tree.start(from: state).autostop()
+      _handle = .init(wrappedValue: handle)
+    } catch {
+      preconditionFailure(
+        """
+        Could not start Tree.
+        error: \(error.localizedDescription)
+        """
+      )
+    }
+    let root = ObservableRoot(tree: tree)
+    _observed = .init(wrappedValue: root)
+  }
+
+  public init(
+    wrappedValue: NodeType
+  ) {
+    let tree = Tree(root: wrappedValue, dependencies: .defaults)
+    do {
+      let handle = try tree.start().autostop()
+      _handle = .init(wrappedValue: handle)
+    } catch {
+      preconditionFailure(
+        """
+        Could not start Tree.
+        error: \(error.localizedDescription)
+        """
+      )
+    }
+    let root = ObservableRoot(tree: tree)
+    _observed = .init(wrappedValue: root)
   }
 
   // MARK: Public
 
-  @_spi(Implementation) public var scope: NodeScope<N> {
-    state.life.root
+  @_spi(Implementation) public var scope: NodeScope<NodeType> {
+    try! observed.tree.assume.root
   }
 
-  public var tree: Tree {
-    state.life.tree
+  @_spi(Implementation) public var nid: NodeID {
+    try! observed.tree.assume.root.nid
   }
 
-  @_spi(Implementation) public var id: NodeID {
-    state.life.root.id
+  public var wrappedValue: NodeType {
+    try! observed.tree.assume.root.node
   }
 
-  public var wrappedValue: N {
-    state.life.root.node
+  public var node: TreeNode<NodeType> {
+    TreeNode(scope: scope)
   }
 
-  public var projectedValue: TreeRoot<N> {
+  public var projectedValue: Self {
     self
   }
 
-  public func life() -> TreeLifetime<N> {
-    state.life
-  }
-
-  public func player(frames: [StateFrame]) throws -> Player<N> {
-    try state.life.player(frames: frames)
-  }
-
-  public func recorder(frames: [StateFrame] = []) -> Recorder<N> {
-    state.life.recorder(frames: frames)
+  public var tree: Tree<NodeType> {
+    observed.tree
   }
 
   // MARK: Internal
 
-  @StateObject var state: RootNodeObject<N>
+  @StateObject var observed: ObservableRoot<NodeType>
 
+  // MARK: Private
+
+  @State private var handle: TreeHandle<NodeType>.StopHandle
 }
-#endif

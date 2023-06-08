@@ -1,8 +1,7 @@
 @_spi(Implementation)
 public struct NodeCapture: Equatable {
-  public static func == (lhs: NodeCapture, rhs: NodeCapture) -> Bool {
-    lhs.fields == rhs.fields
-  }
+
+  // MARK: Lifecycle
 
   init(_ node: some Node) {
     self.anyNode = node
@@ -15,6 +14,36 @@ public struct NodeCapture: Equatable {
       }
   }
 
+  // MARK: Public
+
+  public static func == (lhs: NodeCapture, rhs: NodeCapture) -> Bool {
+    lhs.nodeTypeEquals(other: rhs.anyNode)
+  }
+
+  // MARK: Internal
+
   let anyNode: any Node
   let fields: [FieldCapture]
+
+  var RouteHandles: [any RouteHandle] {
+    fields.compactMap { field in
+      switch field {
+      case .route(let capture):
+        return capture.value.handle
+      default:
+        return nil
+      }
+    }
+  }
+
+  // MARK: Private
+
+  private func nodeTypeEquals<N: Node>(other _: N) -> Bool {
+    if (anyNode as? N) != nil {
+      return true
+    } else {
+      return false
+    }
+  }
+
 }

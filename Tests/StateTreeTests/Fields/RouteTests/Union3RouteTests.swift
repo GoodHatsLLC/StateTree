@@ -1,9 +1,9 @@
+import Disposable
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - Union3RouteTests
 
-@TreeActor
 final class Union3RouteTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,87 +13,87 @@ final class Union3RouteTests: XCTestCase {
     stage.reset()
   }
 
-  func test_Union3Route_A() throws {
-    let tree = try Tree.main
-      .start(root: NestedUnion3RouteHost(routeTo: .a))
-    tree.stage(on: stage)
-    XCTAssertNotNil(tree.root)
-    XCTAssertNil(tree.rootNode.hosted?.b)
-    XCTAssertNil(tree.rootNode.hosted?.c)
-    let routed = try XCTUnwrap(tree.rootNode.hosted?.a)
+  @TreeActor
+  func test_Union3Route_A() async throws {
+    let tree = Tree(root: NestedUnion3RouteHost(routeTo: .a))
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted?.a)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: AModel.self)
     )
   }
 
-  func test_Union3Route_B() throws {
-    let tree = try Tree.main
-      .start(root: NestedUnion3RouteHost(routeTo: .b))
-    tree.stage(on: stage)
-    XCTAssertNotNil(tree.root)
-    XCTAssertNil(tree.rootNode.hosted?.a)
-    XCTAssertNil(tree.rootNode.hosted?.c)
-    let routed = try XCTUnwrap(tree.rootNode.hosted?.b)
+  @TreeActor
+  func test_Union3Route_B() async throws {
+    let tree = Tree(root: NestedUnion3RouteHost(routeTo: .b))
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted?.b)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: BModel.self)
     )
   }
 
-  func test_Union3Route_C() throws {
-    let tree = try Tree.main
-      .start(root: NestedUnion3RouteHost(routeTo: .c))
-    tree.stage(on: stage)
-    XCTAssertNotNil(tree.root)
-    XCTAssertNil(tree.rootNode.hosted?.a)
-    XCTAssertNil(tree.rootNode.hosted?.b)
-    let routed = try XCTUnwrap(tree.rootNode.hosted?.c)
+  @TreeActor
+  func test_Union3Route_C() async throws {
+    let tree = Tree(root: NestedUnion3RouteHost(routeTo: .c))
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted?.c)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: CModel.self)
     )
   }
 
-  func test_Union3Route_none() throws {
-    let tree = try Tree.main
-      .start(root: NestedUnion3RouteHost(routeTo: nil))
-    tree.stage(on: stage)
-    XCTAssertNotNil(tree.root)
-    XCTAssertNil(tree.rootNode.hosted?.a)
-    XCTAssertNil(tree.rootNode.hosted?.b)
-    XCTAssertNil(tree.rootNode.hosted?.c)
+  @TreeActor
+  func test_Union3Route_none() async throws {
+    let tree = Tree(root: NestedUnion3RouteHost(routeTo: nil))
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
   }
 
-  func test_Union3Route_reroute() throws {
-    let tree = try Tree.main
-      .start(root: NestedUnion3RouteHost(routeTo: .a))
-    tree.stage(on: stage)
-    XCTAssertNotNil(tree.root)
-    XCTAssertNil(tree.rootNode.hosted?.b)
-    XCTAssertNil(tree.rootNode.hosted?.c)
-    let routed = try XCTUnwrap(tree.rootNode.hosted?.a)
+  @TreeActor
+  func test_Union3Route_reroute() async throws {
+    let tree = Tree(root: NestedUnion3RouteHost(routeTo: .a))
+    try tree.start()
+    XCTAssertNotNil(try tree.assume.root)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
+    let routed = try XCTUnwrap(try tree.assume.rootNode.hosted?.a)
     XCTAssertEqual(
       String(describing: type(of: routed)),
       String(describing: AModel.self)
     )
 
-    tree.rootNode.routeTo = .b
-    XCTAssertNil(tree.rootNode.hosted?.a)
-    XCTAssertNil(tree.rootNode.hosted?.c)
-    let routed2 = try XCTUnwrap(tree.rootNode.hosted?.b)
+    try tree.assume.rootNode.routeTo = .b
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.c)
+    let routed2 = try XCTUnwrap(try tree.assume.rootNode.hosted?.b)
     XCTAssertEqual(
       String(describing: type(of: routed2)),
       String(describing: BModel.self)
     )
 
-    tree.rootNode.routeTo = nil
-    XCTAssertNil(tree.rootNode.hosted)
+    try tree.assume.rootNode.routeTo = nil
+    XCTAssertNil(try tree.assume.rootNode.hosted)
 
-    tree.rootNode.routeTo = .c
-    XCTAssertNil(tree.rootNode.hosted?.a)
-    XCTAssertNil(tree.rootNode.hosted?.b)
-    let routed3 = try XCTUnwrap(tree.rootNode.hosted?.c)
+    try tree.assume.rootNode.routeTo = .c
+    XCTAssertNil(try tree.assume.rootNode.hosted?.a)
+    XCTAssertNil(try tree.assume.rootNode.hosted?.b)
+    let routed3 = try XCTUnwrap(try tree.assume.rootNode.hosted?.c)
     XCTAssertEqual(
       String(describing: type(of: routed3)),
       String(describing: CModel.self)
@@ -104,7 +104,7 @@ final class Union3RouteTests: XCTestCase {
 
 extension Union3RouteTests {
 
-  enum Model: TreeState {
+  enum Model: Codable {
     case a
     case b
     case c
@@ -133,20 +133,17 @@ extension Union3RouteTests {
   struct NestedUnion3RouteHost: Node {
 
     @Value var routeTo: Model?
-    @Route(AModel.self, BModel.self, CModel.self) var hosted
+    @Route var hosted: Union.Three<AModel, BModel, CModel>? = nil
 
     var rules: some Rules {
       if let routeTo {
         switch routeTo {
         case .a:
-          $hosted
-            .route { .a(AModel()) }
+          Serve(.a(AModel()), at: $hosted)
         case .b:
-          $hosted
-            .route { .b(BModel()) }
+          Serve(.b(BModel()), at: $hosted)
         case .c:
-          $hosted
-            .route { .c(CModel()) }
+          Serve(.c(CModel()), at: $hosted)
         }
       }
     }

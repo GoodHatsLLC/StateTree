@@ -1,12 +1,79 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.8
 
+import class Foundation.ProcessInfo
 import PackageDescription
+
+// MARK: - Build
+
+enum Build {
+  static let isVerbose: Bool = {
+    let value = ProcessInfo.processInfo.environment["VERBOSE_BUILD"] == "1"
+    // trigger initial print that shows up next to 'warning' indicator.
+    if value {
+      print("[🏗️ Printing build context]")
+    }
+    return value
+  }()
+
+  static let usesCustomTreeActor: Bool = {
+    ProcessInfo.processInfo.environment["CUSTOM_ACTOR"] == "1"
+  }()
+
+  static let platformSupportsSwiftUI: Bool = {
+    #if !canImport(SwiftUI)
+    return false
+    #else
+    return true
+    #endif
+  }()
+
+  static let globalSwiftSettings: [SwiftSetting] = {
+    var settings: [SwiftSetting] = []
+    if usesCustomTreeActor {
+      printContext("[🛠️ - @TreeActor aliased to custom global actor]")
+      settings.append(.define("CUSTOM_ACTOR"))
+    } else {
+      printContext("[🎨 - @TreeActor aliased to @MainActor]")
+    }
+    settings.append(contentsOf: [
+      .enableUpcomingFeature("ConciseMagicFile"),
+      .enableUpcomingFeature("ExistentialAny"),
+      .enableUpcomingFeature("StrictConcurrency"),
+      .enableUpcomingFeature("ImplicitOpenExistentials"),
+      .enableUpcomingFeature("BareSlashRegexLiterals"),
+    ])
+    return settings
+  }()
+
+  static var shouldBuildSwiftUI: Bool { !usesCustomTreeActor && platformSupportsSwiftUI }
+
+  static func printContext(_ context: String) {
+    if isVerbose {
+      print(context)
+    }
+  }
+}
+
+extension Package {
+  func filteredForCompatibility() -> Package {
+    if Build.shouldBuildSwiftUI {
+      Build.printContext("[🍎 - SwiftUI build enabled]")
+    } else {
+      Build.printContext("[🐧 - SwiftUI build disabled]")
+      targets.removeAll { $0.name.contains("SwiftUI") }
+      products.removeAll { $0.name.contains("SwiftUI") }
+    }
+    return self
+  }
+}
+
+// MARK: Package definition
 
 let package = Package(
   name: "StateTree",
   platforms: [
-    .macOS(.v12),
-    .iOS(.v14),
+    .macOS("12.3"),
+    .iOS("15.4"),
   ],
   products: [
     .library(
@@ -21,51 +88,137 @@ let package = Package(
         "StateTreeSwiftUI",
       ]
     ),
+    .library(
+      name: "StateTreeImperativeUI",
+      targets: [
+        "StateTreeImperativeUI",
+      ]
+    ),
+    .library(
+      name: "StateTreeTesting",
+      targets: [
+        "StateTreeTesting",
+      ]
+    ),
   ],
   dependencies: [
     .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
-      .upToNextMinor(from: "0.4.0")
+      "0.8.0" ..< "0.9.0"
     ),
     .package(
       url: "https://github.com/GoodHatsLLC/Emitter.git",
-      .upToNextMinor(from: "0.1.4")
+      "0.8.5" ..< "0.9.0"
     ),
     .package(
       url: "https://github.com/apple/swift-collections.git",
       branch: "release/1.1"
     ),
+    .package(
+      url: "https://github.com/apple/swift-docc-plugin",
+      from: "1.1.0"
+    ),
   ],
   targets: [
     .target(
-      name: "StateTree",
+      name: "Intents",
+      dependencies: [
+        "Utilities",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "TreeActor",
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "Utilities",
+      dependencies: [
+        "Disposable",
+        .product(name: "OrderedCollections", package: "swift-collections"),
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "Behavior",
       dependencies: [
         "Disposable",
         "Emitter",
-        "TreeState",
+        "TreeActor",
+        "Utilities",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "StateTree",
+      dependencies: [
+        "Behavior",
+        "Disposable",
+        "Emitter",
+        "Intents",
+        "TreeActor",
+        "Utilities",
         .product(name: "HeapModule", package: "swift-collections"),
-      ]
+        .product(name: "OrderedCollections", package: "swift-collections"),
+      ],
+      swiftSettings: Build.globalSwiftSettings
     ),
     .target(
       name: "StateTreeSwiftUI",
       dependencies: [
+        "Behavior",
+        "Disposable",
+        "Emitter",
+        "Intents",
         "StateTree",
-        "TimeTravel",
-      ]
+        "StateTreePlayback",
+        "TreeActor",
+        "Utilities",
+      ],
+      swiftSettings: Build.globalSwiftSettings
     ),
     .target(
-      name: "TimeTravel",
+      name: "StateTreeTesting",
       dependencies: [
         "StateTree",
-      ]
+        "StateTreePlayback",
+      ],
+      swiftSettings: Build.globalSwiftSettings
     ),
     .target(
-      name: "TreeState"
+      name: "StateTreeImperativeUI",
+      dependencies: [
+        "StateTree",
+        "TreeActor",
+      ],
+      swiftSettings: Build.globalSwiftSettings
+    ),
+    .target(
+      name: "StateTreePlayback",
+      dependencies: [
+        "StateTree",
+      ],
+      swiftSettings: Build.globalSwiftSettings
     ),
     .testTarget(
       name: "StateTreeTests",
       dependencies: [
         "StateTree",
+        "Disposable",
+        .product(name: "HeapModule", package: "swift-collections"),
+      ]
+    ),
+    .testTarget(
+      name: "StateTreeImperativeUITests",
+      dependencies: [
+        "StateTree",
+        "StateTreeImperativeUI",
+      ]
+    ),
+    .testTarget(
+      name: "StateTreePlaybackTests",
+      dependencies: [
+        "StateTreePlayback",
       ]
     ),
     .testTarget(
@@ -75,8 +228,17 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "TreeStateTests",
-      dependencies: ["TreeState"]
+      name: "BehaviorTests",
+      dependencies: ["Behavior"]
+    ),
+    .testTarget(
+      name: "IntentsTests",
+      dependencies: ["Intents"]
+    ),
+    .testTarget(
+      name: "UtilitiesTests",
+      dependencies: ["Utilities"]
     ),
   ]
 )
+.filteredForCompatibility()

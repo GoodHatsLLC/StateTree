@@ -1,22 +1,22 @@
+import Behavior
+import TreeActor
+import Utilities
+
 // MARK: - StateUpdater
 
 @TreeActor
-final class StateUpdater: ChangeManager {
+final class StateUpdater {
 
   // MARK: Lifecycle
 
   nonisolated init(
     changes: TreeChanges,
     state: StateStorage,
-    scopes: ScopeStorage,
-    lastValidState: TreeStateRecord,
-    userError: RuntimeConfiguration.ErrorHandler
+    scopes: ScopeStorage
   ) {
     self.state = state
     self.scopes = scopes
     self.stagedChanges = changes
-    self.lastValidState = lastValidState
-    self.userError = userError
   }
 
   // MARK: Internal
@@ -27,7 +27,7 @@ final class StateUpdater: ChangeManager {
   ///
   /// > Important: The changes in `StateStorage` must be described in the `changes`
   /// parameter to be flushed.
-  func flush() throws -> FinalizedChange {
+  func flush() throws -> (events: [NodeEvent], stats: UpdateStats) {
     guard !isFlushing
     else {
       assertionFailure("flush should never be called when another flush is in progress")
@@ -36,62 +36,24 @@ final class StateUpdater: ChangeManager {
 
     isFlushing = true
     defer { isFlushing = false }
-    do {
-      return try .init(
-        updatedScopes: updateScopes()
-      )
-    } catch let error as CycleError {
-      runtimeWarning("A circular dependency between Nodes was found")
-      let applier = StateApplier(state: state, scopes: scopes)
-      self.revertApplier = applier
-      defer { revertApplier = nil }
-      userError.handle(error: error)
-      return try applier.apply(state: lastValidState)
-    } catch {
-      throw error
-    }
-  }
-
-  func register(metadata: StateChangeMetadata?) {
-    assert(isFlushing)
-    guard
-      isFlushing,
-      potentialCycleDetected,
-      let metadata
-    else {
-      return
-    }
-    changeEventsInFlushCycle.append(metadata)
+    return try updateScopes()
   }
 
   func flush(dependentChanges changes: TreeChanges) {
     assert(isFlushing)
-    if let revertApplier {
-      revertApplier.flush(dependentChanges: changes)
-    } else {
-      stagedChanges.put(changes)
-    }
+    stagedChanges.put(changes)
   }
 
   // MARK: Private
 
-  private let lastValidState: TreeStateRecord
-  private let userError: RuntimeConfiguration.ErrorHandler
   private let state: StateStorage
   private let scopes: ScopeStorage
 
-  private var revertApplier: StateApplier?
   private var stagedChanges: TreeChanges = .none
-  private var potentialFlushCycles: Set<NodeID> = []
-  private var changeEventsInFlushCycle: [StateChangeMetadata] = []
 
-  private var potentialCycleDetected: Bool {
-    !potentialFlushCycles.isEmpty
-  }
-
-  private func updateScopes() throws -> [NodeID] {
-    var allInserts = Set<NodeID>()
-    var updatedScopes = Set<DepthMarkedNodeID>()
+  private func updateScopes() throws -> (events: [NodeEvent], stats: UpdateStats) {
+    var updateCollector = UpdateEffectInfoCollector()
+    let timer = updateCollector.stats.startedTimer()
 
     // Create a priority queue to hold the scopes that require updates.
     //
@@ -114,28 +76,9 @@ final class StateUpdater: ChangeManager {
     //   (i.e. min() is FIFO within a same-depth group and max() is FILO.)
     var priorityQueue = PriorityQueue(
       type: AnyScope.self,
-      prioritizeBy: \.depth,
-      uniqueBy: \.id
+      orderBy: \.depth,
+      uniqueBy: \.nid
     )
-
-    func detectCycles(_ scopeID: NodeID) throws {
-      if !allInserts.contains(scopeID) {
-        // If this is the first time the scope has been inserted into the change queue
-        // track the scope.
-        allInserts.insert(scopeID)
-        return
-      }
-      if !potentialFlushCycles.contains(scopeID) {
-        // If the scope was reinserted we're probably in a cycle.
-        // Insert this scope as a potential cycle source.
-        // (`potentialCycleDetected` is now true)
-        potentialFlushCycles.insert(scopeID)
-        return
-      }
-      // If the scope has now been reinserted twice we define the current update as cyclical.
-      // Throw an error containing all of the change sources seen since the first reinsertion.
-      throw CycleError(cycle: changeEventsInFlushCycle)
-    }
 
     // Handle changes made as part of regular value updates.
     //
@@ -145,7 +88,7 @@ final class StateUpdater: ChangeManager {
     // future calls to this function methods.
     func addChangesToQueue(_ changes: TreeChanges) throws {
       // Added scopes have been built by a router rule and registered
-      // with the manager via `updateRoutedNodes(at:to:)`.
+      // with the tracker via `updateRouteRecord(at:to:)`.
       // The scopes have not yet been started or reacted to their
       // initial state.
       //
@@ -160,10 +103,9 @@ final class StateUpdater: ChangeManager {
           assertionFailure("a reported added scope should always exist")
           continue
         }
+        updateCollector.started(id: id, depth: scope.depth)
         scope.markDirty(pending: .update)
-        if priorityQueue.insert(scope) {
-          try detectCycles(scope.id)
-        }
+        _ = priorityQueue.insert(scope)
       }
 
       // When a state update leads to nodes being torn down their
@@ -180,9 +122,7 @@ final class StateUpdater: ChangeManager {
           continue
         }
         scope.markDirty(pending: .stop)
-        if priorityQueue.insert(scope) {
-          try detectCycles(scope.id)
-        }
+        _ = priorityQueue.insert(scope)
       }
 
       // Scopes known to be dependent on a value field that
@@ -194,6 +134,7 @@ final class StateUpdater: ChangeManager {
       let valueChangeDirtiedScopes = changes
         .updatedValues
         .flatMap { field in
+          // N.B. This casts a wide net and triggers needless checks.
           scopes.dependentScopesForValue(id: field)
         }
       // If the source of the change has directly highlighted
@@ -211,11 +152,13 @@ final class StateUpdater: ChangeManager {
       // To find downstream changes caused by dirtying these scopes
       // we mark them as needing updates and track progress in the
       // priority queue.
-      for scope in Set(valueChangeDirtiedScopes + knownDirtyScopes) {
+      for scope in valueChangeDirtiedScopes {
         scope.markDirty(pending: .update)
-        if priorityQueue.insert(scope) {
-          try detectCycles(scope.id)
-        }
+        _ = priorityQueue.insert(scope)
+      }
+      for scope in knownDirtyScopes {
+        scope.markDirty(pending: .update)
+        _ = priorityQueue.insert(scope)
       }
     }
 
@@ -227,35 +170,33 @@ final class StateUpdater: ChangeManager {
     try addChangesToQueue(initialChanges)
 
     while !priorityQueue.isEmpty {
-      // Check if the deepest scope requires 'finalization'
-      // actions to progress it further towards stopping.
+      // Forward the root-most node.
       if
-        let scope = priorityQueue.max,
-        scope.requiresFinishing
-      {
-        // Remove the scope if fully finished.
-        if scope.isFinished {
-          priorityQueue.popMax()
-          continue
-        }
-        // Take the next finalization action to
-        // progress towards removal.
-        try scope.stepTowardsFinished()
-      }
-      // If there was no scope to finalize check for
-      // if the least deep node can be forwarded towards
-      // being clean.
-      else if
         let scope = priorityQueue.min,
         scope.requiresReadying
       {
-        // If already clean remove.
-        if scope.isClean, let scope = priorityQueue.popMin() {
-          updatedScopes.insert(DepthMarkedNodeID(id: scope.id, depth: scope.depth))
+        // if true, the node is now clean
+        if
+          try scope.stepTowardsReady(),
+          let scope = priorityQueue.popMin()
+        {
+          updateCollector.updated(id: scope.nid, depth: scope.depth)
+        }
+      }
+      // Check if the deepest scope requires 'finalization'
+      // actions to progress it further towards stopping.
+      else if
+        let scope = priorityQueue.max,
+        scope.requiresFinishing
+      {
+        // Act, and remove the scope if fully finished.
+        if
+          try scope.stepTowardsFinished(),
+          let scope = priorityQueue.popMax()
+        {
+          updateCollector.stopped(id: scope.nid, depth: scope.depth)
           continue
         }
-        // Forward if required.
-        try scope.stepTowardsReady()
       }
       // When the deepest changed scope needs to be forwarded and
       // the changed scope closest to the root needs to be finished
@@ -268,11 +209,13 @@ final class StateUpdater: ChangeManager {
         let scope = priorityQueue.min,
         scope.requiresFinishing
       {
-        if scope.isFinished {
-          priorityQueue.popMin()
-          continue
+        // if true, the node is now clean
+        if
+          try scope.stepTowardsFinished(),
+          let scope = priorityQueue.popMin()
+        {
+          updateCollector.stopped(id: scope.nid, depth: scope.depth)
         }
-        try scope.stepTowardsFinished()
       }
       // If no change to the queue are possible the queue must be empty.
       else {
@@ -283,22 +226,15 @@ final class StateUpdater: ChangeManager {
       try addChangesToQueue(stagedChanges.take())
     }
 
+    updateCollector.stats.recordTimeElapsed(from: timer)
+
     // Return the list of updated nodes to fire notifications
     // to the UI layer for.
-    // These are sorted by increasing depth as they're inserted
-    // at min pop.
-    return Set(updatedScopes)
-      .sorted { lhs, rhs in
-        lhs.depth < rhs.depth
-      }
-      .map(\.id)
+    return updateCollector.collectChanges()
   }
 
 }
 
-// MARK: - DepthMarkedNodeID
+// MARK: - UnfinishedFlushError
 
-private struct DepthMarkedNodeID: Hashable {
-  let id: NodeID
-  let depth: Int
-}
+struct UnfinishedFlushError: Error { }

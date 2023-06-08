@@ -1,9 +1,9 @@
+import Disposable
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - ProjectionTests
 
-@TreeActor
 final class ProjectionTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,11 +13,11 @@ final class ProjectionTests: XCTestCase {
     stage.reset()
   }
 
-  func test_projection() throws {
-    let tree = try Tree.main
-      .start(root: ProjectionHost())
-    tree.stage(on: stage)
-    let node = tree.rootNode
+  @TreeActor
+  func test_projection() async throws {
+    let tree = Tree(root: ProjectionHost())
+    try tree.start()
+    let node = try tree.assume.rootNode
     XCTAssertNil(node.route)
     node.val = 3
     let subnode = try XCTUnwrap(node.route?.c)
@@ -25,11 +25,11 @@ final class ProjectionTests: XCTestCase {
     XCTAssertNil(node.route)
   }
 
-  func test_projection_onChange() throws {
-    let tree = try Tree.main
-      .start(root: ReferencedHost(intVal: 5))
-    tree.stage(on: stage)
-    let node = tree.rootNode
+  @TreeActor
+  func test_projection_onChange() async throws {
+    let tree = Tree(root: ReferencedHost(intVal: 5))
+    try tree.start()
+    let node = try tree.assume.rootNode
 
     XCTAssertEqual(node.intVal, 5)
     XCTAssertEqual(node.displayed?.intVal, 5)
@@ -49,16 +49,19 @@ extension ProjectionTests {
 
   struct ProjectionHost: Node {
 
-    @Route(SubnodeA.self, SubnodeB.self, SubnodeC.self) var route
+    @Route var route: Union.Three<SubnodeA, SubnodeB, SubnodeC>? = nil
     @Value var val: Int?
 
     var rules: some Rules {
-      if val == 1 {
-        $route.route { .a(SubnodeA()) }
-      } else if val == 2 {
-        $route.route { .b(SubnodeB()) }
-      } else if val == 3 {
-        $route.route { .c(SubnodeC(value: $val)) }
+      switch val {
+      case 1:
+        Serve(.a(.init()), at: $route)
+      case 2:
+        Serve(.b(.init()), at: $route)
+      case 3:
+        Serve(.c(SubnodeC(value: $val)), at: $route)
+      default:
+        ()
       }
     }
   }
@@ -95,7 +98,7 @@ extension ProjectionTests {
     @Projection var intVal: Int
     @Value var derived = 0
     var rules: some Rules {
-      OnChange(intVal) { value in
+      OnUpdate(intVal) { value in
         derived = -value
       }
     }
@@ -105,9 +108,9 @@ extension ProjectionTests {
 
   struct ReferencedHost: Node {
     @Value var intVal: Int
-    @Route(DisplayedReference.self) var displayed
+    @Route var displayed: DisplayedReference? = nil
     var rules: some Rules {
-      $displayed.route { DisplayedReference(intVal: $intVal) }
+      Serve(DisplayedReference(intVal: $intVal), at: $displayed)
     }
   }
 

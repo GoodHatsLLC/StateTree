@@ -1,0 +1,32 @@
+{
+  "pins" : [
+    {
+      "identity" : "disposable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Disposable.git",
+      "state" : {
+        "revision" : "2b6db4e812dc2dddb7743251224c29308976b3e3",
+        "version" : "0.8.0"
+      }
+    },
+    {
+      "identity" : "emitter",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/Emitter.git",
+      "state" : {
+        "revision" : "84614b2f05e51deb1ada3bd9fc36bf431bc25e44",
+        "version" : "0.8.5"
+      }
+    },
+    {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-collections.git",
+      "state" : {
+        "branch" : "release/1.1",
+        "revision" : "992e0f3446b4f608f5ead9dd6edc92f6bbc0b0a0"
+      }
+    }
+  ],
+  "version" : 2
+}

@@ -1,3 +1,5 @@
+import TreeActor
+
 // MARK: - MaybeRule
 @TreeActor
 public struct MaybeRule<R: Rules>: Rules {
@@ -33,6 +35,10 @@ public struct MaybeRule<R: Rules>: Rules {
     case (.none, .none):
       break
     }
+  }
+
+  public mutating func syncToState(with context: RuleContext) throws {
+    try optionalRules?.syncToState(with: context)
   }
 
   // MARK: Internal

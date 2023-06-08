@@ -1,3 +1,6 @@
+import OrderedCollections
+import TreeActor
+
 struct ValueDependencyTracker {
 
   // MARK: Internal
@@ -10,18 +13,18 @@ struct ValueDependencyTracker {
   @TreeActor
   mutating func addValueDependencies(for scope: AnyScope) {
     let valueFieldDependencies = scope.valueFieldDependencies
-    let nodeID = scope.id
+    let nodeID = scope.nid
     nodeToValueDependency[nodeID] = valueFieldDependencies
     for valueDependency in valueFieldDependencies {
       valueDependencyToNodes[valueDependency, default: []]
-        .insert(nodeID)
+        .updateOrAppend(nodeID)
     }
   }
 
   @TreeActor
   mutating func removeValueDependencies(for scope: AnyScope) {
     let valueFieldDependencies = scope.valueFieldDependencies
-    let nodeID = scope.id
+    let nodeID = scope.nid
     nodeToValueDependency
       .removeValue(forKey: nodeID)
     for valueDependency in valueFieldDependencies {
@@ -36,7 +39,7 @@ struct ValueDependencyTracker {
 
   // MARK: Private
 
-  private var nodeToValueDependency: [NodeID: Set<FieldID>] = [:]
-  private var valueDependencyToNodes: [FieldID: Set<NodeID>] = [:]
+  private var nodeToValueDependency: [NodeID: OrderedSet<FieldID>] = [:]
+  private var valueDependencyToNodes: [FieldID: OrderedSet<NodeID>] = [:]
 
 }

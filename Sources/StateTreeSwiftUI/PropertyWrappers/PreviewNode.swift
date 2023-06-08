@@ -1,7 +1,9 @@
-#if !CUSTOM_ACTOR
 @_spi(Implementation) import StateTree
+@_spi(Implementation) import Disposable
+import StateTreePlayback
 import SwiftUI
-import TimeTravel
+
+// MARK: - PreviewNode
 
 @MainActor
 @propertyWrapper
@@ -10,13 +12,13 @@ public struct PreviewNode<N: Node> {
   // MARK: Lifecycle
 
   public init(
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
     wrappedValue: N
   ) {
     self.wrappedValue = wrappedValue
-    self.fileID = fileID
+    self.moduleFile = moduleFile
     self.line = line
     self.column = column
   }
@@ -26,24 +28,27 @@ public struct PreviewNode<N: Node> {
   public let wrappedValue: N
 
   public var projectedValue: TreeNode<N> {
-    PreviewLife(root: wrappedValue)
+    PreviewLifetime(root: wrappedValue)
       .node(
-        fileID: fileID,
+        moduleFile: moduleFile,
         line: line,
-        column: column
+        column: column,
+        node: wrappedValue
       )
   }
 
   // MARK: Private
 
-  private let fileID: String
+  private let moduleFile: String
   private let line: Int
   private let column: Int
 
 }
 
+// MARK: - PreviewLifetime
+
 @MainActor
-public struct PreviewLife<N: Node> {
+public struct PreviewLifetime<N: Node> {
   init(
     root: N
   ) {
@@ -51,25 +56,19 @@ public struct PreviewLife<N: Node> {
   }
 
   public func node(
-    fileID: String = #fileID,
+    moduleFile: String = #file,
     line: Int = #line,
     column: Int = #column,
-    tree: Tree = Tree(),
-    record: TreeStateRecord? = nil,
-    dependencies: DependencyValues = .defaults
+    node _: N
   ) -> TreeNode<N> {
-    let life = try! tree
-      .start(
-        root: root,
-        from: record,
-        dependencies: dependencies,
-        configuration: .init()
-      )
-    life.stageOneByLocation(fileID: fileID, line: line, column: column)
-    return TreeNode(scope: life.root)
+    let tree = try! Tree(root: root)
+      .start()
+    tree
+      .autostop()
+      .stageByUniqueCallSite(location: (fileID: moduleFile, line: line, column: column))
+
+    return TreeNode(scope: tree.root)
   }
 
   private let root: N
 }
-
-#endif

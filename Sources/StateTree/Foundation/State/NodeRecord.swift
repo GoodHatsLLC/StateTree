@@ -1,4 +1,3 @@
-import TreeState
 
 // MARK: - NodeRecord
 
@@ -7,8 +6,7 @@ import TreeState
 /// The `NodeRecord` includes all of the node's StateTree managed fields.
 /// (Fields are managed by StateTree when annotated with property wrappers like ``Value`` and
 /// ``Projection``.
-@_spi(Implementation)
-public struct NodeRecord: TreeState {
+struct NodeRecord: TreeState {
   var id: NodeID
   let origin: RouteSource
   var records: [FieldRecord]

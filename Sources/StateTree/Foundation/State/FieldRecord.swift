@@ -1,18 +1,13 @@
-import TreeState
+import Utilities
 
 // MARK: - FieldRecord
 
 struct FieldRecord: TreeState {
-  struct SourceFieldMetadata: TreeState {
-    let label: String?
-    let typeof: String
-  }
 
   let id: FieldID
-  let meta: SourceFieldMetadata
   var payload: FieldRecordPayload?
 
-  var type: FieldType {
+  var fieldType: FieldType {
     id.type
   }
 }
@@ -29,7 +24,7 @@ enum FieldRecordPayload: TreeState {
   case route(RouteRecord)
 
   /// `@Value` (``Value``) field on a ``Node``.
-  case value(AnyTreeState)
+  case value(ValuePayload)
 
 }
 
@@ -43,20 +38,20 @@ struct TypeDescription: TreeState {
 
 struct ValueRecord: TreeState {
   let id: FieldID
-  let value: AnyTreeState
+  let value: ValuePayload
 }
 
 // MARK: - ProjectionSource
 
 /// The source of a `Projection` — used for dependency analysis.
-enum ProjectionSource: TreeState {
+public enum ProjectionSource: TreeState {
   case valueField(FieldID)
   case programmatic
   case invalid
 }
 
 extension FieldRecord {
-  func value() -> AnyTreeState? {
+  func value() -> ValuePayload? {
     if case .value(let valueRecord) = payload {
       return valueRecord
     }

@@ -1,26 +1,27 @@
+import Disposable
 import Emitter
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - DependencyTests
 
-@TreeActor
 final class DependencyTests: XCTestCase {
 
   let stage = DisposableStage()
 
-  override func setUp() { XCTAssertNil(Tree.main._info) }
+  override func setUp() { }
   override func tearDown() {
     stage.reset()
   }
 
-  func test_dependencyInjection() throws {
-    let tree = try Tree.main
-      .start(root: DependencyHost())
-    tree.stage(on: stage)
-    XCTAssertEqual(tree.rootNode.value, "Default Value")
-    XCTAssertEqual(tree.rootNode.hosted?.value, "Some Other Value")
-    XCTAssertEqual(tree.rootNode.hosted?.hosted?.value, "Another Other Value")
+  @TreeActor
+  func test_dependencyInjection() async throws {
+    let tree = Tree(root: DependencyHost())
+    _ = try tree.start()
+    let node = try tree.assume.rootNode
+    XCTAssertEqual(node.value, "Default Value")
+    XCTAssertEqual(node.hosted?.value, "Some Other Value")
+    XCTAssertEqual(node.hosted?.hosted?.value, "Another Other Value")
   }
 
 }
@@ -44,15 +45,13 @@ extension DependencyTests {
 
   struct DependencyHost: Node {
 
-    @Route(DependencyUserOne.self) var hosted
+    @Route var hosted: DependencyUserOne? = nil
 
     @Dependency(\.myCustomValue) var value
 
     var rules: some Rules {
-      Inject(\.myCustomValue, "Some Other Value") {
-        $hosted
-          .route { DependencyUserOne() }
-      }
+      Serve(DependencyUserOne(), at: $hosted)
+        .injecting(\.myCustomValue, "Some Other Value")
     }
   }
 
@@ -61,12 +60,10 @@ extension DependencyTests {
   struct DependencyUserOne: Node {
 
     @Dependency(\.myCustomValue) var value
-    @Route(DependencyUserTwo.self) var hosted
+    @Route var hosted: DependencyUserTwo? = nil
     var rules: some Rules {
-      Inject(\.myCustomValue, "Another Other Value") {
-        $hosted
-          .route { DependencyUserTwo() }
-      }
+      Serve(DependencyUserTwo(), at: $hosted)
+        .injecting(\.myCustomValue, "Another Other Value")
     }
   }
 

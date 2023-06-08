@@ -1,10 +1,10 @@
-import TreeState
+import Utilities
 
 enum FieldCapture: Equatable {
 
   case dependency(Structure<any DependencyField>)
   case projection(Structure<any ProjectionField>)
-  case route(Structure<any RouteField>)
+  case route(Structure<any RouteFieldInternal>)
   case scope(Structure<any ScopeField>)
   case value(Structure<any ValueField>, InitialValue)
   case unmanaged(Structure<Any>)
@@ -34,7 +34,7 @@ enum FieldCapture: Equatable {
           typeDescription: typeDescription
         )
       )
-    case let field as any RouteField:
+    case let field as any RouteFieldInternal:
       self = .route(
         Structure(
           offset: offset,
@@ -90,10 +90,10 @@ enum FieldCapture: Equatable {
     }
   }
 
-  struct InitialValue: Equatable {
-    let anyTreeState: AnyTreeState
+  struct InitialValue {
+    let anyPayload: ValuePayload
     init(valueField: any ValueField) {
-      self.anyTreeState = AnyTreeState(valueField.anyInitial)
+      self.anyPayload = try! ValuePayload(valueField.anyInitial)
     }
   }
 
@@ -111,6 +111,23 @@ enum FieldCapture: Equatable {
       return structure.label
     case .unmanaged(let structure):
       return structure.label
+    }
+  }
+
+  var fieldType: FieldType {
+    switch self {
+    case .dependency:
+      return .dependency
+    case .projection:
+      return .projection
+    case .route:
+      return .route
+    case .scope:
+      return .scope
+    case .value:
+      return .value
+    case .unmanaged:
+      return .unmanaged
     }
   }
 

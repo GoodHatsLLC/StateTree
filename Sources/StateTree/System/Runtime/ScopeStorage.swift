@@ -1,5 +1,6 @@
 import Disposable
-
+import OrderedCollections
+import TreeActor
 // MARK: - ScopeStorage
 
 @TreeActor
@@ -16,11 +17,11 @@ final class ScopeStorage {
   }
 
   var scopes: [AnyScope] {
-    scopeMap.values.sorted(by: { $0.id < $1.id })
+    scopeMap.values.elements
   }
 
   var scopeIDs: [NodeID] {
-    scopeMap.keys.sorted()
+    scopeMap.keys.elements
   }
 
   var isEmpty: Bool {
@@ -28,7 +29,7 @@ final class ScopeStorage {
   }
 
   func remove(_ scope: AnyScope) {
-    remove(id: scope.id)
+    remove(id: scope.nid)
   }
 
   func remove(id: NodeID) {
@@ -39,8 +40,8 @@ final class ScopeStorage {
   }
 
   func insert(_ scope: AnyScope) {
-    assert(scopeMap[scope.id] == nil)
-    scopeMap[scope.id] = scope
+    assert(scopeMap[scope.nid] == nil, "pre-existing: \(scope.nid)")
+    scopeMap[scope.nid] = scope
     valueDependencyTracker
       .addValueDependencies(for: scope)
   }
@@ -49,7 +50,7 @@ final class ScopeStorage {
     scopeMap[id]
   }
 
-  func getScopes(for ids: [NodeID]) -> [AnyScope] {
+  func getScopes(for ids: some Collection<NodeID>) -> [AnyScope] {
     let scopes = ids.compactMap { id in
       getScope(for: id)
     }
@@ -62,7 +63,7 @@ final class ScopeStorage {
   }
 
   func contains(_ scope: AnyScope) -> Bool {
-    scopeMap[scope.id] != nil
+    scopeMap[scope.nid] != nil
   }
 
   func matching<N: Node>(node _: N) -> [AnyScope] {
@@ -91,7 +92,6 @@ final class ScopeStorage {
 
     return scope
       .childScopes
-      .filter { $0.id != scope.id }
       .map { depth(from: $0) }
       .max()
       .map { $0 + 1 } ?? 0
@@ -99,7 +99,7 @@ final class ScopeStorage {
 
   // MARK: Private
 
-  private var scopeMap: [NodeID: AnyScope] = [:]
+  private var scopeMap: OrderedDictionary<NodeID, AnyScope> = [:]
   private var valueDependencyTracker: ValueDependencyTracker = .init()
 
 }

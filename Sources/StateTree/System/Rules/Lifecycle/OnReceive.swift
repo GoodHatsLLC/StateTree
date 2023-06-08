@@ -1,83 +1,174 @@
-import Disposable
-import Emitter
+import TreeActor
+@_spi(Implementation) import Behavior
 
 // MARK: - OnReceive
 
-/// TODO: replace with behavior oriented lifecycle handlers
-@TreeActor
-public struct OnReceive<Value>: Rules {
+/// Subscribe to and receive values and lifecycle events from an `AsyncSequence` or Combine
+/// `Publisher`.
+///
+/// ```swift
+/// OnReceive(someSequence) { value in
+///   // ...
+/// } onFinish: {
+///   // ...
+/// } onFailure: { error in
+///   // ...
+/// }
+/// ```
+public struct OnReceive<Value: Sendable>: Rules {
 
   // MARK: Lifecycle
 
-  public init(
-    _ emitter: some Emitter<Value>,
+  /// Subscribe to and receive values and lifecycle events from an `AsyncSequence`.
+  ///
+  /// - Parameter seq: An `AsyncSequence` to subscribe to.
+  /// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter onValue: A callback fired with values emitted by the `AsyncSequence`.
+  /// - Parameter onFinish: *Optional:* A callback run if the `AsyncSequence` completes
+  /// successfully.
+  /// - Parameter onFailure: *Optional:* A callback run if the `AsyncSequence` fails with an error.
+  public init<Seq: AsyncSequence>(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    _ seq: Seq,
+    _ id: BehaviorID? = nil,
     onValue: @escaping @TreeActor (Value) -> Void,
-    onFinished: @escaping @TreeActor () -> Void = { },
-    onError: @escaping @TreeActor (Error) -> Void = { _ in }
-  ) {
-    self.emitter = emitter.erase()
-    self.onFinished = onFinished
-    self.onError = onError
-    self.onValue = onValue
+    onFinish: @escaping @TreeActor () -> Void = { },
+    onFailure: @escaping @TreeActor (_ error: any Error) -> Void = { _ in }
+  ) where Seq.Element == Value {
+    let id = id ?? .meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: ""
+    )
+    let behavior: Behaviors.Stream<Void, Seq.Element, any Error> = Behaviors
+      .make(id, input: Void.self) {
+        seq
+      }
+    self.callback = { scope, tracker in
+      behavior.run(
+        tracker: tracker,
+        scope: scope,
+        input: (),
+        handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
+      )
+    }
   }
 
   // MARK: Public
 
-  public func act(for lifecycle: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
-    switch lifecycle {
-    case .didStart:
-      emitter
-        .subscribe { [onValue] value in
-          onValue(value)
-        } finished: { [onFinished] in
-          onFinished()
-        } failed: { [onError] error in
-          onError(error)
-        }
-        .stage(on: stage)
-    case .didUpdate:
-      break
-    case .willStop:
-      stage.dispose()
-    case .handleIntent:
-      break
-    }
-    return .init()
+  public func act(for _: RuleLifecycle, with _: RuleContext) -> LifecycleResult {
+    .init()
   }
 
-  public mutating func applyRule(with _: RuleContext) throws { }
+  public mutating func applyRule(with context: RuleContext) throws {
+    callback(scope, context.runtime.behaviorTracker)
+  }
 
-  public mutating func removeRule(with _: RuleContext) throws { }
+  public mutating func removeRule(with _: RuleContext) throws {
+    scope.dispose()
+  }
 
   public mutating func updateRule(
-    from _: OnReceive<Value>,
+    from _: Self,
     with _: RuleContext
   ) throws { }
 
+  public mutating func syncToState(with context: RuleContext) throws {
+    scope.reset()
+    callback(scope, context.runtime.behaviorTracker)
+  }
+
   // MARK: Private
 
-  private let stage = DisposableStage()
-  private let emitter: AnyEmitter<Value>
-  private let onFinished: @TreeActor () -> Void
-  private let onError: @TreeActor (Error) -> Void
-  private let onValue: @TreeActor (Value) -> Void
-
+  private let callback: (any BehaviorScoping, BehaviorTracker) -> Void
+  private let scope: BehaviorStage = .init()
 }
 
-extension Rules {
-  public func onReceive<Value>(
-    _ emitter: some Emitter<Value>,
+import Emitter
+extension OnReceive {
+
+  /// Subscribe to and receive values and lifecycle events from an `Emitter`.
+  ///
+  /// - Parameter publisher: A `Emitter` to subscribe to.
+  /// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+  /// action.
+  /// - Parameter onValue: A callback fired with values emitted by the `Emitter`.
+  /// - Parameter onFinish: *Optional:* A callback run if the `Emitter` completes successfully.
+  /// - Parameter onFailure: *Optional:* A callback run if the `Emitter` fails with an error.
+  @_spi(Implementation)
+  public init(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    _ emitter: some Emitter<Value, any Error>,
+    _ id: BehaviorID? = nil,
     onValue: @escaping @TreeActor (Value) -> Void,
-    onFinished: @escaping @TreeActor () -> Void = { },
-    onError: @escaping @TreeActor (Error) -> Void = { _ in }
-  )
-    -> some Rules
-  {
-    OnReceive(
-      emitter,
-      onValue: onValue,
-      onFinished: onFinished,
-      onError: onError
+    onFinish: @escaping @TreeActor () -> Void = { },
+    onFailure: @escaping @TreeActor (_ error: any Error) -> Void = { _ in }
+  ) {
+    let id = id ?? .meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: ""
     )
+    let behavior: Behaviors.Stream<Void, Value, any Error> = Behaviors.make(id, input: Void.self) {
+      emitter
+    }
+    self.callback = { scope, tracker in
+      behavior.run(
+        tracker: tracker,
+        scope: scope,
+        input: (),
+        handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
+      )
+    }
   }
 }
+
+#if canImport(Combine)
+import Combine
+
+/// Subscribe to and receive values and lifecycle events from a Combine `Publisher`.
+///
+/// - Parameter publisher: A `Publisher` to subscribe to.
+/// - Parameter id: *Optional:*  A ``BehaviorID`` representing the ``Behavior`` created to run the
+/// action.
+/// - Parameter onValue: A callback fired with values emitted by the `Publisher`.
+/// - Parameter onFinish: *Optional:* A callback run if the `Publisher` completes successfully.
+/// - Parameter onFailure: *Optional:* A callback run if the `Publisher` fails with an error.
+extension OnReceive {
+  public init(
+    moduleFile: String = #file,
+    line: Int = #line,
+    column: Int = #column,
+    _ publisher: some Publisher<Value, some Error>,
+    _ id: BehaviorID? = nil,
+    onValue: @escaping @TreeActor (Value) -> Void,
+    onFinish: @escaping @TreeActor () -> Void = { },
+    onFailure: @escaping @TreeActor (_ error: any Error) -> Void = { _ in }
+  ) {
+    let id = id ?? .meta(
+      moduleFile: moduleFile,
+      line: line,
+      column: column,
+      meta: ""
+    )
+    let behavior: Behaviors.Stream<Void, Value, any Error> = Behaviors.make(id, input: Void.self) {
+      publisher
+    }
+    self.callback = { scope, tracker in
+      behavior.run(
+        tracker: tracker,
+        scope: scope,
+        input: (),
+        handler: .init(onValue: onValue, onFinish: onFinish, onFailure: onFailure, onCancel: { })
+      )
+    }
+  }
+}
+#endif

@@ -1,3 +1,4 @@
+import OrderedCollections
 /// The underlying StateTree representation of the identity of a routed node.
 ///
 /// `@Route` (``Route``) fields may be of different types such as:
@@ -16,16 +17,15 @@
 /// `.a(<NodeID>)`
 /// which would in turn correspond to a known `Node` type of the router's`Union.Two<NodeA, NodeB>`.
 public enum RouteRecord: TreeState {
-  case single(Single?)
-  case union2(Union2?)
-  case union3(Union3?)
-  case list(List?)
+  case single(NodeID)
+  case union2(Union2)
+  case union3(Union3)
+  case maybeSingle(NodeID?)
+  case maybeUnion2(Union2?)
+  case maybeUnion3(Union3?)
+  case list(List)
 
   // MARK: Public
-
-  public struct Single: TreeState {
-    var id: NodeID
-  }
 
   public enum Union2: TreeState {
     case a(NodeID)
@@ -54,74 +54,72 @@ public enum RouteRecord: TreeState {
   public struct List: TreeState {
 
     // MARK: Lifecycle
-
-    init(ids: [String: NodeID]) {
-      self.ids = ids
-    }
-
-    public init(from decoder: Decoder) throws {
-      let container = try decoder.singleValueContainer()
-      let pairs = try container.decode([IDPair].self)
-      self.ids = pairs.reduce(into: [String: NodeID]()) { partialResult, pair in
-        partialResult[pair.key] = pair.val
-      }
-    }
-
-    // MARK: Public
-
-    public func encode(to encoder: Encoder) throws {
-      var container = encoder.singleValueContainer()
-      let pairs = ids.map { IDPair(key: $0.key, val: $0.value) }.sorted(by: { $0.key < $1.key })
-      try container.encode(pairs)
+    init(idMap: OrderedDictionary<LSID, NodeID>) {
+      self.idMap = idMap
     }
 
     // MARK: Internal
 
-    struct IDPair: TreeState {
-      var key: String
-      var val: NodeID
+    var nodeIDs: [NodeID] {
+      Array(idMap.values)
     }
 
-    enum CodingKeys: CodingKey {
-      case ids
+    func nodeID(matching route: RouteID) -> NodeID? {
+      route.identity.flatMap { idMap[$0] }
     }
 
-    func nodeID(matching route: RouteSource) -> NodeID? {
-      route.identity.flatMap { ids[$0] }
-    }
-
-    func sortedNodeIDs() -> [NodeID] {
-      ids
-        .map { (sortKey: $0.key, value: $0.value) }
-        .sorted { lhs, rhs in
-          lhs.sortKey < rhs.sortKey
-        }
-        .map(\.value)
-    }
-
-    // MARK: Private
-
-    private var ids: [String: NodeID]
+    var idMap: OrderedDictionary<LSID, NodeID>
   }
 
   public var ids: [NodeID] {
     switch self {
-    case .single(let single): return (single?.id).map { [$0] } ?? []
-    case .union2(let union2): return (union2?.id).map { [$0] } ?? []
-    case .union3(let union3): return (union3?.id).map { [$0] } ?? []
-    case .list(let list): return list?.sortedNodeIDs() ?? []
+    case .single(let single): return [single]
+    case .union2(let union2): return [union2.id]
+    case .union3(let union3): return [union3.id]
+    case .maybeSingle(let single): return [single].compactMap { $0 }
+    case .maybeUnion2(let union2): return [union2?.id].compactMap { $0 }
+    case .maybeUnion3(let union3): return [union3?.id].compactMap { $0 }
+    case .list(let list): return list.nodeIDs
+    }
+  }
+
+  public var type: RouteType {
+    switch self {
+    case .single:
+      return .single
+    case .union2:
+      return .union2
+    case .union3:
+      return .union3
+    case .maybeSingle:
+      return .maybeSingle
+    case .maybeUnion2:
+      return .maybeUnion2
+    case .maybeUnion3:
+      return .maybeUnion3
+    case .list:
+      return .list
     }
   }
 
   // MARK: Internal
 
-  func nodeID(matching route: RouteSource) -> NodeID? {
-    switch (route.identity, self) {
-    case (.none, .single(let single)): return single?.id
-    case (.none, .union2(let union2)): return union2?.id
-    case (.none, .union3(let union3)): return union3?.id
-    case (.some, .list(let list)): return list?.nodeID(matching: route)
-    default: return nil
+  func nodeID(matching route: RouteID) -> NodeID? {
+    switch self {
+    case .single(let nodeID):
+      return nodeID
+    case .union2(let union2):
+      return union2.id
+    case .union3(let union3):
+      return union3.id
+    case .maybeSingle(let nodeID):
+      return nodeID
+    case .maybeUnion2(let union2):
+      return union2?.id
+    case .maybeUnion3(let union3):
+      return union3?.id
+    case .list(let list):
+      return list.nodeID(matching: route)
     }
   }
 }

@@ -1,3 +1,6 @@
+import TreeActor
+import Utilities
+
 // MARK: - ProjectionField
 
 protocol ProjectionField<Value> {
@@ -20,8 +23,7 @@ struct ProjectionConnection {
 
 /// A `Projection` references a value whose source of truth is elsewhere.
 ///
-/// The underlying referenced value is represented by an ``Accessor`` which
-/// is back by either:
+/// The underlying referenced value is backed by either:
 /// - A ``Value`` owned by a ``Node`` which is an ancestor to the one
 ///   containing the `Projection`.
 /// - Or more rarely a closure capturing a value.
@@ -31,18 +33,16 @@ struct ProjectionConnection {
 ///
 /// > Important: Shared state should have a clear contract. If multiple nodes react to shared
 /// state changes in conflicting ways they may create a circular dependency in their combined
-/// reaction logic. StateTree will detect and revert the state change triggering the circular
-/// dependency—but that's likely to be a costly process with a poor end-user  uexperience.
+/// reaction logic.
 @propertyWrapper
 @dynamicMemberLookup
-public struct Projection<Value: TreeState>: ProjectionField, Accessor {
+public struct Projection<Value: Equatable>: ProjectionField, Accessor {
 
   // MARK: Lifecycle
 
-  @TreeActor
-  init(_ access: some Accessor<Value>) {
+  public nonisolated init(_ access: some Accessor<Value>, initial: Value) {
     self.access = access
-    self.inner = Inner(cache: access.value)
+    self.inner = Inner(cache: initial)
   }
 
   // MARK: Public
@@ -54,7 +54,6 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
         runtimeWarning(
           "The projection accessed was invalid. The last cached value was returned."
         )
-        assertionFailure("the projection cache should never be used")
         return inner.cache
       }
       let value = access.value
@@ -67,11 +66,9 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
         runtimeWarning(
           "The projection written to was invalid. The write was discarded."
         )
-        assertionFailure("an invalidated projection should never be written to")
         return
       }
       if access.value != newValue {
-        registerWriteMetadata()
         access.value = newValue
         inner.cache = newValue
       }
@@ -85,8 +82,16 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
     }
   }
 
-  public var projectedValue: Projection<Value> {
-    .init(self)
+  @_disfavoredOverload public var projectedValue: Projection<Value> {
+    .init(self, initial: value)
+  }
+
+  public var source: ProjectionSource {
+    access.source
+  }
+
+  public func isValid() -> Bool {
+    access.isValid()
   }
 
   // MARK: Internal
@@ -96,17 +101,9 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
     nonmutating set { inner.projectionContext = newValue }
   }
 
-  var source: ProjectionSource {
-    access.source
-  }
-
-  func isValid() -> Bool {
-    access.isValid()
-  }
-
   // MARK: Private
 
-  @TreeActor private final class Inner {
+  private final class Inner {
 
     // MARK: Lifecycle
 
@@ -124,26 +121,10 @@ public struct Projection<Value: TreeState>: ProjectionField, Accessor {
 
   private let access: any Accessor<Value>
 
-  /// Register the projection's metadata with the ``Runtime`` providing
-  /// diagnostic information in case of circular update dependencies.
-  private func registerWriteMetadata() {
-    guard let projectionContext
-    else {
-      // An intermediate Projection not assigned to a Node field will not
-      // have a projectionContext set by StateTree.
+}
 
-      // TODO: Consider weird cases:
-      // - projections used directly as instance variables
-      // - projections used only within an initialiser.
-      return
-    }
-    projectionContext.runtime
-      .register(
-        metadata: .init(
-          projection: projectionContext.fieldID,
-          source: source
-        )
-      )
-  }
+// MARK: Identifiable
 
+extension Projection: Identifiable where Value: Identifiable {
+  public var id: Value.ID { value.id }
 }

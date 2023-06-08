@@ -1,6 +1,17 @@
+import OrderedCollections
+import TreeActor
+
 // MARK: - InitializedNode
 
-struct InitializedNode<N: Node> {
+struct InitializedNode<N: Node>: Hashable, Identifiable {
+  static func == (lhs: InitializedNode<N>, rhs: InitializedNode<N>) -> Bool {
+    lhs.id == rhs.id
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+  }
+
   let id: NodeID
   let node: N
   let dependencies: DependencyValues
@@ -8,6 +19,7 @@ struct InitializedNode<N: Node> {
   let initialCapture: NodeCapture
   let nodeRecord: NodeRecord
   let runtime: Runtime
+  let routerSet: RouterSet
 }
 
 extension InitializedNode {
@@ -19,8 +31,8 @@ extension InitializedNode {
     return scope
   }
 
-  func getValueDependencies() -> Set<FieldID> {
-    Set(
+  func getValueDependencies() -> OrderedSet<FieldID> {
+    OrderedSet(
       nodeRecord
         .records
         .compactMap { record in

@@ -1,9 +1,9 @@
+import Disposable
 import XCTest
 @_spi(Implementation) @testable import StateTree
 
 // MARK: - ValueTests
 
-@TreeActor
 final class ValueTests: XCTestCase {
 
   let stage = DisposableStage()
@@ -13,11 +13,11 @@ final class ValueTests: XCTestCase {
     stage.reset()
   }
 
-  func test_value() throws {
-    let tree = try Tree.main
-      .start(root: ValueTestHost())
-    tree.stage(on: stage)
-    let node = tree.rootNode
+  @TreeActor
+  func test_value() async throws {
+    let tree = Tree(root: ValueTestHost())
+    try tree.start()
+    let node = try tree.assume.rootNode
 
     XCTAssertNil(node.val)
     node.val = 1
@@ -31,19 +31,20 @@ extension ValueTests {
 
   struct ValueTestHost: Node {
 
-    @Route(SubnodeA.self, SubnodeB.self, SubnodeC.self) var route
-    @Route(SubnodeA.self) var otherRoute
+    @Route var route: Union.Three<SubnodeA, SubnodeB, SubnodeC>? = nil
+    @Route var otherRoute: SubnodeA? = nil
     @Value var val: Int?
 
     var rules: some Rules {
-      if val == 1 {
-        $route.route { .a(SubnodeA()) }
-      } else if val == 2 {
-        $route.route { .b(SubnodeB()) }
-      } else if val == 3 {
-        $route.route { .c(SubnodeC(value: $val)) }
-      } else if (val ?? 1) < 0 {
-        $otherRoute.route { SubnodeA() }
+      switch val {
+      case 1:
+        Serve(.a(SubnodeA()), at: $route)
+      case 2:
+        Serve(.b(SubnodeB()), at: $route)
+      case 3:
+        Serve(.c(SubnodeC(value: $val)), at: $route)
+      default:
+        Serve(SubnodeA(), at: $otherRoute)
       }
     }
   }
