@@ -26,7 +26,7 @@ public struct TagEditor: Node {
   // MARK: Public
 
   public enum Failure: Error {
-    case databaseError(Error)
+    case databaseError(any Error)
     case idCreationError
   }
 
