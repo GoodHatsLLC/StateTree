@@ -1,7 +1,4 @@
-/// Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into
-///
-/// Source: https://github.com/vapor/vapor/tree/f4b00a5350238fe896d865d96d64f12fcbbeda95/Sources/Vapor/URLEncodedForm
-/// License: https://github.com/vapor/vapor/blob/main/LICENSE
+/// Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue`
 struct URLEncodedFormParser {
 
   // MARK: Lifecycle
