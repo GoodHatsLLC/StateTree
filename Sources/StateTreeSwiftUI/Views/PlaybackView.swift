@@ -1,3 +1,4 @@
+import Dispatch
 import Disposable
 import Emitter
 import StateTree
@@ -187,6 +188,7 @@ public struct PlaybackView<Root: Node, NodeView: View>: View {
           .replaceFailures(with: 0)
         }
         .asCombinePublisher()
+        .receive(on: DispatchQueue.main)
     ) { loc in
       switch mode {
       case .record(let recorder): frameRange = recorder.frameRangeDouble
