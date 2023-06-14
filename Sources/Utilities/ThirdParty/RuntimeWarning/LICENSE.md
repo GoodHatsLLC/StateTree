@@ -1,11 +1,11 @@
-#  AnyAsyncSequence License
+# RuntimeWarning license
 
-`AnyAsyncSequence` is a lightly modified version of [AnyAsyncSequence](https://github.com/vsanthanam/AnyAsyncSequence).
+[RuntimeWarning's source](https://github.com/pointfreeco/swift-composable-architecture/blob/96f47fbe858da6084ec31ee7e31c8a310ecb8168/Sources/ComposableArchitecture/Internal/RuntimeWarnings.swift)
 
 ```
 MIT License
 
-Copyright (c) 2022 Varun Santhanam
+Copyright (c) 2020 Point-Free, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

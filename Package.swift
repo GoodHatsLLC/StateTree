@@ -141,6 +141,7 @@ let package = Package(
       ],
       exclude: [
         "ThirdParty/AnyAsyncSequence/LICENSE.md",
+        "ThirdParty/RuntimeWarning/LICENSE.md",
         "ThirdParty/SipHash/LICENSE.md",
       ],
       swiftSettings: Build.globalSwiftSettings

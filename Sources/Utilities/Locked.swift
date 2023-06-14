@@ -115,7 +115,7 @@ extension Locked {
   @inline(__always)
   fileprivate static func make(for value: T) -> some LockType<T> {
     #if canImport(os)
-    if #available(iOS 16, macOS 13, *) {
+    if #available(iOS 16, macOS 13, tvOS 16, macCatalyst 16, watchOS 9, *) {
       return OSUnfairLocked(value)
     } else {
       return NSLocked(value)
