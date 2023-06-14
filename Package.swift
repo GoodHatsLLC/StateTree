@@ -117,10 +117,6 @@ let package = Package(
       url: "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
       "1.1.0" ..< "1.2.0"
     ),
-    .package(
-      url: "https://github.com/apple/swift-docc-plugin",
-      from: "1.1.0"
-    ),
   ],
   targets: [
     .target(
