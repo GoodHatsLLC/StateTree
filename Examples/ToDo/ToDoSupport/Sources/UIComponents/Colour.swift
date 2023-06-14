@@ -38,7 +38,7 @@ public struct Colour: Hashable, Codable, Sendable, LosslessStringConvertible {
     self = this
   }
 
-  public init(from decoder: Decoder) throws {
+  public init(from decoder: any Decoder) throws {
     let container = try decoder.singleValueContainer()
     let hex = try container.decode(String.self)
     guard let rgba = RGBA(hex: hex)
@@ -59,7 +59,7 @@ public struct Colour: Hashable, Codable, Sendable, LosslessStringConvertible {
     rgba.hexString
   }
 
-  public func encode(to encoder: Encoder) throws {
+  public func encode(to encoder: any Encoder) throws {
     var container = encoder.singleValueContainer()
     try container.encode(rgba.hexString)
   }
@@ -257,7 +257,7 @@ extension Colour {
       self.init(red: red, green: green, blue: blue, alpha: alpha)
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
       let container = try decoder.singleValueContainer()
       let description = try container.decode(String.self)
       guard let this = RGBA(description)
@@ -315,7 +315,7 @@ extension Colour {
     public var b: Double { blue }
     public var a: Double { alpha }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
       var container = encoder.singleValueContainer()
       try container.encode(description)
     }
@@ -349,7 +349,7 @@ extension Colour {
       self.init(cyan: cyan, magenta: magenta, yellow: yellow, black: black, alpha: alpha)
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
       let container = try decoder.singleValueContainer()
       let description = try container.decode(String.self)
       guard let this = CMYKA(description)
@@ -400,7 +400,7 @@ extension Colour {
     public var k: Double { black }
     public var a: Double { alpha }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
       var container = encoder.singleValueContainer()
       try container.encode(description)
     }
@@ -441,7 +441,7 @@ extension Colour {
       self.init(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
       let container = try decoder.singleValueContainer()
       let description = try container.decode(String.self)
       guard let this = HSBA(description)
@@ -488,7 +488,7 @@ extension Colour {
     public var b: Double { brightness }
     public var a: Double { alpha }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
       var container = encoder.singleValueContainer()
       try container.encode(description)
     }
