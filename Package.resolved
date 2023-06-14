@@ -19,12 +19,12 @@
       }
     },
     {
-      "identity" : "swift-collections",
+      "identity" : "swift-collections-v1_1-fork",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections.git",
+      "location" : "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
       "state" : {
-        "branch" : "release/1.1",
-        "revision" : "d8003787efafa82f9805594bc51100be29ac6903"
+        "revision" : "d8003787efafa82f9805594bc51100be29ac6903",
+        "version" : "1.1.0"
       }
     },
     {

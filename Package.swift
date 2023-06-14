@@ -111,8 +111,8 @@ let package = Package(
       "0.8.5" ..< "0.9.0"
     ),
     .package(
-      url: "https://github.com/apple/swift-collections.git",
-      branch: "release/1.1"
+      url: "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
+      "1.1.0" ..< "1.2.0"
     ),
     .package(
       url: "https://github.com/apple/swift-docc-plugin",
@@ -135,7 +135,7 @@ let package = Package(
       name: "Utilities",
       dependencies: [
         "Disposable",
-        .product(name: "OrderedCollections", package: "swift-collections"),
+        .product(name: "OrderedCollections", package: "swift-collections-v1_1-fork"),
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
@@ -158,8 +158,8 @@ let package = Package(
         "Intents",
         "TreeActor",
         "Utilities",
-        .product(name: "HeapModule", package: "swift-collections"),
-        .product(name: "OrderedCollections", package: "swift-collections"),
+        .product(name: "HeapModule", package: "swift-collections-v1_1-fork"),
+        .product(name: "OrderedCollections", package: "swift-collections-v1_1-fork"),
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
@@ -205,7 +205,7 @@ let package = Package(
       dependencies: [
         "StateTree",
         "Disposable",
-        .product(name: "HeapModule", package: "swift-collections"),
+        .product(name: "HeapModule", package: "swift-collections-v1_1-fork"),
       ]
     ),
     .testTarget(
