@@ -70,14 +70,6 @@ final class IntentURLEncodingTests: XCTestCase {
     XCTAssertNotNil(try intent?.tail?.tail?.head?.getPayload(as: TestStep3.self))
   }
 
-//  func testPrerequisite_anyCodable_encodingDecoding() throws {
-//    let step = TestStep1(field1: "one", field2: "two", field3: "three")
-//    let anyCodable = AnyCodable(step)
-//    let enc = try URLEncodedFormEncoder().encode(anyCodable)
-//    let dec = try URLEncodedFormDecoder().decode(TestStep1.self, from: enc)
-//    XCTAssertEqual(dec, step)
-//  }
-
   func testPrerequisite_step_encodingDecoding() throws {
     let step1 = TestStep1(field1: "one", field2: "two", field3: "three")
     let step2 = TestStep2(field1: "|", field2: "/", field3: "abc")
