@@ -125,6 +125,9 @@ let package = Package(
       dependencies: [
         "Utilities",
       ],
+      exclude: [
+        "ThirdParty/URLEncoder/LICENSE.md",
+      ],
       swiftSettings: Build.globalSwiftSettings
     ),
     .target(
@@ -136,6 +139,10 @@ let package = Package(
       dependencies: [
         "Disposable",
         .product(name: "OrderedCollections", package: "swift-collections-v1_1-fork"),
+      ],
+      exclude: [
+        "ThirdParty/AnyAsyncSequence/LICENSE.md",
+        "ThirdParty/SipHash/LICENSE.md",
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
@@ -166,14 +173,8 @@ let package = Package(
     .target(
       name: "StateTreeSwiftUI",
       dependencies: [
-        "Behavior",
-        "Disposable",
-        "Emitter",
-        "Intents",
         "StateTree",
         "StateTreePlayback",
-        "TreeActor",
-        "Utilities",
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
@@ -189,7 +190,6 @@ let package = Package(
       name: "StateTreeImperativeUI",
       dependencies: [
         "StateTree",
-        "TreeActor",
       ],
       swiftSettings: Build.globalSwiftSettings
     ),
@@ -204,14 +204,12 @@ let package = Package(
       name: "StateTreeTests",
       dependencies: [
         "StateTree",
-        "Disposable",
         .product(name: "HeapModule", package: "swift-collections-v1_1-fork"),
       ]
     ),
     .testTarget(
       name: "StateTreeImperativeUITests",
       dependencies: [
-        "StateTree",
         "StateTreeImperativeUI",
       ]
     ),

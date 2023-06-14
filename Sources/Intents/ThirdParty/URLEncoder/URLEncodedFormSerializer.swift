@@ -2,8 +2,6 @@ import struct Foundation.CharacterSet
 
 // MARK: - URLEncodedFormSerializer
 
-/// Source: https://github.com/vapor/vapor/tree/f4b00a5350238fe896d865d96d64f12fcbbeda95/Sources/Vapor/URLEncodedForm
-/// License: https://github.com/vapor/vapor/blob/main/LICENSE
 struct URLEncodedFormSerializer {
 
   // MARK: Lifecycle
