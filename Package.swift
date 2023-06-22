@@ -105,7 +105,8 @@ let package = Package(
     ),
   ],
   dependencies: [
-    .package(
+   .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.2.0"),
+   .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
       "0.8.0" ..< "0.9.0"
     ),
