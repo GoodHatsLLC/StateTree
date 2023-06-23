@@ -225,10 +225,10 @@ private enum Env {
 
   static let supportsSwiftUI: Bool = {
     if !treeActorIsNonMain, canImportSwiftUI {
-      verboseContext("[🍎 - SwiftUI build enabled]")
+      verboseContext("[🎨 - SwiftUI build enabled]")
       return true
     } else {
-      verboseContext("[🐧 - SwiftUI build disabled]")
+      verboseContext("[📵 - SwiftUI build disabled]")
       return false
     }
   }()
@@ -242,13 +242,21 @@ private enum Env {
   // MARK: Private
 
   private static let treeActorIsNonMain: Bool = {
-    ProcessInfo.processInfo.environment["CUSTOM_ACTOR"] == "1"
+    if ProcessInfo.processInfo.environment["CUSTOM_ACTOR"] == "1" {
+      verboseContext("[🎄 - @TreeActor != @MainActor]")
+      return true
+    } else {
+      verboseContext("[🌳 - @TreeActor == @MainActor]")
+      return false
+    }
   }()
 
   private static let canImportSwiftUI: Bool = {
     #if !canImport(SwiftUI)
+    verboseContext("[🐧 - SwiftUI is unavailable]")
     return false
     #else
+    verboseContext("[🍎 - SwiftUI can be imported]")
     return true
     #endif
   }()
