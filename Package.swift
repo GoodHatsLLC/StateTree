@@ -3,70 +3,6 @@
 import class Foundation.ProcessInfo
 import PackageDescription
 
-// MARK: - Build
-
-enum Build {
-  static let isVerbose: Bool = {
-    let value = ProcessInfo.processInfo.environment["VERBOSE_BUILD"] == "1"
-    // trigger initial print that shows up next to 'warning' indicator.
-    if value {
-      print("[🏗️ Printing build context]")
-    }
-    return value
-  }()
-
-  static let usesCustomTreeActor: Bool = {
-    ProcessInfo.processInfo.environment["CUSTOM_ACTOR"] == "1"
-  }()
-
-  static let platformSupportsSwiftUI: Bool = {
-    #if !canImport(SwiftUI)
-    return false
-    #else
-    return true
-    #endif
-  }()
-
-  static let globalSwiftSettings: [SwiftSetting] = {
-    var settings: [SwiftSetting] = []
-    if usesCustomTreeActor {
-      printContext("[🛠️ - @TreeActor aliased to custom global actor]")
-      settings.append(.define("CUSTOM_ACTOR"))
-    } else {
-      printContext("[🎨 - @TreeActor aliased to @MainActor]")
-    }
-    settings.append(contentsOf: [
-      .enableUpcomingFeature("ConciseMagicFile"),
-      .enableUpcomingFeature("ExistentialAny"),
-      .enableUpcomingFeature("StrictConcurrency"),
-      .enableUpcomingFeature("ImplicitOpenExistentials"),
-      .enableUpcomingFeature("BareSlashRegexLiterals"),
-    ])
-    return settings
-  }()
-
-  static var shouldBuildSwiftUI: Bool { !usesCustomTreeActor && platformSupportsSwiftUI }
-
-  static func printContext(_ context: String) {
-    if isVerbose {
-      print(context)
-    }
-  }
-}
-
-extension Package {
-  func filteredForCompatibility() -> Package {
-    if Build.shouldBuildSwiftUI {
-      Build.printContext("[🍎 - SwiftUI build enabled]")
-    } else {
-      Build.printContext("[🐧 - SwiftUI build disabled]")
-      targets.removeAll { $0.name.contains("SwiftUI") }
-      products.removeAll { $0.name.contains("SwiftUI") }
-    }
-    return self
-  }
-}
-
 // MARK: Package definition
 
 let package = Package(
@@ -90,7 +26,8 @@ let package = Package(
       targets: [
         "StateTreeSwiftUI",
       ]
-    ),
+    )
+    .contingent(on: Env.supportsSwiftUI),
     .library(
       name: "StateTreeImperativeUI",
       targets: [
@@ -103,10 +40,11 @@ let package = Package(
         "StateTreeTesting",
       ]
     ),
-  ],
+  ].compactMap { $0 },
   dependencies: [
-   .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.2.0"),
-   .package(
+    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.2.0")
+      .contingent(on: Env.requiresDocCPlugin),
+    .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
       "0.8.0" ..< "0.9.0"
     ),
@@ -118,7 +56,7 @@ let package = Package(
       url: "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
       "1.1.0" ..< "1.2.0"
     ),
-  ],
+  ].compactMap { $0 },
   targets: [
     .target(
       name: "Intents",
@@ -128,11 +66,11 @@ let package = Package(
       exclude: [
         "ThirdParty/URLEncoder/LICENSE.md",
       ],
-      swiftSettings: Build.globalSwiftSettings
+      swiftSettings: Env.swiftSettings
     ),
     .target(
       name: "TreeActor",
-      swiftSettings: Build.globalSwiftSettings
+      swiftSettings: Env.swiftSettings
     ),
     .target(
       name: "Utilities",
@@ -145,7 +83,7 @@ let package = Package(
         "ThirdParty/RuntimeWarning/LICENSE.md",
         "ThirdParty/SipHash/LICENSE.md",
       ],
-      swiftSettings: Build.globalSwiftSettings
+      swiftSettings: Env.swiftSettings
     ),
     .target(
       name: "Behavior",
@@ -155,7 +93,7 @@ let package = Package(
         "TreeActor",
         "Utilities",
       ],
-      swiftSettings: Build.globalSwiftSettings
+      swiftSettings: Env.swiftSettings
     ),
     .target(
       name: "StateTree",
@@ -169,7 +107,7 @@ let package = Package(
         .product(name: "HeapModule", package: "swift-collections-v1_1-fork"),
         .product(name: "OrderedCollections", package: "swift-collections-v1_1-fork"),
       ],
-      swiftSettings: Build.globalSwiftSettings
+      swiftSettings: Env.swiftSettings
     ),
     .target(
       name: "StateTreeSwiftUI",
@@ -177,29 +115,29 @@ let package = Package(
         "StateTree",
         "StateTreePlayback",
       ],
-      swiftSettings: Build.globalSwiftSettings
-    ),
+      swiftSettings: Env.swiftSettings
+    ).contingent(on: Env.supportsSwiftUI),
     .target(
       name: "StateTreeTesting",
       dependencies: [
         "StateTree",
         "StateTreePlayback",
       ],
-      swiftSettings: Build.globalSwiftSettings
+      swiftSettings: Env.swiftSettings
     ),
     .target(
       name: "StateTreeImperativeUI",
       dependencies: [
         "StateTree",
       ],
-      swiftSettings: Build.globalSwiftSettings
+      swiftSettings: Env.swiftSettings
     ),
     .target(
       name: "StateTreePlayback",
       dependencies: [
         "StateTree",
       ],
-      swiftSettings: Build.globalSwiftSettings
+      swiftSettings: Env.swiftSettings
     ),
     .testTarget(
       name: "StateTreeTests",
@@ -225,7 +163,8 @@ let package = Package(
       dependencies: [
         "StateTreeSwiftUI",
       ]
-    ),
+    )
+    .contingent(on: Env.supportsSwiftUI),
     .testTarget(
       name: "BehaviorTests",
       dependencies: ["Behavior"]
@@ -238,6 +177,107 @@ let package = Package(
       name: "UtilitiesTests",
       dependencies: ["Utilities"]
     ),
-  ]
+  ].compactMap { $0 }
 )
-.filteredForCompatibility()
+
+// MARK: - Env
+
+private enum Env {
+
+  // MARK: Internal
+
+  static let isVerbose: Bool = {
+    let value: Bool = {
+      ProcessInfo.processInfo.environment["VERBOSE"] == "1"
+    }()
+    // trigger initial print that shows up next to 'warning' indicator.
+    if value {
+      print("[🏗️ - Verbose build enabled]")
+    }
+    return value
+  }()
+
+  static let requiresDocCPlugin: Bool = {
+    let shouldBuildDocC = ProcessInfo.processInfo.environment["DOCC"] == "1"
+    if shouldBuildDocC {
+      verboseContext("[📝 - Building DocC plugin]")
+    }
+    return shouldBuildDocC
+  }()
+
+  static let swiftSettings: [SwiftSetting] = {
+    var settings: [SwiftSetting] = []
+    if treeActorIsNonMain {
+      verboseContext("[🛠️ - @TreeActor aliased to custom global actor]")
+      settings.append(.define("CUSTOM_ACTOR"))
+    } else {
+      verboseContext("[🎨 - @TreeActor aliased to @MainActor]")
+    }
+    settings.append(contentsOf: [
+      .enableUpcomingFeature("ConciseMagicFile"),
+      .enableUpcomingFeature("ExistentialAny"),
+      .enableUpcomingFeature("StrictConcurrency"),
+      .enableUpcomingFeature("ImplicitOpenExistentials"),
+      .enableUpcomingFeature("BareSlashRegexLiterals"),
+    ])
+    return settings
+  }()
+
+  static let supportsSwiftUI: Bool = {
+    if !treeActorIsNonMain, canImportSwiftUI {
+      verboseContext("[🍎 - SwiftUI build enabled]")
+      return true
+    } else {
+      verboseContext("[🐧 - SwiftUI build disabled]")
+      return false
+    }
+  }()
+
+  static func verboseContext(_ context: String) {
+    if isVerbose {
+      print(context)
+    }
+  }
+
+  // MARK: Private
+
+  private static let treeActorIsNonMain: Bool = {
+    ProcessInfo.processInfo.environment["CUSTOM_ACTOR"] == "1"
+  }()
+
+  private static let canImportSwiftUI: Bool = {
+    #if !canImport(SwiftUI)
+    return false
+    #else
+    return true
+    #endif
+  }()
+
+}
+
+// MARK: - ConditionalArtifact
+
+private protocol ConditionalArtifact { }
+extension ConditionalArtifact {
+  func
+    contingent(on filter: Bool) -> Self?
+  {
+    if filter {
+      return self
+    } else {
+      return nil
+    }
+  }
+}
+
+// MARK: - Package.Dependency + ConditionalArtifact
+
+extension Package.Dependency: ConditionalArtifact { }
+
+// MARK: - Target + ConditionalArtifact
+
+extension Target: ConditionalArtifact { }
+
+// MARK: - Product + ConditionalArtifact
+
+extension Product: ConditionalArtifact { }

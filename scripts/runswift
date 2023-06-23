@@ -1,0 +1,25 @@
+#!/bin/bash
+
+BUILD_ENV=""
+
+while true; do
+  case "$1" in
+    --custom-actor|-c)
+      BUILD_ENV="${BUILD_ENV} CUSTOM_ACTOR=1"
+      shift
+    ;;
+    --docc|-d)
+      BUILD_ENV="${BUILD_ENV} DOCC=1"
+      shift
+    ;;
+    --verbose|-v)
+      BUILD_ENV="${BUILD_ENV} VERBOSE=1"
+      shift
+    ;;
+    *)
+    break
+    ;;
+  esac
+done
+
+eval "${BUILD_ENV} swift ${*}"

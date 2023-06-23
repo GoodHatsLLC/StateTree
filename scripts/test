@@ -1,8 +1,5 @@
 #!/bin/bash
 
-BUILD_ENV="VERBOSE_BUILD=1"
-if [[ "$1" == "--custom-actor" ]]; then
-  BUILD_ENV="${BUILD_ENV} CUSTOM_ACTOR=1"
-fi
+>/dev/null pushd "$(git rev-parse --show-toplevel)/scripts" || exit 1
 
-eval "$BUILD_ENV swift test"
+./runswift "${@}" test

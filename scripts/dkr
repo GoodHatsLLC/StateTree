@@ -1,0 +1,5 @@
+#!/bin/bash
+
+IMG='swift:5.8.1'
+
+docker  run  -v "$(pwd)":"$(pwd)" -w "$(pwd)" -i -t  -a stdout -a stderr "${IMG}" "${@}"
