@@ -42,7 +42,7 @@ let package = Package(
     ),
   ].compactMap { $0 },
   dependencies: [
-    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.2.0")
+    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0")
       .contingent(on: Env.requiresDocCPlugin),
     .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
