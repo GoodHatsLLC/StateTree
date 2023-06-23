@@ -1,5 +1,46 @@
 #!/bin/bash
 
->/dev/null pushd "$(git rev-parse --show-toplevel)/scripts" || exit 1
+>/dev/null pushd "$(git rev-parse --show-toplevel)/scripts" || exit 1 ;
 
-./runswift "${@}" test
+DIDFAIL=0
+
+echo "📝 Test Suite"
+echo ""
+
+if uname | >/dev/null grep Darwin; then
+  echo "⌛1️⃣ macOS build (TreeActor == MainActor)"
+  ./runswift -v test || DIDFAIL=1
+  echo ""
+  echo ""
+  echo "⌛2️⃣ macOS build (TreeActor != MainActor)"
+  ./runswift -v -c test || DIDFAIL=1
+  echo ""
+  echo ""
+else
+  >&2 echo "❗ no macOS builds"
+  >&2 echo ""
+  >&2 echo ""
+  DIDFAIL=1
+fi
+
+>/dev/null pushd "$(git rev-parse --show-toplevel)" || exit 1 ;
+
+if ./scripts/dkr uname | >/dev/null grep Linux; then
+  echo "⌛3️⃣ Linux build"
+  ./scripts/dkr ./scripts/runswift -v test || DIDFAIL=1
+  echo ""
+  echo ""
+else
+  >&2 echo "❗ no Linux build"
+  >&2 echo ""
+  >&2 echo ""
+  DIDFAIL=1
+fi
+
+if [ $DIDFAIL != 0 ]; then
+  >&2 echo "⛔ Failures present"
+  exit 1
+else
+  echo "✅ Tests succeeded"
+  exit 0
+fi
