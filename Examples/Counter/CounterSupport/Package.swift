@@ -19,8 +19,8 @@ let package = Package(
   dependencies: [
     .package(path: "../../../"),
     .package(
-      url: "https://github.com/apple/swift-collections.git",
-      branch: "release/1.1"
+      url: "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
+      .upToNextMinor(from: "1.1.0")
     ),
   ],
   targets: [
@@ -35,7 +35,7 @@ let package = Package(
       name: "CounterDomain",
       dependencies: [
         .product(name: "StateTree", package: "StateTree"),
-        .product(name: "OrderedCollections", package: "swift-collections"),
+        .product(name: "OrderedCollections", package: "swift-collections-v1_1-fork"),
       ]
     ),
   ]

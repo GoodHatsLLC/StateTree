@@ -89,7 +89,7 @@ extension Async {
     }
 
     /// Resolve to the passed `T` instance, resuming any suspended accesses and executing
-    /// ``action`` (unless already resolved).
+    /// `action` (unless already resolved).
     ///
     /// - Parameters:
     ///   - to: The value of `T` to resolve this instance to.
@@ -138,7 +138,7 @@ extension Async {
 
 extension Async.Value where T == Void {
   /// Resolve to the `Void` value resuming any suspended accesses and executing
-  /// ``action`` (unless already resolved).
+  /// `action` (unless already resolved).
   ///
   /// - Parameters:
   ///   - action: An action to execute *if* resolving, *after* resolving, but *before* resuming any

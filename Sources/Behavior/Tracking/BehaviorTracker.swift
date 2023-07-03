@@ -56,8 +56,6 @@ public final class BehaviorTracker {
   // MARK: Public
 
   /// Whether to track ``Behavior`` instances created during the runtime.
-  /// ``BehaviorTrackingConfig/track`` is required to enable `await`ing
-  /// ``TreeLifetime/behaviorResolutions`` in unit tests.
   public enum Tracking {
 
     public static var defaults: Tracking {

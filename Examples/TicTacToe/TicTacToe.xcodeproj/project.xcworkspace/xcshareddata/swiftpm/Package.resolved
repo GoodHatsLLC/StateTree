@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GoodHatsLLC/Disposable.git",
       "state" : {
-        "revision" : "2b6db4e812dc2dddb7743251224c29308976b3e3",
-        "version" : "0.8.0"
+        "revision" : "a4348e7c8b5e10bd8bc13ef880acd640a9c83104",
+        "version" : "1.0.0"
       }
     },
     {
@@ -14,17 +14,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GoodHatsLLC/Emitter.git",
       "state" : {
-        "revision" : "84614b2f05e51deb1ada3bd9fc36bf431bc25e44",
-        "version" : "0.8.5"
+        "revision" : "5480d5b6f1ad63371e91a39f499e5795dc6b6615",
+        "version" : "1.0.0"
       }
     },
     {
-      "identity" : "swift-collections",
+      "identity" : "swift-collections-v1_1-fork",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections.git",
+      "location" : "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
       "state" : {
-        "branch" : "release/1.1",
-        "revision" : "992e0f3446b4f608f5ead9dd6edc92f6bbc0b0a0"
+        "revision" : "d8003787efafa82f9805594bc51100be29ac6903",
+        "version" : "1.1.0"
       }
     }
   ],

@@ -46,15 +46,15 @@ let package = Package(
       .contingent(on: Env.requiresDocCPlugin),
     .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
-      "0.8.0" ..< "0.9.0"
+      .upToNextMajor(from: "1.0.0")
     ),
     .package(
       url: "https://github.com/GoodHatsLLC/Emitter.git",
-      "0.8.5" ..< "0.9.0"
+      .upToNextMajor(from: "1.0.0")
     ),
     .package(
       url: "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
-      "1.1.0" ..< "1.2.0"
+      .upToNextMinor(from: "1.1.0")
     ),
   ].compactMap { $0 },
   targets: [

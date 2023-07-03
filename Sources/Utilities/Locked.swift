@@ -37,7 +37,7 @@ public struct Locked<T> {
 
   /// Exclusive `{ get set }` access to the protected value.
   ///
-  /// > Note: Use ``withLock(action:)-7qgic`` for atomic
+  /// > Note: Use ``withLock(action:)-7ntrz`` for atomic
   /// read-evaluate-write access to the underlying variable.
   @inline(__always) public var value: T {
     get {
