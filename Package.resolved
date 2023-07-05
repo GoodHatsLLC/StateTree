@@ -19,12 +19,30 @@
       }
     },
     {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "fee6933f37fde9a5e12a1e4aeaa93fe60116ff2a",
+        "version" : "1.2.2"
+      }
+    },
+    {
       "identity" : "swift-collections-v1_1-fork",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
       "state" : {
         "revision" : "d8003787efafa82f9805594bc51100be29ac6903",
         "version" : "1.1.0"
+      }
+    },
+    {
+      "identity" : "swiftlintfix",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GoodHatsLLC/SwiftLintFix.git",
+      "state" : {
+        "revision" : "0314761a4be0a0b1e89ee2050f2b4dccd51b0e74",
+        "version" : "0.1.0"
       }
     }
   ],

@@ -10,7 +10,8 @@ repos:
     -   id: check-added-large-files
 -   repo: local
     hooks:
-    -   id: lint-format
+    -   id: lintfix
         name: Run swiftformat and swift-lint
-        entry: ./scripts/lint
+        entry: /usr/bin/swift package plugin --allow-writing-to-package-directory lintfix
+        files: '.*swift$'
         language: script

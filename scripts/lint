@@ -1,6 +1,0 @@
-#!/bin/bash
-
-ROOT=$(git rev-parse --show-toplevel)
-
-swiftlint --fix --config "$ROOT/.swiftlint"
-swiftformat "$ROOT"
