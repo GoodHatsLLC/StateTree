@@ -8,10 +8,7 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-yaml
     -   id: check-added-large-files
--   repo: local
+-   repo: https://github.com/GoodHatsLLC/SwiftLintFix
+    rev: v0.1.1
     hooks:
-    -   id: lintfix
-        name: Run swiftformat and swift-lint
-        entry: /usr/bin/swift package plugin --allow-writing-to-package-directory lintfix
-        files: '.*swift$'
-        language: script
+    -   id: swift_lintfix
