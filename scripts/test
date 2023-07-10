@@ -9,11 +9,11 @@ echo ""
 
 if uname | >/dev/null grep Darwin; then
   echo "⌛1️⃣ macOS build (TreeActor == MainActor)"
-  ./runswift -v test || DIDFAIL=1
+  ./swft -v test || DIDFAIL=1
   echo ""
   echo ""
   echo "⌛2️⃣ macOS build (TreeActor != MainActor)"
-  ./runswift -v -c test || DIDFAIL=1
+  ./swft -v -c test || DIDFAIL=1
   echo ""
   echo ""
 else
@@ -27,7 +27,7 @@ fi
 
 if ./scripts/dkr uname | >/dev/null grep Linux; then
   echo "⌛3️⃣ Linux build"
-  ./scripts/dkr ./scripts/runswift -v test || DIDFAIL=1
+  ./scripts/dkr ./scripts/swft -v test || DIDFAIL=1
   echo ""
   echo ""
 else
