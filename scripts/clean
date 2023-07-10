@@ -1,0 +1,11 @@
+#!/bin/bash
+
+IMG='swift:5.8.1'
+
+>/dev/null pushd "$(git rev-parse --show-toplevel)" || exit 1 ;
+./scripts/swft package clean
+./scripts/swft --docc package plugin generate-documentation
+./scripts/swft --docc package --allow-writing-to-directory docs \
+    generate-documentation --target StateTree --disable-indexing \
+    --output-path docs \
+    --transform-for-static-hosting
