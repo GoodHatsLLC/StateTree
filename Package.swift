@@ -56,7 +56,8 @@ let package = Package(
       url: "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
       .upToNextMinor(from: "1.1.0")
     ),
-    .package(url: "https://github.com/GoodHatsLLC/SwiftLintFix.git", from: "0.1.0"),
+    .package(url: "https://github.com/GoodHatsLLC/SwiftLintFix.git", from: "0.1.7")
+      .contingent(on: Env.requiresSwiftLintFixPlugin),
   ].compactMap { $0 },
   targets: [
     .target(
@@ -198,10 +199,18 @@ private enum Env {
     return value
   }()
 
+  static let requiresSwiftLintFixPlugin: Bool = {
+    let shouldBuildSwiftLintFix = ProcessInfo.processInfo.environment["LINT_FIX"] == "1"
+    if shouldBuildSwiftLintFix {
+      verboseContext("[🪄 - Building LintFix plugin]")
+    }
+    return shouldBuildSwiftLintFix
+  }()
+
   static let requiresDocCPlugin: Bool = {
     let shouldBuildDocC = ProcessInfo.processInfo.environment["DOCC"] == "1"
     if shouldBuildDocC {
-      verboseContext("[📝 - Building DocC plugin]")
+      verboseContext("[📄 - Building DocC plugin]")
     }
     return shouldBuildDocC
   }()
@@ -209,10 +218,7 @@ private enum Env {
   static let swiftSettings: [SwiftSetting] = {
     var settings: [SwiftSetting] = []
     if treeActorIsNonMain {
-      verboseContext("[🛠️ - @TreeActor aliased to custom global actor]")
       settings.append(.define("CUSTOM_ACTOR"))
-    } else {
-      verboseContext("[🎨 - @TreeActor aliased to @MainActor]")
     }
     settings.append(contentsOf: [
       .enableUpcomingFeature("ConciseMagicFile"),
@@ -220,6 +226,7 @@ private enum Env {
       .enableUpcomingFeature("StrictConcurrency"),
       .enableUpcomingFeature("ImplicitOpenExistentials"),
       .enableUpcomingFeature("BareSlashRegexLiterals"),
+      .enableUpcomingFeature("ForwardTrailingClosures"),
     ])
     return settings
   }()
@@ -244,10 +251,10 @@ private enum Env {
 
   private static let treeActorIsNonMain: Bool = {
     if ProcessInfo.processInfo.environment["CUSTOM_ACTOR"] == "1" {
-      verboseContext("[🎄 - @TreeActor != @MainActor]")
+      verboseContext("[🖋️ - @TreeActor != @MainActor]")
       return true
     } else {
-      verboseContext("[🌳 - @TreeActor == @MainActor]")
+      verboseContext("[🖍️ - @TreeActor == @MainActor]")
       return false
     }
   }()
@@ -268,9 +275,7 @@ private enum Env {
 
 private protocol ConditionalArtifact { }
 extension ConditionalArtifact {
-  func
-    contingent(on filter: Bool) -> Self?
-  {
+  func contingent(on filter: Bool) -> Self? {
     if filter {
       return self
     } else {

@@ -4,6 +4,10 @@ BUILD_ENV=""
 
 while true; do
   case "$1" in
+    --lintfix|-c)
+      BUILD_ENV="${BUILD_ENV} LINT_FIX=1"
+      shift
+    ;;
     --custom-actor|-c)
       BUILD_ENV="${BUILD_ENV} CUSTOM_ACTOR=1"
       shift
