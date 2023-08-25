@@ -8,9 +8,9 @@ public enum Spacing {
 }
 
 extension BinaryInteger {
-  public var su: Spacing.Unit { Spacing.unitSize }
+  public var su: Spacing.Unit { Double(self) * Spacing.unitSize }
 }
 
 extension BinaryFloatingPoint {
-  public var su: Spacing.Unit { Spacing.unitSize }
+  public var su: Spacing.Unit { Double(self) * Spacing.unitSize }
 }
