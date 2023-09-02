@@ -19,7 +19,6 @@ struct SelectedToDoView: View {
           prompt: Text("Title…")
         )
         .textFieldStyle(.plain)
-        .foregroundStyle(.selection)
         .font(.largeTitle)
         HStack {
           HStack(spacing: 0.5.su) {

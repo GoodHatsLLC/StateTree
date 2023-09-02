@@ -6,7 +6,7 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
 
   // MARK: Lifecycle
 
-  init(builder: () -> Union.Two<A, B>?) {
+  init(builder: () -> Union2<A, B>?) {
     let capturedUnion = builder()
     self.capturedUnion = capturedUnion
     let nodeCapture: NodeCapture?
@@ -23,7 +23,7 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
 
   // MARK: Public
 
-  public typealias Value = Union.Two<A, B>?
+  public typealias Value = Union2<A, B>?
 
   public static var type: RouteType { .maybeUnion2 }
 
@@ -209,7 +209,7 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
 
   // MARK: Private
 
-  private let capturedUnion: Union.Two<A, B>?
+  private let capturedUnion: Union2<A, B>?
   private let capturedNode: NodeCapture?
   private var hasApplied = false
   private var context: RouterRuleContext?
@@ -245,16 +245,33 @@ public struct MaybeUnion2Router<A: Node, B: Node>: RouterType {
 // MARK: - Route
 extension Route {
 
-  public init<A: Node, B: Node>(wrappedValue: @autoclosure () -> Union.Two<A, B>?)
+  // MARK: Lifecycle
+
+  public init<A: Node, B: Node>(wrappedValue: @autoclosure () -> Union2<A, B>?)
     where Router == MaybeUnion2Router<A, B>
   {
     self.init(defaultRouter: MaybeUnion2Router<A, B>(builder: wrappedValue))
   }
 
+  // MARK: Public
+
+  @TreeActor
+  public func serve<
+    A: Node,
+    B: Node
+  >(_ union2: @escaping () -> Union2<A, B>?) -> Serve<Router>
+    where Router == MaybeUnion2Router<
+      A,
+      B
+    >
+  {
+    Serve(router: MaybeUnion2Router<A, B>(builder: union2), at: self)
+  }
+
 }
 
 extension Serve {
-  public init<A: Node, B: Node>(_ union: Union.Two<A, B>?, at route: Route<Router>)
+  init<A: Node, B: Node>(_ union: Union2<A, B>?, at route: Route<Router>)
     where Router == MaybeUnion2Router<A, B>
   {
     self.init(router: MaybeUnion2Router(builder: { union }), at: route)

@@ -12,7 +12,7 @@ public struct CountersList: Node {
   @Route public var counters: [Counter] = []
 
   public var rules: some Rules {
-    Serve(data: counterIDs, at: $counters) { datum in
+    $counters.serve(data: counterIDs, identifiedBy: \.self) { datum in
       Counter(
         id: datum,
         shouldDelete: {

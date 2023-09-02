@@ -144,7 +144,7 @@ extension ListRouterTests {
     @Route var route: [NodeA] = []
     var rules: some Rules {
       if let numbers {
-        Serve(data: numbers, at: $route) { datum in
+        $route.serve(data: numbers, identifiedBy: \.self) { datum in
           NodeA(id: datum)
         }
       }
@@ -183,7 +183,7 @@ extension ListRouterTests {
     @Value var ids: [Int] = []
     @Value var other: String = ""
     var rules: some Rules {
-      Serve(data: ids, at: $children) { _ in
+      $children.serve(data: ids, identifiedBy: \.self) { _ in
         ChildA()
       }
     }

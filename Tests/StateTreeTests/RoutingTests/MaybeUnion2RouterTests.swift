@@ -92,7 +92,7 @@ extension MaybeUnion2RouterTests {
 
   struct TestPlainDefault: Node {
 
-    @Route var child: Union.Two<ChildA, ChildB>? = nil
+    @Route var child: Union2<ChildA, ChildB>? = nil
 
     var rules: some Rules {
       ()
@@ -106,14 +106,14 @@ extension MaybeUnion2RouterTests {
       case bRoute
     }
 
-    @Route var child: Union.Two<ChildA, ChildB>? = .a(ChildA())
+    @Route var child: Union2<ChildA, ChildB>? = .a(ChildA())
     @Value var routeCase: RouteCase = .defaultRoute
 
     var rules: some Rules {
       if routeCase == .aRoute {
-        Serve(.a(ChildA()), at: $child)
+        $child.serve { .a(ChildA()) }
       } else if routeCase == .bRoute {
-        Serve(.b(ChildB()), at: $child)
+        $child.serve { .b(ChildB()) }
       }
     }
   }

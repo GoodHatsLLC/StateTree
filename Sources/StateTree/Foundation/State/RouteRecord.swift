@@ -15,7 +15,7 @@ import OrderedCollections
 /// > Discussion:
 /// For example a route to one of two types,`NodeA` or `NodeB` might be represented by
 /// `.a(<NodeID>)`
-/// which would in turn correspond to a known `Node` type of the router's`Union.Two<NodeA, NodeB>`.
+/// which would in turn correspond to a known `Node` type of the router's`Union2<NodeA, NodeB>`.
 public enum RouteRecord: TreeState {
   case single(NodeID)
   case union2(Union2)

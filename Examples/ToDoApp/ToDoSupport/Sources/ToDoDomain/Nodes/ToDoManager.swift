@@ -22,32 +22,34 @@ public struct ToDoManager: Node {
 
   public var rules: some Rules {
     // always serve the list of todos.
-    Serve(data: $records.values, at: $todoList) { datum in
+    $todoList.serve(data: $records.values, identifiedBy: \.id) { datum in
       ListedToDo(record: datum)
     }
 
     // if we can get a projection of the selected record, serve it
     // as the selected todo node.
-    if let selected = selectedRecord.flatMap({ $records[$0].compact() }) {
-      Serve(
+    if
+      let uuid = selectedRecord,
+      let maybeRecordProjection = $records[uuid],
+      let selected = Projection(maybeRecordProjection)
+    {
+      $selectedToDo.serve {
         SelectedToDo(
           record: selected,
           allTags: $allTags
-        ),
-        at: $selectedToDo
-      )
+        )
+      }
     }
 
     // show the tag editor only if desired.
     if showTagEditor {
-      Serve(
+      $tagEditor.serve {
         TagEditor(
           selected: $selectedTag,
           allTags: $allTags,
           isActive: $showTagEditor
-        ),
-        at: $tagEditor
-      )
+        )
+      }
     }
   }
 

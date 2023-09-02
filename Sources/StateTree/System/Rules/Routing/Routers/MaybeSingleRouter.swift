@@ -6,8 +6,8 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
 
   // MARK: Lifecycle
 
-  init(node: NodeType?) {
-    self.capturedNode = node
+  init(builder: () -> NodeType?) {
+    self.capturedNode = builder()
   }
 
   // MARK: Public
@@ -153,17 +153,28 @@ public struct MaybeSingleRouter<NodeType: Node>: RouterType {
 
 extension Route {
 
-  public init<NodeType>(wrappedValue: NodeType?)
+  // MARK: Lifecycle
+
+  public init<NodeType: Node>(wrappedValue: @autoclosure () -> NodeType?)
     where Router == MaybeSingleRouter<NodeType>
   {
-    self.init(defaultRouter: MaybeSingleRouter(node: wrappedValue))
+    self.init(defaultRouter: MaybeSingleRouter(builder: wrappedValue))
+  }
+
+  // MARK: Public
+
+  @TreeActor
+  public func serve<NodeType: Node>(_ maybe: () -> NodeType?) -> Serve<Router>
+    where Router == MaybeSingleRouter<NodeType>
+  {
+    Serve(router: MaybeSingleRouter<NodeType>(builder: maybe), at: self)
   }
 }
 
 extension Serve {
-  public init<Value>(_ node: Value?, at route: Route<Router>) where Value: Node,
+  init<Value>(_ node: @autoclosure () -> Value?, at route: Route<Router>) where Value: Node,
     Router == MaybeSingleRouter<Value>
   {
-    self.init(router: Router(node: node), at: route)
+    self.init(router: Router(builder: node), at: route)
   }
 }

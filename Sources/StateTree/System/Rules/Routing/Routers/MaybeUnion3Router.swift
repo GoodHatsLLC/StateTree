@@ -6,7 +6,7 @@ public struct MaybeUnion3Router<A: Node, B: Node, C: Node>: RouterType {
 
   // MARK: Lifecycle
 
-  init(builder: () -> Union.Three<A, B, C>?) {
+  init(builder: () -> Union3<A, B, C>?) {
     let capturedUnion = builder()
     self.capturedUnion = capturedUnion
     let nodeCapture: NodeCapture?
@@ -25,7 +25,7 @@ public struct MaybeUnion3Router<A: Node, B: Node, C: Node>: RouterType {
 
   // MARK: Public
 
-  public typealias Value = Union.Three<A, B, C>?
+  public typealias Value = Union3<A, B, C>?
 
   public static var type: RouteType { .maybeUnion3 }
 
@@ -246,7 +246,7 @@ public struct MaybeUnion3Router<A: Node, B: Node, C: Node>: RouterType {
 
   // MARK: Private
 
-  private let capturedUnion: Union.Three<A, B, C>?
+  private let capturedUnion: Union3<A, B, C>?
   private let capturedNode: NodeCapture?
   private var hasApplied = false
   private var context: RouterRuleContext?
@@ -282,16 +282,29 @@ public struct MaybeUnion3Router<A: Node, B: Node, C: Node>: RouterType {
 // MARK: - Route
 extension Route {
 
-  public init<A: Node, B: Node, C: Node>(wrappedValue: @autoclosure () -> Union.Three<A, B, C>?)
+  // MARK: Lifecycle
+
+  public init<A: Node, B: Node, C: Node>(wrappedValue: @autoclosure () -> Union3<A, B, C>?)
     where Router == MaybeUnion3Router<A, B, C>
   {
     self.init(defaultRouter: MaybeUnion3Router<A, B, C>(builder: wrappedValue))
   }
 
+  // MARK: Public
+
+  @TreeActor
+  public func serve<A: Node, B: Node, C: Node>(_ union3: () -> Union3<
+    A,
+    B,
+    C
+  >?) -> Serve<Router> where Router == MaybeUnion3Router<A, B, C> {
+    Serve(router: MaybeUnion3Router<A, B, C>(builder: union3), at: self)
+  }
+
 }
 
 extension Serve {
-  public init<A: Node, B: Node, C: Node>(_ union: Union.Three<A, B, C>?, at route: Route<Router>)
+  init<A: Node, B: Node, C: Node>(_ union: Union3<A, B, C>?, at route: Route<Router>)
     where Router == MaybeUnion3Router<A, B, C>
   {
     self.init(router: MaybeUnion3Router(builder: { union }), at: route)

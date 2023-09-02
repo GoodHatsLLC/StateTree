@@ -129,15 +129,26 @@ public struct SingleRouter<NodeType: Node>: RouterType {
 // MARK: - Route
 extension Route {
 
+  // MARK: Lifecycle
+
   public init<NodeType: Node>(wrappedValue: @autoclosure () -> NodeType)
     where Router == SingleRouter<NodeType>
   {
     self.init(defaultRouter: SingleRouter(builder: wrappedValue))
   }
+
+  // MARK: Public
+
+  @TreeActor
+  public func serve<NodeType: Node>(_ node: () -> NodeType)
+    -> Serve<Router> where Router == SingleRouter<NodeType>
+  {
+    Serve(router: SingleRouter(builder: node), at: self)
+  }
 }
 
 extension Serve {
-  public init<Value>(_ node: Value, at route: Route<Router>) where Value: Node,
+  init<Value>(_ node: Value, at route: Route<Router>) where Value: Node,
     Router == SingleRouter<Value>
   {
     self.init(router: Router(builder: { node }), at: route)

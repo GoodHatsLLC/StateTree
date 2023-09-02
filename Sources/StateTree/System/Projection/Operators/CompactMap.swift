@@ -38,3 +38,14 @@ extension Projection {
   }
 
 }
+
+extension Projection {
+  public init?(_ upstream: Projection<Value?>) {
+    let upstream = upstream.compact()
+    if let compacted = upstream {
+      self = compacted
+    } else {
+      return nil
+    }
+  }
+}

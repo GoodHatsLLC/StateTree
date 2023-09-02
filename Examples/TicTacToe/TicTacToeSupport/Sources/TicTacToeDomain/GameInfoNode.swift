@@ -21,14 +21,13 @@ public struct GameInfoNode: Node {
   @Value public private(set) var lastResult: GameResult? = nil
 
   public var rules: some Rules {
-    if let player = $activePlayer.compact() {
-      Serve(
+    if let player = Projection($activePlayer) {
+      $game.serve {
         GameNode(
           currentPlayer: player,
           finishHandler: finishHandler(result:)
-        ),
-        at: $game
-      )
+        )
+      }
     }
   }
 

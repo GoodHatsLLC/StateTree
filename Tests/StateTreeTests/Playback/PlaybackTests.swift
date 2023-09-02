@@ -186,7 +186,7 @@ extension PlaybackTests {
 
     var rules: some Rules {
       if subValue == 2 {
-        Serve(SubSubNode(value: $value), at: $subSubRoute)
+        $subSubRoute.serve { SubSubNode(value: $value) }
       }
     }
   }
@@ -200,7 +200,7 @@ extension PlaybackTests {
 
     var rules: some Rules {
       if routeIfNegative < 0 {
-        Serve(SubNode(value: $routeIfNegative), at: $subRoute)
+        $subRoute.serve { SubNode(value: $routeIfNegative) }
       }
     }
   }
@@ -230,7 +230,7 @@ extension PlaybackTests {
 
     var rules: some Rules {
       if isPrime(potentialPrime) {
-        Serve(Square(value: $potentialPrime), at: $primeSquared)
+        $primeSquared.serve { Square(value: $potentialPrime) }
       }
     }
 

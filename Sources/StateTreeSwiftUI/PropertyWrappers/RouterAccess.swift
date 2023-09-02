@@ -26,7 +26,7 @@ extension RouterAccess {
 
   public subscript<SubNodeA: Node, SubNodeB: Node>(
     dynamicMember dynamicMember: KeyPath<NodeType, Route<Union2Router<SubNodeA, SubNodeB>>>
-  ) -> Union.Two<TreeNode<SubNodeA>, TreeNode<SubNodeB>> {
+  ) -> Union2<TreeNode<SubNodeA>, TreeNode<SubNodeB>> {
     try! access.access(via: dynamicMember)
       .map(
         a: { TreeNode(scope: $0) },
@@ -36,7 +36,7 @@ extension RouterAccess {
 
   public subscript<SubNodeA: Node, SubNodeB: Node>(
     dynamicMember dynamicMember: KeyPath<NodeType, Route<MaybeUnion2Router<SubNodeA, SubNodeB>>>
-  ) -> Union.Two<TreeNode<SubNodeA>, TreeNode<SubNodeB>>? {
+  ) -> Union2<TreeNode<SubNodeA>, TreeNode<SubNodeB>>? {
     try! access.access(via: dynamicMember)?
       .map(
         a: { TreeNode(scope: $0) },
@@ -49,7 +49,7 @@ extension RouterAccess {
       NodeType,
       Route<Union3Router<SubNodeA, SubNodeB, SubNodeC>>
     >
-  ) -> Union.Three<TreeNode<SubNodeA>, TreeNode<SubNodeB>, TreeNode<SubNodeC>> {
+  ) -> Union3<TreeNode<SubNodeA>, TreeNode<SubNodeB>, TreeNode<SubNodeC>> {
     try! access.access(via: dynamicMember)
       .map(
         a: { TreeNode(scope: $0) },
@@ -63,7 +63,7 @@ extension RouterAccess {
       NodeType,
       Route<MaybeUnion3Router<SubNodeA, SubNodeB, SubNodeC>>
     >
-  ) -> Union.Three<TreeNode<SubNodeA>, TreeNode<SubNodeB>, TreeNode<SubNodeC>>? {
+  ) -> Union3<TreeNode<SubNodeA>, TreeNode<SubNodeB>, TreeNode<SubNodeC>>? {
     try! access.access(via: dynamicMember)?
       .map(
         a: { TreeNode(scope: $0) },

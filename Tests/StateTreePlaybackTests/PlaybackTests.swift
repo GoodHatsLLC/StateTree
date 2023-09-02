@@ -111,14 +111,14 @@ extension PlaybackTests {
     // MARK: Internal
 
     @Value var number = 0
-    @Route var info: Union.Two<Prime, Composite>? = nil
+    @Route var info: Union2<Prime, Composite>? = nil
     @Scope var scope
 
     var rules: some Rules {
       if isPrime(number) {
-        Serve(.a(Prime(number: $number)), at: $info)
+        $info.serve { .a(Prime(number: $number)) }
       } else {
-        Serve(.b(Composite(number: $number)), at: $info)
+        $info.serve { .b(Composite(number: $number)) }
       }
     }
 

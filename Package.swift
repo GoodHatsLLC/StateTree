@@ -1,4 +1,4 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 5.9
 
 import class Foundation.ProcessInfo
 import PackageDescription
@@ -56,7 +56,7 @@ let package = Package(
       url: "https://github.com/GoodHatsLLC/swift-collections-v1_1-fork.git",
       .upToNextMinor(from: "1.1.0")
     ),
-    .package(url: "https://github.com/GoodHatsLLC/SwiftLintFix.git", from: "0.1.7")
+    .package(url: "https://github.com/GoodHatsLLC/SwiftLintFix.git", from: "0.1.8")
       .contingent(on: Env.requiresSwiftLintFixPlugin),
   ].compactMap { $0 },
   targets: [

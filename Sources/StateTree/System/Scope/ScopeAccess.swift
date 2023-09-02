@@ -75,7 +75,7 @@ extension ScopeAccess {
 
   public func access<SubNodeA: Node, SubNodeB: Node>(
     via path: KeyPath<NodeType, Route<Union2Router<SubNodeA, SubNodeB>>>
-  ) throws -> Union.Two<NodeScope<SubNodeA>, NodeScope<SubNodeB>> {
+  ) throws -> Union2<NodeScope<SubNodeA>, NodeScope<SubNodeB>> {
     let accessor = try ScopeAccessor(
       field: scope.node[keyPath: path],
       runtime: scope.runtime
@@ -94,7 +94,7 @@ extension ScopeAccess {
 
   public func access<SubNodeA: Node, SubNodeB: Node>(
     via path: KeyPath<NodeType, Route<MaybeUnion2Router<SubNodeA, SubNodeB>>>
-  ) throws -> Union.Two<NodeScope<SubNodeA>, NodeScope<SubNodeB>>? {
+  ) throws -> Union2<NodeScope<SubNodeA>, NodeScope<SubNodeB>>? {
     let accessor = try ScopeAccessor(
       field: scope.node[keyPath: path],
       runtime: scope.runtime
@@ -117,7 +117,7 @@ extension ScopeAccess {
 
   public func access<SubNodeA: Node, SubNodeB: Node, SubNodeC: Node>(
     via path: KeyPath<NodeType, Route<Union3Router<SubNodeA, SubNodeB, SubNodeC>>>
-  ) throws -> Union.Three<NodeScope<SubNodeA>, NodeScope<SubNodeB>, NodeScope<SubNodeC>> {
+  ) throws -> Union3<NodeScope<SubNodeA>, NodeScope<SubNodeB>, NodeScope<SubNodeC>> {
     let accessor = try ScopeAccessor(
       field: scope.node[keyPath: path],
       runtime: scope.runtime
@@ -138,7 +138,7 @@ extension ScopeAccess {
 
   public func access<SubNodeA: Node, SubNodeB: Node, SubNodeC: Node>(
     via path: KeyPath<NodeType, Route<MaybeUnion3Router<SubNodeA, SubNodeB, SubNodeC>>>
-  ) throws -> Union.Three<NodeScope<SubNodeA>, NodeScope<SubNodeB>, NodeScope<SubNodeC>>? {
+  ) throws -> Union3<NodeScope<SubNodeA>, NodeScope<SubNodeB>, NodeScope<SubNodeC>>? {
     let accessor = try ScopeAccessor(
       field: scope.node[keyPath: path],
       runtime: scope.runtime

@@ -38,10 +38,9 @@ public struct SelectedToDo: Node, Identifiable {
   }
 
   public var rules: some Rules {
-    Serve(
-      TagSelector(allTags: $allTags, todo: $record),
-      at: $tagSelector
-    )
+    $tagSelector.serve {
+      TagSelector(allTags: $allTags, todo: $record)
+    }
   }
 
   // MARK: Internal

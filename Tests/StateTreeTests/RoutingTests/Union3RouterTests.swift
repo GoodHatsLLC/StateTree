@@ -110,7 +110,7 @@ extension Union3RouterTests {
 
   struct TestPlainDefault: Node {
 
-    @Route var child: Union.Three<ChildA, ChildB, ChildC> = .a(ChildA())
+    @Route var child: Union3<ChildA, ChildB, ChildC> = .a(ChildA())
 
     var rules: some Rules {
       ()
@@ -125,7 +125,7 @@ extension Union3RouterTests {
       case cRoute
     }
 
-    @Route var child: Union.Three<ChildA, ChildB, ChildC> = .a(ChildA())
+    @Route var child: Union3<ChildA, ChildB, ChildC> = .a(ChildA())
     @Value var routeCase: RouteCase = .defaultRoute
 
     var rules: some Rules {

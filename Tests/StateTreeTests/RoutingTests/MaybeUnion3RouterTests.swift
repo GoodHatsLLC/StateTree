@@ -106,7 +106,7 @@ extension MaybeUnion3RouterTests {
 
   struct TestPlainDefault: Node {
 
-    @Route var child: Union.Three<ChildA, ChildB, ChildC>? = nil
+    @Route var child: Union3<ChildA, ChildB, ChildC>? = nil
 
     var rules: some Rules {
       ()
@@ -121,16 +121,16 @@ extension MaybeUnion3RouterTests {
       case cRoute
     }
 
-    @Route var child: Union.Three<ChildA, ChildB, ChildC>? = nil
+    @Route var child: Union3<ChildA, ChildB, ChildC>? = nil
     @Value var routeCase: RouteCase = .defaultRoute
 
     var rules: some Rules {
       if routeCase == .aRoute {
-        Serve(.a(ChildA()), at: $child)
+        $child.serve { .a(ChildA()) }
       } else if routeCase == .bRoute {
-        Serve(.b(ChildB()), at: $child)
+        $child.serve { .b(ChildB()) }
       } else if routeCase == .cRoute {
-        Serve(.c(ChildC()), at: $child)
+        $child.serve { .c(ChildC()) }
       }
     }
   }

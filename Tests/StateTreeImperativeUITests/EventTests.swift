@@ -101,16 +101,16 @@ extension EventTests {
     @Value var v1: Int = 55
     @Route var single: ChildOne = .init(v1: .constant(1))
     @Route var maybeSingle: ChildOne? = nil
-    @Route var union2: Union.Two<ChildOne, ChildTwo>? = nil
-    @Route var union3: Union.Three<ChildOne, ChildTwo, ChildThree>? = nil
+    @Route var union2: Union2<ChildOne, ChildTwo>? = nil
+    @Route var union3: Union3<ChildOne, ChildTwo, ChildThree>? = nil
     @Route var list: [ChildTwo] = []
 
     var rules: some Rules {
-      Serve(ChildOne(v1: $v1), at: $single)
-      Serve(.b(ChildTwo(id: 1, v1: $v1)), at: $union2)
-      Serve(.c(ChildThree(v1: $v1)), at: $union3)
+      $single.serve { ChildOne(v1: $v1) }
+      $union2.serve { .b(ChildTwo(id: 1, v1: $v1)) }
+      $union3.serve { .c(ChildThree(v1: $v1)) }
 
-      Serve(data: [1, 2, 3, 4], at: $list) { datum in
+      $list.serve(data: [1, 2, 3, 4], identifiedBy: \.self) { datum in
         .init(id: datum, v1: $v1)
       }
     }

@@ -62,18 +62,15 @@ extension RouteAccess {
   struct Parent: Node {
     @Value var v1: Int = 55
     @Route var single: ChildOne? = nil
-    @Route var union2: Union.Two<ChildOne, ChildTwo>? = nil
-    @Route var union3: Union.Three<ChildOne, ChildTwo, ChildThree>? = nil
+    @Route var union2: Union2<ChildOne, ChildTwo>? = nil
+    @Route var union3: Union3<ChildOne, ChildTwo, ChildThree>? = nil
     @Route var list: [ChildTwo] = []
 
     var rules: some Rules {
-      Serve(
-        ChildOne(v1: $v1),
-        at: $single
-      )
-      Serve(.b(ChildTwo(id: 1, v1: $v1)), at: $union2)
-      Serve(.c(ChildThree(v1: $v1)), at: $union3)
-      Serve(data: Array(0 ..< 5), at: $list) {
+      $single.serve { ChildOne(v1: $v1) }
+      $union2.serve { .b(ChildTwo(id: 1, v1: $v1)) }
+      $union3.serve { .c(ChildThree(v1: $v1)) }
+      $list.serve(data: Array(0 ..< 5), identifiedBy: \.self) {
         .init(id: $0, v1: $v1)
       }
     }

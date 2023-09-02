@@ -345,7 +345,7 @@ extension IntentApplicationTests {
     @Value private var shouldRoute: Bool = false
     var rules: some Rules {
       if shouldRoute {
-        Serve(Next(), at: $child)
+        $child.serve { Next() }
       }
       OnIntent(RouteTriggerStep.self) { step in
         .act {
@@ -358,7 +358,7 @@ extension IntentApplicationTests {
   fileprivate struct IntermediateNode<Next: DefaultInitNode>: DefaultInitNode {
     @Route var child: Next? = nil
     var rules: some Rules {
-      Serve(Next(), at: $child)
+      $child.serve { Next() }
     }
   }
 
@@ -370,7 +370,7 @@ extension IntentApplicationTests {
 
     var rules: some Rules {
       if shouldRoute {
-        Serve(Next(), at: $child)
+        $child.serve { Next() }
       }
       OnIntent(PendingNodeStep.self) { step in
         mayRoute
@@ -394,8 +394,8 @@ extension IntentApplicationTests {
     var rules: some Rules {
       if shouldRoute {
         switch validNext {
-        case .initial: Serve(Next(), at: $initialNext)
-        case .later: Serve(Next(), at: $laterNext)
+        case .initial: $initialNext.serve { Next() }
+        case .later: $laterNext.serve { Next() }
         }
       }
       OnIntent(MaybeInvalidatedStep.self) { step in

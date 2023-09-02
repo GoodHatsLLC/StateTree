@@ -49,7 +49,7 @@ extension ProjectionTests {
 
   struct ProjectionHost: Node {
 
-    @Route var route: Union.Three<SubnodeA, SubnodeB, SubnodeC>? = nil
+    @Route var route: Union3<SubnodeA, SubnodeB, SubnodeC>? = nil
     @Value var val: Int?
 
     var rules: some Rules {
