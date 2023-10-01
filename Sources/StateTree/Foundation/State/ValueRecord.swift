@@ -3,8 +3,9 @@ import Utilities
 
 // MARK: - ValuePayload
 
-/// Value types aren't known at decoding time, so we store them as encoded strings
-/// and use that string for comparison and hashing.
+/// Value types aren't known at decoding time so their representation is kept as strings until
+/// they can be decoded *as* a desired value. Until then the string representation is used
+/// for any comparison and hashing.
 public enum ValuePayload: TreeState {
   case runtime(known: any TreeState, stringPayload: String)
   case decoded(stringPayload: String)

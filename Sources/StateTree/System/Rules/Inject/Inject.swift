@@ -4,13 +4,15 @@ public struct Inject<R: Rules>: Rules {
 
   // MARK: Lifecycle
 
-  public init<Value>(
-    _ path: WritableKeyPath<DependencyValues, Value>,
-    _ value: Value,
+  @_spi(Internal)
+  public init(
+    modification: @escaping (inout DependencyValues) -> Void,
     @RuleBuilder into rules: () -> R
   ) {
-    self.dependenciesUpdateFunc = { initial in
-      initial.injecting(path, value: value)
+    self.dependenciesUpdateFunc = { dependencyValues in
+      var copy = dependencyValues
+      modification(&copy)
+      return copy
     }
     self.containedRules = rules()
   }
@@ -82,10 +84,9 @@ public struct Inject<R: Rules>: Rules {
 }
 
 extension Rules {
-  public func injecting<Value>(
-    _ path: WritableKeyPath<DependencyValues, Value>,
-    _ value: Value
+  public func injecting(
+    modifier: @escaping (_ dependencies: inout DependencyValues) -> Void
   ) -> Inject<some Rules> {
-    Inject(path, value, into: { self })
+    Inject(modification: modifier, into: { self })
   }
 }

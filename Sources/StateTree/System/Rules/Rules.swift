@@ -32,7 +32,13 @@ public struct LifecycleResult {
 
   let intentResolutions: [IntentStepResolution]
 
-  public static func + (lhs: LifecycleResult, rhs: LifecycleResult) -> LifecycleResult {
+  @_spi(Internal)
+  public static func + (
+    lhs: LifecycleResult,
+    rhs: LifecycleResult
+  )
+    -> LifecycleResult
+  {
     LifecycleResult(
       intentResolutions: lhs.intentResolutions + rhs.intentResolutions
     )
@@ -43,12 +49,16 @@ public struct LifecycleResult {
 
 @TreeActor
 public protocol Rules {
+  @_spi(Internal)
   func act(for: RuleLifecycle, with: RuleContext) -> LifecycleResult
   /// Apply a new rule
+  @_spi(Internal)
   mutating func applyRule(with: RuleContext) throws
   /// Remove an existing rule
+  @_spi(Internal)
   mutating func removeRule(with: RuleContext) throws
   /// Update a rule from a new version of itself
+  @_spi(Internal)
   mutating func updateRule(from: Self, with: RuleContext) throws
   /// Sync the runtime representation with the current state.
   ///
@@ -58,6 +68,7 @@ public protocol Rules {
   /// - Start any side effects which would be started when reaching this rule naturally.
   /// - Cancel active side effects invalidated by the new state.
   /// - The current state may not change during this sync.
+  @_spi(Internal)
   mutating func syncToState(with: RuleContext) throws
 }
 

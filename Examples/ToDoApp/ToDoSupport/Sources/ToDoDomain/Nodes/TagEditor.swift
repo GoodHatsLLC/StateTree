@@ -13,10 +13,10 @@ public struct TagEditor: Node {
     isActive: Projection<Bool>
   ) {
     _selected = selected
-    _initialSelected = .init(wrappedValue: selected.value)
+    _initialSelected = .init(wrappedValue: selected.wrappedValue)
     _allTags = allTags
     _isActive = isActive
-    if let selected = selected.value, let tag = allTags[selected]?.compact()?.value {
+    if let selected = selected.wrappedValue, let tag = allTags[selected]?.compact()?.wrappedValue {
       _editingTag = .init(wrappedValue: tag)
     } else {
       _editingTag = .init(wrappedValue: .init(id: UUID()))

@@ -8,6 +8,8 @@ protocol DependencyField {
 
 // MARK: - Dependency
 
+/// Dependency values are injected into ``Node``s in the tree.
+/// The value must be registered on ``DependencyValues`` and accessible with a ``DependencyKey``.
 @propertyWrapper
 public struct Dependency<Value>: DependencyField {
 

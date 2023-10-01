@@ -37,6 +37,7 @@ protocol ValueField<WrappedValue> {
 
 // MARK: - Value
 
+/// A property wrapper whose wrappedValue is managed by StateTree
 @propertyWrapper
 public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
 
@@ -53,6 +54,11 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
 
   @_spi(Implementation) public let initial: WrappedValue
 
+  /// The projectedValue of a ``Value`` is a `Projection`.
+  ///
+  /// Projections allow references to managed state from 'higher' ``Node``s closer to the tree root
+  /// to be shared with
+  /// 'lower' nodes closer to its leaves.
   public var projectedValue: Projection<WrappedValue> {
     .init(
       self,
@@ -60,6 +66,11 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
     )
   }
 
+  /// The state value managed by StateTree.
+  ///
+  /// Updates to this value cause any ``Node`` which uses it, either through direct ownership or
+  /// through ``projectedValue`` access,
+  /// to be reevaluated. This will potentially cause the tree itself to reflow.
   @TreeActor public var wrappedValue: WrappedValue {
     get {
       let value = inner
@@ -75,7 +86,7 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
     }
   }
 
-  public var value: WrappedValue {
+  @_spi(Implementation) public var value: WrappedValue {
     get {
       wrappedValue
     }
@@ -84,7 +95,7 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
     }
   }
 
-  public var source: ProjectionSource {
+  @_spi(Implementation) public var source: ProjectionSource {
     if let id = inner.treeValue?.id {
       return .valueField(id)
     } else {
@@ -92,6 +103,7 @@ public struct Value<WrappedValue: TreeState>: ValueField, Accessor {
     }
   }
 
+  @_spi(Implementation)
   public func isValid() -> Bool {
     inner.treeValue != nil
   }

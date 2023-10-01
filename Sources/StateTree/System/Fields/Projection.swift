@@ -40,14 +40,14 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
 
   // MARK: Lifecycle
 
-  public nonisolated init(_ access: some Accessor<Value>, initial: Value) {
+  nonisolated init(_ access: some Accessor<Value>, initial: Value) {
     self.access = access
     self.inner = Inner(cache: initial)
   }
 
   // MARK: Public
 
-  public var value: Value {
+  @_spi(Implementation) public var value: Value {
     get {
       guard access.isValid()
       else {
@@ -75,6 +75,10 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
     }
   }
 
+  /// Access to the Projection's underlying state
+  ///
+  /// The underlying state is managed by StateTree and is owned by the ``Value`` field which was
+  /// first used to make a projection.
   public var wrappedValue: Value {
     get { value }
     nonmutating set {
@@ -86,10 +90,11 @@ public struct Projection<Value: Equatable>: ProjectionField, Accessor {
     .init(self, initial: value)
   }
 
-  public var source: ProjectionSource {
+  @_spi(Implementation) public var source: ProjectionSource {
     access.source
   }
 
+  @_spi(Implementation)
   public func isValid() -> Bool {
     access.isValid()
   }

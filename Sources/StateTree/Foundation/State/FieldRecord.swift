@@ -44,6 +44,7 @@ struct ValueRecord: TreeState {
 // MARK: - ProjectionSource
 
 /// The source of a `Projection` — used for dependency analysis.
+@_spi(Implementation)
 public enum ProjectionSource: TreeState {
   case valueField(FieldID)
   case programmatic

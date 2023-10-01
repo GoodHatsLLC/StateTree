@@ -26,7 +26,7 @@ protocol Transformer<Upstream, Downstream> {
 
 // MARK: - Transform
 
-public enum Transform { }
+enum Transform { }
 
 extension Transformer {
   func erase() -> AnyTransformer<Upstream, Downstream> {

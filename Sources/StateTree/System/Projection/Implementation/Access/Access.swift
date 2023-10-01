@@ -2,13 +2,12 @@ import TreeActor
 
 // MARK: - Accessor
 
-/// An `Accessor` provides some opaque access to an underlying `Value`.
-///
-/// An `Access` should allow a consumer to check its validity prior to use.
+/// An `Accessor` provides some opaque access to an underlying ``Value`` or ``Projection``.
 @TreeActor
 public protocol Accessor<WrappedValue> {
   associatedtype WrappedValue
-  var value: WrappedValue { get nonmutating set }
+  @_spi(Implementation) var value: WrappedValue { get nonmutating set }
+  @_spi(Implementation)
   func isValid() -> Bool
-  var source: ProjectionSource { get }
+  @_spi(Implementation) var source: ProjectionSource { get }
 }

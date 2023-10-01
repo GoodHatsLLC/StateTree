@@ -1,20 +1,71 @@
 /// A source struct for injecting dependencies into nodes.
 ///
-/// The `Dependency` system is nodeled after SwiftUI's `Environment`.
-/// DependencyValues can be added by extending `DependencyValues`
-/// with a field which subscripts `self` with a `DependencyKey` conforming metatype.
+/// The `Dependency` system is modeled after SwiftUI's `Environment`.
+/// DependencyValues are added by extending `DependencyValues`
+/// with a field accessed via a `DependencyKey` self 'metatype'.
 ///
 /// ``` swift
-/// private struct MyDependencyKey: DependencyKey {
-///   static let defaultValue: String = "Default value"
+/// public struct MyNetworkManager { /* ... */ }
+///
+/// // A DependencyKey conformance must implement defaultValue
+/// extension SomeNetworkManager: DependencyKey {
+///   static var defaultValue: MyNetworkManager { MyNetworkManager(config: .mock) }
 /// }
 ///
+/// // To be injected a dependency must be given a referenceable name
 /// extension DependencyValues {
-///   var myCustomValue: String {
-///     get { self[MyDependencyKey.self] }
-///     set { self[MyDependencyKey.self] = newValue }
+///   var networkManager: MyNetworkManager {
+///     get { self[MyNetworkManager.self] }
+///     set { self[MyNetworkManager.self] = newValue }
 ///   }
 /// }
+/// ```
+///
+///
+/// The value can then be accessed within nodes using the ``Dependency`` property wrapper.
+/// ```swift
+/// @Dependency(\.networkManager) var networkManager
+/// ```
+///
+/// Dependencies can also be updated for all consumers within a ``Node``'s subtree while routing
+/// from the node's rules section.
+/// ```swift
+/// $someRoute
+///   .serve {
+///     SomeNode()
+///   }
+///   .injecting {
+///     $0.networkManager = SomeNetworkManager(config: .prod)
+///   }
+/// ```
+///
+/// A dependency key can also by implemented with a type unrelated to the payload itself.
+/// ```swift
+/// public protocol NetworkManagerProtocol { /* ... */ }
+/// struct MockNetworkManager: NetworkManagerProtocol { /* ... */ }
+/// struct ProductionNetworkManager: NetworkManagerProtocol { /* ... */ }
+///
+/// struct NetworkManagerKey: DependencyKey {
+///     static var defaultValue: any NetworkManagerProtocol { MockNetworkManager() }
+/// }
+/// extension DependencyValues {
+///   var networkManager: MyNetworkManager {
+///     get { self[NetworkManagerKey.self] }
+///     set { self[NetworkManagerKey.self] = newValue }
+///   }
+/// }
+///
+/// /* ... */
+///
+/// // inside a Node's rules.
+/// $someRoute
+///   .serve {
+///     SomeNode()
+///   }
+///   .injecting {
+///     $0.networkManager = ProductionNetworkManager()
+///   }
+///
 /// ```
 public struct DependencyValues {
 
@@ -22,6 +73,7 @@ public struct DependencyValues {
 
   public static let defaults: DependencyValues = .init()
 
+  @_spi(Internal)
   public func injecting<Value>(
     _ keyPath: WritableKeyPath<DependencyValues, Value>,
     value: Value
@@ -33,7 +85,17 @@ public struct DependencyValues {
     return copy
   }
 
+  @_spi(Internal)
+  public func injecting(modifier: (inout DependencyValues) -> Void)
+    -> DependencyValues
+  {
+    var copy = self
+    modifier(&copy)
+    return copy
+  }
+
   @discardableResult
+  @_spi(Internal)
   public mutating func inject<Value>(
     _ keyPath: WritableKeyPath<DependencyValues, Value>,
     value: Value

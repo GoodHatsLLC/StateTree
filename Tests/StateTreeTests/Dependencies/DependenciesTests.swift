@@ -1,5 +1,5 @@
 import Disposable
-import StateTree
+@_spi(Internal) import StateTree
 import XCTest
 
 class DependencyValuesTests: XCTestCase {

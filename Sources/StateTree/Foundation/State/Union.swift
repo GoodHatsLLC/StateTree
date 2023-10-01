@@ -12,13 +12,23 @@ extension UnionType {
 }
 
 // MARK: - Union2
+/// `U2` is a convenience alias for ``Union2``.
+public typealias U2<A, B> = Union2<A, B>
 
+// MARK: - Union2
+
+/// `Union2` is a generic enum with two associated values types.
+///
+/// Construct it with ``a(_:)`` or ``b(_:)`` and access it with switch-case pattern matching
+/// or with the ``a`` or``b`` accessors — which return the payload only if the access matches the
+/// case.
 public enum Union2<A, B>: UnionType {
   case a(A)
   case b(B)
 
   // MARK: Public
 
+  /// Access the union's value if it is a ``a(_:)`` case.
   public var a: A? {
     switch self {
     case .a(let a): return a
@@ -26,6 +36,7 @@ public enum Union2<A, B>: UnionType {
     }
   }
 
+  /// Access the union's value if it is a ``b(_:)`` case.
   public var b: B? {
     switch self {
     case .b(let b): return b
@@ -33,13 +44,14 @@ public enum Union2<A, B>: UnionType {
     }
   }
 
-  public var anyPayload: Any {
+  @_spi(Implementation) public var anyPayload: Any {
     switch self {
     case .a(let a): return a
     case .b(let b): return b
     }
   }
 
+  @_spi(Implementation)
   public func caseMatches(_ other: Union2<A, B>) -> Bool {
     switch (self, other) {
     case (.a, .a): return true
@@ -48,6 +60,7 @@ public enum Union2<A, B>: UnionType {
     }
   }
 
+  @_spi(Implementation)
   public func map<NewA, NewB>(
     a aMap: (A) -> NewA,
     b bMap: (B) -> NewB
@@ -61,6 +74,17 @@ public enum Union2<A, B>: UnionType {
 
 // MARK: - Union3
 
+/// `U3` is a convenience alias for ``Union3``.
+public typealias U3<A, B, C> = Union3<A, B, C>
+
+// MARK: - Union3
+
+/// `Union3` is a generic enum with three associated values types.
+///
+/// Construct it with ``a(_:)``, ``b(_:)``, or ``c(_:)`` and access it with switch-case pattern
+/// matching
+/// or with the ``a``, ``b``, or ``c`` accessors — which return the payload only if the access
+/// matches the case.
 public enum Union3<A, B, C>: UnionType {
   case a(A)
   case b(B)
@@ -68,6 +92,7 @@ public enum Union3<A, B, C>: UnionType {
 
   // MARK: Public
 
+  /// Access the union's value if it is a ``a(_:)`` case.
   public var a: A? {
     switch self {
     case .b,
@@ -76,6 +101,7 @@ public enum Union3<A, B, C>: UnionType {
     }
   }
 
+  /// Access the union's value if it is a ``b(_:)`` case.
   public var b: B? {
     switch self {
     case .a,
@@ -84,6 +110,7 @@ public enum Union3<A, B, C>: UnionType {
     }
   }
 
+  /// Access the union's value if it is a ``c(_:)`` case.
   public var c: C? {
     switch self {
     case .a,
@@ -92,7 +119,7 @@ public enum Union3<A, B, C>: UnionType {
     }
   }
 
-  public var anyPayload: Any {
+  @_spi(Implementation) public var anyPayload: Any {
     switch self {
     case .a(let a): return a
     case .b(let b): return b
@@ -100,6 +127,7 @@ public enum Union3<A, B, C>: UnionType {
     }
   }
 
+  @_spi(Implementation)
   public func caseMatches(_ other: Union3<A, B, C>) -> Bool {
     switch (self, other) {
     case (.a, .a): return true
@@ -109,6 +137,7 @@ public enum Union3<A, B, C>: UnionType {
     }
   }
 
+  @_spi(Implementation)
   public func map<NewA, NewB, NewC>(
     a aMap: (A) -> NewA,
     b bMap: (B) -> NewB,
