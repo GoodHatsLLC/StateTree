@@ -42,8 +42,6 @@ let package = Package(
     ),
   ].compactMap { $0 },
   dependencies: [
-    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0")
-      .contingent(on: Env.requiresDocCPlugin),
     .package(
       url: "https://github.com/GoodHatsLLC/Disposable.git",
       .upToNextMajor(from: "1.0.0")
@@ -205,14 +203,6 @@ private enum Env {
       verboseContext("[🪄 - Building LintFix plugin]")
     }
     return shouldBuildSwiftLintFix
-  }()
-
-  static let requiresDocCPlugin: Bool = {
-    let shouldBuildDocC = ProcessInfo.processInfo.environment["DOCC"] == "1"
-    if shouldBuildDocC {
-      verboseContext("[📄 - Building DocC plugin]")
-    }
-    return shouldBuildDocC
   }()
 
   static let swiftSettings: [SwiftSetting] = {

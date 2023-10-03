@@ -1,4 +1,4 @@
 version: 1
 builder:
   configs:
-    - documentation_targets: [StateTree, StateTreeSwiftUI, StateTreeTesting, Behavior, Intents, StateTreePlayback]
+    - documentation_targets: [StateTree]
